@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 const css = `
   :root {
@@ -3011,6 +3012,6 @@ ${clientJs}
 </body>
 </html>`;
 
-fs.writeFileSync('c:/Users/busin/Desktop/admit/index.html', fullHtml, 'utf8');
-fs.writeFileSync('c:/Users/busin/Desktop/admit/admitlabs-website-mockup.html', fullHtml, 'utf8');
+fs.writeFileSync(path.join(__dirname, 'index.html'), fullHtml, 'utf8');
+fs.writeFileSync(path.join(__dirname, 'admitlabs-website-mockup.html'), fullHtml, 'utf8');
 console.log('Successfully written complete files.');
