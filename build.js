@@ -201,8 +201,7 @@ const css = `
   .btn,
   button.btn,
   a.btn,
-  .btn-svc-action,
-  .nav-cta-btn {
+  .btn-svc-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -317,10 +316,14 @@ const css = `
   }
   .nav-link:hover::after { width: 100%; }
   .nav-right { display: flex; align-items: center; gap: 14px; }
-  .nav-cta-btn { display: none; }
+  .nav-cta-btn,
+  button.nav-cta-btn {
+    display: none !important;
+  }
   @media (min-width: 920px) {
-    .nav-cta-btn {
-      display: inline-flex;
+    .nav-cta-btn,
+    button.nav-cta-btn {
+      display: inline-flex !important;
       padding: 10px 20px;
       font-size: 13px;
       font-weight: 700 !important;
