@@ -317,7 +317,17 @@ const css = `
   }
   .nav-link:hover::after { width: 100%; }
   .nav-right { display: flex; align-items: center; gap: 14px; }
-  .nav-cta-btn { padding: 10px 20px; font-size: 13px; font-weight: 700 !important; font-variation-settings: "wght" 700, "opsz" 20 !important; white-space: nowrap; }
+  .nav-cta-btn { display: none; }
+  @media (min-width: 920px) {
+    .nav-cta-btn {
+      display: inline-flex;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 700 !important;
+      font-variation-settings: "wght" 700, "opsz" 20 !important;
+      white-space: nowrap;
+    }
+  }
 
   .menu-toggle {
     display: flex; flex-direction: column; justify-content: center;
