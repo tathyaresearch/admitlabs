@@ -1,0 +1,9 @@
+{
+  "name": "admitlabs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AdmitLabs - Education Branding & Media System",
+  "scripts": {
+    "build": "node build.js"
+  }
+}
