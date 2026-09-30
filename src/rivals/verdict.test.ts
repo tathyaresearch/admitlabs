@@ -113,8 +113,15 @@ describe('Where you stand on Free: ahead or behind only', () => {
   test('the sample: Northbank has three rivals ahead for now', () => {
     assert.equal(
       freeRivalsVerdict(rivals({ 'Silverline College': 'ahead', 'Eastgate University': 'ahead', 'Highfield University': 'ahead' })),
-      'Each rival shows you something that works. Next step: catching all three.',
+      'Each rival shows you something that works. Next step: catching up.',
     );
+  });
+
+  test('every rival ahead reads the same for 3, 4 or 5 rivals', () => {
+    for (const names of [['A', 'B', 'C'], ['A', 'B', 'C', 'D'], ['A', 'B', 'C', 'D', 'E']]) {
+      const text = freeRivalsVerdict(names.map((name) => ({ name, standing: 'ahead' as const })));
+      assert.equal(text, 'Each rival shows you something that works. Next step: catching up.');
+    }
   });
 
   test('names only, never a score, and in name order so nothing hints at one', () => {

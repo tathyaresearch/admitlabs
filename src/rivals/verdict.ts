@@ -98,11 +98,12 @@ export function freeRivalsVerdict(rivals: ReadonlyArray<{ name: string; standing
         : level.length > 0
           ? `You're level with ${joinNames(level)}.`
           : 'Each rival shows you something that works.';
+  // Every rival ahead (3 to 5 of them): no list of names, just the next step.
   const next =
     aheadOfYou.length === 0
       ? 'Next step: keeping your lead.'
       : aheadOfYou.length === scored.length && scored.length > 1
-        ? `Next step: catching ${countWord(scored.length)}.`
+        ? 'Next step: catching up.'
         : `Next step: catching ${joinNames(aheadOfYou)}.`;
   return `${strength} ${next}`;
 }
