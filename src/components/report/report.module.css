@@ -1,0 +1,123 @@
+/*
+  Reports, in the Audit page's style: the latest report in one band (the month in large type,
+  when it was made, one download button, and what is inside), then earlier reports as quiet
+  rows. Space does the separating; lines are kept for rows.
+*/
+
+.latest {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.month {
+  font: var(--type-score-medium);
+  font-size: clamp(2.25rem, 1.9rem + 1.4vw, 3rem);
+  letter-spacing: var(--tracking-score);
+  line-height: 0.95;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.download {
+  justify-self: start;
+  margin-top: var(--space-2);
+}
+
+/* What's inside: the report's pages, in order. */
+
+.inside {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.insideTitle {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.insideList {
+  display: grid;
+  gap: 0;
+  counter-reset: page;
+}
+
+@media (min-width: 40rem) {
+  .insideList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-6);
+  }
+}
+
+.insideItem {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line);
+  font: var(--type-small);
+}
+
+.insideNumber {
+  flex: none;
+  width: 1.25rem;
+  font: var(--type-caption-strong);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+/* Earlier reports: one quiet row each. */
+
+.rows {
+  display: grid;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  min-height: 3.25rem;
+  padding: var(--space-2) 0;
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.rowMonth {
+  display: grid;
+  gap: 2px;
+  font: var(--type-strong);
+}
+
+.rowFacts {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* 3 things to do this month (Home, Paid and Client). */
+
+.thingSource {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.thingDetail {
+  /* A clamp only holds when the grid row does not stretch the box. */
+  align-self: start;
+  display: -webkit-box;
+  overflow: hidden;
+  font: var(--type-small);
+  color: var(--text-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}

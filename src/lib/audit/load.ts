@@ -3,7 +3,8 @@
 // Client get everything). Nothing here widens what the database returns.
 
 import { cache } from 'react';
-import type { HistoryRow, StoredAudit, StoredCheck } from '@/audit/view';
+import { latestStoredAudit, ownHistory } from '@/audit/read';
+import type { HistoryRow, StoredAudit } from '@/audit/view';
 import type { ProgramEntry } from '@/components/audit/Programs';
 import { monthKey } from '@/domain/dates';
 import { formatDate } from '@/domain/format';
@@ -29,8 +30,6 @@ export interface AuditPageData {
   refresh: { left: number; resetsOn: Date } | null;
 }
 
-const OWN_KINDS = ['free', 'paid', 'client'] as const;
-
 export const loadPrograms = cache(async (institutionId: string): Promise<ProgramRow[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase.from('programs').select('id, name, program_key, archived_at').eq('institution_id', institutionId).order('name');
@@ -38,88 +37,10 @@ export const loadPrograms = cache(async (institutionId: string): Promise<Program
   return (data ?? []).map((row) => ({ id: row.id, name: row.name, programKey: row.program_key, archived: row.archived_at !== null }));
 });
 
-export const loadLatestAudit = cache(async (institutionId: string): Promise<StoredAudit | null> => {
-  const supabase = await createClient();
-  const { data: audit, error } = await supabase
-    .from('audits')
-    .select('id, run_at, kind, trigger, program_count, previous_audit_id, overall, discovered, trusted, chosen, overall_change, discovered_change, trusted_change, chosen_change')
-    .eq('institution_id', institutionId)
-    .in('kind', [...OWN_KINDS])
-    .order('run_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(`Could not load the Audit: ${error.message}`);
-  if (!audit) return null;
-
-  const [programs, checks] = await Promise.all([
-    supabase
-      .from('audit_program_scores')
-      .select('program_id, overall, discovered, trusted, chosen, overall_change, discovered_change, trusted_change, chosen_change')
-      .eq('audit_id', audit.id),
-    supabase
-      .from('audit_checks')
-      .select(
-        'id, program_id, pillar, check_key, result, points_awarded, points_max, strength_rank, fix_rank, previous_result, checked_at, audit_check_details(finding, why_it_matters, how_to_fix, difficulty, source_url)',
-      )
-      .eq('audit_id', audit.id),
-  ]);
-  if (programs.error) throw new Error(`Could not load program scores: ${programs.error.message}`);
-  if (checks.error) throw new Error(`Could not load check results: ${checks.error.message}`);
-
-  return {
-    id: audit.id,
-    runAt: audit.run_at,
-    kind: audit.kind,
-    trigger: audit.trigger,
-    programCount: audit.program_count,
-    previousAuditId: audit.previous_audit_id,
-    scores: { overall: audit.overall, discovered: audit.discovered, trusted: audit.trusted, chosen: audit.chosen },
-    changes: { overall: audit.overall_change, discovered: audit.discovered_change, trusted: audit.trusted_change, chosen: audit.chosen_change },
-    programs: (programs.data ?? []).map((row) => ({
-      programId: row.program_id,
-      scores: { overall: row.overall, discovered: row.discovered, trusted: row.trusted, chosen: row.chosen },
-      changes: { overall: row.overall_change, discovered: row.discovered_change, trusted: row.trusted_change, chosen: row.chosen_change },
-    })),
-    checks: (checks.data ?? []).map((row): StoredCheck => {
-      const detail = row.audit_check_details;
-      return {
-        id: row.id,
-        programId: row.program_id,
-        pillar: row.pillar,
-        key: row.check_key,
-        result: row.result,
-        pointsAwarded: Number(row.points_awarded),
-        pointsMax: row.points_max,
-        strengthRank: row.strength_rank,
-        fixRank: row.fix_rank,
-        previousResult: row.previous_result,
-        checkedAt: row.checked_at,
-        detail: detail
-          ? { finding: detail.finding, whyItMatters: detail.why_it_matters, howToFix: detail.how_to_fix, difficulty: detail.difficulty, sourceUrl: detail.source_url }
-          : null,
-      };
-    }),
-  };
-});
+export const loadLatestAudit = cache(async (institutionId: string): Promise<StoredAudit | null> => latestStoredAudit(await createClient(), institutionId));
 
 /** Own Audits the viewer may see: every one on Paid and Client, the latest only on Free. */
-export const loadHistory = cache(async (institutionId: string): Promise<Array<HistoryRow & { trigger: string; kind: string }>> => {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('audits')
-    .select('id, run_at, kind, trigger, overall, discovered, trusted, chosen')
-    .eq('institution_id', institutionId)
-    .in('kind', [...OWN_KINDS])
-    .order('run_at', { ascending: true });
-  if (error) throw new Error(`Could not load score history: ${error.message}`);
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    runAt: row.run_at,
-    kind: row.kind,
-    trigger: row.trigger,
-    scores: { overall: row.overall, discovered: row.discovered, trusted: row.trusted, chosen: row.chosen },
-  }));
-});
+export const loadHistory = cache(async (institutionId: string): Promise<Array<HistoryRow & { trigger: string; kind: string }>> => ownHistory(await createClient(), institutionId));
 
 /** One program's scores across the Audits the viewer may see (Paid and Client: all of them). */
 export const loadProgramHistory = cache(async (programId: string): Promise<Array<HistoryRow & { trigger: string }>> => {

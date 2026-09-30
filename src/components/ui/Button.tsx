@@ -62,6 +62,26 @@ export function ButtonLink({ variant = 'primary', size = 'md', icon, iconAfter, 
   );
 }
 
+/** A plain link styled as a button, for addresses the router should not handle (a file download). */
+export function AnchorButton({
+  variant = 'primary',
+  size = 'md',
+  icon,
+  iconAfter,
+  block,
+  className,
+  children,
+  ...rest
+}: CommonProps & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'children'>) {
+  return (
+    <a className={classes(variant, size, block, className)} {...rest}>
+      <Content icon={icon} iconAfter={iconAfter}>
+        {children}
+      </Content>
+    </a>
+  );
+}
+
 /** For links that leave Drishti (source links, for example). */
 export function ExternalButtonLink({
   variant = 'secondary',

@@ -712,6 +712,8 @@ export type Database = {
           id: string
           institution_id: string
           month: string
+          pages: number | null
+          size_bytes: number | null
           storage_path: string
         }
         Insert: {
@@ -719,6 +721,8 @@ export type Database = {
           id?: string
           institution_id: string
           month: string
+          pages?: number | null
+          size_bytes?: number | null
           storage_path: string
         }
         Update: {
@@ -726,6 +730,8 @@ export type Database = {
           id?: string
           institution_id?: string
           month?: string
+          pages?: number | null
+          size_bytes?: number | null
           storage_path?: string
         }
         Relationships: [
@@ -1160,6 +1166,18 @@ export type Database = {
       }
       record_audit: { Args: { payload: Json }; Returns: string }
       record_demand_pull: { Args: { payload: Json }; Returns: string }
+      record_report: {
+        Args: {
+          p_institution: string
+          p_made_at: string
+          p_month: string
+          p_notice: string
+          p_pages: number
+          p_size: number
+          p_storage_path: string
+        }
+        Returns: string
+      }
       record_rival_check: { Args: { payload: Json }; Returns: number }
       remove_member: { Args: { p_user: string }; Returns: undefined }
       revoke_invite: { Args: { p_invite: string }; Returns: undefined }
@@ -1257,6 +1275,7 @@ export type Database = {
         | "demand_spike"
         | "plan_reminder"
         | "plan_ended"
+        | "report_ready"
       pillar: "discovered" | "trusted" | "chosen"
       rival_move_kind:
         | "new_program"
@@ -1437,6 +1456,7 @@ export const Constants = {
         "demand_spike",
         "plan_reminder",
         "plan_ended",
+        "report_ready",
       ],
       pillar: ["discovered", "trusted", "chosen"],
       rival_move_kind: [

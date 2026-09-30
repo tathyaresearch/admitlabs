@@ -4,7 +4,8 @@
 // mentions of themselves and their rivals. Nothing here widens what the database returns.
 
 import { cache } from 'react';
-import type { DemandRow } from '@/demand/view';
+import { latestDemandRows } from '@/demand/read';
+import { demandView, type DemandRow, type IdeaRow } from '@/demand/view';
 import { regionsFor, type DemandRegion } from '@/demand/regions';
 import type { DemandScope, Sentiment } from '@/domain/types';
 import type { InstitutionViewer } from '@/lib/auth/guards';
@@ -74,61 +75,17 @@ export const loadHighlight = cache(async (institutionId: string): Promise<Highli
 });
 
 async function loadRows(region: DemandRegion, programs: readonly DemandProgram[]): Promise<{ rows: DemandRow[]; pulledAt: string | null }> {
-  if (programs.length === 0) return { rows: [], pulledAt: null };
-  const supabase = await createClient();
-  let query = supabase
-    .from('demand_pulls')
-    .select('id, program_key, month, pulled_at')
-    .eq('scope', region.scope)
-    .eq('region', region.region)
-    .in(
-      'program_key',
-      programs.map((program) => program.programKey),
-    );
-  query = region.state === null ? query.is('state', null) : query.eq('state', region.state);
-  const { data: pulls, error } = await query.order('month', { ascending: false });
-  if (error) throw new Error(`Could not load Demand pulls: ${error.message}`);
+  return latestDemandRows(await createClient(), region, programs);
+}
 
-  // The latest month for each program.
-  const latest = new Map<string, { id: string; month: string; pulledAt: string }>();
-  for (const pull of pulls ?? []) if (!latest.has(pull.program_key)) latest.set(pull.program_key, { id: pull.id, month: pull.month.slice(0, 7), pulledAt: pull.pulled_at });
-  if (latest.size === 0) return { rows: [], pulledAt: null };
-
-  const { data: items, error: itemError } = await supabase
-    .from('demand_items')
-    .select('id, pull_id, kind, text, language, count, change_pct, rank, source_url, found_at, meta')
-    .in(
-      'pull_id',
-      [...latest.values()].map((pull) => pull.id),
-    )
-    .neq('kind', 'mention');
-  if (itemError) throw new Error(`Could not load Demand items: ${itemError.message}`);
-
-  const byPull = new Map([...latest.entries()].map(([programKey, pull]) => [pull.id, { programKey, month: pull.month }]));
-  const names = new Map(programs.map((program) => [program.programKey, program.name]));
-  const rows = (items ?? []).flatMap((item): DemandRow[] => {
-    const pull = byPull.get(item.pull_id);
-    if (!pull) return [];
-    return [
-      {
-        id: item.id,
-        programKey: pull.programKey,
-        programName: names.get(pull.programKey) ?? pull.programKey,
-        month: pull.month,
-        kind: item.kind,
-        text: item.text,
-        language: item.language,
-        count: item.count,
-        changePct: item.change_pct === null ? null : Number(item.change_pct),
-        rank: item.rank,
-        sourceUrl: item.source_url,
-        foundAt: item.found_at,
-        meta: (item.meta ?? {}) as Record<string, unknown>,
-      },
-    ];
-  });
-  const pulledAt = [...latest.values()].map((pull) => pull.pulledAt).sort().pop() ?? null;
-  return { rows, pulledAt };
+/** The content ideas for the institution's city, across its programs, ranked as the Demand page ranks them. */
+export async function loadCityIdeas(viewer: InstitutionViewer): Promise<IdeaRow[]> {
+  const institution = viewer.membership.institution;
+  const programs = (await loadPrograms(institution.id)).flatMap((program) =>
+    !program.archived && program.programKey ? [{ id: program.id, name: program.name, programKey: program.programKey }] : [],
+  );
+  const { rows } = await loadRows(regionsFor(institution).city, programs);
+  return demandView(rows, { singleProgram: programs.length === 1, skills: institution.type === 'skilling' }).ideas;
 }
 
 async function loadMentions(institutionId: string): Promise<MentionRow[]> {

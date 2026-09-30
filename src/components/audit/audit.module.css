@@ -344,6 +344,8 @@ a.tab:hover {
 }
 
 .fixWrong {
+  /* A clamp only holds when the grid row does not stretch the box. */
+  align-self: start;
   display: -webkit-box;
   overflow: hidden;
   font: var(--type-small);

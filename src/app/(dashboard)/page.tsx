@@ -2,6 +2,7 @@ import { overviewView } from '@/audit/view';
 import { FixCards } from '@/components/audit/Lists';
 import { SummaryBand } from '@/components/audit/SummaryBand';
 import { DemandHighlight } from '@/components/demand/DemandHighlight';
+import { MonthThings } from '@/components/report/MonthThings';
 import { RivalSnapshot } from '@/components/rivals/RivalSnapshot';
 import { ButtonLink } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Data';
@@ -14,8 +15,9 @@ import { planReminder } from '@/domain/tiers';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { loadAuditPage, nextAuditText } from '@/lib/audit/load';
-import { loadHighlight } from '@/lib/demand/load';
-import { loadRivalSnapshot } from '@/lib/rivals/load';
+import { loadCityIdeas, loadHighlight } from '@/lib/demand/load';
+import { loadActions, loadRivalSnapshot } from '@/lib/rivals/load';
+import { threeThings } from '@/report/things';
 import styles from './home.module.css';
 
 export const metadata = { title: 'Home' };
@@ -24,10 +26,28 @@ export const metadata = { title: 'Home' };
 export default async function HomePage() {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
-  const [data, rivals, highlight] = await Promise.all([loadAuditPage(viewer), loadRivalSnapshot(viewer), loadHighlight(institution.id)]);
+  // Paid and Client see the month's 3 things to do (the same list as the monthly report); Free
+  // keeps its top 3 fixes.
+  const full = viewer.tier !== 'free';
+  const [data, rivals, highlight, lessons, ideas] = await Promise.all([
+    loadAuditPage(viewer),
+    loadRivalSnapshot(viewer),
+    loadHighlight(institution.id),
+    full ? loadActions(institution.id) : Promise.resolve([]),
+    full ? loadCityIdeas(viewer) : Promise.resolve([]),
+  ]);
   const reminder = planReminder(viewer.plan, new Date());
   const view = data.audit ? overviewView(data.audit, { institutionType: institution.type, programNames: data.names }) : null;
   const topFixes = view ? view.fixes.slice(0, limitFor('audit_what_to_fix', 'free') ?? 3) : [];
+  const things = full
+    ? threeThings({
+        institutionType: institution.type,
+        place: institution.city,
+        fixes: view?.fixes ?? [],
+        lessons: lessons.map((lesson) => ({ text: lesson.text, detail: lesson.detail, checkKey: lesson.checkKey, rivalId: lesson.rivalId })),
+        ideas,
+      })
+    : [];
   const activePrograms = data.programs.filter((program) => !program.archived);
   const freeProgram = viewer.tier === 'free' ? activePrograms.find((program) => program.id === viewer.plan?.freeProgramId) : undefined;
 
@@ -91,7 +111,13 @@ export default async function HomePage() {
         </EmptyState>
       )}
 
-      {view ? (
+      {full && things.length ? (
+        <Section id="month-things" title="3 things to do this month" description="The steps that could make the most difference this month, in order.">
+          <MonthThings things={things} />
+        </Section>
+      ) : null}
+
+      {!full && view ? (
         <Section
           id="top-fixes"
           title="Fix these first"

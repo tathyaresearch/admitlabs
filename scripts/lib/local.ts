@@ -9,9 +9,21 @@ export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const DRISHTI_API_PORT = '55321';
 export const SIGNING_KEYS_PATH = join(ROOT, 'supabase', 'signing_keys.json');
 
+/** Thrown by fail() once its message is printed. It stops the script without a stack trace. */
+class ScriptFailure extends Error {}
+
+// Calling process.exit() straight after a request can crash Node on Windows while a connection
+// is still closing ("Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)"). So a failed script
+// stops by throwing, and Node finishes on its own with exit code 1.
+process.on('uncaughtException', (error) => {
+  process.exitCode = 1;
+  if (!(error instanceof ScriptFailure)) console.error(error);
+});
+
 export function fail(message: string): never {
   console.error(`\n${message}\n`);
-  process.exit(1);
+  process.exitCode = 1;
+  throw new ScriptFailure(message);
 }
 
 /** Refuse anything that is not Drishti's local Supabase API (never a hosted project, never another local stack). */

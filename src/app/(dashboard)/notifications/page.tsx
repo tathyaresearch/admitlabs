@@ -14,6 +14,7 @@ const ICONS: Readonly<Record<string, IconName>> = {
   audit_ready: 'audit',
   rival_move: 'rivals',
   demand_spike: 'demand',
+  report_ready: 'reports',
   plan_reminder: 'plan',
   plan_ended: 'plan',
 };
@@ -22,6 +23,7 @@ const LINK_TEXT: Readonly<Record<string, string>> = {
   audit_ready: 'See your Audit',
   rival_move: 'See the rival',
   demand_spike: 'See Demand',
+  report_ready: 'See your report',
 };
 
 export default async function NotificationsPage() {

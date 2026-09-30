@@ -113,6 +113,26 @@ npm run demand -- --first --institution <slug>
 - `--due` runs every pull due that day: each region and program an institution that has signed up needs, for the month (this month from the 28th, last month before it). A course or career rising 40% or more in a city (`DEMAND_RULES` in `src/config/demand.ts`) alerts every Paid and Client institution there that offers the program.
 - A new signup, or a program added in Settings, gets any region and program nobody needed before straight away, without alerts. `--first` does the same by hand.
 
+## Monthly report
+
+One PDF a month (spec section 12), readable in 5 minutes: 7 pages, never more than 8. A black cover, then ivory pages in the dashboard's style, set in Bricolage Grotesque (embedded from `src/report/fonts`, with its licence): your score and what's working, what to fix (the top 5 in detail, the rest ranked), program by program, you and your rivals with the month's key moves, what students in your city want, the 3 things to do this month, and the sources and dates checked. On Paid only, the last page ends with one quiet line: "Want AdmitLabs to do this for you? hello@admitlabs.in".
+
+- **Who gets one:** Paid and Client, made on the 1st for the month just ended, from what was known at the end of that month. Making a month again replaces it. After a Paid plan ends, past reports stay downloadable; no new ones are made.
+- **Where it lives:** a private storage bucket (`reports`). `/reports` lists them; a download asks for a link that works for one minute, as the signed-in person, so the database checks membership every time. Free sees one "Paid gets a monthly report" card.
+- **3 things to do this month:** the biggest Audit fix, the top Rivals lesson on another check, and the top content idea from Demand (`src/report/things.ts`). The same list shows on Home for Paid and Client.
+- **The page cap:** every list has a limit and every long sentence a line limit. A report that would still pass 8 pages is made again in its compact form (3 fixes in detail instead of 5).
+- A new report adds "Your September report is ready." to Notifications.
+
+```
+npm run report -- --due
+npm run report -- --due --date 2026-10-01 --dry-run
+npm run report -- --institution eastgate-university --month 2026-09
+npm run report -- --institution eastgate-university --month 2026-08 --preview --out report.pdf
+```
+
+- `--due` makes every report due that day. `--institution` makes (or makes again) one month's report; `--out` also saves a copy, and `--preview` only renders it (nothing stored or recorded).
+- The sample data includes the August 2026 report for Eastgate University (Paid) and Brightpath Skills Academy (Client), made on 1 September.
+
 ## Local addresses
 
 | What | Address |
@@ -140,24 +160,26 @@ npm run demand -- --first --institution <slug>
 | `npm run tier -- ...` | Switches a local institution's tier (see above) |
 | `npm run rivals -- ...` | Runs rival Audits, weekly checks and 3 things to do by hand (see above) |
 | `npm run demand -- ...` | Runs the monthly Demand pulls by hand (see above) |
+| `npm run report -- ...` | Makes monthly reports by hand (see above) |
 
 ## Layout
 
 ```
 supabase/        config, migrations (schema, row level security, owner actions), database tests, email template
-scripts/         env, seed, audit, tier, rivals, demand, dash check (TypeScript run directly by Node)
+scripts/         env, seed, audit, tier, rivals, demand, report, dash check (TypeScript run directly by Node)
 src/app/         routes: (product)/drishti, login, (dashboard), onboarding, team, share, design-system
-src/components/  ui, charts, audit, rivals and demand screens, institution inputs and the app shell
+src/components/  ui, charts, audit, rivals, demand and report screens, institution inputs and the app shell
 src/domain/      pure logic: the scoring engine (domain/scoring), checks, schedules, onboarding checks, dates, tiers
 src/config/      every adjustable value: scoring, plans, entitlements, schedules, providers, cities, programs
 src/providers/   the provider interface, mock providers, and real provider slots
 src/audit/       one Audit end to end (collect, score, save) and what the Audit screens show
 src/rivals/      comparisons, verdicts, change rules, the 3 things to do, and the rival jobs
 src/demand/      regions, the pull schedule, ranking and spikes, the season clock, the page view, and the pulls
+src/report/      the monthly report: its schedule, the 3 things to do, the snapshot, the PDF and the job
 src/sample/      the fictional sample world
 ```
 
-`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand` and `src/sample` never import Next.js, so Node runs their tests directly.
+`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/report` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library is only ever loaded by the report job, never by the web app.
 
 ## How scores work
 

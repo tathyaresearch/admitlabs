@@ -4,6 +4,7 @@ import {
   CHECKS,
   INSTITUTION_CHECK_KEYS,
   PROGRAM_CHECK_KEYS,
+  checkAction,
   checkLooksAt,
   checkName,
   checksForLevel,
@@ -52,6 +53,20 @@ describe('check catalogue (spec 7.2)', () => {
     assert.equal(checkName('approvals', 'college'), 'Approvals');
     assert.match(checkLooksAt('approvals', 'university'), /NIRF, NAAC, AICTE, UGC/);
     assert.equal(checkName('page_speed', 'skilling'), 'Page speed');
+  });
+
+  test('what to do about a check, in a few words, naming the programs when given', () => {
+    assert.equal(checkAction('fees_shown', ['BBA', 'MBA'], 'college'), 'Show your full BBA and MBA fees');
+    assert.equal(checkAction('fees_shown', [], 'college'), 'Show your full fees');
+    assert.equal(checkAction('program_page', [], 'college'), 'Give each program a page of its own');
+    assert.equal(checkAction('google_search', ['BBA', 'BCA', 'MBA'], 'college'), 'Get found when students search for BBA, BCA and MBA');
+    assert.equal(checkAction('approvals', [], 'skilling'), 'Show your skilling recognition on your website');
+    for (const key of CHECK_KEYS) {
+      for (const programs of [[], ['BBA']]) {
+        const action = checkAction(key, programs, 'college');
+        assert.ok(action.length > 0 && !/your programs fees|  /.test(action), action);
+      }
+    }
   });
 
   test('unknown keys throw', () => {

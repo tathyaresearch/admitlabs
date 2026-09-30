@@ -2,32 +2,12 @@
 // opportunity and never a failing. Learn from rivals, never copy them: content items name the
 // idea behind a post and say to tell it with your own students.
 
+import { checkAction } from '../../domain/checks.ts';
 import { formatCount, joinNames } from '../../domain/format.ts';
 import type { CheckKey, InstitutionType } from '../../domain/types.ts';
 import type { Opportunity } from '../../rivals/opportunities.ts';
 import { moveNotice } from '../../rivals/text.ts';
 import type { RivalActionText } from '../analysis.ts';
-
-/** What to do, per check. `{programs}` becomes the programs where a rival leads you. */
-const GAP_TITLES: Readonly<Record<CheckKey, string>> = {
-  google_search: 'Get found when students search for {programs}',
-  instagram_activity: 'Post on Instagram every week',
-  google_profile: 'Build up your Google profile and reviews',
-  youtube: 'Post a short YouTube video each month',
-  ai_answers: 'Get named when students ask AI about {programs}',
-  other_socials: 'Keep Facebook and LinkedIn active',
-  placement_proof: 'Publish your {programs} placement results',
-  review_rating: 'Reply to every Google review',
-  approvals: 'Show your approvals on your website',
-  faculty_leaders: 'Introduce your faculty and leaders',
-  students_in_content: 'Put real students in your posts',
-  fees_shown: 'Show your full {programs} fees',
-  program_page: 'Give {programs} a page of its own',
-  easy_enquiry: 'Make it one tap to enquire',
-  admission_steps: 'Spell out the {programs} admission steps',
-  mobile_friendly: 'Make your website easy to use on a phone',
-  page_speed: 'Make your website load faster',
-};
 
 /** Why it matters to a student, in one sentence. */
 const GAP_WHY: Readonly<Record<CheckKey, string>> = {
@@ -57,18 +37,13 @@ const MOVE_ACTIONS = {
   new_page: { text: 'See what they added to their website', next: 'Ask whether your own site answers the same student question.' },
 } as const;
 
-function titleFor(key: CheckKey, programs: readonly string[], type: InstitutionType): string {
-  const title = key === 'approvals' && type === 'skilling' ? 'Show your skilling recognition on your website' : GAP_TITLES[key];
-  return title.replace('{programs}', programs.length ? joinNames(programs) : 'your programs');
-}
-
 export function writeRivalAction(item: Opportunity, type: InstitutionType): RivalActionText {
   switch (item.type) {
     case 'gap': {
       const leaders = item.rivals.slice(0, 2).map((rival) => rival.name);
       const verb = leaders.length > 1 ? 'are' : 'is';
       return {
-        text: titleFor(item.key, item.programs, type),
+        text: checkAction(item.key, item.programs, type),
         detail: `${joinNames(leaders)} ${verb} ahead of you here. ${GAP_WHY[item.key]}`,
       };
     }

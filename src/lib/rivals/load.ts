@@ -205,7 +205,7 @@ export async function loadActivity(rivalIds: readonly string[], options: { posts
 }
 
 /** This month's Rivals 3 things to do, or the latest month's. Paid and Client (row level security). */
-async function loadActions(institutionId: string): Promise<ActionRow[]> {
+export async function loadActions(institutionId: string): Promise<ActionRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('actions')

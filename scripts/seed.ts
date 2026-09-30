@@ -12,6 +12,8 @@ import { istDate } from '../src/domain/dates.ts';
 import { paidPlanEndsAt } from '../src/domain/tiers.ts';
 import { TIER_LABELS } from '../src/domain/types.ts';
 import type { Database, Json } from '../src/lib/supabase/database.types.ts';
+import { makeReport, reportsDue } from '../src/report/jobs.ts';
+import { reportDayOf } from '../src/report/schedule.ts';
 import { checkRival, writeRivalActions } from '../src/rivals/jobs.ts';
 import {
   ADMIN_EMAIL,
@@ -35,6 +37,8 @@ type Tables = Database['public']['Tables'];
 type Row<T extends keyof Tables> = Tables[T]['Insert'];
 
 const DAY_MS = 86_400_000;
+/** The sample world's latest monthly report: August 2026, made on 1 September. */
+const REPORT_MONTH = '2026-08';
 
 const db = serviceClient();
 
@@ -244,6 +248,22 @@ async function main(): Promise<void> {
     }
   }
 
+  // August's Rivals 3 things to do, then August's monthly report for the Paid and Client
+  // institutions, made on 1 September through the live path (September's is made on 1 October).
+  for (const tracker of new Set(SAMPLE_RIVALS.map(([slug]) => slug))) {
+    actionCount += await writeRivalActions(db, institutionId(tracker), istDate('2026-08-31', 9));
+  }
+  const reportDay = reportDayOf(REPORT_MONTH);
+  const { due: reportsToMake } = await reportsDue(db, reportDay);
+  const reportPages: number[] = [];
+  for (const institution of reportsToMake) {
+    try {
+      reportPages.push((await makeReport(db, institution.id, REPORT_MONTH, reportDay, { notify: true })).pages);
+    } catch (error) {
+      fail(`Could not make the ${REPORT_MONTH} report for ${institution.name}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   // Older notifications have been read. New: the latest "Audit ready", and the last 10 days of
   // rival moves and demand spikes.
   const { data: notices, error: noticeError } = await db.from('notifications').select('id, institution_id, kind, created_at').order('created_at', { ascending: false });
@@ -266,8 +286,9 @@ async function main(): Promise<void> {
   console.log('\nSample data ready.');
   console.log(`  Institutions ${SAMPLE_INSTITUTIONS.length} (${prospects} prospects, team only), programs ${programCount}, users ${SAMPLE_USERS.length}`);
   console.log(`  Audits ${auditCounts.own} own, ${auditCounts.rival} rival, ${auditCounts.team} team, from ${signalCount} signals`);
-  console.log(`  Rival moves ${moveCount}, best posts ${contentCount ?? 0}, ads ${SAMPLE_ADS.length}, Rivals 3 things to do ${actionCount}`);
+  console.log(`  Rival moves ${moveCount}, best posts ${contentCount ?? 0}, ads ${SAMPLE_ADS.length}, Rivals 3 things to do ${actionCount} (August and September)`);
   console.log(`  Demand pulls ${needed.length * DEMAND_MONTHS.length} with ${demandItems} grouped items, ${spikeCount} spike alerts sent`);
+  console.log(`  Monthly reports ${reportPages.length} for ${REPORT_MONTH} (${reportPages.map((pages) => `${pages} pages`).join(', ')})`);
   console.log('\nSign in at http://localhost:3000/login with any of these:');
   for (const user of SAMPLE_USERS) {
     const sample = user.institutionSlug ? sampleInstitution(user.institutionSlug) : null;

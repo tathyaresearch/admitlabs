@@ -83,6 +83,34 @@ export function checkName(key: CheckKey, type: InstitutionType): string {
   return getCheck(key).name;
 }
 
+/** What to do about a check, as a short action. Program checks name the programs it is about, when given. */
+const CHECK_ACTIONS: Readonly<Record<CheckKey, (programs: string | null) => string>> = {
+  google_search: (programs) => `Get found when students search for ${programs ?? 'your programs'}`,
+  instagram_activity: () => 'Post on Instagram every week',
+  google_profile: () => 'Build up your Google profile and reviews',
+  youtube: () => 'Post a short YouTube video each month',
+  ai_answers: (programs) => `Get named when students ask AI about ${programs ?? 'your programs'}`,
+  other_socials: () => 'Keep Facebook and LinkedIn active',
+  placement_proof: (programs) => `Publish your ${programs ? `${programs} ` : ''}placement results`,
+  review_rating: () => 'Reply to every Google review',
+  approvals: () => 'Show your approvals on your website',
+  faculty_leaders: () => 'Introduce your faculty and leaders',
+  students_in_content: () => 'Put real students in your posts',
+  fees_shown: (programs) => `Show your full ${programs ? `${programs} ` : ''}fees`,
+  program_page: (programs) => (programs ? `Give ${programs} a page of its own` : 'Give each program a page of its own'),
+  easy_enquiry: () => 'Make it one tap to enquire',
+  admission_steps: (programs) => `Spell out the ${programs ? `${programs} ` : ''}admission steps`,
+  mobile_friendly: () => 'Make your website easy to use on a phone',
+  page_speed: () => 'Make your website load faster',
+};
+
+/** "Show your full BBA and MBA fees", or "Show your full fees" when no program is named. */
+export function checkAction(key: CheckKey, programs: readonly string[], type: InstitutionType): string {
+  if (key === 'approvals' && type === 'skilling') return 'Show your skilling recognition on your website';
+  const names = programs.length <= 1 ? (programs[0] ?? null) : `${programs.slice(0, -1).join(', ')} and ${programs[programs.length - 1]}`;
+  return CHECK_ACTIONS[key](names);
+}
+
 export function checkLooksAt(key: CheckKey, type: InstitutionType): string {
   if (key === 'approvals') {
     return type === 'skilling'
