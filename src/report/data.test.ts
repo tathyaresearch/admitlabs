@@ -3,7 +3,7 @@ import { describe, test } from 'node:test';
 import { regionsFor } from '../demand/regions.ts';
 import { hasDashes } from '../domain/copy.ts';
 import { istDate } from '../domain/dates.ts';
-import { buildReport, changeSince, compactLinks, REPORT_LIMITS, reportTexts, sinceWhen } from './data.ts';
+import { buildReport, changeSince, compactLinks, curlyQuotes, REPORT_LIMITS, reportTexts, sinceWhen } from './data.ts';
 import { sampleReportInput as input } from './testing.ts';
 
 // The report snapshot, from Eastgate University's sample Audit (see ./testing.ts).
@@ -76,7 +76,7 @@ describe('what goes into the monthly report', () => {
         [null, 'Newcomer College', false],
       ],
     );
-    assert.match(data.rivals?.verdict ?? '', /^You're ahead of Highfield University\. Next step: catching Silverline College/);
+    assert.match(data.rivals?.verdict ?? '', /^You’re ahead of Highfield University\. Next step: catching Silverline College/);
     // Newest first.
     assert.deepEqual(data.rivals?.moves[0], { rival: 'Silverline College', kind: 'New page', text: 'Added page 7.', date: '21 Sep 2026' });
   });
@@ -143,6 +143,21 @@ describe('what goes into the monthly report', () => {
     assert.equal(reportTexts(client).some((text) => text.includes('admitlabs.in')), false);
   });
 
+  test('curly quotes everywhere in the report, whatever the source wrote', async () => {
+    const base = await input();
+    const data = buildReport({
+      ...base,
+      lessons: [{ text: "Learn from Silverline College's top post", detail: '"A student\x27s first day" reached 48,200 views.', checkKey: null, rivalId: 'silverline' }],
+      moves: [{ rivalId: 'highfield', kind: 'fee_change', description: 'Replaced MBA fee amounts with "Contact us for fees".', detectedAt: base.moves[0]?.detectedAt ?? '' }],
+    });
+    assert.equal(data.things[1]?.title, 'Learn from Silverline College’s top post');
+    assert.equal(data.things[1]?.detail, '“A student’s first day” reached 48,200 views.');
+    assert.equal(data.rivals?.moves[0]?.text, 'Replaced MBA fee amounts with “Contact us for fees”.');
+    for (const tier of ['paid', 'client'] as const) {
+      for (const text of reportTexts(buildReport({ ...base, tier }))) assert.doesNotMatch(text, /["']/, text);
+    }
+  });
+
   test('no dashes anywhere in the report', async () => {
     for (const tier of ['paid', 'client'] as const) {
       for (const text of reportTexts(buildReport(await input({ tier })))) assert.equal(hasDashes(text), false, text);
@@ -159,6 +174,13 @@ describe('report words', () => {
     assert.equal(changeSince(-1, 'August'), 'Down 1 since August');
     assert.equal(changeSince(0, 'August'), 'No change since August');
     assert.equal(changeSince(null, 'August'), null);
+  });
+
+  test('quotes open after a space or bracket and close everywhere else; apostrophes curl', () => {
+    assert.equal(curlyQuotes('Answer "which college is good" in Assamese.'), 'Answer “which college is good” in Assamese.');
+    assert.equal(curlyQuotes('"Fees" (see "Programs").'), '“Fees” (see “Programs”).');
+    assert.equal(curlyQuotes("What's working, last year's batch, 'quoted'"), 'What’s working, last year’s batch, ‘quoted’');
+    assert.equal(curlyQuotes('No quotes here.'), 'No quotes here.');
   });
 
   test('sources: one link per site, and how many more pages there', () => {

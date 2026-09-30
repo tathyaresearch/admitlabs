@@ -367,7 +367,7 @@ export function buildReport(input: ReportInput): ReportData {
     notes.push({ label: 'Demand', text: `${place}${pulled}${from}${languages}.` });
   }
 
-  return {
+  return typeset({
     institution: {
       name: institution.name,
       place: `${INSTITUTION_TYPE_LABELS[institution.type]} in ${institution.city}, ${institution.state}`,
@@ -457,10 +457,30 @@ export function buildReport(input: ReportInput): ReportData {
     things: threeThings({ institutionType: institution.type, place, fixes, lessons: input.lessons, ideas: demand.ideas }),
     sources: { checkedOn: sameDay, checks: checkSources, notes },
     contact: input.tier === 'paid' ? { ...PAID_CONTACT } : null,
-  };
+  });
 }
 
-/** Every piece of text in the report, for the copy checks (no dashes). */
+/**
+ * Typographer's quotes: “double”, ‘single’ and apostrophes (’). Text comes from many places
+ * (the Audit, rival moves, student questions), so the report sets them all the same way.
+ */
+export function curlyQuotes(text: string): string {
+  return text
+    .replace(/(^|[\s([{‘])"/g, '$1“')
+    .replace(/"/g, '”')
+    .replace(/(^|[\s([{“])'/g, '$1‘')
+    .replace(/'/g, '’');
+}
+
+/** Curly quotes in every piece of text in the report. */
+function typeset<T>(value: T): T {
+  if (typeof value === 'string') return curlyQuotes(value) as T;
+  if (Array.isArray(value)) return value.map((entry) => typeset(entry)) as T;
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, typeset(entry)])) as T;
+  return value;
+}
+
+/** Every piece of text in the report, for the copy checks (no dashes, no straight quotes). */
 export function reportTexts(data: ReportData): string[] {
   const texts: string[] = [];
   const walk = (value: unknown): void => {

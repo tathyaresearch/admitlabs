@@ -187,7 +187,7 @@ export function SummaryPage({ data }: PageProps): ReactElement {
       h(
         View,
         { key: 'working', style: styles.section },
-        h(SectionTitle, { title: "What's working", lead: 'The three things doing the most for your score. Keep them up.' }),
+        h(SectionTitle, { title: 'What’s working', lead: 'The three things doing the most for your score. Keep them up.' }),
         ...data.working.map((item, index) =>
           h(
             Keep,
@@ -411,7 +411,7 @@ export function ProgramsPage({ data }: PageProps): ReactElement {
   return h(ContentPage, {
     data,
     children: [
-      h(PageHead, { key: 'head', eyebrow: 'By program', title: 'Program by program', lead: "Each program's score, and the one fix that would help it most." }),
+      h(PageHead, { key: 'head', eyebrow: 'By program', title: 'Program by program', lead: 'Each program’s score, and the one fix that would help it most.' }),
       cards
         ? h(View, { key: 'grid', style: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP } }, ...data.programs.map((program, index) => h(ProgramCard, { key: index, program })))
         : h(ProgramTable, { key: 'table', programs: data.programs }),
