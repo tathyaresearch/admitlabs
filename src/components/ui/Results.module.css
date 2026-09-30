@@ -1,0 +1,125 @@
+.result {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Strong sits in an inverted block. Swapping the current colours keeps it right inside inverted blocks too. */
+.invertedResult {
+  padding: 0.32em 0.55em;
+  border-radius: var(--radius-xs);
+  background: var(--text);
+  color: var(--surface);
+}
+
+.meter {
+  display: inline-flex;
+  gap: var(--meter-gap);
+}
+
+.segment {
+  display: block;
+  width: var(--meter-width);
+  height: var(--meter-height);
+  border-radius: 1px;
+  border: 1px solid currentColor;
+}
+
+.segment[data-state='on'] {
+  background: currentColor;
+}
+
+.segment[data-state='off'] {
+  background: transparent;
+  opacity: 0.55;
+}
+
+/* Missing: an empty outline with a dashed border. */
+.segment[data-state='missing'] {
+  background: transparent;
+  border-style: dashed;
+}
+
+.word {
+  letter-spacing: -0.005em;
+}
+
+.sm {
+  --meter-width: 0.5rem;
+  --meter-height: 0.3125rem;
+  --meter-gap: 2px;
+  font-size: var(--text-caption);
+}
+
+.md {
+  --meter-width: 0.75rem;
+  --meter-height: 0.4375rem;
+  --meter-gap: 3px;
+  font-size: var(--text-small);
+}
+
+.lg {
+  --meter-width: 1.125rem;
+  --meter-height: 0.625rem;
+  --meter-gap: 4px;
+  font-size: var(--text-body);
+}
+
+.lg .segment {
+  border-width: 1.5px;
+}
+
+.scoreLabel {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3em 0.6em;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.scoreLabelStrong {
+  border-color: transparent;
+  background: var(--text);
+  color: var(--surface);
+}
+
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.delta-md {
+  font-size: var(--text-small);
+}
+
+.delta-sm {
+  font-size: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.difficulty {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45em;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+.difficultyLabel {
+  font-size: var(--text-micro);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}

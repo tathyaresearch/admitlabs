@@ -1,0 +1,32 @@
+.page {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--space-8);
+  padding: var(--space-6) var(--gutter);
+}
+
+.body {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: var(--space-4);
+  max-width: 36rem;
+}
+
+.code {
+  font-size: var(--num-hero);
+  font-weight: var(--weight-heavy);
+  font-stretch: var(--width-condensed);
+  letter-spacing: -0.05em;
+  line-height: 0.85;
+}
+
+.title {
+  font-size: var(--text-h1);
+  line-height: var(--leading-tight);
+}
+
+.text {
+  color: var(--text-muted);
+}

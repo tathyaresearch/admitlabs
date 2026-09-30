@@ -1,0 +1,25 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+*.tsbuildinfo
+
+# env files with local keys (never commit)
+.env*.local
+
+# supabase local state and Drishti's local JWT signing key
+supabase/.branches
+supabase/.temp
+supabase/.env
+supabase/signing_keys.json
+
+# logs
+npm-debug.log*
+
+# os
+.DS_Store
+Thumbs.db

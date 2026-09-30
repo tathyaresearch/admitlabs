@@ -1,0 +1,47 @@
+.group {
+  display: inline-flex;
+  width: fit-content;
+  justify-self: start;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--field);
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.segment {
+  flex: none;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.segment:hover {
+  color: var(--text);
+}
+
+.segment[aria-checked='true'] {
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+
+.md .segment {
+  min-height: 2.375rem;
+  padding: 0 var(--space-4);
+  font-size: var(--text-small);
+}
+
+.sm .segment {
+  min-height: 2rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-caption);
+}

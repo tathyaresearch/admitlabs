@@ -1,0 +1,64 @@
+.locked {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* The placeholder and the overlay share one grid cell, so the area grows to fit whichever is taller. */
+.area {
+  display: grid;
+  min-height: 14rem;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.placeholder,
+.overlay {
+  grid-area: 1 / 1;
+}
+
+.placeholder {
+  filter: blur(7px);
+  opacity: 0.7;
+  user-select: none;
+  pointer-events: none;
+}
+
+.overlay {
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.card {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  max-width: 22rem;
+  padding: var(--space-6);
+  text-align: center;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+}
+
+.lock {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-1);
+}
+
+.title {
+  font-weight: var(--weight-bold);
+  font-size: var(--text-h4);
+  letter-spacing: -0.01em;
+}
+
+.description {
+  font-size: var(--text-small);
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}

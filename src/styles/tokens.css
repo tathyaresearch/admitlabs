@@ -1,0 +1,272 @@
+/*
+  Drishti design tokens. AdmitLabs brand, strictly monochrome.
+  Black #0A0A0C, Graphite #1E1F23, Ivory #F2E8D6, Slate #8A8D94, and greys between them.
+  No accent colour. No gradients. No glow. Contrast comes from size, weight, width and
+  black and ivory surface flips.
+
+  How theming works:
+  - Two palettes (--dk-* and --lt-*) are defined once.
+  - A theme maps the semantic tokens (--surface, --text, ...) to one palette and the
+    inverse tokens (--inv-*) to the other.
+  - data-theme="light" or "dark" on any element sets the theme for everything inside it.
+    With no data-theme on <html>, the device setting decides.
+  - .invert (in base.css) flips a block to the other palette, whatever the theme is.
+
+  Every text pairing below is 4.5:1 or better, and control borders are 3:1 or better
+  (checked in src/domain/format.test.ts and on the design system page).
+*/
+
+:root {
+  /* Brand */
+  --black: #0a0a0c;
+  --graphite: #1e1f23;
+  --ivory: #f2e8d6;
+  --slate: #8a8d94;
+
+  /* Greys between the brand colours: black, graphite, slate, ivory. */
+  --grey-975: #141417;
+  --grey-950: #1e1f23; /* graphite */
+  --grey-930: #242529;
+  --grey-925: #26272b;
+  --grey-900: #303237;
+  --grey-850: #3f4146;
+  --grey-800: #4d4f55;
+  --grey-700: #5e6066; /* small text on ivory, 5.17:1 */
+  --grey-600: #74777d; /* control borders, 3:1 or more on every surface */
+  --grey-500: #8a8d94; /* slate */
+  --grey-400: #a4a4a5;
+  --grey-300: #bebab5;
+  --grey-200: #d8d1c5;
+  --grey-150: #e5dcce;
+  --grey-100: #ece3d2;
+
+  /* Dark palette: black surface. */
+  --dk-scheme: dark;
+  --dk-surface: var(--black);
+  --dk-surface-raised: var(--graphite);
+  --dk-surface-sunken: var(--grey-975);
+  --dk-surface-hover: var(--grey-930);
+  --dk-surface-inverse: var(--ivory);
+  --dk-surface-inverse-hover: var(--grey-150);
+  --dk-text: var(--ivory);
+  --dk-text-muted: var(--slate);
+  --dk-text-inverse: var(--black);
+  --dk-line: var(--grey-925);
+  --dk-line-raised: var(--grey-900);
+  --dk-line-strong: var(--grey-600);
+  --dk-focus: var(--ivory);
+  --dk-field: var(--grey-975);
+  --dk-chart-grid: var(--grey-900);
+  --dk-chart-track: var(--grey-850);
+
+  /* Light palette: ivory surface. */
+  --lt-scheme: light;
+  --lt-surface: var(--ivory);
+  --lt-surface-raised: var(--ivory);
+  --lt-surface-sunken: var(--grey-100);
+  --lt-surface-hover: var(--grey-150);
+  --lt-surface-inverse: var(--black);
+  --lt-surface-inverse-hover: var(--graphite);
+  --lt-text: var(--black);
+  --lt-text-muted: var(--grey-700);
+  --lt-text-inverse: var(--ivory);
+  --lt-line: var(--grey-200);
+  --lt-line-raised: var(--grey-200);
+  --lt-line-strong: var(--grey-600);
+  --lt-focus: var(--black);
+  --lt-field: var(--ivory);
+  --lt-chart-grid: var(--grey-200);
+  --lt-chart-track: var(--grey-150);
+
+  /* Type: Bricolage Grotesque only. Hierarchy from size, weight and width. */
+  --font-sans: var(--font-bricolage), sans-serif;
+
+  --text-display: clamp(2.75rem, 1.5rem + 4.8vw, 4.75rem);
+  --text-h1: clamp(2rem, 1.35rem + 2.4vw, 3rem);
+  --text-h2: clamp(1.5rem, 1.2rem + 1.1vw, 2rem);
+  --text-h3: 1.25rem;
+  --text-h4: 1.0625rem;
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-caption: 0.8125rem;
+  --text-micro: 0.75rem;
+  --num-hero: clamp(4.75rem, 3rem + 7.5vw, 8.75rem);
+  --num-large: clamp(2.5rem, 1.9rem + 2.2vw, 3.5rem);
+  --num-medium: 1.75rem;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-heavy: 800;
+
+  --width-condensed: 75%;
+  --width-narrow: 85%;
+  --width-normal: 100%;
+
+  --tracking-tight: -0.035em;
+  --tracking-snug: -0.02em;
+  --tracking-body: -0.005em;
+  --tracking-wide: 0.08em;
+
+  --leading-tight: 1.04;
+  --leading-snug: 1.15;
+  --leading-body: 1.55;
+
+  /* Space: 4px base */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-full: 999px;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 120ms;
+  --duration: 200ms;
+  --duration-slow: 360ms;
+
+  --page-max: 1200px;
+  --gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
+  --sidebar-width: 15.5rem;
+  --topbar-height: 4rem;
+  --bottombar-height: 4.25rem;
+  --touch-target: 2.75rem;
+
+  --z-sticky: 10;
+  --z-nav: 20;
+  --z-overlay: 50;
+}
+
+/* Dark theme: the default. */
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+  --surface: var(--dk-surface);
+  --surface-raised: var(--dk-surface-raised);
+  --surface-sunken: var(--dk-surface-sunken);
+  --surface-hover: var(--dk-surface-hover);
+  --surface-inverse: var(--dk-surface-inverse);
+  --surface-inverse-hover: var(--dk-surface-inverse-hover);
+  --text: var(--dk-text);
+  --text-muted: var(--dk-text-muted);
+  --text-inverse: var(--dk-text-inverse);
+  --line: var(--dk-line);
+  --line-raised: var(--dk-line-raised);
+  --line-strong: var(--dk-line-strong);
+  --focus: var(--dk-focus);
+  --field: var(--dk-field);
+  --chart-grid: var(--dk-chart-grid);
+  --chart-track: var(--dk-chart-track);
+
+  --inv-scheme: var(--lt-scheme);
+  --inv-surface: var(--lt-surface);
+  --inv-surface-raised: var(--lt-surface-raised);
+  --inv-surface-sunken: var(--lt-surface-sunken);
+  --inv-surface-hover: var(--lt-surface-hover);
+  --inv-surface-inverse: var(--lt-surface-inverse);
+  --inv-surface-inverse-hover: var(--lt-surface-inverse-hover);
+  --inv-text: var(--lt-text);
+  --inv-text-muted: var(--lt-text-muted);
+  --inv-text-inverse: var(--lt-text-inverse);
+  --inv-line: var(--lt-line);
+  --inv-line-raised: var(--lt-line-raised);
+  --inv-line-strong: var(--lt-line-strong);
+  --inv-focus: var(--lt-focus);
+  --inv-field: var(--lt-field);
+  --inv-chart-grid: var(--lt-chart-grid);
+  --inv-chart-track: var(--lt-chart-track);
+}
+
+/* Light theme. Keep in sync with the block inside the media query below. */
+[data-theme='light'] {
+  color-scheme: light;
+  --surface: var(--lt-surface);
+  --surface-raised: var(--lt-surface-raised);
+  --surface-sunken: var(--lt-surface-sunken);
+  --surface-hover: var(--lt-surface-hover);
+  --surface-inverse: var(--lt-surface-inverse);
+  --surface-inverse-hover: var(--lt-surface-inverse-hover);
+  --text: var(--lt-text);
+  --text-muted: var(--lt-text-muted);
+  --text-inverse: var(--lt-text-inverse);
+  --line: var(--lt-line);
+  --line-raised: var(--lt-line-raised);
+  --line-strong: var(--lt-line-strong);
+  --focus: var(--lt-focus);
+  --field: var(--lt-field);
+  --chart-grid: var(--lt-chart-grid);
+  --chart-track: var(--lt-chart-track);
+
+  --inv-scheme: var(--dk-scheme);
+  --inv-surface: var(--dk-surface);
+  --inv-surface-raised: var(--dk-surface-raised);
+  --inv-surface-sunken: var(--dk-surface-sunken);
+  --inv-surface-hover: var(--dk-surface-hover);
+  --inv-surface-inverse: var(--dk-surface-inverse);
+  --inv-surface-inverse-hover: var(--dk-surface-inverse-hover);
+  --inv-text: var(--dk-text);
+  --inv-text-muted: var(--dk-text-muted);
+  --inv-text-inverse: var(--dk-text-inverse);
+  --inv-line: var(--dk-line);
+  --inv-line-raised: var(--dk-line-raised);
+  --inv-line-strong: var(--dk-line-strong);
+  --inv-focus: var(--dk-focus);
+  --inv-field: var(--dk-field);
+  --inv-chart-grid: var(--dk-chart-grid);
+  --inv-chart-track: var(--dk-chart-track);
+}
+
+/* No theme saved: follow the device. Same mapping as [data-theme='light']. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --surface: var(--lt-surface);
+    --surface-raised: var(--lt-surface-raised);
+    --surface-sunken: var(--lt-surface-sunken);
+    --surface-hover: var(--lt-surface-hover);
+    --surface-inverse: var(--lt-surface-inverse);
+    --surface-inverse-hover: var(--lt-surface-inverse-hover);
+    --text: var(--lt-text);
+    --text-muted: var(--lt-text-muted);
+    --text-inverse: var(--lt-text-inverse);
+    --line: var(--lt-line);
+    --line-raised: var(--lt-line-raised);
+    --line-strong: var(--lt-line-strong);
+    --focus: var(--lt-focus);
+    --field: var(--lt-field);
+    --chart-grid: var(--lt-chart-grid);
+    --chart-track: var(--lt-chart-track);
+
+    --inv-scheme: var(--dk-scheme);
+    --inv-surface: var(--dk-surface);
+    --inv-surface-raised: var(--dk-surface-raised);
+    --inv-surface-sunken: var(--dk-surface-sunken);
+    --inv-surface-hover: var(--dk-surface-hover);
+    --inv-surface-inverse: var(--dk-surface-inverse);
+    --inv-surface-inverse-hover: var(--dk-surface-inverse-hover);
+    --inv-text: var(--dk-text);
+    --inv-text-muted: var(--dk-text-muted);
+    --inv-text-inverse: var(--dk-text-inverse);
+    --inv-line: var(--dk-line);
+    --inv-line-raised: var(--dk-line-raised);
+    --inv-line-strong: var(--dk-line-strong);
+    --inv-focus: var(--dk-focus);
+    --inv-field: var(--dk-field);
+    --inv-chart-grid: var(--dk-chart-grid);
+    --inv-chart-track: var(--dk-chart-track);
+  }
+}

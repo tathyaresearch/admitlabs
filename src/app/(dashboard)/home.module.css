@@ -1,0 +1,123 @@
+.page {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.page > header {
+  margin-bottom: 0;
+}
+
+.site {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+
+.site:hover {
+  color: var(--text);
+}
+
+.features {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .features {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.feature {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--space-3);
+  color: var(--text);
+}
+
+.featureTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  color: var(--text-muted);
+}
+
+.featureQuestion {
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 1.875rem);
+  line-height: 1.08;
+  margin-top: var(--space-4);
+  text-wrap: pretty;
+}
+
+.featureText {
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  margin-bottom: var(--space-2);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .split {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.cardTitle {
+  font-size: var(--text-h3);
+  letter-spacing: var(--tracking-snug);
+}
+
+.count {
+  font-size: var(--num-medium);
+  font-weight: var(--weight-heavy);
+  font-stretch: var(--width-narrow);
+  line-height: 1;
+}
+
+.programs {
+  display: grid;
+}
+
+.program {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+  font-weight: var(--weight-semibold);
+}
+
+.program:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.note {
+  margin-top: var(--space-4);
+  font-size: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.cardFoot {
+  margin-top: var(--space-5);
+}

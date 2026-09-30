@@ -1,0 +1,203 @@
+.page {
+  display: grid;
+  gap: var(--space-10);
+}
+
+.page > header {
+  margin-bottom: 0;
+}
+
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cardTitle {
+  font-size: var(--text-h3);
+  letter-spacing: var(--tracking-snug);
+  margin-bottom: var(--space-5);
+}
+
+.offer {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+}
+
+.offerName {
+  font-size: var(--text-micro);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.offerPrice {
+  font-size: var(--num-large);
+  font-weight: var(--weight-heavy);
+  font-stretch: var(--width-narrow);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-top: var(--space-2);
+}
+
+.offerLength {
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+
+.offerPoints {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-5) 0;
+  font-size: var(--text-small);
+}
+
+.offerPoints li,
+.unlocks li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.offerPoints svg,
+.unlocks svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+.offerNote {
+  font-size: var(--text-caption);
+  color: var(--text-muted);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.unlocks {
+  display: grid;
+  gap: var(--space-3);
+  font-size: var(--text-small);
+}
+
+.unlocks li > span {
+  display: grid;
+}
+
+.unlockGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--space-3);
+}
+
+.unlockCard {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line-raised);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.unlockGroup {
+  font-size: var(--text-micro);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.unlockLabel {
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.01em;
+}
+
+.unlockValue {
+  color: var(--text-muted);
+  font-size: var(--text-small);
+}
+
+.tableCard {
+  overflow: hidden;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.compare {
+  width: 100%;
+  min-width: 38rem;
+  font-size: var(--text-small);
+}
+
+.compare th,
+.compare td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.compare thead th {
+  vertical-align: bottom;
+  border-bottom-color: var(--line-strong);
+  font-weight: var(--weight-bold);
+}
+
+.compare tbody th {
+  font-weight: var(--weight-semibold);
+  width: 34%;
+}
+
+.compare td[data-current='true'] {
+  background: var(--surface-sunken);
+  font-weight: var(--weight-semibold);
+}
+
+.current {
+  border-bottom-color: transparent !important;
+}
+
+.columnName {
+  display: block;
+  font-size: var(--text-body);
+}
+
+.yours {
+  display: block;
+  font-size: var(--text-micro);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.groupRow th {
+  padding-top: var(--space-5);
+  font-size: var(--text-micro);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.no {
+  color: var(--text-muted);
+}
+
+.fine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  font-size: var(--text-caption);
+  color: var(--text-muted);
+}

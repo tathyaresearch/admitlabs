@@ -1,0 +1,176 @@
+/* Base styles: a small reset, type defaults and a few shared utilities. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--topbar-height) + var(--space-4));
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--text);
+  background: var(--surface);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+[data-theme] {
+  color: var(--text);
+}
+
+/*
+  An inverted block: ivory on black in the dark theme, black on ivory in the light theme.
+  Everything inside flips too (muted text, lines, fields), so components just work.
+*/
+.invert {
+  color-scheme: var(--inv-scheme);
+  --surface: var(--inv-surface);
+  --surface-raised: var(--inv-surface-raised);
+  --surface-sunken: var(--inv-surface-sunken);
+  --surface-hover: var(--inv-surface-hover);
+  --surface-inverse: var(--inv-surface-inverse);
+  --surface-inverse-hover: var(--inv-surface-inverse-hover);
+  --text: var(--inv-text);
+  --text-muted: var(--inv-text-muted);
+  --text-inverse: var(--inv-text-inverse);
+  --line: var(--inv-line);
+  --line-raised: var(--inv-line-raised);
+  --line-strong: var(--inv-line-strong);
+  --focus: var(--inv-focus);
+  --field: var(--inv-field);
+  --chart-grid: var(--inv-chart-grid);
+  --chart-track: var(--inv-chart-track);
+  background: var(--surface);
+  color: var(--text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
+  text-wrap: balance;
+}
+
+p,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: var(--space-3);
+  z-index: 100;
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font-weight: var(--weight-bold);
+  text-decoration: none;
+  border-radius: var(--radius-xs);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
