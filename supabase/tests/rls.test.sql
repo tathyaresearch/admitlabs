@@ -104,7 +104,11 @@ select results_eq(
   $$values ('20000000-0000-4000-8000-00000000000a'::text), ('20000000-0000-4000-8000-00000000000c'::text)$$,
   'Owner A sees programs of their institution and their rival only'
 );
-select is_empty($$select 1 from public.rivals$$, 'Rival links stay closed to institution users until Phase 3');
+select results_eq(
+  $$select institution_id::text from public.rivals$$,
+  $$values ('20000000-0000-4000-8000-00000000000a'::text)$$,
+  'Owner A sees its own rival link only, never the link of an institution tracking A'
+);
 select is_empty($$select 1 from public.notes$$, 'Owner A cannot see team notes, even notes about A');
 select is_empty($$select 1 from public.signals$$, 'Raw signals are team only in Phase 1');
 select isnt_empty(

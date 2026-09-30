@@ -23,7 +23,8 @@
     "db:test": "supabase test db",
     "env:local": "node scripts/env-local.ts",
     "audit": "node --env-file=.env.local scripts/audit.ts",
-    "tier": "node --env-file=.env.local scripts/tier.ts"
+    "tier": "node --env-file=.env.local scripts/tier.ts",
+    "rivals": "node --env-file=.env.local scripts/rivals.ts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

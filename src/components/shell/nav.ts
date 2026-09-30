@@ -35,7 +35,10 @@ export const INSTITUTION_NAV: readonly NavSection[] = [
 export const TEAM_NAV: readonly NavSection[] = [
   {
     label: 'AdmitLabs team',
-    items: [{ href: '/team', label: 'Institutions', icon: 'institution' }],
+    items: [
+      { href: '/team', label: 'Institutions', icon: 'institution' },
+      { href: '/team/ads', label: 'Rival ads', icon: 'rivals' },
+    ],
   },
 ];
 
@@ -43,6 +46,7 @@ export const TEAM_NAV: readonly NavSection[] = [
 export const MOBILE_PRIMARY: readonly string[] = ['/', '/audit', '/rivals', '/demand'];
 
 export function isActive(pathname: string, href: string): boolean {
-  if (href === '/') return pathname === '/';
+  // Home pages match exactly, so a page under them (like /team/ads) lights up its own item only.
+  if (href === '/' || href === '/team') return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }

@@ -1,6 +1,7 @@
 import { overviewView } from '@/audit/view';
 import { FixCards } from '@/components/audit/Lists';
 import { SummaryBand } from '@/components/audit/SummaryBand';
+import { RivalSnapshot } from '@/components/rivals/RivalSnapshot';
 import { ButtonLink } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Data';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
@@ -12,19 +13,19 @@ import { planReminder } from '@/domain/tiers';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { loadAuditPage, nextAuditText } from '@/lib/audit/load';
+import { loadRivalSnapshot } from '@/lib/rivals/load';
 import styles from './home.module.css';
 
 export const metadata = { title: 'Home' };
 
 const LATER: ReadonlyArray<{ href: string; name: string; question: string; text: string; phase: number; icon: IconName }> = [
-  { href: '/rivals', name: 'Rivals', question: "Who's ahead of us?", text: 'Your rivals, their score, best content and moves.', phase: 3, icon: 'rivals' },
   { href: '/demand', name: 'Demand', question: 'What do students want?', text: 'What students search and ask, grouped, never personal.', phase: 4, icon: 'demand' },
 ];
 
 export default async function HomePage() {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
-  const data = await loadAuditPage(viewer);
+  const [data, rivals] = await Promise.all([loadAuditPage(viewer), loadRivalSnapshot(viewer)]);
   const reminder = planReminder(viewer.plan, new Date());
   const view = data.audit ? overviewView(data.audit, { institutionType: institution.type, programNames: data.names }) : null;
   const topFixes = view ? view.fixes.slice(0, limitFor('audit_what_to_fix', 'free') ?? 3) : [];
@@ -106,7 +107,22 @@ export default async function HomePage() {
         </Section>
       ) : null}
 
-      <Section id="next" title="Coming to your dashboard" description="Rivals, Demand and your 3 things to do each month.">
+      <Section
+        id="rivals"
+        title="Your rivals"
+        description="Where you stand against the rivals you track."
+        actions={
+          rivals.rivals.length ? (
+            <ButtonLink href="/rivals" size="sm" variant="quiet" iconAfter="arrowRight">
+              Open Rivals
+            </ButtonLink>
+          ) : undefined
+        }
+      >
+        <RivalSnapshot snapshot={rivals} youName={institution.name} canChoose={role === 'owner'} />
+      </Section>
+
+      <Section id="next" title="Coming to your dashboard" description="Demand: what students search and ask, grouped, never personal.">
         <div className={styles.later}>
           {LATER.map((feature) => (
             <CardLink key={feature.href} href={feature.href}>

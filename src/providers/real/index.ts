@@ -29,4 +29,7 @@ export const realAnalysis: AnalysisProvider = {
   async fixAdvice() {
     throw new ProviderNotConnectedError('analysis');
   },
+  async rivalActions() {
+    throw new ProviderNotConnectedError('analysis');
+  },
 };

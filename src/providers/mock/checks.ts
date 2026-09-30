@@ -1,9 +1,8 @@
 // Mock providers for the Audit checks. Each returns raw facts with a source link and the
 // time they were checked. Source links use .example hosts only.
 
-import { istDate, monthKey } from '../../domain/dates.ts';
+import { monthKey } from '../../domain/dates.ts';
 import { scoringFamily } from '../../domain/types.ts';
-import { SAMPLE_CONTENT, SAMPLE_MOVES } from '../../sample/rivals.ts';
 import { PROVIDER_TARGETS } from '../targets.ts';
 import { makeSignal, type AnySignal, type InstitutionRef, type Provider, type Target } from '../types.ts';
 import {
@@ -21,15 +20,14 @@ import {
   pageSpeedFacts,
   placementProofFacts,
   programPageFacts,
-  reviewCountFor,
-  reviewRatingFacts,
+  reviewCountOverTime,
+  reviewRatingOverTime,
   studentsInContentFacts,
   youtubeFacts,
 } from './facts.ts';
 import { rngFor } from './random.ts';
+import { mockMoves, mockPosts } from './rival-activity.ts';
 import { exampleUrl, intendedResult, sitePage, slugify } from './shared.ts';
-
-const DAY_MS = 86_400_000;
 
 export const mockSearch: Provider = {
   key: 'search',
@@ -56,13 +54,16 @@ export const mockPlaces: Provider = {
     const profileResult = intendedResult(institution, 'google_profile', null, asOf);
     const ratingResult = intendedResult(institution, 'review_rating', null, asOf);
     const exists = profileResult !== 'missing';
-    const reviewCount = exists ? reviewCountFor(profileResult, rngFor('reviews', institution.slug, month), scoringFamily(institution.type)) : 0;
+    const [year, monthNumber] = month.split('-').map(Number) as [number, number];
+    const monthsIn = (year - 2026) * 12 + (monthNumber - 1);
+    const reviewCount = exists ? reviewCountOverTime(profileResult, rngFor('reviews', institution.slug), scoringFamily(institution.type), monthsIn) : 0;
     const source = exists
       ? `https://maps.example/place/${institution.slug}`
       : `https://maps.example/search?q=${encodeURIComponent(`${institution.name} ${institution.city}`)}`;
+    const rating = reviewRatingOverTime(ratingResult, rngFor('rating', institution.slug), rngFor('replies', institution.slug, month), reviewCount, monthsIn);
     return [
       makeSignal('places', 'google_profile', target, googleProfileFacts(reviewCount, exists), source, asOf),
-      makeSignal('places', 'review_rating', target, reviewRatingFacts(ratingResult, rngFor('rating', institution.slug, month), reviewCount), `${source}/reviews`, asOf),
+      makeSignal('places', 'review_rating', target, rating, `${source}/reviews`, asOf),
     ];
   },
 };
@@ -130,14 +131,11 @@ function institutionSiteSignals(target: Extract<Target, { kind: 'institution' }>
     makeSignal('site_crawler', 'approvals', target, { source: 'site', ...shown }, sitePage(institution, '/about/approvals'), asOf),
   ];
 
-  // Moves on the site in the 31 days up to this check (rival moves are checked weekly).
-  const windowStart = asOf.getTime() - 31 * DAY_MS;
-  for (const move of SAMPLE_MOVES) {
-    if (move.slug !== institution.slug) continue;
-    const detected = istDate(move.detectedAt, 9);
-    if (detected.getTime() > asOf.getTime() || detected.getTime() <= windowStart) continue;
+  // Moves on the site in the weeks up to this check (rival moves are checked weekly).
+  for (const move of mockMoves(institution, asOf)) {
+    const detected = new Date(move.detectedAt);
     signals.push(
-      makeSignal('site_crawler', 'rival_move', target, { kind: move.kind, description: move.description, detectedAt: detected.toISOString() }, sitePage(institution, move.path), detected),
+      makeSignal('site_crawler', 'rival_move', target, { kind: move.kind, description: move.description, detectedAt: move.detectedAt }, sitePage(institution, move.path), detected),
     );
   }
   return signals;
@@ -154,19 +152,12 @@ export const mockSiteCrawler: Provider = {
   },
 };
 
-/** A rival's best content for the month of `asOf` on one platform. */
+/** A rival's posts on one platform in the weeks before `asOf`, for its best content of the month. */
 export function contentFor(platform: 'instagram' | 'youtube', target: Target, asOf: Date): AnySignal[] {
   if (target.kind !== 'institution') return [];
-  const { institution } = target;
-  const month = monthKey(asOf);
-  return SAMPLE_CONTENT.filter((item) => item.slug === institution.slug && item.platform === platform && item.month === month).map((item) => {
-    const url =
-      platform === 'instagram'
-        ? `https://instagram.example/p/${slugify(`${item.postedAt} ${item.title}`).slice(0, 48)}`
-        : `https://youtube.example/watch?v=${slugify(`${institution.slug} ${item.title}`).slice(0, 32)}`;
-    const postedAt = istDate(item.postedAt, 18).toISOString();
-    return makeSignal(platform, 'rival_content', target, { platform, url, title: item.title, postedAt, metrics: item.metrics }, url, asOf);
-  });
+  return mockPosts(target.institution, platform, asOf).map((post) =>
+    makeSignal(platform, 'rival_content', target, { platform, url: post.url, title: post.title, postedAt: post.postedAt, metrics: post.metrics }, post.url, asOf),
+  );
 }
 
 export function instagramInstitutionSignals(target: Target, asOf: Date): AnySignal[] {

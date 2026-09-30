@@ -13,6 +13,7 @@ import { istDate } from '../src/domain/dates.ts';
 import { formatDate } from '../src/domain/format.ts';
 import { scoreLabel } from '../src/domain/scores.ts';
 import { AUDIT_TRIGGERS, type AuditTrigger } from '../src/domain/types.ts';
+import { writeRivalActions } from '../src/rivals/jobs.ts';
 import { institutionBySlug, serviceClient } from './lib/db.ts';
 import { fail } from './lib/local.ts';
 
@@ -44,6 +45,8 @@ async function main(): Promise<void> {
       }
       const result = await runAudit(db, { institutionId: item.institutionId, asOf, trigger: 'scheduled' });
       console.log(`  ${item.name}: ${KIND_WORDS[result.kind]} Audit saved, score ${result.overall} (${scoreLabel(result.overall)})`);
+      // The monthly Rivals 3 things to do follow the institution's own Audit (Paid and Client).
+      if ((await writeRivalActions(db, item.institutionId, asOf)) > 0) console.log(`    Rivals 3 things to do updated`);
     }
     console.log('');
     return;

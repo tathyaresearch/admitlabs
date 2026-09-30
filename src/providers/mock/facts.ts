@@ -52,32 +52,51 @@ export function instagramFacts(result: CheckResult, rng: Rng, handle: string | n
   return { handle, exists: true, postsPerWeek: rng.between(0.2, 0.8), reelShare: rng.between(0, 0.4, 2), weeksChecked };
 }
 
-/** Review count for a Google profile result. Shared by google_profile and review_rating. */
-export function reviewCountFor(result: CheckResult, rng: Rng, family: ScoringFamily): number {
-  const t = T.google_profile[family];
-  if (result === 'strong') return rng.int(t.strongMinReviews, t.strongMinReviews * 3);
-  if (result === 'okay') return rng.int(t.okayMinReviews, t.strongMinReviews - 1);
-  if (result === 'weak') return rng.int(t.weakMinReviews, t.okayMinReviews - 1);
-  return 0;
-}
-
 export function googleProfileFacts(reviewCount: number, exists: boolean): GoogleProfileValue {
   return { exists, reviewCount: exists ? reviewCount : 0 };
 }
 
-export function reviewRatingFacts(result: CheckResult, rng: Rng, reviewCount: number): ReviewRatingValue {
+// Reviews build up over time. `steady` is seeded by the institution alone, so each one keeps
+// its place in the band for its result and moves a little each month: a few new reviews, and a
+// rating that drifts slowly. When the result changes band, the numbers move with it.
+
+/** Review count for a Google profile result, `monthsIn` months after January 2026. */
+export function reviewCountOverTime(result: CheckResult, steady: Rng, family: ScoringFamily, monthsIn: number): number {
+  const t = T.google_profile[family];
+  const band: Readonly<Record<CheckResult, readonly [number, number]>> = {
+    strong: [t.strongMinReviews, t.strongMinReviews * 3],
+    okay: [t.okayMinReviews, t.strongMinReviews - 1],
+    weak: [t.weakMinReviews, t.okayMinReviews - 1],
+    missing: [0, 0],
+  };
+  const [min, max] = band[result];
+  if (max === 0) return 0;
+  const start = min + Math.floor(steady.next() * (max - min) * 0.5);
+  const perMonth = steady.int(1, 4);
+  return Math.min(max, start + perMonth * Math.max(0, monthsIn));
+}
+
+/** Rating and replies for a review result, drifting slowly from month to month. */
+export function reviewRatingOverTime(result: CheckResult, steady: Rng, monthly: Rng, reviewCount: number, monthsIn: number): ReviewRatingValue {
   const t = T.review_rating;
   if (result === 'missing' || reviewCount === 0) return { reviewCount: 0, rating: null, replyRate: 0 };
+  const base = steady.next();
+  const slope = steady.pick([0.05, 0.03, 0, -0.03]);
+  const lowAndUnanswered = !steady.chance(0.6);
+  const rating = (min: number, max: number) => {
+    const value = Math.min(max, Math.max(min, min + base * (max - min) + slope * Math.max(0, monthsIn)));
+    return Math.round(value * 10) / 10;
+  };
   if (result === 'strong') {
-    return { reviewCount, rating: rng.between(t.strongMinRating, 4.8), replyRate: rng.between(t.strongMinReplyRate + 0.05, 0.92, 2) };
+    return { reviewCount, rating: rating(t.strongMinRating, 4.8), replyRate: monthly.between(t.strongMinReplyRate + 0.05, 0.92, 2) };
   }
   if (result === 'okay') {
     // Either 4.0 to 4.2, or 4.3 and above with few replies.
-    return rng.chance(0.6)
-      ? { reviewCount, rating: rng.between(t.okayMinRating, t.strongMinRating - 0.1), replyRate: rng.between(0.1, 0.8, 2) }
-      : { reviewCount, rating: rng.between(t.strongMinRating, 4.7), replyRate: rng.between(0.05, t.strongMinReplyRate - 0.1, 2) };
+    return lowAndUnanswered
+      ? { reviewCount, rating: rating(t.strongMinRating, 4.7), replyRate: monthly.between(0.05, t.strongMinReplyRate - 0.1, 2) }
+      : { reviewCount, rating: rating(t.okayMinRating, t.strongMinRating - 0.1), replyRate: monthly.between(0.1, 0.8, 2) };
   }
-  return { reviewCount, rating: rng.between(3.1, t.okayMinRating - 0.1), replyRate: rng.between(0, 0.3, 2) };
+  return { reviewCount, rating: rating(3.1, t.okayMinRating - 0.1), replyRate: monthly.between(0, 0.3, 2) };
 }
 
 export function youtubeFacts(result: CheckResult, rng: Rng, channelUrl: string | null): YoutubeValue {

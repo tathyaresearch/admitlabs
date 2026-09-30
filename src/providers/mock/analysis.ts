@@ -5,6 +5,7 @@ import { SAMPLE_CONTENT } from '../../sample/rivals.ts';
 import type { AnalysisProvider } from '../analysis.ts';
 import { writeFixAdvice } from './fix-advice.ts';
 import { rngFor } from './random.ts';
+import { writeRivalAction } from './rival-actions.ts';
 
 const GENERAL_REASONS = [
   'Real people and a clear outcome early on. The idea to take away is showing proof, not the post itself.',
@@ -33,5 +34,9 @@ export const mockAnalysis: AnalysisProvider = {
 
   async fixAdvice(input) {
     return writeFixAdvice(input);
+  },
+
+  async rivalActions({ institutionType, opportunities }) {
+    return opportunities.map((item) => writeRivalAction(item, institutionType));
   },
 };

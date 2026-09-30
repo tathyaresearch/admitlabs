@@ -13,6 +13,7 @@ import { istDate } from '../src/domain/dates.ts';
 import { formatDate } from '../src/domain/format.ts';
 import { effectiveTier, paidPlanEndsAt } from '../src/domain/tiers.ts';
 import { TIER_LABELS, TIERS, type Tier } from '../src/domain/types.ts';
+import { writeRivalActions } from '../src/rivals/jobs.ts';
 import { ADMIN_EMAIL } from '../src/sample/institutions.ts';
 import { institutionBySlug, serviceClient } from './lib/db.ts';
 import { fail } from './lib/local.ts';
@@ -56,5 +57,7 @@ console.log(`It counts as ${TIER_LABELS[now]} today.${now === 'free' && tier !==
 if (now !== 'free' && !values.from) {
   const result = await runAudit(db, { institutionId: institution.id, asOf: new Date(), trigger: 'scheduled', createdBy: admin });
   console.log(`First ${TIER_LABELS[now]} Audit saved: score ${result.overall}, ${result.programs} ${result.programs === 1 ? 'program' : 'programs'}.`);
+  const actions = await writeRivalActions(db, institution.id, new Date());
+  if (actions) console.log(`Rivals 3 things to do written for this month (${actions}).`);
 }
 console.log('');

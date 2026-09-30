@@ -6,6 +6,7 @@
 import type { ProviderMode } from '../config/providers.ts';
 import type { CheckFacts } from '../domain/facts.ts';
 import type { CheckKey, CheckResult, ContentPlatform, Difficulty, InstitutionType } from '../domain/types.ts';
+import type { Opportunity } from '../rivals/opportunities.ts';
 import type { RivalContentValue } from './signals.ts';
 
 export interface FixAdviceInput<K extends CheckKey = CheckKey> {
@@ -39,6 +40,18 @@ export interface ContentIdea {
   sourceUrl: string;
 }
 
+export interface RivalActionsInput {
+  institutionType: InstitutionType;
+  /** Already picked and ordered from the rival data (src/rivals/opportunities.ts). */
+  opportunities: readonly Opportunity[];
+}
+
+/** One of the Rivals "3 things to do": a short title and a line on why. */
+export interface RivalActionText {
+  text: string;
+  detail: string;
+}
+
 export interface AnalysisProvider {
   key: 'analysis';
   mode: ProviderMode;
@@ -48,4 +61,6 @@ export interface AnalysisProvider {
   contentIdeas(input: ContentIdeaInput): Promise<ContentIdea[]>;
   /** Why a check matters to a student, how to fix it, and how hard that is. Opportunity, never blame. */
   fixAdvice<K extends CheckKey>(input: FixAdviceInput<K>): Promise<FixAdvice>;
+  /** The Rivals 3 things to do, one per opportunity, in the same order. Learn, never copy. */
+  rivalActions(input: RivalActionsInput): Promise<RivalActionText[]>;
 }

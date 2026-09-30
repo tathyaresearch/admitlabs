@@ -70,6 +70,28 @@ npm run audit -- --institution riverbend-college --kind team
 - `--institution` runs one Audit now. An institution's own Audit follows its plan. `--kind team` or `--kind rival` runs a private team or rival Audit instead.
 - Paid gets one extra refresh each calendar month (the Refresh button on the Audit page). A second one is refused by the server and by the database.
 
+## Rivals
+
+Each institution tracks 3 to 5 rivals (spec section 8). Owners pick them at `/rivals/choose`: suggestions (same type, shared programs, same city first, then same state; never a team prospect), their current rivals, or one they add by hand (name, type, city, website, Instagram, and which of their own programs the rival also offers). A rival added by hand becomes an unclaimed institution record; if its website is already on record, that record is used as it is.
+
+- **Plan rules, enforced by the database** (`save_rivals`): Free picks once and keeps them. Paid changes once each calendar month, India time. Client changes any time. The first setup never counts as a change, and saving the same list again is not a change.
+- **Free** sees ahead or behind for each rival, in words, with no scores (`rival_standings`), and one "Paid shows the full comparison" card with counts. **Paid and Client** see where they stand, the 3 things to do, head to head by pillar (each rival opens to show where each side leads), moves, best content and ads, and each rival's own page with all 17 checks side by side.
+- **Rival scores** come only from Drishti's own monthly rival Audit, never from a rival's own account, even when the rival is on Drishti too.
+- **Rivals never know**: nothing tells an institution who tracks it, and it never sees rival Audits of itself. The database tests check this.
+
+Rival work runs on a schedule, with mock providers, through one script:
+
+```
+npm run rivals -- --due
+npm run rivals -- --due --date 2026-10-05 --dry-run
+npm run rivals -- --check --institution silverline-college
+npm run rivals -- --actions --institution eastgate-university
+```
+
+- `--due` runs everything due that day: a rival Audit for every tracked rival without one since the 1st of the month; the weekly check (moves and best content) for every rival not checked this week, with an alert to each Paid and Client institution tracking it for every new move; and the Rivals 3 things to do for every Paid and Client institution without this month's list.
+- `--check` runs one weekly check now. `--actions` rebuilds one institution's 3 things to do (they also follow each Paid or Client Audit).
+- Rival ads are entered by the team at `/team/ads`.
+
 ## Local addresses
 
 | What | Address |
@@ -95,22 +117,24 @@ npm run audit -- --institution riverbend-college --kind team
 | `npm run db:types` | Regenerates `src/lib/supabase/database.types.ts` |
 | `npm run audit -- ...` | Runs Audits by hand (see above) |
 | `npm run tier -- ...` | Switches a local institution's tier (see above) |
+| `npm run rivals -- ...` | Runs rival Audits, weekly checks and 3 things to do by hand (see above) |
 
 ## Layout
 
 ```
 supabase/        config, migrations (schema, row level security, owner actions), database tests, email template
-scripts/         env, seed, audit, tier, dash check (TypeScript run directly by Node)
+scripts/         env, seed, audit, tier, rivals, dash check (TypeScript run directly by Node)
 src/app/         routes: (product)/drishti, login, (dashboard), onboarding, team, share, design-system
-src/components/  ui, charts, audit screens, institution inputs and the app shell
+src/components/  ui, charts, audit and rivals screens, institution inputs and the app shell
 src/domain/      pure logic: the scoring engine (domain/scoring), checks, schedules, onboarding checks, dates, tiers
 src/config/      every adjustable value: scoring, plans, entitlements, schedules, providers, cities, programs
 src/providers/   the provider interface, mock providers, and real provider slots
 src/audit/       one Audit end to end (collect, score, save) and what the Audit screens show
+src/rivals/      comparisons, verdicts, change rules, the 3 things to do, and the rival jobs
 src/sample/      the fictional sample world
 ```
 
-`src/domain`, `src/config`, `src/providers`, `src/audit` and `src/sample` never import Next.js, so Node runs their tests directly.
+`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals` and `src/sample` never import Next.js, so Node runs their tests directly.
 
 ## How scores work
 

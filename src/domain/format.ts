@@ -76,6 +76,20 @@ export function plural(count: number, one: string, many: string): string {
   return `${formatCount(count)} ${count === 1 ? one : many}`;
 }
 
+/** "A", "A and B", "A, B and C". */
+export function joinNames(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+/** "1st", "2nd", "3rd", "4th", "11th", "22nd". */
+export function ordinal(value: number): string {
+  const tens = value % 100;
+  if (tens >= 11 && tens <= 13) return `${value}th`;
+  const suffix = { 1: 'st', 2: 'nd', 3: 'rd' }[value % 10] ?? 'th';
+  return `${value}${suffix}`;
+}
+
 /** "northbank-college.example/fees" from a full URL, for source lines. */
 export function hostAndPath(url: string): string {
   try {

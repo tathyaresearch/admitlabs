@@ -11,6 +11,12 @@ const MESSAGES: Readonly<Record<string, string>> = {
   no_programs: 'Add at least one program.',
   not_allowed: 'Only the owner of this account can do that.',
   refresh_used: "This month's extra refresh has been used.",
+  rival_count: 'Pick 3 to 5 rivals.',
+  rivals_locked: 'On Free, your rivals stay as you picked them. Paid can change them once a month.',
+  change_used: 'You have changed your rivals this month. You can change them again from the 1st.',
+  own_website: 'That website is your own.',
+  rival_details: 'One of the rivals you added needs another look. Check its name, city and website.',
+  rival_programs: 'Tick at least one program each added rival also offers.',
 };
 
 export function friendlyError(message: string | null | undefined, fallback = 'That did not work just now. Please try again.'): string {

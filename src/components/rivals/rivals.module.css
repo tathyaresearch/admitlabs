@@ -1,0 +1,853 @@
+/*
+  The Rivals screens, in the Audit page's style: where you stand in one band, the 3 things to
+  do, one head to head table (where each side leads opens inside it), and their activity in
+  three tabs. Space does the separating; lines are kept for rows only.
+*/
+
+/* Where you stand: the ladder of overall scores, you in an inverted row. */
+
+.standBlock {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.rankLine {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  line-height: 0.85;
+}
+
+.rankNumber {
+  font: var(--type-score);
+  letter-spacing: var(--tracking-score);
+}
+
+.rankSuffix {
+  font: var(--type-section);
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+  align-self: flex-start;
+  margin-top: 0.35em;
+  margin-left: calc(var(--space-3) * -1 + 6px);
+}
+
+.rankOf {
+  font: var(--type-lead);
+  color: var(--text-muted);
+}
+
+.ladder {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.ladderRow {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1.2fr) minmax(0, 1fr) 2.25rem 4.75rem;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 3.25rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.ladderYou {
+  border-radius: var(--radius-md);
+}
+
+.ladderRank {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ladderName {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  font: var(--type-strong);
+}
+
+.ladderNameText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ladderSub {
+  overflow: hidden;
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ladderTrack {
+  display: block;
+  height: 4px;
+  background: var(--chart-track);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ladderFill {
+  display: block;
+  height: 100%;
+  background: var(--text);
+}
+
+.ladderScore {
+  font: var(--type-score-small);
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ladderChange {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-align: right;
+}
+
+@media (max-width: 40rem) {
+  .ladderRow {
+    grid-template-columns: 1.5rem minmax(0, 1fr) 2.25rem;
+    gap: var(--space-1) var(--space-3);
+  }
+
+  .ladderTrack {
+    grid-column: 2 / 4;
+    grid-row: 2;
+  }
+
+  .ladderChange {
+    display: none;
+  }
+}
+
+/* Free: ahead or behind, in words. No numbers anywhere. */
+
+.standingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 3.25rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.standing {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.35em;
+  font: var(--type-caption-strong);
+  white-space: nowrap;
+}
+
+.standing[data-standing='unscored'],
+.standing[data-standing='level'] {
+  color: var(--text-muted);
+}
+
+/* 3 things to do: numbered cards, like "Fix these first". */
+
+.thingSource {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.thingDetail {
+  display: -webkit-box;
+  overflow: hidden;
+  font: var(--type-small);
+  color: var(--text-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* Head to head: one table. Each rival opens to show where each side leads. */
+
+.table {
+  display: grid;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-raised);
+  border-radius: var(--radius-lg);
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(4, 5.5rem) 1.25rem;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 3.75rem;
+  padding: var(--space-3) var(--space-5);
+}
+
+.tableHead {
+  min-height: 2.75rem;
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.tableHead > span:not(:first-child) {
+  text-align: center;
+}
+
+.tableYou {
+  margin: 0 var(--space-2);
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.rival {
+  border-top: 1px solid var(--line-raised);
+}
+
+.tableYou + .rival {
+  margin-top: var(--space-2);
+}
+
+.rival > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.rival > summary::-webkit-details-marker {
+  display: none;
+}
+
+.rival > summary:hover {
+  background: var(--surface-hover);
+}
+
+.rival:last-child > summary {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.who {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.whoName {
+  overflow: hidden;
+  font: var(--type-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.whoSub {
+  overflow: hidden;
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.cellLabel {
+  display: none;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.score {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.75rem;
+  padding: 0.3em 0.5em;
+  border-radius: var(--radius-sm);
+  font: var(--type-strong);
+  font-weight: var(--weight-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Where a rival leads you: the cell is an inverted block. */
+.score[data-lead='them'] {
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+
+.expandIcon {
+  color: var(--text-muted);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.rival[open] .expandIcon {
+  transform: rotate(180deg);
+}
+
+.leads {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-2) var(--space-5) var(--space-5);
+}
+
+@media (min-width: 48rem) {
+  .leads {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+}
+
+.leadList {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+}
+
+.leadTitle {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.leadItem {
+  display: grid;
+  gap: 1px;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line);
+}
+
+.leadName {
+  font: var(--type-strong);
+}
+
+.leadSub {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.leadNone {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.leadsFoot {
+  grid-column: 1 / -1;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.legendChip {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.75rem;
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-xs);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font: var(--type-caption-strong);
+}
+
+@media (max-width: 48rem) {
+  .tableHead {
+    display: none;
+  }
+
+  /* Name on the first line; the four scores under it, each with its label. */
+  .tableRow {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 1.25rem;
+    grid-template-areas:
+      'who who who who icon'
+      'overall discovered trusted chosen icon';
+    row-gap: var(--space-2);
+    padding: var(--space-4);
+  }
+
+  .tableRow > :nth-child(1) {
+    grid-area: who;
+  }
+
+  .tableRow > :nth-child(2) {
+    grid-area: overall;
+  }
+
+  .tableRow > :nth-child(3) {
+    grid-area: discovered;
+  }
+
+  .tableRow > :nth-child(4) {
+    grid-area: trusted;
+  }
+
+  .tableRow > :nth-child(5) {
+    grid-area: chosen;
+  }
+
+  .tableRow > :nth-child(6) {
+    grid-area: icon;
+  }
+
+  .tableYou {
+    margin: var(--space-2) var(--space-2) 0;
+  }
+
+  .cellLabel {
+    display: block;
+  }
+
+  .leads {
+    padding: var(--space-1) var(--space-4) var(--space-4);
+  }
+}
+
+/* Their activity, in three tabs. */
+
+.activityList {
+  display: grid;
+}
+
+.move {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+}
+
+.move + .move {
+  border-top: 1px solid var(--line);
+}
+
+.moveDate {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+}
+
+.moveBody {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.moveTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}
+
+.moveRival {
+  font: var(--type-strong);
+}
+
+.moveKind {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.moveText {
+  font: var(--type-small);
+}
+
+.sourceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.sourceLink:hover {
+  color: var(--text);
+}
+
+@media (max-width: 40rem) {
+  .move {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}
+
+.posts {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .posts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .posts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.post {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-raised);
+  border-radius: var(--radius-lg);
+}
+
+.postMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.postTitle {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+}
+
+.postNumbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font: var(--type-caption-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.postWhy {
+  display: grid;
+  gap: 2px;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.postWhyLabel {
+  font: var(--type-caption-strong);
+  color: var(--text);
+}
+
+.ad {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4) 0;
+}
+
+.ad + .ad {
+  border-top: 1px solid var(--line);
+}
+
+.adPromise {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+}
+
+.adMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.tabNote {
+  margin-bottom: var(--space-1);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* One rival's page: two facts under the verdict, and every check side by side. */
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  width: fit-content;
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-raised);
+}
+
+@media (min-width: 40rem) {
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.fact {
+  display: grid;
+  gap: 2px;
+}
+
+.factLabel {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.factValue {
+  display: grid;
+  gap: 2px;
+  font: var(--type-small);
+}
+
+.factSub {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* A row of its own (not the Audit's .row), so its five columns are never overridden. */
+.compareRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8.5rem 8.5rem 5.5rem 1rem;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  min-height: 3rem;
+  padding: var(--space-2) var(--space-3);
+  margin: 0 calc(var(--space-3) * -1);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.compareRow:hover {
+  background: var(--surface-hover);
+}
+
+.compareRow + .compareRow {
+  box-shadow: 0 -1px 0 var(--line);
+}
+
+.compareHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8.5rem 8.5rem 5.5rem 1rem;
+  gap: var(--space-2) var(--space-5);
+  padding-bottom: var(--space-1);
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.side {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+}
+
+.sideLabel {
+  display: none;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.leadWord {
+  font: var(--type-caption-strong);
+  white-space: nowrap;
+}
+
+.leadWord[data-lead='level'],
+.leadWord[data-lead='unknown'] {
+  color: var(--text-muted);
+  font-weight: var(--weight-regular);
+}
+
+@media (max-width: 48rem) {
+  .compareHead {
+    display: none;
+  }
+
+  .compareRow {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 1rem;
+    margin: 0;
+    padding: var(--space-3) 0;
+    grid-template-areas:
+      'name name chevron'
+      'them you chevron'
+      'lead lead chevron';
+    row-gap: var(--space-2);
+  }
+
+  .compareRow > :nth-child(1) {
+    grid-area: name;
+  }
+
+  .compareRow > :nth-child(2) {
+    grid-area: them;
+  }
+
+  .compareRow > :nth-child(3) {
+    grid-area: you;
+  }
+
+  .compareRow > :nth-child(4) {
+    grid-area: lead;
+  }
+
+  .compareRow > :nth-child(5) {
+    grid-area: chevron;
+  }
+
+  .sideLabel {
+    display: block;
+  }
+}
+
+/* Picking rivals. */
+
+.chooser {
+  display: grid;
+  gap: var(--space-10);
+}
+
+.picked {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.pickedRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 3.5rem;
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-raised);
+  border-radius: var(--radius-md);
+}
+
+.suggestions {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 48rem) {
+  .suggestions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.suggestion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-raised);
+  border-radius: var(--radius-lg);
+}
+
+.suggestion[data-picked='true'] {
+  border-color: var(--line-strong);
+}
+
+.count {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.addPanel {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-lg);
+}
+
+.addGrid {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 48rem) {
+  .addGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.programChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+}
+
+.programsField {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fieldLegend {
+  margin-bottom: var(--space-3);
+  padding: 0;
+  font: var(--type-label);
+}
+
+.saveBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--line);
+}
+
+.saveNote {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.formError {
+  font: var(--type-small);
+  font-weight: var(--weight-medium);
+}
+
+/* Home: the rival snapshot. */
+
+.snapshot {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.snapshotFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  font: var(--type-small);
+  color: var(--text-muted);
+}

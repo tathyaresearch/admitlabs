@@ -5,7 +5,7 @@ import { istDate } from '../domain/dates.ts';
 import { CHECK_KEYS, RESULTS } from '../domain/types.ts';
 import { sampleInstitution, toInstitutionRef, toProgramRefs } from '../sample/index.ts';
 import { collect } from './collect.ts';
-import { googleSearchFacts, pageSpeedFacts, reviewCountFor } from './mock/facts.ts';
+import { googleSearchFacts, pageSpeedFacts, reviewCountOverTime } from './mock/facts.ts';
 import { rngFor } from './mock/random.ts';
 import { getAnalysisProvider, getProvider } from './registry.ts';
 import { ProviderNotConnectedError, type AnySignal, type InstitutionRef } from './types.ts';
@@ -130,12 +130,12 @@ describe('facts land inside the band of the intended result', () => {
     for (let seed = 0; seed < 50; seed += 1) {
       const college = t.google_profile.college_university;
       const skilling = t.google_profile.skilling;
-      assert.ok(reviewCountFor('strong', rngFor('rc', seed), 'college_university') >= college.strongMinReviews);
-      const okay = reviewCountFor('okay', rngFor('rc', seed), 'skilling');
+      assert.ok(reviewCountOverTime('strong', rngFor('rc', seed), 'college_university', seed % 12) >= college.strongMinReviews);
+      const okay = reviewCountOverTime('okay', rngFor('rc', seed), 'skilling', seed % 12);
       assert.ok(okay >= skilling.okayMinReviews && okay < skilling.strongMinReviews);
-      const weak = reviewCountFor('weak', rngFor('rc', seed), 'college_university');
+      const weak = reviewCountOverTime('weak', rngFor('rc', seed), 'college_university', seed % 12);
       assert.ok(weak >= college.weakMinReviews && weak < college.okayMinReviews);
-      assert.equal(reviewCountFor('missing', rngFor('rc', seed), 'skilling'), 0);
+      assert.equal(reviewCountOverTime('missing', rngFor('rc', seed), 'skilling', seed % 12), 0);
     }
   });
 

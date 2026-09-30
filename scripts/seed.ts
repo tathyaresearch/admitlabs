@@ -6,13 +6,14 @@
 import { INDIA_CITIES } from '../src/config/cities.ts';
 import { SCORING_V1 } from '../src/config/scoring.v1.ts';
 import { runAudit } from '../src/audit/run.ts';
-import { istDate, monthKey, monthStart } from '../src/domain/dates.ts';
+import { istDate, monthStart } from '../src/domain/dates.ts';
 import { paidPlanEndsAt } from '../src/domain/tiers.ts';
 import { TIER_LABELS } from '../src/domain/types.ts';
 import type { Database, Json } from '../src/lib/supabase/database.types.ts';
 import { collect } from '../src/providers/collect.ts';
-import { getAnalysisProvider, getProvider } from '../src/providers/registry.ts';
+import { getAnalysisProvider } from '../src/providers/registry.ts';
 import type { Signal } from '../src/providers/types.ts';
+import { checkRival, writeRivalActions } from '../src/rivals/jobs.ts';
 import {
   ADMIN_EMAIL,
   DEMAND_MONTHS,
@@ -30,7 +31,6 @@ import {
   programId,
   sampleId,
   sampleInstitution,
-  toInstitutionRef,
 } from '../src/sample/index.ts';
 import { serviceClient } from './lib/db.ts';
 import { fail } from './lib/local.ts';
@@ -179,6 +179,24 @@ async function main(): Promise<void> {
       added_at: at(addedAt),
     })),
   );
+  // Each institution picked its rivals once, at signup. That first setup is not a change, so
+  // Paid can still change its rivals this month.
+  const trackers = new Map<string, { rivals: string[]; addedAt: string }>();
+  for (const [tracker, rival, , addedAt] of SAMPLE_RIVALS) {
+    const entry = trackers.get(tracker) ?? { rivals: [], addedAt };
+    entry.rivals.push(institutionId(rival));
+    trackers.set(tracker, entry);
+  }
+  await insert(
+    'rival_changes',
+    [...trackers.entries()].map(([tracker, entry]) => ({
+      institution_id: institutionId(tracker),
+      changed_at: at(entry.addedAt),
+      changed_by: userId(sampleInstitution(tracker).owner),
+      first_setup: true,
+      rival_ids: entry.rivals,
+    })),
+  );
 
   // Audits: every sample run, own, rival and team, through the live path (collect, score, save).
   const auditCounts = { own: 0, rival: 0, team: 0 };
@@ -197,64 +215,38 @@ async function main(): Promise<void> {
     }
   }
 
-  // Earlier "Audit ready" notifications have been read. The newest one for each institution is new.
-  const { data: notices, error: noticeError } = await db.from('notifications').select('id, institution_id').order('created_at', { ascending: false });
+  // The weekly rival check, every Monday from August to today, through the live path: new moves
+  // (with alerts for Paid and Client trackers) and each month's best content.
+  const tracked = [...new Set(SAMPLE_RIVALS.map(([, rival]) => rival))];
+  let moveCount = 0;
+  for (let day = istDate('2026-08-03', 9); day.getTime() <= istDate(SAMPLE_TODAY, 9).getTime(); day = new Date(day.getTime() + 7 * DAY_MS)) {
+    for (const slug of tracked) moveCount += (await checkRival(db, institutionId(slug), day, { notify: true })).newMoves;
+  }
+
+  // This month's Rivals 3 things to do, for the Paid and Client institutions.
+  let actionCount = 0;
+  for (const tracker of new Set(SAMPLE_RIVALS.map(([slug]) => slug))) {
+    actionCount += await writeRivalActions(db, institutionId(tracker), istDate(SAMPLE_TODAY, 9));
+  }
+
+  // Older notifications have been read. New: the latest "Audit ready" and the last 10 days of rival moves.
+  const { data: notices, error: noticeError } = await db.from('notifications').select('id, institution_id, kind, created_at').order('created_at', { ascending: false });
   if (noticeError) fail(`Could not read notifications: ${noticeError.message}`);
-  const newest = new Set<string>();
+  const newestAudit = new Set<string>();
+  const recent = istDate(SAMPLE_TODAY, 0).getTime() - 10 * DAY_MS;
   const older: string[] = [];
   for (const notice of notices ?? []) {
-    if (newest.has(notice.institution_id)) older.push(notice.id);
-    else newest.add(notice.institution_id);
+    if (notice.kind === 'audit_ready' && !newestAudit.has(notice.institution_id)) newestAudit.add(notice.institution_id);
+    else if (notice.kind === 'rival_move' && new Date(notice.created_at).getTime() >= recent) continue;
+    else older.push(notice.id);
   }
   if (older.length) {
     const { error } = await db.from('notifications').update({ read: true }).in('id', older);
     if (error) fail(`Could not mark older notifications read: ${error.message}`);
   }
 
-  // Rival moves, found by weekly site checks from 1 August to today.
-  const tracked = [...new Set(SAMPLE_RIVALS.map(([, rival]) => rival))];
-  const crawler = getProvider('site_crawler');
-  const moves = new Map<string, Row<'rival_moves'>>();
-  for (const slug of tracked) {
-    const institution = toInstitutionRef(sampleInstitution(slug));
-    for (let day = istDate('2026-08-01', 9); day.getTime() <= istDate(SAMPLE_TODAY, 9).getTime(); day = new Date(day.getTime() + 7 * DAY_MS)) {
-      for (const signal of await crawler.collect({ kind: 'institution', institution }, day)) {
-        if (signal.key !== 'rival_move') continue;
-        moves.set(`${slug}|${signal.value.description}`, {
-          rival_institution_id: institution.id,
-          kind: signal.value.kind,
-          description: signal.value.description,
-          source_url: signal.sourceUrl,
-          detected_at: signal.value.detectedAt,
-        });
-      }
-    }
-  }
-  await insert('rival_moves', [...moves.values()]);
-
-  // Each tracked rival's best content this month, with why it worked.
   const analysis = getAnalysisProvider();
-  const contentRows: Row<'rival_content'>[] = [];
-  for (const slug of tracked) {
-    const institution = toInstitutionRef(sampleInstitution(slug));
-    for (const key of ['instagram', 'youtube'] as const) {
-      for (const signal of await getProvider(key).collect({ kind: 'institution', institution }, istDate(SAMPLE_TODAY, 20))) {
-        if (signal.key !== 'rival_content') continue;
-        const { platform, url: postUrl, title, metrics, postedAt } = signal.value;
-        contentRows.push({
-          rival_institution_id: institution.id,
-          platform,
-          url: postUrl,
-          title,
-          metrics: json(metrics),
-          why_it_worked: await analysis.whyItWorked({ institutionSlug: slug, platform, title, metrics }),
-          month: monthStart(monthKey(new Date(postedAt))),
-          posted_at: postedAt,
-        });
-      }
-    }
-  }
-  await insert('rival_content', contentRows);
+  const { count: contentCount } = await db.from('rival_content').select('id', { count: 'exact', head: true });
 
   await insert(
     'rival_ads',
@@ -342,9 +334,8 @@ async function main(): Promise<void> {
   const prospects = SAMPLE_INSTITUTIONS.filter((sample) => sample.isProspect).length;
   console.log('\nSample data ready.');
   console.log(`  Institutions ${SAMPLE_INSTITUTIONS.length} (${prospects} prospects, team only), programs ${programCount}, users ${SAMPLE_USERS.length}`);
-  console.log(
-    `  Audits ${auditCounts.own} own, ${auditCounts.rival} rival, ${auditCounts.team} team, from ${signalCount} signals. Rival moves ${moves.size}, best content ${contentRows.length}, ads ${SAMPLE_ADS.length}`,
-  );
+  console.log(`  Audits ${auditCounts.own} own, ${auditCounts.rival} rival, ${auditCounts.team} team, from ${signalCount} signals`);
+  console.log(`  Rival moves ${moveCount}, best posts ${contentCount ?? 0}, ads ${SAMPLE_ADS.length}, Rivals 3 things to do ${actionCount}`);
   console.log(`  Demand pulls ${pullRows.length} with ${itemRows.length} grouped items`);
   console.log('\nSign in at http://localhost:3000/login with any of these:');
   for (const user of SAMPLE_USERS) {

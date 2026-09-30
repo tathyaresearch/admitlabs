@@ -13,33 +13,52 @@ export type Database = {
     Tables: {
       actions: {
         Row: {
+          check_key: Database["public"]["Enums"]["check_key"] | null
+          created_at: string
+          detail: string | null
           feature: Database["public"]["Enums"]["feature"]
           id: string
           institution_id: string
           month: string
           rank: number
+          rival_institution_id: string | null
           text: string
         }
         Insert: {
+          check_key?: Database["public"]["Enums"]["check_key"] | null
+          created_at?: string
+          detail?: string | null
           feature: Database["public"]["Enums"]["feature"]
           id?: string
           institution_id: string
           month: string
           rank: number
+          rival_institution_id?: string | null
           text: string
         }
         Update: {
+          check_key?: Database["public"]["Enums"]["check_key"] | null
+          created_at?: string
+          detail?: string | null
           feature?: Database["public"]["Enums"]["feature"]
           id?: string
           institution_id?: string
           month?: string
           rank?: number
+          rival_institution_id?: string | null
           text?: string
         }
         Relationships: [
           {
             foreignKeyName: "actions_institution_id_fkey"
             columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actions_rival_institution_id_fkey"
+            columns: ["rival_institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
             referencedColumns: ["id"]
@@ -751,6 +770,67 @@ export type Database = {
           },
         ]
       }
+      rival_changes: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          first_setup: boolean
+          id: string
+          institution_id: string
+          rival_ids: string[]
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          first_setup: boolean
+          id?: string
+          institution_id: string
+          rival_ids: string[]
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          first_setup?: boolean
+          id?: string
+          institution_id?: string
+          rival_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rival_changes_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rival_checks: {
+        Row: {
+          checked_at: string
+          rival_institution_id: string
+          week: string
+        }
+        Insert: {
+          checked_at: string
+          rival_institution_id: string
+          week: string
+        }
+        Update: {
+          checked_at?: string
+          rival_institution_id?: string
+          week?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rival_checks_rival_institution_id_fkey"
+            columns: ["rival_institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rival_content: {
         Row: {
           id: string
@@ -1037,9 +1117,55 @@ export type Database = {
         }
         Returns: string
       }
+      record_actions: {
+        Args: {
+          p_feature: Database["public"]["Enums"]["feature"]
+          p_institution: string
+          p_items: Json
+          p_month: string
+        }
+        Returns: number
+      }
       record_audit: { Args: { payload: Json }; Returns: string }
+      record_rival_check: { Args: { payload: Json }; Returns: number }
       remove_member: { Args: { p_user: string }; Returns: undefined }
       revoke_invite: { Args: { p_invite: string }; Returns: undefined }
+      rival_review_trend: {
+        Args: { p_rival: string }
+        Returns: {
+          checked_at: string
+          rating: number
+          review_count: number
+        }[]
+      }
+      rival_standings: {
+        Args: { p_institution: string }
+        Returns: {
+          rival_institution_id: string
+          standing: string
+        }[]
+      }
+      rival_suggestions: {
+        Args: { p_institution: string }
+        Returns: {
+          city: string
+          institution_id: string
+          name: string
+          same_city: boolean
+          shared_programs: string[]
+          state: string
+          type: Database["public"]["Enums"]["institution_type"]
+          website: string
+        }[]
+      }
+      rival_teaser: {
+        Args: { p_institution: string }
+        Returns: Record<string, unknown>
+      }
+      save_rivals: {
+        Args: { p_added: Json; p_picked: string[] }
+        Returns: string[]
+      }
       set_free_program: { Args: { p_program: string }; Returns: undefined }
       update_institution: {
         Args: {

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { contrastRatio } from './contrast.ts';
 import { istDate } from './dates.ts';
-import { formatCount, formatDate, formatDateLong, formatInr, formatMonth, formatMonthShort, groupIndian, hostAndPath, plural } from './format.ts';
+import { formatCount, formatDate, formatDateLong, formatInr, formatMonth, formatMonthShort, groupIndian, hostAndPath, joinNames, ordinal, plural } from './format.ts';
 import { scoreLabel } from './scores.ts';
 
 describe('formatting for India', () => {
@@ -26,6 +26,14 @@ describe('formatting for India', () => {
     assert.equal(formatCount(48200), '48,200');
     assert.equal(plural(1, 'program', 'programs'), '1 program');
     assert.equal(plural(3, 'program', 'programs'), '3 programs');
+  });
+
+  test('lists of names and places', () => {
+    assert.equal(joinNames([]), '');
+    assert.equal(joinNames(['Silverline College']), 'Silverline College');
+    assert.equal(joinNames(['Eastgate University', 'Silverline College']), 'Eastgate University and Silverline College');
+    assert.equal(joinNames(['BBA', 'BCA', 'B.Com']), 'BBA, BCA and B.Com');
+    assert.deepEqual([1, 2, 3, 4, 11, 12, 13, 21, 22, 101].map(ordinal), ['1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st', '22nd', '101st']);
   });
 
   test('source links shorten to host and path', () => {

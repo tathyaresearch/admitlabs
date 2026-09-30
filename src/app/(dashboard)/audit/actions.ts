@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { AuditRunError, RefreshUsedError, runAudit } from '@/audit/run';
 import { formatDate } from '@/domain/format';
 import { refreshResetsOn } from '@/domain/schedule';
+import { writeRivalActions } from '@/rivals/jobs';
 import { getViewer } from '@/lib/auth/viewer';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -28,8 +29,11 @@ export async function refreshAuditAction(): Promise<RefreshState> {
   }
 
   const now = new Date();
+  const admin = createAdminClient();
   try {
-    await runAudit(createAdminClient(), { institutionId: viewer.membership.institution.id, asOf: now, trigger: 'manual', createdBy: viewer.userId });
+    await runAudit(admin, { institutionId: viewer.membership.institution.id, asOf: now, trigger: 'manual', createdBy: viewer.userId });
+    // The Rivals 3 things to do are built on the latest Audit, so they follow the refresh.
+    await writeRivalActions(admin, viewer.membership.institution.id, now);
   } catch (error) {
     if (error instanceof RefreshUsedError) {
       return { status: 'error', message: `This month's extra refresh has been used. It comes back on ${formatDate(refreshResetsOn(now))}.` };
