@@ -100,6 +100,15 @@ export interface ListItem {
   points: number;
 }
 
+/**
+ * One line for a check in the list of all checks. A per-program check whose programs
+ * disagree "varies by program", with the average points; the side panel shows each program.
+ */
+export type RowSummary =
+  | { kind: 'single'; result: CheckResult; points: number; maxPoints: number }
+  | { kind: 'varies'; points: number; maxPoints: number }
+  | { kind: 'none' };
+
 export interface AreaRow {
   key: CheckKey;
   name: string;
@@ -107,6 +116,15 @@ export interface AreaRow {
   pillar: Pillar;
   level: CheckLevel;
   parts: ItemPart[];
+  summary: RowSummary;
+}
+
+export function rowSummary(parts: readonly ItemPart[]): RowSummary {
+  const first = parts[0];
+  if (!first) return { kind: 'none' };
+  const average = parts.reduce((sum, part) => sum + part.points, 0) / parts.length;
+  if (parts.every((part) => part.result === first.result)) return { kind: 'single', result: first.result, points: average, maxPoints: first.maxPoints };
+  return { kind: 'varies', points: average, maxPoints: first.maxPoints };
 }
 
 export interface AuditView {
@@ -163,17 +181,21 @@ function hardest(parts: readonly ItemPart[]): Difficulty | null {
 function areas(checks: readonly StoredCheck[], options: ViewOptions): AuditView['areas'] {
   return PILLARS.map((pillar) => ({
     pillar,
-    rows: CHECKS.filter((check) => check.pillar === pillar).map((check) => ({
-      key: check.key,
-      name: checkName(check.key, options.institutionType),
-      looksAt: checkLooksAt(check.key, options.institutionType),
-      pillar,
-      level: check.level,
-      parts: checks
+    rows: CHECKS.filter((check) => check.pillar === pillar).map((check) => {
+      const parts = checks
         .filter((stored) => stored.key === check.key)
         .map((stored) => part(stored, options.programNames))
-        .sort(byProgramName),
-    })),
+        .sort(byProgramName);
+      return {
+        key: check.key,
+        name: checkName(check.key, options.institutionType),
+        looksAt: checkLooksAt(check.key, options.institutionType),
+        pillar,
+        level: check.level,
+        parts,
+        summary: rowSummary(parts),
+      };
+    }),
   }));
 }
 
@@ -301,8 +323,15 @@ export function pointsWorthText(points: number): string {
   return `Worth ${rounded} ${rounded === 1 ? 'point' : 'points'} of your score`;
 }
 
-/** "18 of 30 points". */
+// Points on screen are whole numbers: 7.5 shows as 8. The exact value stays in the data and
+// in every score calculation.
+
+/** "8 of 25 points". */
 export function pointsEarnedText(points: number, maxPoints: number): string {
-  const earned = Number.isInteger(points) ? String(points) : points.toFixed(1);
-  return `${earned} of ${maxPoints} points`;
+  return `${Math.round(points)} of ${maxPoints} points`;
+}
+
+/** "8/25", for the list of checks. */
+export function pointsFraction(points: number, maxPoints: number): string {
+  return `${Math.round(points)}/${maxPoints}`;
 }

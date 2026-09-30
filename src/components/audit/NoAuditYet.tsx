@@ -1,8 +1,8 @@
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/Feedback';
-import { PageHeader } from '@/components/ui/Layout';
 import { formatDate } from '@/domain/format';
 import type { Tier } from '@/domain/types';
+import { AuditHeader } from './AuditHeader';
 import styles from './audit.module.css';
 
 /** Before the first Audit: either pick the Free program, or wait for the first run. */
@@ -20,7 +20,7 @@ export function NoAuditYet({
   const needsProgram = tier === 'free' && !hasFreeProgram;
   return (
     <div className={styles.page}>
-      <PageHeader eyebrow="Audit" title="How you look to students" description="What a student or parent sees when they look you up." />
+      <AuditHeader title="Audit" caption={['What a student or parent sees when they look you up']} />
       {needsProgram ? (
         <EmptyState
           icon="audit"

@@ -1,6 +1,6 @@
 import { overviewView } from '@/audit/view';
-import { CompactFixList } from '@/components/audit/AuditLists';
-import { ScorePanel } from '@/components/audit/ScorePanel';
+import { FixCards } from '@/components/audit/Lists';
+import { SummaryBand } from '@/components/audit/SummaryBand';
 import { ButtonLink } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Data';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
@@ -73,7 +73,7 @@ export default async function HomePage() {
               Checked {formatDate(data.audit.runAt)}. {nextAuditText(data)}.
             </p>
           </div>
-          <ScorePanel view={view} />
+          <SummaryBand view={view} />
         </section>
       ) : (
         <EmptyState
@@ -91,40 +91,38 @@ export default async function HomePage() {
         </EmptyState>
       )}
 
-      <div className={styles.split}>
-        {view ? (
-          <Section
-            id="top-fixes"
-            title="Top 3 fixes"
-            description="The fixes that could add the most to your score."
-            actions={
-              <ButtonLink href="/audit#fix" size="sm" variant="quiet" iconAfter="arrowRight">
-                See all
-              </ButtonLink>
-            }
-          >
-            {topFixes.length ? <CompactFixList items={topFixes} /> : <p className={styles.note}>Every check is Strong. Keep it that way.</p>}
-          </Section>
-        ) : null}
-
-        <Section id="next" title="Coming to your dashboard" description="Rivals, Demand and your 3 things to do each month.">
-          <div className={styles.later}>
-            {LATER.map((feature) => (
-              <CardLink key={feature.href} href={feature.href}>
-                <span className={styles.laterCard}>
-                  <span className={styles.laterTop}>
-                    <Eyebrow>{feature.name}</Eyebrow>
-                    <Icon name={feature.icon} size={20} />
-                  </span>
-                  <span className={styles.laterQuestion}>{feature.question}</span>
-                  <span className={styles.laterText}>{feature.text}</span>
-                  <Tag variant="quiet">Arrives in Phase {feature.phase}</Tag>
-                </span>
-              </CardLink>
-            ))}
-          </div>
+      {view ? (
+        <Section
+          id="top-fixes"
+          title="Fix these first"
+          description="The changes that could add the most to your score."
+          actions={
+            <ButtonLink href="/audit" size="sm" variant="quiet" iconAfter="arrowRight">
+              Open your Audit
+            </ButtonLink>
+          }
+        >
+          {topFixes.length ? <FixCards items={topFixes} basePath="/audit" /> : <p className={styles.note}>Every check is Strong. Keep it that way.</p>}
         </Section>
-      </div>
+      ) : null}
+
+      <Section id="next" title="Coming to your dashboard" description="Rivals, Demand and your 3 things to do each month.">
+        <div className={styles.later}>
+          {LATER.map((feature) => (
+            <CardLink key={feature.href} href={feature.href}>
+              <span className={styles.laterCard}>
+                <span className={styles.laterTop}>
+                  <Eyebrow>{feature.name}</Eyebrow>
+                  <Icon name={feature.icon} size={20} />
+                </span>
+                <span className={styles.laterQuestion}>{feature.question}</span>
+                <span className={styles.laterText}>{feature.text}</span>
+                <Tag variant="quiet">Arrives in Phase {feature.phase}</Tag>
+              </span>
+            </CardLink>
+          ))}
+        </div>
+      </Section>
 
       <div className={styles.split}>
         <Card>

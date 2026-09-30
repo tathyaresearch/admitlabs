@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import type { ItemPart, ListItem } from '@/audit/view';
-import { FixList, WorkingList } from '@/components/audit/AuditLists';
-import { PlaceholderList } from '@/components/audit/Placeholders';
-import { ProgramScoreList, ProgramTabs } from '@/components/audit/Programs';
+import { rowSummary, type AuditView, type ItemPart, type ListItem } from '@/audit/view';
+import { ChecksTable } from '@/components/audit/ChecksTable';
+import { FixCards, WorkingRows } from '@/components/audit/Lists';
+import { ProgramTabs } from '@/components/audit/Programs';
+import { SummaryBand } from '@/components/audit/SummaryBand';
+import { UnlockCard } from '@/components/audit/UnlockCard';
 import { HeadToHead } from '@/components/charts/HeadToHead';
 import { CityPicker } from '@/components/institution/CityPicker';
 import { ProgramPicker } from '@/components/institution/ProgramPicker';
@@ -198,6 +200,60 @@ const SAMPLE_FIXES: ListItem[] = [
     ],
   },
 ];
+
+SAMPLE_FIXES.push({
+  rank: 3,
+  key: 'google_profile',
+  name: 'Google profile',
+  pillar: 'discovered',
+  strength: null,
+  difficulty: 'medium',
+  points: 4.7,
+  parts: [
+    samplePart({
+      checkId: 'f4',
+      result: 'weak',
+      points: 6,
+      maxPoints: 20,
+      detail: { finding: 'A Google profile with 4 reviews.', whyItMatters: null, howToFix: null, difficulty: 'medium', sourceUrl: 'https://maps.example' },
+    }),
+  ],
+});
+
+const sampleRow = (key: AreaRowSample['key'], name: string, parts: ItemPart[]) => ({
+  key,
+  name,
+  looksAt: '',
+  pillar: 'chosen' as const,
+  level: 'program' as const,
+  parts,
+  summary: rowSummary(parts),
+});
+type AreaRowSample = { key: 'fees_shown' | 'program_page' | 'easy_enquiry' };
+
+const SAMPLE_VIEW: AuditView = {
+  programId: null,
+  scores: { overall: 46, discovered: 44, trusted: 44, chosen: 50 },
+  changes: { overall: 5, discovered: 8, trusted: 0, chosen: 6 },
+  label: 'Needs work',
+  firstAudit: false,
+  programsChanged: false,
+  working: SAMPLE_WORKING,
+  fixes: SAMPLE_FIXES,
+  areas: [
+    {
+      pillar: 'chosen',
+      rows: [
+        sampleRow('fees_shown', 'Fees shown', [samplePart({ checkId: 'r1', result: 'weak', points: 7.5, maxPoints: 25, previousResult: 'missing' })]),
+        sampleRow('program_page', 'Program page', [
+          samplePart({ checkId: 'r2', programName: 'BBA', result: 'strong', points: 20, maxPoints: 20 }),
+          samplePart({ checkId: 'r3', programName: 'BCA', result: 'weak', points: 6, maxPoints: 20 }),
+        ]),
+        sampleRow('easy_enquiry', 'Easy enquiry', [samplePart({ checkId: 'r4', result: 'okay', points: 12, maxPoints: 20 })]),
+      ],
+    },
+  ],
+};
 
 const HISTORY = [
   { month: '2026-04', score: 64 },
@@ -608,52 +664,30 @@ export default async function DesignSystemPage() {
           <Section
             id="audit"
             title="Audit"
-            description="What's working comes first. Fixes are ranked by the points they could add. A program check that needs work in several programs is one item that names them."
+            description="Readable in ten seconds: how we're doing, what to fix first, where the detail is. The verdict names the strength first, then the next step."
           >
-            <Card>
-              <Specimen label="Program switcher (a locked program links to the plan)">
-                <ProgramTabs
-                  allLabel="All programs"
-                  active={null}
-                  entries={[
-                    { id: 'bba', name: 'BBA', state: 'scored', score: { overall: 46, change: 5 } },
-                    { id: 'bca', name: 'BCA', state: 'scored', score: { overall: 52, change: null } },
-                    { id: 'bcom', name: 'B.Com', state: 'locked' },
-                  ]}
-                />
+            <ProgramTabs
+              allLabel="All programs"
+              active={null}
+              entries={[
+                { id: 'bba', name: 'BBA', state: 'scored', score: { overall: 46, change: 5 } },
+                { id: 'bca', name: 'BCA', state: 'scored', score: { overall: 52, change: null } },
+                { id: 'bcom', name: 'B.Com', state: 'locked' },
+              ]}
+            />
+            <SummaryBand view={SAMPLE_VIEW} />
+            <Specimen label="Fix these first">
+              <FixCards items={SAMPLE_FIXES} />
+            </Specimen>
+            <div className={styles.grid2}>
+              <Specimen label="What's working">
+                <WorkingRows items={SAMPLE_WORKING} />
               </Specimen>
-            </Card>
-            <div className={styles.grid2}>
-              <Card>
-                <Specimen label="What's working">
-                  <WorkingList items={SAMPLE_WORKING} />
-                </Specimen>
-              </Card>
-              <Card>
-                <Specimen label="What to fix">
-                  <FixList items={SAMPLE_FIXES} />
-                </Specimen>
-              </Card>
+              <Specimen label="Checks, one row each: a program check that varies shows the average points">
+                <ChecksTable view={SAMPLE_VIEW} />
+              </Specimen>
             </div>
-            <div className={styles.grid2}>
-              <Card>
-                <Specimen label="By program">
-                  <ProgramScoreList
-                    nextAuditText="Next Audit on 15 Oct 2026"
-                    entries={[
-                      { id: 'mba', name: 'MBA', state: 'scored', score: { overall: 84, change: 2 } },
-                      { id: 'data', name: 'B.Sc Data Analytics', state: 'next' },
-                      { id: 'bcom', name: 'B.Com', state: 'locked' },
-                    ]}
-                  />
-                </Specimen>
-              </Card>
-              <Card>
-                <Specimen label="Locked list: shapes only, never real data">
-                  <LockedPanel title="14 more fixes, ranked" description="Paid shows the full ranked list, with how to fix each one." placeholder={<PlaceholderList rows={3} />} />
-                </Specimen>
-              </Card>
-            </div>
+            <UnlockCard moreFixes={14} moreStrengths={5} lockedPrograms={2} />
           </Section>
 
           <Section id="data" title="Data" description="One hero number per view. Every finding carries its source and the date it was checked.">

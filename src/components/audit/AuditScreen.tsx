@@ -1,37 +1,40 @@
-// The Audit screen (spec 7.6 and 13): the score first, then what's working, what to fix,
-// area by area, programs and history. Shared by the all-programs view and a program view.
-// Everything shown comes from rows the viewer's plan allows; locked areas are placeholders.
+// The Audit screen, readable in ten seconds (spec 7.6 and 13):
+//   1. How we're doing: the summary band (score, verdict, three pillars)
+//   2. What to fix first: three numbered cards, the rest folded under "See all"
+//   3. What's working: a short, quiet list
+//   4. Where the detail is: all 17 checks by pillar, each opening the side panel
+//   5. Score history, small, at the bottom
+// Free gets one "Paid shows the full picture" card instead of locked areas across the page.
 
 import { Suspense, type ReactNode } from 'react';
 import type { AuditView } from '@/audit/view';
-import { PageHeader, Section } from '@/components/ui/Layout';
-import { LockedPanel } from '@/components/ui/LockedPanel';
 import { limitFor } from '@/config/entitlements';
 import { plural } from '@/domain/format';
 import type { Tier } from '@/domain/types';
-import { AreaList } from './AreaList';
-import { FixList, WorkingList } from './AuditLists';
+import { AuditHeader, SectionHead } from './AuditHeader';
 import { CheckPanel } from './CheckPanel';
+import { ChecksTable } from './ChecksTable';
 import { HistorySection, type HistoryEntry } from './HistorySection';
-import { PlaceholderChart, PlaceholderList } from './Placeholders';
-import { ProgramScoreList, ProgramTabs, type ProgramEntry } from './Programs';
-import { ScorePanel } from './ScorePanel';
+import { FixCards, FixRows, Folded, WorkingRows } from './Lists';
+import { ProgramTabs, type ProgramEntry } from './Programs';
+import { SummaryBand } from './SummaryBand';
+import { UnlockCard } from './UnlockCard';
 import styles from './audit.module.css';
+
+const TOP_FIXES = 3;
+const SHOWN_STRENGTHS = 5;
 
 interface AuditScreenProps {
   view: AuditView;
   tier: Tier;
-  eyebrow: string;
   title: string;
-  description: string;
+  caption: readonly ReactNode[];
   actions?: ReactNode;
-  meta?: ReactNode;
   notice?: ReactNode;
   entries: readonly ProgramEntry[];
   /** "All programs" for Paid and Client; null for Free, which covers one program. */
   allLabel: string | null;
-  showProgramList: boolean;
-  nextAuditText: string;
+  scoreCaption: string;
   /** Null when the plan has no score history. */
   history: readonly HistoryEntry[] | null;
   historyLabel: string;
@@ -39,74 +42,68 @@ interface AuditScreenProps {
 
 export function AuditScreen(props: AuditScreenProps) {
   const { view, tier } = props;
-  const workingLimit = limitFor('audit_whats_working', tier);
   const fixLimit = limitFor('audit_what_to_fix', tier);
-  const working = workingLimit === null ? view.working : view.working.slice(0, workingLimit);
+  const workingLimit = limitFor('audit_whats_working', tier);
   const fixes = fixLimit === null ? view.fixes : view.fixes.slice(0, fixLimit);
-  const moreWorking = view.working.length - working.length;
-  const moreFixes = view.fixes.length - fixes.length;
-  const showTabs = props.entries.length > 1 || props.entries.some((entry) => entry.state === 'locked');
+  const working = workingLimit === null ? view.working : view.working.slice(0, workingLimit);
+  const hiddenFixes = view.fixes.length - fixes.length;
+  const hiddenStrengths = view.working.length - working.length;
+  const lockedPrograms = props.entries.filter((entry) => entry.state === 'locked').length;
+  const showTabs = props.entries.length > 1 || lockedPrograms > 0;
+  // Fold only when it hides more than one strength.
+  const foldStrengths = working.length > SHOWN_STRENGTHS + 1;
 
   return (
     <div className={styles.page}>
-      <PageHeader eyebrow={props.eyebrow} title={props.title} description={props.description} actions={props.actions} meta={props.meta} />
-
-      {props.notice}
-
       <div className={styles.top}>
+        <AuditHeader title={props.title} caption={props.caption} actions={props.actions} />
+        {props.notice}
         {showTabs ? <ProgramTabs entries={props.entries} active={view.programId} allLabel={props.allLabel} /> : null}
-        <ScorePanel view={view} caption={view.programId ? 'Program score' : 'Overall score'} />
+        <SummaryBand view={view} caption={props.scoreCaption} />
       </div>
 
-      <div className={styles.columns}>
-        <Section id="working" title="What's working" description="Your strengths first, ranked by the points they earn.">
-          {working.length ? (
-            <WorkingList items={working} />
-          ) : (
-            <p className={styles.emptyNote}>Nothing stands out yet. The fixes are the quickest way to change that, starting with the first one.</p>
-          )}
-          {moreWorking > 0 ? (
-            <LockedPanel
-              title={`${plural(moreWorking, 'more strength', 'more strengths')}`}
-              description="Paid shows every strength, with what was found and where."
-              placeholder={<PlaceholderList rows={Math.min(moreWorking, 3)} />}
-            />
-          ) : null}
-        </Section>
-
-        <Section id="fix" title="What to fix" description="Ranked by the points each fix could add to your score.">
-          {fixes.length ? <FixList items={fixes} /> : <p className={styles.emptyNote}>Every check is Strong. Keep it that way.</p>}
-          {moreFixes > 0 ? (
-            <LockedPanel
-              title={`${plural(moreFixes, 'more fix', 'more fixes')}, ranked`}
-              description="Paid shows the full ranked list, with how to fix each one."
-              placeholder={<PlaceholderList rows={Math.min(moreFixes, 3)} />}
-            />
-          ) : null}
-        </Section>
-      </div>
-
-      <Section id="areas" title="Area by area" description="Every check with its result. Open one to see what was found, where, and when it was checked.">
-        <AreaList view={view} />
-      </Section>
-
-      {props.showProgramList ? (
-        <Section id="programs" title="By program" description="Each program gets its own score from its own checks and the ones it shares.">
-          <ProgramScoreList entries={props.entries} nextAuditText={props.nextAuditText} />
-        </Section>
-      ) : null}
-
-      <Section id="history" title="Score history" description="How the score has moved, Audit by Audit.">
-        {props.history ? (
-          <HistorySection rows={props.history} label={props.historyLabel} />
-        ) : (
-          <LockedPanel
-            title="See how your score moves"
-            description="Paid keeps every Audit, so you can follow your score month by month."
-            placeholder={<PlaceholderChart />}
+      <section className={styles.section} aria-labelledby="fix-title">
+        <SectionHead id="fix-title" title="Fix these first" help="The changes that could add the most to your score. Open one to see how." />
+        {fixes.length ? (
+          <Folded
+            total={fixes.length}
+            noun="fixes"
+            shown={<FixCards items={fixes.slice(0, TOP_FIXES)} />}
+            rest={fixes.length > TOP_FIXES ? <FixRows items={fixes.slice(TOP_FIXES)} /> : null}
           />
+        ) : (
+          <p className={styles.quietNote}>Every check is Strong. Keep it that way.</p>
         )}
-      </Section>
+        {hiddenFixes > 0 ? <p className={styles.quietNote}>{plural(hiddenFixes, 'more fix', 'more fixes')}, ranked, come with Paid.</p> : null}
+      </section>
+
+      <section className={styles.section} aria-labelledby="working-title">
+        <SectionHead id="working-title" title="What's working" help="Your strengths, ranked by the points they earn." />
+        {working.length ? (
+          <Folded
+            total={working.length}
+            noun="strengths"
+            shown={<WorkingRows items={foldStrengths ? working.slice(0, SHOWN_STRENGTHS) : working} />}
+            rest={foldStrengths ? <WorkingRows items={working.slice(SHOWN_STRENGTHS)} /> : null}
+          />
+        ) : (
+          <p className={styles.quietNote}>Nothing stands out yet. The fixes above are the quickest way to change that.</p>
+        )}
+      </section>
+
+      {tier === 'free' ? <UnlockCard moreFixes={hiddenFixes} moreStrengths={hiddenStrengths} lockedPrograms={lockedPrograms} /> : null}
+
+      <section className={styles.section} aria-labelledby="checks-title">
+        <SectionHead id="checks-title" title="All 17 checks" help="Grouped by pillar. Open any check to see what was found, the source and how to fix it." />
+        <ChecksTable view={view} />
+      </section>
+
+      {props.history ? (
+        <section className={styles.section} aria-labelledby="history-title">
+          <SectionHead id="history-title" title="Score history" help="Your score, Audit by Audit." />
+          <HistorySection rows={props.history} label={props.historyLabel} />
+        </section>
+      ) : null}
 
       <Suspense fallback={null}>
         <CheckPanel rows={view.areas.flatMap((area) => area.rows)} />

@@ -4,10 +4,11 @@
 // fix, and difficulty. Opens from ?check=<key>, so it can be linked and survives a reload.
 // Details the plan does not include arrive as null and show a placeholder, never real data.
 
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { pointsEarnedText, type AreaRow } from '@/audit/view';
 import { SourceLine } from '@/components/ui/Data';
-import { LockedPanel } from '@/components/ui/LockedPanel';
+import { Icon } from '@/components/ui/Icon';
 import { SidePanel } from '@/components/ui/Overlay';
 import { Difficulty, ResultMeter } from '@/components/ui/Results';
 import { formatDate } from '@/domain/format';
@@ -78,11 +79,16 @@ function PanelBody({ row }: { row: AreaRow }) {
           ) : (
             <>
               <p className={styles.points}>Checked {formatDate(part.checkedAt)}</p>
-              <LockedPanel
-                title="See what Drishti found"
-                description="Paid shows what was found for every check, where it was found, and how to fix it."
-                placeholder={<PlaceholderDetail />}
-              />
+              <div className={styles.lockedDetail}>
+                <div className={styles.lockedShapes} aria-hidden="true" inert>
+                  <PlaceholderDetail />
+                </div>
+                <p className={styles.lockedText}>Paid shows what Drishti found for this check, where it found it, and how to fix it.</p>
+                <Link href="/plan" className={styles.lockedLink}>
+                  See what Paid adds
+                  <Icon name="arrowRight" size={14} />
+                </Link>
+              </div>
             </>
           )}
         </div>

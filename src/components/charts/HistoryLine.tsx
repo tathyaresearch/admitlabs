@@ -15,12 +15,11 @@ export interface HistoryPoint {
   score: number;
 }
 
-const HEIGHT = 240;
 /** Band names sit in their own column on the right, so they never collide with the data. */
 const BAND_COLUMN = 92;
 const MIN_WIDTH_FOR_BANDS = 480;
 
-export function HistoryLine({ points, label = 'Overall score by month' }: { points: readonly HistoryPoint[]; label?: string }) {
+export function HistoryLine({ points, label = 'Overall score by month', height: HEIGHT = 240 }: { points: readonly HistoryPoint[]; label?: string; height?: number }) {
   const { ref, width } = useChartWidth<HTMLDivElement>();
   const [active, setActive] = useState<number | null>(null);
 

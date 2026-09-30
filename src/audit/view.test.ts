@@ -9,7 +9,7 @@ import { sampleInstitution, toInstitutionRef, toProgramRefs } from '../sample/in
 import { CHECK_KEYS, type CheckKey } from '../domain/types.ts';
 import { factsFromSignals, type CheckSignal } from './facts.ts';
 import { prepareAudit, type AuditRecord } from './record.ts';
-import { historyByMonth, overviewView, pointsEarnedText, pointsToGainText, programView, type StoredAudit } from './view.ts';
+import { historyByMonth, overviewView, pointsEarnedText, pointsFraction, pointsToGainText, programView, rowSummary, type StoredAudit } from './view.ts';
 
 // The Audit screens' view model, from records built on sample data.
 
@@ -138,6 +138,23 @@ describe('the all-programs view', () => {
     assert.equal(view.areas[0]?.rows.find((row) => row.key === 'instagram_activity')?.parts.length, 1);
   });
 
+  test('one line per check: a single result, or "varies by program" with the average points', async () => {
+    const { record, names, type } = await recordFor('eastgate-university', '2026-09-15');
+    const view = overviewView(stored(record), { institutionType: type, programNames: names });
+    const rows = view.areas.flatMap((area) => area.rows);
+    const instagram = rows.find((row) => row.key === 'instagram_activity');
+    assert.deepEqual(instagram?.summary, { kind: 'single', result: 'strong', points: 25, maxPoints: 25 });
+    const search = rows.find((row) => row.key === 'google_search');
+    assert.equal(search?.summary.kind, 'varies');
+    const average = (search?.parts ?? []).reduce((sum, part) => sum + part.points, 0) / 5;
+    assert.ok(search?.summary.kind === 'varies' && Math.abs(search.summary.points - average) < 1e-9);
+    assert.deepEqual(rowSummary([]), { kind: 'none' });
+
+    const { record: free, names: freeNames } = await recordFor('northbank-college', '2026-09-10', ['bba']);
+    const freeView = overviewView(stored(free, { freeDetails: true }), { institutionType: 'college', programNames: freeNames });
+    assert.ok(freeView.areas.flatMap((area) => area.rows).every((row) => row.summary.kind === 'single'), 'one program never varies');
+  });
+
   test('change flags: a first Audit, and programs that changed', async () => {
     const { record, names, type } = await recordFor('northbank-college', '2026-09-10', ['bba']);
     const changed = overviewView(stored(record, { previousAuditId: 'earlier' }), { institutionType: type, programNames: names });
@@ -178,11 +195,14 @@ describe('history and wording', () => {
     ]);
   });
 
-  test('points wording', () => {
+  test('points wording: whole numbers on screen, halves round up', () => {
     assert.equal(pointsToGainText(0.3), 'Could add less than 1 point');
     assert.equal(pointsToGainText(0.5), 'Could add up to 1 point');
     assert.equal(pointsToGainText(5.83), 'Could add up to 6 points');
-    assert.equal(pointsEarnedText(7.5, 25), '7.5 of 25 points');
+    assert.equal(pointsEarnedText(7.5, 25), '8 of 25 points');
     assert.equal(pointsEarnedText(18, 30), '18 of 30 points');
+    assert.equal(pointsFraction(7.5, 25), '8/25');
+    assert.equal(pointsFraction(4.5, 15), '5/15');
+    assert.equal(pointsFraction(15.83, 25), '16/25');
   });
 });

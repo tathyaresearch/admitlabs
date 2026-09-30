@@ -159,6 +159,15 @@ export function nextAuditText(data: AuditPageData): string {
   return `${data.nextAudit.tier === 'free' ? 'Next free Audit' : 'Next Audit'} on ${formatDate(data.nextAudit.on)}`;
 }
 
+/** The one small caption under the Audit title: when it was checked, when it runs next, the plan. */
+export function auditCaption(data: AuditPageData, viewer: Pick<Viewer, 'tier' | 'plan'>): string[] {
+  const caption = data.audit ? [`Checked ${formatDate(data.audit.runAt)}`] : [];
+  caption.push(nextAuditText(data));
+  if (viewer.tier === 'paid' && viewer.plan?.endsAt) caption.push(`Paid until ${formatDate(viewer.plan.endsAt)}`);
+  if (viewer.tier === 'client') caption.push('Your AdmitLabs team can refresh it at any time');
+  return caption;
+}
+
 export async function loadAuditPage(viewer: Viewer & { membership: NonNullable<Viewer['membership']> }): Promise<AuditPageData> {
   const institutionId = viewer.membership.institution.id;
   const [audit, programs, history] = await Promise.all([loadLatestAudit(institutionId), loadPrograms(institutionId), loadHistory(institutionId)]);

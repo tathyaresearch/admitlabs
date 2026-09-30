@@ -1,8 +1,9 @@
-// Score history (Paid and Client): a month-by-month line and every Audit in a table.
+// Score history (Paid and Client): a small month-by-month line; every Audit sits folded below.
 
 import { historyByMonth, type HistoryRow } from '@/audit/view';
 import { HistoryLine } from '@/components/charts/HistoryLine';
 import { DataTable } from '@/components/ui/DataTable';
+import { Icon } from '@/components/ui/Icon';
 import { monthKey } from '@/domain/dates';
 import { formatDate } from '@/domain/format';
 import styles from './audit.module.css';
@@ -19,21 +20,28 @@ export function HistorySection({ rows, label }: { rows: readonly HistoryEntry[];
   const points = historyByMonth(rows, (runAt) => monthKey(new Date(runAt)));
   return (
     <div className={styles.history}>
-      <HistoryLine points={points} label={label} />
-      <DataTable
-        caption="Every Audit"
-        hideCaption
-        rowKey={(row) => row.id}
-        rows={[...rows].reverse()}
-        columns={[
-          { key: 'date', header: 'Checked', render: (row) => formatDate(row.runAt) },
-          { key: 'overall', header: 'Overall', numeric: true, align: 'end', render: (row) => row.scores.overall },
-          { key: 'discovered', header: 'Discovered', numeric: true, align: 'end', render: (row) => row.scores.discovered },
-          { key: 'trusted', header: 'Trusted', numeric: true, align: 'end', render: (row) => row.scores.trusted },
-          { key: 'chosen', header: 'Chosen', numeric: true, align: 'end', render: (row) => row.scores.chosen },
-          { key: 'how', header: 'How it ran', render: (row) => HOW[row.trigger] ?? 'Scheduled' },
-        ]}
-      />
+      <HistoryLine points={points} label={label} height={190} />
+      <details className={styles.more}>
+        <summary className={styles.moreSummary}>
+          <span className={styles.moreClosed}>Show every Audit</span>
+          <span className={styles.moreOpen}>Hide the list</span>
+          <Icon name="chevronDown" size={16} className={styles.moreIcon} />
+        </summary>
+        <DataTable
+          caption="Every Audit"
+          hideCaption
+          rowKey={(row) => row.id}
+          rows={[...rows].reverse()}
+          columns={[
+            { key: 'date', header: 'Checked', render: (row) => formatDate(row.runAt) },
+            { key: 'overall', header: 'Overall', numeric: true, align: 'end', render: (row) => row.scores.overall },
+            { key: 'discovered', header: 'Discovered', numeric: true, align: 'end', render: (row) => row.scores.discovered },
+            { key: 'trusted', header: 'Trusted', numeric: true, align: 'end', render: (row) => row.scores.trusted },
+            { key: 'chosen', header: 'Chosen', numeric: true, align: 'end', render: (row) => row.scores.chosen },
+            { key: 'how', header: 'How it ran', render: (row) => HOW[row.trigger] ?? 'Scheduled' },
+          ]}
+        />
+      </details>
     </div>
   );
 }

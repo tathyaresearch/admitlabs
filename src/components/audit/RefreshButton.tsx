@@ -14,11 +14,9 @@ export function RefreshButton({ left, resetsOn }: { left: number; resetsOn: stri
 
   if (left <= 0) {
     return (
-      <div className={styles.refresh}>
-        <p className={styles.refreshNote} role="status">
-          {state.status === 'done' ? state.message : `This month's extra refresh is used. It comes back on ${resetsOn}.`}
-        </p>
-      </div>
+      <p className={styles.actionNote} role="status">
+        {state.status === 'done' ? state.message : `This month's extra refresh is used. It comes back on ${resetsOn}.`}
+      </p>
     );
   }
 
@@ -27,8 +25,8 @@ export function RefreshButton({ left, resetsOn }: { left: number; resetsOn: stri
       <Button type="submit" variant="secondary" size="sm" icon="refresh" loading={pending}>
         {pending ? 'Checking again' : 'Refresh now'}
       </Button>
-      <p className={styles.refreshNote} role="status">
-        {state.message ?? '1 extra refresh left this month.'}
+      <p className={styles.actionNote} role="status">
+        {state.message ?? '1 extra refresh left this month'}
       </p>
     </form>
   );
