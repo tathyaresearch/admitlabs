@@ -76,7 +76,8 @@ export default async function NotificationsPage() {
           You will see a note here when your next Audit is ready.
         </EmptyState>
       )}
-      {unread ? <MarkRead /> : null}
+      {/* The AdmitLabs team viewing their dashboard only looks: nothing is marked read. */}
+      {unread && !viewer.viewingAs ? <MarkRead /> : null}
     </div>
   );
 }

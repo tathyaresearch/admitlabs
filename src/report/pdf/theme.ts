@@ -2,7 +2,8 @@
 // Grotesque only (embedded from src/report/fonts), contrast from size, weight, width and black and
 // ivory flips. Small text on ivory uses grey 700 (5.17:1); slate is only used on black.
 
-import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { Font, StyleSheet } from '@react-pdf/renderer';
 
 export const COLORS = {
@@ -26,7 +27,11 @@ export const FONT = 'Bricolage';
 export const FONT_SEMI_CONDENSED = 'Bricolage SemiCondensed';
 export const FONT_CONDENSED = 'Bricolage Condensed';
 
-const file = (name: string) => fileURLToPath(new URL(`../fonts/${name}`, import.meta.url));
+// Beside this file when Node runs it (the report job, scripts, tests); from the project folder
+// when the app runs it on the server (bundled code lives elsewhere).
+const FONTS_BESIDE = typeof import.meta.dirname === 'string' ? join(import.meta.dirname, '..', 'fonts') : '';
+const FONTS_DIR = FONTS_BESIDE && existsSync(join(FONTS_BESIDE, 'OFL.txt')) ? FONTS_BESIDE : join(process.cwd(), 'src', 'report', 'fonts');
+const file = (name: string) => join(FONTS_DIR, name);
 
 let registered = false;
 

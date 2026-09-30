@@ -37,7 +37,9 @@ export const TEAM_NAV: readonly NavSection[] = [
     label: 'AdmitLabs team',
     items: [
       { href: '/team', label: 'Institutions', icon: 'institution' },
-      { href: '/team/ads', label: 'Rival ads', icon: 'rivals' },
+      { href: '/team/bulk', label: 'Bulk Audit', icon: 'grid' },
+      { href: '/team/ads', label: 'Manual entry', icon: 'rivals' },
+      { href: '/team/users', label: 'Team users', icon: 'team' },
     ],
   },
 ];

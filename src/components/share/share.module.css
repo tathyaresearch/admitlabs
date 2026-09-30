@@ -1,0 +1,300 @@
+/*
+  The shared Audit: a prospect opens it from a private link, with no sign in. One calm page in
+  the brand: a black header, the score, what to fix, what's working and every check with its
+  source. Works on a phone first.
+*/
+
+.page {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.hero {
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.heroInner,
+.main,
+.footInner {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.heroTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.heroLabel {
+  font: var(--type-caption-strong);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.heroBody {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-12);
+}
+
+.heroTitle {
+  font: var(--type-display);
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
+}
+
+.heroCaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.heroCaption a {
+  color: inherit;
+}
+
+.main {
+  display: grid;
+  gap: var(--space-14);
+  padding: var(--space-10) var(--gutter) var(--space-16);
+}
+
+.section {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.cards {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 60rem) {
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-raised);
+  border-radius: var(--radius-lg);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.number {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+  background: var(--text);
+  color: var(--surface);
+  font: var(--type-caption-strong);
+}
+
+.cardTitle {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+}
+
+.label {
+  font: var(--type-caption-strong);
+}
+
+.text {
+  font: var(--type-small);
+}
+
+.muted {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.source a {
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+
+.gain {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  font: var(--type-caption-strong);
+}
+
+.rows {
+  display: grid;
+}
+
+.row {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.rowHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.rowName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  font: var(--type-strong);
+}
+
+.canFix {
+  font: var(--type-caption-strong);
+}
+
+.pillar {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.pillarTitle {
+  font: var(--type-section);
+  letter-spacing: var(--tracking-section);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.part {
+  display: grid;
+  gap: var(--space-1);
+}
+
+@media (min-width: 48rem) {
+  .part {
+    grid-template-columns: 12rem minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+}
+
+.partResult {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  justify-items: start;
+}
+
+.partProgram {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.closing {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+}
+
+@media (min-width: 60rem) {
+  .closing {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+.closingTitle {
+  font: var(--type-section);
+  font-size: var(--size-title);
+  letter-spacing: var(--tracking-title);
+}
+
+.closingText {
+  font: var(--type-body);
+  color: var(--text-muted);
+}
+
+.closingText a {
+  color: var(--text);
+  font-weight: var(--weight-medium);
+}
+
+.closingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.foot {
+  padding: var(--space-6) var(--gutter);
+  border-top: 1px solid var(--line);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.footInner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+/* Expired link. */
+
+.expired {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-8) var(--gutter);
+}
+
+.expiredCard {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-5);
+  max-width: 28rem;
+}
+
+.expiredTitle {
+  font: var(--type-title);
+  letter-spacing: var(--tracking-title);
+}

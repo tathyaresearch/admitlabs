@@ -59,7 +59,7 @@ export default async function HomePage() {
         meta={
           <>
             <Tag variant="solid">{TIER_LABELS[viewer.tier]} plan</Tag>
-            <Tag>{MEMBERSHIP_ROLE_LABELS[role]}</Tag>
+            <Tag>{viewer.viewingAs ? 'Read only' : MEMBERSHIP_ROLE_LABELS[role]}</Tag>
             <a className={styles.site} href={institution.website} target="_blank" rel="noreferrer">
               {institution.website.replace(/^https?:\/\//, '')}
               <Icon name="external" size={14} />

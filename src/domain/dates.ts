@@ -15,6 +15,12 @@ export function istParts(date: Date): { year: number; month: number; day: number
   return { year: ist.getUTCFullYear(), month: ist.getUTCMonth() + 1, day: ist.getUTCDate() };
 }
 
+/** Hour (0 to 23) and minute in India. */
+export function istTime(date: Date): { hour: number; minute: number } {
+  const ist = toIstFields(date);
+  return { hour: ist.getUTCHours(), minute: ist.getUTCMinutes() };
+}
+
 /** Calendar day number in India (whole days since 1 Jan 1970, India time). */
 export function istDayNumber(date: Date): number {
   return Math.floor((date.getTime() + IST_OFFSET_MS) / DAY_MS);

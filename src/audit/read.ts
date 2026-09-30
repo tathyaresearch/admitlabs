@@ -4,6 +4,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../lib/supabase/database.types.ts';
+import type { AuditKind } from '../domain/types.ts';
 import type { HistoryRow, StoredAudit, StoredCheck } from './view.ts';
 
 type Db = SupabaseClient<Database>;
@@ -15,15 +16,18 @@ export class AuditReadError extends Error {
   }
 }
 
-const OWN_KINDS = ['free', 'paid', 'client'] as const;
+const OWN_KINDS: readonly AuditKind[] = ['free', 'paid', 'client'];
 
-/** The institution's latest own Audit, before `before` when given, with every check the reader may see. */
-export async function latestStoredAudit(db: Db, institutionId: string, before?: Date): Promise<StoredAudit | null> {
+/**
+ * The institution's latest own Audit (or of the given kinds, such as a team Audit), before
+ * `before` when given, with every check the reader may see.
+ */
+export async function latestStoredAudit(db: Db, institutionId: string, before?: Date, kinds: readonly AuditKind[] = OWN_KINDS): Promise<StoredAudit | null> {
   let query = db
     .from('audits')
     .select('id, run_at, kind, trigger, program_count, previous_audit_id, overall, discovered, trusted, chosen, overall_change, discovered_change, trusted_change, chosen_change')
     .eq('institution_id', institutionId)
-    .in('kind', [...OWN_KINDS]);
+    .in('kind', [...kinds]);
   if (before) query = query.lt('run_at', before.toISOString());
   const { data: audit, error } = await query.order('run_at', { ascending: false }).limit(1).maybeSingle();
   if (error) throw new AuditReadError(`Could not load the Audit: ${error.message}`);

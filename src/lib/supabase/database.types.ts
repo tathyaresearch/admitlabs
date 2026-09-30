@@ -57,10 +57,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "actions_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "actions_rival_institution_id_fkey"
             columns: ["rival_institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actions_rival_institution_id_fkey"
+            columns: ["rival_institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -152,6 +166,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "audit_checks_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["audit_id"]
+          },
+          {
             foreignKeyName: "audit_checks_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
@@ -204,6 +225,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "audits"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_program_scores_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["audit_id"]
           },
           {
             foreignKeyName: "audit_program_scores_program_id_fkey"
@@ -288,13 +316,120 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "audits_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "audits_previous_audit_id_fkey"
             columns: ["previous_audit_id"]
             isOneToOne: false
             referencedRelation: "audits"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "audits_previous_audit_id_fkey"
+            columns: ["previous_audit_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["audit_id"]
+          },
         ]
+      }
+      bulk_run_rows: {
+        Row: {
+          audit_id: string | null
+          details: Json
+          institution_id: string | null
+          message: string | null
+          outcome: string
+          position: number
+          reused: boolean
+          run_id: string
+        }
+        Insert: {
+          audit_id?: string | null
+          details: Json
+          institution_id?: string | null
+          message?: string | null
+          outcome?: string
+          position: number
+          reused?: boolean
+          run_id: string
+        }
+        Update: {
+          audit_id?: string | null
+          details?: Json
+          institution_id?: string | null
+          message?: string | null
+          outcome?: string
+          position?: number
+          reused?: boolean
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_run_rows_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bulk_run_rows_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["audit_id"]
+          },
+          {
+            foreignKeyName: "bulk_run_rows_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bulk_run_rows_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bulk_run_rows_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bulk_runs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          source: string
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          source: string
+          total: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          source?: string
+          total?: number
+        }
+        Relationships: []
       }
       cities: {
         Row: {
@@ -369,6 +504,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "demand_items_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "demand_items_pull_id_fkey"
             columns: ["pull_id"]
             isOneToOne: false
@@ -435,6 +577,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: true
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_status_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -525,6 +674,13 @@ export type Database = {
             referencedRelation: "institutions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "invites_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       memberships: {
@@ -552,6 +708,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memberships_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -584,6 +747,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -622,6 +792,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -669,6 +846,13 @@ export type Database = {
             referencedRelation: "institutions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "plans_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       programs: {
@@ -702,6 +886,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programs_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -742,6 +933,13 @@ export type Database = {
             referencedRelation: "institutions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reports_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       rival_ads: {
@@ -775,6 +973,13 @@ export type Database = {
             columns: ["rival_institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rival_ads_rival_institution_id_fkey"
+            columns: ["rival_institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -812,6 +1017,13 @@ export type Database = {
             referencedRelation: "institutions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rival_changes_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       rival_checks: {
@@ -836,6 +1048,13 @@ export type Database = {
             columns: ["rival_institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rival_checks_rival_institution_id_fkey"
+            columns: ["rival_institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -882,6 +1101,13 @@ export type Database = {
             referencedRelation: "institutions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rival_content_rival_institution_id_fkey"
+            columns: ["rival_institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       rival_moves: {
@@ -917,6 +1143,13 @@ export type Database = {
             referencedRelation: "institutions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rival_moves_rival_institution_id_fkey"
+            columns: ["rival_institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       rivals: {
@@ -947,10 +1180,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "rivals_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "rivals_rival_institution_id_fkey"
             columns: ["rival_institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rivals_rival_institution_id_fkey"
+            columns: ["rival_institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -990,21 +1237,30 @@ export type Database = {
           audit_id: string
           created_at: string
           created_by: string | null
+          expires_at: string
           institution_id: string
+          stopped_at: string | null
+          stopped_by: string | null
           token: string
         }
         Insert: {
           audit_id: string
           created_at?: string
           created_by?: string | null
+          expires_at: string
           institution_id: string
+          stopped_at?: string | null
+          stopped_by?: string | null
           token?: string
         }
         Update: {
           audit_id?: string
           created_at?: string
           created_by?: string | null
+          expires_at?: string
           institution_id?: string
+          stopped_at?: string | null
+          stopped_by?: string | null
           token?: string
         }
         Relationships: [
@@ -1016,10 +1272,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "share_links_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["audit_id"]
+          },
+          {
             foreignKeyName: "share_links_institution_id_fkey"
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "share_links_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -1064,6 +1334,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "signals_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "signals_program_belongs"
             columns: ["program_id", "institution_id"]
             isOneToOne: false
@@ -1071,6 +1348,27 @@ export type Database = {
             referencedColumns: ["id", "institution_id"]
           },
         ]
+      }
+      team_invites: {
+        Row: {
+          created_at: string
+          email: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["team_role"]
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          invited_by?: string | null
+          role: Database["public"]["Enums"]["team_role"]
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["team_role"]
+        }
+        Relationships: []
       }
       team_users: {
         Row: {
@@ -1092,15 +1390,69 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      team_institutions: {
+        Row: {
+          audit_id: string | null
+          audit_kind: Database["public"]["Enums"]["audit_kind"] | null
+          checked_at: string | null
+          city: string | null
+          claimed: boolean | null
+          created_at: string | null
+          id: string | null
+          is_prospect: boolean | null
+          name: string | null
+          plan_ends_at: string | null
+          plan_starts_at: string | null
+          plan_tier: Database["public"]["Enums"]["tier"] | null
+          programs: number | null
+          score: number | null
+          slug: string | null
+          state: string | null
+          status: string | null
+          tier: Database["public"]["Enums"]["tier"] | null
+          type: Database["public"]["Enums"]["institution_type"] | null
+          website: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institutions_city_listed"
+            columns: ["city", "state"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["name", "state"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_invites: { Args: never; Returns: string }
+      accept_team_invite: {
+        Args: never
+        Returns: Database["public"]["Enums"]["team_role"]
+      }
       add_program: {
         Args: { p_name: string; p_program_key: string }
         Returns: string
       }
+      add_prospect: {
+        Args: { p_details: Json }
+        Returns: {
+          prospect_id: string
+          reused: boolean
+        }[]
+      }
+      add_team_user: {
+        Args: {
+          p_email: string
+          p_role: Database["public"]["Enums"]["team_role"]
+        }
+        Returns: string
+      }
       archive_program: { Args: { p_program: string }; Returns: undefined }
+      create_share_link: {
+        Args: { p_audit: string; p_days: number }
+        Returns: string
+      }
       demand_highlight: {
         Args: { p_institution: string }
         Returns: {
@@ -1130,6 +1482,7 @@ export type Database = {
         Args: { p_institution: string }
         Returns: Record<string, unknown>
       }
+      end_plan: { Args: { p_institution: string }; Returns: undefined }
       institution_people: {
         Args: { p_institution: string }
         Returns: {
@@ -1180,6 +1533,8 @@ export type Database = {
       }
       record_rival_check: { Args: { payload: Json }; Returns: number }
       remove_member: { Args: { p_user: string }; Returns: undefined }
+      remove_team_invite: { Args: { p_email: string }; Returns: undefined }
+      remove_team_user: { Args: { p_user: string }; Returns: undefined }
       revoke_invite: { Args: { p_invite: string }; Returns: undefined }
       rival_review_trend: {
         Args: { p_rival: string }
@@ -1218,6 +1573,32 @@ export type Database = {
         Returns: string[]
       }
       set_free_program: { Args: { p_program: string }; Returns: undefined }
+      set_plan: {
+        Args: {
+          p_institution: string
+          p_starts_at: string
+          p_tier: Database["public"]["Enums"]["tier"]
+        }
+        Returns: undefined
+      }
+      set_team_role: {
+        Args: {
+          p_role: Database["public"]["Enums"]["team_role"]
+          p_user: string
+        }
+        Returns: undefined
+      }
+      shared_audit: { Args: { p_token: string }; Returns: Json }
+      team_people: {
+        Args: never
+        Returns: {
+          email: string
+          pending: boolean
+          role: Database["public"]["Enums"]["team_role"]
+          since: string
+          user_id: string
+        }[]
+      }
       update_institution: {
         Args: {
           p_city: string

@@ -5,10 +5,12 @@
 
 import { INDIA_CITIES } from '../src/config/cities.ts';
 import { SCORING_V1 } from '../src/config/scoring.v1.ts';
+import { TEAM_RULES } from '../src/config/team.ts';
 import { runAudit } from '../src/audit/run.ts';
 import { neededNow, pullDemand, watchList } from '../src/demand/jobs.ts';
 import { pullDayOf } from '../src/demand/schedule.ts';
 import { istDate } from '../src/domain/dates.ts';
+import { formatDate } from '../src/domain/format.ts';
 import { paidPlanEndsAt } from '../src/domain/tiers.ts';
 import { TIER_LABELS } from '../src/domain/types.ts';
 import type { Database, Json } from '../src/lib/supabase/database.types.ts';
@@ -23,12 +25,14 @@ import {
   SAMPLE_NOTES,
   SAMPLE_RIVALS,
   SAMPLE_RUNS,
+  SAMPLE_SHARES,
   SAMPLE_TODAY,
   SAMPLE_USERS,
   TEAM_EMAIL,
   institutionId,
   programId,
   sampleInstitution,
+  sampleToken,
 } from '../src/sample/index.ts';
 import { serviceClient } from './lib/db.ts';
 import { fail } from './lib/local.ts';
@@ -124,15 +128,19 @@ async function main(): Promise<void> {
   );
   await insert(
     'memberships',
-    SAMPLE_USERS.flatMap((user) =>
-      user.institutionSlug && user.membershipRole
-        ? [{ user_id: requireUser(user.email), institution_id: institutionId(user.institutionSlug), role: user.membershipRole }]
-        : [],
-    ),
+    SAMPLE_USERS.flatMap((user) => {
+      if (!user.institutionSlug || !user.membershipRole) return [];
+      // Owners joined when they signed up; members a week later, when the owner invited them.
+      const signedUp = istDate(sampleInstitution(user.institutionSlug).claimedAt ?? SAMPLE_TODAY, 10);
+      const joined = user.membershipRole === 'owner' ? signedUp : new Date(signedUp.getTime() + 7 * DAY_MS);
+      return [{ user_id: requireUser(user.email), institution_id: institutionId(user.institutionSlug), role: user.membershipRole, created_at: joined.toISOString() }];
+    }),
   );
+  // The team was there before the first institution was added.
+  const teamSince = at(SAMPLE_INSTITUTIONS.map((sample) => sample.createdAt).sort()[0] ?? SAMPLE_TODAY, 9);
   await insert(
     'team_users',
-    SAMPLE_USERS.flatMap((user) => (user.teamRole ? [{ user_id: requireUser(user.email), role: user.teamRole }] : [])),
+    SAMPLE_USERS.flatMap((user) => (user.teamRole ? [{ user_id: requireUser(user.email), role: user.teamRole, created_at: teamSince }] : [])),
   );
   await insert(
     'plans',
@@ -234,6 +242,33 @@ async function main(): Promise<void> {
     })),
   );
 
+  // Share links: Cedar's team Audit, shared the day after it ran. The link is printed below.
+  const shares: { url: string; name: string; expiresAt: Date }[] = [];
+  for (const share of SAMPLE_SHARES) {
+    const { data: audit, error: auditError } = await db
+      .from('audits')
+      .select('id')
+      .eq('institution_id', institutionId(share.slug))
+      .eq('kind', 'team')
+      .order('run_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (auditError || !audit) fail(`Could not find the team Audit to share for ${share.slug}.`);
+    const createdAt = istDate(share.createdAt, 11);
+    const expiresAt = new Date(createdAt.getTime() + TEAM_RULES.shareLinkDays * DAY_MS);
+    await insert('share_links', [
+      {
+        token: sampleToken(share.slug),
+        institution_id: institutionId(share.slug),
+        audit_id: audit.id,
+        created_by: requireUser(TEAM_EMAIL),
+        created_at: createdAt.toISOString(),
+        expires_at: expiresAt.toISOString(),
+      },
+    ]);
+    shares.push({ url: `http://localhost:3000/share/${sampleToken(share.slug)}`, name: sampleInstitution(share.slug).name, expiresAt });
+  }
+
   // Demand: one shared pull per region and program each month, through the live path, on the
   // 28th. September's big spikes alert the Paid and Client institutions in Guwahati.
   const needed = await neededNow(db);
@@ -299,6 +334,8 @@ async function main(): Promise<void> {
         : 'AdmitLabs team';
     console.log(`  ${user.email.padEnd(38)} ${label}`);
   }
+  console.log('\nShared Audits open without signing in:');
+  for (const share of shares) console.log(`  ${share.url}  ${share.name}, works until ${formatDate(share.expiresAt)}`);
   console.log(`\nSign-in codes arrive in Mailpit: ${process.env.DRISHTI_MAILPIT_URL ?? 'http://127.0.0.1:55324'}\n`);
 }
 

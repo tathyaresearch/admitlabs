@@ -24,7 +24,8 @@ export interface PageProps {
   compact?: boolean;
 }
 
-function ContentPage({ data, children }: { data: ReportData; children: ReactElement[] }): ReactElement {
+/** An ivory page with the footer. */
+export function ContentPage({ data, children }: { data: Pick<ReportData, 'institution' | 'monthLabel'>; children: ReactElement[] }): ReactElement {
   return h(Page, { size: 'A4', style: styles.page }, ...children, h(Footer, { institution: data.institution.name, month: data.monthLabel }));
 }
 
@@ -211,7 +212,7 @@ export function SummaryPage({ data }: PageProps): ReactElement {
 
 // 3. What to fix ----------------------------------------------------------------------------------
 
-function FixBlock({ fix, first, compact }: { fix: ReportFix; first: boolean; compact: boolean }): ReactElement {
+export function FixBlock({ fix, first, compact }: { fix: ReportFix; first: boolean; compact: boolean }): ReactElement {
   const single = fix.results.length === 1 && fix.results[0]?.program === null ? fix.results[0] : null;
   return h(
     Keep,
@@ -406,7 +407,7 @@ function ProgramTable({ programs }: { programs: ReportData['programs'] }): React
   );
 }
 
-export function ProgramsPage({ data }: PageProps): ReactElement {
+export function ProgramsPage({ data }: { data: Pick<ReportData, 'institution' | 'monthLabel' | 'programs' | 'morePrograms'>; compact?: boolean }): ReactElement {
   const cards = data.programs.length <= PROGRAM_CARDS;
   return h(ContentPage, {
     data,

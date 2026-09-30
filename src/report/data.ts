@@ -223,7 +223,7 @@ export function changeSince(change: number | null, since: string): string | null
 }
 
 /** "BBA, MBA and B.Com" for the programs of a program check, or null for an institution check. */
-function programsOf(item: ListItem): string | null {
+export function programsOf(item: ListItem): string | null {
   const names = [...new Set(item.parts.flatMap((part) => (part.programName ? [part.programName] : [])))];
   return names.length ? joinNames(names) : null;
 }
@@ -269,7 +269,39 @@ function fixRow(item: ListItem): ReportFixRow {
   };
 }
 
-function fixOf(item: ListItem): ReportFix {
+/** One of what's working, as the PDF prints it. */
+export function workingRow(item: ListItem): ReportData['working'][number] {
+  return {
+    rank: item.rank,
+    name: item.name,
+    programs: programsOf(item),
+    result: item.strength ?? 'okay',
+    worth: pointsWorthText(item.points),
+    finding: item.parts.find((part) => part.detail)?.detail?.finding ?? null,
+  };
+}
+
+/** Each program in name order, with its score and the one fix that would help it most. */
+export function programRows(audit: StoredAudit, options: { institutionType: InstitutionType; programNames: ReadonlyMap<string, string> }): ReportData['programs'] {
+  return [...audit.programs]
+    .map((program) => ({ program, name: options.programNames.get(program.programId) ?? 'Program' }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, REPORT_LIMITS.programs)
+    .map(({ program, name }) => {
+      const top = programView(audit, program.programId, options)?.fixes[0];
+      return {
+        name,
+        score: program.scores.overall,
+        label: scoreLabel(program.scores.overall),
+        change: shortChange(program.changes.overall),
+        pillars: { discovered: program.scores.discovered, trusted: program.scores.trusted, chosen: program.scores.chosen },
+        topFix: top ? checkName(top.key, options.institutionType) : null,
+        topFixGain: top ? pointsToGainText(top.points) : null,
+      };
+    });
+}
+
+export function fixOf(item: ListItem): ReportFix {
   const most = [...item.parts].sort((a, b) => share(a) - share(b))[0];
   const tooMany = item.parts.length > REPORT_LIMITS.partsShown;
   return {
@@ -394,32 +426,10 @@ export function buildReport(input: ReportInput): ReportData {
       history,
       note: view.programsChanged ? 'Your programs changed since the last Audit, so each program shows its own change.' : null,
     },
-    working: view.working.slice(0, REPORT_LIMITS.working).map((item) => ({
-      rank: item.rank,
-      name: item.name,
-      programs: programsOf(item),
-      result: item.strength ?? 'okay',
-      worth: pointsWorthText(item.points),
-      finding: item.parts.find((part) => part.detail)?.detail?.finding ?? null,
-    })),
+    working: view.working.slice(0, REPORT_LIMITS.working).map(workingRow),
     fixes: fixes.slice(0, REPORT_LIMITS.fixesInDetail).map(fixOf),
     moreFixes: fixes.slice(REPORT_LIMITS.fixesInDetail).map(fixRow),
-    programs: [...audit.programs]
-      .map((program) => ({ program, name: input.programNames.get(program.programId) ?? 'Program' }))
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .slice(0, REPORT_LIMITS.programs)
-      .map(({ program, name }) => {
-        const top = programView(audit, program.programId, options)?.fixes[0];
-        return {
-          name,
-          score: program.scores.overall,
-          label: scoreLabel(program.scores.overall),
-          change: shortChange(program.changes.overall),
-          pillars: { discovered: program.scores.discovered, trusted: program.scores.trusted, chosen: program.scores.chosen },
-          topFix: top ? checkName(top.key, institution.type) : null,
-          topFixGain: top ? pointsToGainText(top.points) : null,
-        };
-      }),
+    programs: programRows(audit, options),
     morePrograms: Math.max(0, audit.programs.length - REPORT_LIMITS.programs),
     rivals: input.rivals.length
       ? {
@@ -473,7 +483,7 @@ export function curlyQuotes(text: string): string {
 }
 
 /** Curly quotes in every piece of text in the report. */
-function typeset<T>(value: T): T {
+export function typeset<T>(value: T): T {
   if (typeof value === 'string') return curlyQuotes(value) as T;
   if (Array.isArray(value)) return value.map((entry) => typeset(entry)) as T;
   if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, typeset(entry)])) as T;
@@ -481,7 +491,7 @@ function typeset<T>(value: T): T {
 }
 
 /** Every piece of text in the report, for the copy checks (no dashes, no straight quotes). */
-export function reportTexts(data: ReportData): string[] {
+export function reportTexts(data: unknown): string[] {
   const texts: string[] = [];
   const walk = (value: unknown): void => {
     if (typeof value === 'string') texts.push(value);

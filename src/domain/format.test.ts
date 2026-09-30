@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { contrastRatio } from './contrast.ts';
 import { istDate } from './dates.ts';
-import { formatCount, formatDate, formatDateLong, formatInr, formatMonth, formatMonthShort, groupIndian, hostAndPath, joinNames, ordinal, plural } from './format.ts';
+import { formatCount, formatDate, formatDateLong, formatDateTime, formatInr, formatMonth, formatMonthShort, formatTime, groupIndian, hostAndPath, joinNames, ordinal, plural } from './format.ts';
 import { scoreLabel } from './scores.ts';
 
 describe('formatting for India', () => {
@@ -10,6 +10,13 @@ describe('formatting for India', () => {
     assert.equal(formatDate(istDate('2026-09-30', 12)), '30 Sep 2026');
     assert.equal(formatDate('2026-09-30T19:00:00Z'), '1 Oct 2026');
     assert.equal(formatDateLong(istDate('2026-10-15', 10)), '15 October 2026');
+  });
+
+  test('times read in India time, on a 12 hour clock', () => {
+    assert.equal(formatDateTime('2026-10-01T06:22:00Z'), '1 Oct 2026, 11:52 am');
+    assert.equal(formatTime('2026-09-30T18:45:00Z'), '12:15 am');
+    assert.equal(formatTime('2026-10-01T06:30:00Z'), '12:00 pm');
+    assert.equal(formatTime('2026-10-01T07:35:00Z'), '1:05 pm');
   });
 
   test('months', () => {

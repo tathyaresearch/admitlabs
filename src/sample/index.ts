@@ -4,11 +4,13 @@ import type { InstitutionRef, ProgramRef } from '../providers/types.ts';
 import { institutionId, programId } from './ids.ts';
 import type { SampleInstitution } from './institutions.ts';
 
+export * from './bulk.ts';
 export * from './demand.ts';
 export * from './ids.ts';
 export * from './institutions.ts';
 export * from './profiles.ts';
 export * from './rivals.ts';
+export * from './shares.ts';
 export * from './users.ts';
 
 /** The provider input for a sample institution. */

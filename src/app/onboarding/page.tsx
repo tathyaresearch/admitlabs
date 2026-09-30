@@ -17,7 +17,9 @@ export default async function OnboardingPage() {
   const supabase = await createClient();
 
   if (!viewer.membership) {
-    // Someone the owner invited joins as a Member when they sign in; no form for them.
+    // Someone an Admin added to the team joins it; someone an owner invited joins as a Member. No form for them.
+    const { data: teamRole } = await supabase.rpc('accept_team_invite');
+    if (teamRole) redirect('/team');
     const { data: joined } = await supabase.rpc('accept_invites');
     if (joined) redirect('/');
 

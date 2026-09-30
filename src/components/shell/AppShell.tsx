@@ -22,10 +22,12 @@ interface AppShellProps {
   showNotifications?: boolean;
   /** Unread notifications, shown on the bell. */
   unread?: number;
+  /** A strip under the top bar, for example while the team views an institution's dashboard. */
+  banner?: ReactNode;
   children: ReactNode;
 }
 
-export function AppShell({ sections, homeHref, email, roleLabel, context, showNotifications = true, unread = 0, children }: AppShellProps) {
+export function AppShell({ sections, homeHref, email, roleLabel, context, showNotifications = true, unread = 0, banner, children }: AppShellProps) {
   return (
     <div className={styles.shell}>
       <a className="skip-link" href="#main">
@@ -74,6 +76,7 @@ export function AppShell({ sections, homeHref, email, roleLabel, context, showNo
             <AccountMenu email={email} roleLabel={roleLabel} institutionName={context?.title} />
           </div>
         </header>
+        {banner}
 
         <main id="main" className={styles.main}>
           {children}

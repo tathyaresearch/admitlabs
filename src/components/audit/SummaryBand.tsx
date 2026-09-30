@@ -13,11 +13,12 @@ function shortChange(change: number | null): string | null {
   return `${change > 0 ? 'Up' : 'Down'} ${Math.abs(change)}`;
 }
 
-export function SummaryBand({ view, caption = 'Overall score' }: { view: AuditView; caption?: string }) {
+/** `showChange` off leaves out every change, for an Audit seen on its own (a shared Audit). */
+export function SummaryBand({ view, caption = 'Overall score', showChange = true }: { view: AuditView; caption?: string; showChange?: boolean }) {
   // The first Audit says so once, on the overall score. When the programs changed, the overall
   // change is left out rather than comparing different things.
-  const overallChange = view.programsChanged ? undefined : view.changes.overall;
-  const quiet = view.firstAudit || view.programsChanged;
+  const overallChange = view.programsChanged || !showChange ? undefined : view.changes.overall;
+  const quiet = view.firstAudit || view.programsChanged || !showChange;
   return (
     <section className={styles.band} aria-labelledby="summary-title">
       <h2 id="summary-title" className="visually-hidden">

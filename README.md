@@ -44,7 +44,7 @@ Any other email creates a new account and goes to onboarding: the institution's 
 
 ## Try the Audit on each tier
 
-The sample covers Free (Northbank, Silverline), Paid (Eastgate) and Client (Brightpath). To see one institution on every tier, sign up with a new email, then switch its tier here (in the product only an Admin does this):
+The sample covers Free (Northbank, Silverline), Paid (Eastgate) and Client (Brightpath). To see one institution on every tier, sign up with a new email, then switch its tier here (in the product an Admin does this on the institution's page in the team area):
 
 ```
 npm run tier -- --institution <slug> --tier paid
@@ -90,7 +90,7 @@ npm run rivals -- --actions --institution eastgate-university
 
 - `--due` runs everything due that day: a rival Audit for every tracked rival without one since the 1st of the month; the weekly check (moves and best content) for every rival not checked this week, with an alert to each Paid and Client institution tracking it for every new move; and the Rivals 3 things to do for every Paid and Client institution without this month's list.
 - `--check` runs one weekly check now. `--actions` rebuilds one institution's 3 things to do (they also follow each Paid or Client Audit).
-- Rival ads are entered by the team at `/team/ads`.
+- Rival ads are entered by the team under Manual entry, at `/team/ads`.
 
 ## Demand
 
@@ -133,6 +133,20 @@ npm run report -- --institution eastgate-university --month 2026-08 --preview --
 - `--due` makes every report due that day. `--institution` makes (or makes again) one month's report; `--out` also saves a copy, and `--preview` only renders it (nothing stored or recorded).
 - The sample data includes the August 2026 report for Eastgate University (Paid) and Brightpath Skills Academy (Client), made on 1 September.
 
+## Team tools
+
+The AdmitLabs team area at `/team` (spec section 13), for `team@admitlabs.example` and `admin@admitlabs.example`. To everyone else it does not exist.
+
+- **Institutions** (`/team`): everyone in Drishti, 50 a page. Search by name or website; filter by type, city, state, status (signed up, prospect, rival record), plan and score; sort by name, score or last check. The counts at the top open the matching list.
+- **Bulk Audit** (`/team/bulk`): paste a list or choose a CSV file, up to 100 rows a run. One institution per line: `name, website, city, type, programs, instagram`, with programs separated by semicolons and Instagram optional. A header row can put the columns in any order and add a `state` column. Every row is checked first: Ready, Needs fixing, or skipped because the institution has signed up. A website already on record reuses that record. Each ready row becomes a prospect with a private team Audit, with a progress bar and the results. Past runs stay under Earlier runs. "Try a sample list" loads 5 fictional institutions.
+- **Institution page** (`/team/institutions/<id>`): the latest score, what to fix first, every Audit, programs, private notes (team only), people and the record. **Audit now** runs a private team Audit; for a Client it runs their own Audit, which they see. **Open their dashboard** shows a signed-up institution's dashboard exactly as they see it, read only, under a bar that says so.
+- **Plans** (Admin only, on the institution page): start Paid from the day of payment (today, or up to 6 months back; always 6 months), make them a Client, or end the plan now. The first Audit of a new plan runs straight away. The database refuses these for anyone but an Admin (`set_plan`, `end_plan`).
+- **Sharing** (prospects and rival records only): **Create a link** makes a private link to the latest team Audit. It works for 90 days unless the team stops it sooner. It opens without signing in, at `/share/<token>`, and is never indexed: the score, every check with its result, what was found, the source and the date, how to fix for the top 3 fixes only, and "AdmitLabs can fix this" for the rest. It ends with "Want AdmitLabs to fix this for you? hello@admitlabs.in" and "Get your free Audit". **Download PDF** gives the same content as a PDF, on the team page and on the shared page. An expired or stopped link says so and offers the free Audit. A link keeps working after the prospect signs up; their team Audits and notes stay invisible to them.
+- **Manual entry** (`/team/ads`): rival ads, entered by hand until a provider can collect them.
+- **Team users** (`/team/users`): an Admin adds someone by email as Team or Admin (someone who has signed in before joins at once, anyone else at first sign in), changes roles and removes people. There is always at least one Admin.
+
+The limits (90 days, top 3 fixes, 100 rows a run, 50 a page, Paid ending within 30 days) are `TEAM_RULES` in `src/config/team.ts`. The sample data includes a live shared Audit for Cedar Skill Institute; `npm run db:reset` prints its link.
+
 ## Local addresses
 
 | What | Address |
@@ -168,18 +182,19 @@ npm run report -- --institution eastgate-university --month 2026-08 --preview --
 supabase/        config, migrations (schema, row level security, owner actions), database tests, email template
 scripts/         env, seed, audit, tier, rivals, demand, report, dash check (TypeScript run directly by Node)
 src/app/         routes: (product)/drishti, login, (dashboard), onboarding, team, share, design-system
-src/components/  ui, charts, audit, rivals, demand and report screens, institution inputs and the app shell
+src/components/  ui, charts, audit, rivals, demand, report, team and share screens, institution inputs and the app shell
 src/domain/      pure logic: the scoring engine (domain/scoring), checks, schedules, onboarding checks, dates, tiers
 src/config/      every adjustable value: scoring, plans, entitlements, schedules, providers, cities, programs
 src/providers/   the provider interface, mock providers, and real provider slots
 src/audit/       one Audit end to end (collect, score, save) and what the Audit screens show
 src/rivals/      comparisons, verdicts, change rules, the 3 things to do, and the rival jobs
 src/demand/      regions, the pull schedule, ranking and spikes, the season clock, the page view, and the pulls
-src/report/      the monthly report: its schedule, the 3 things to do, the snapshot, the PDF and the job
+src/report/      the monthly report (its schedule, the 3 things to do, the snapshot, the PDF, the job) and the shared Audit PDF
+src/team/        team tools: the bulk list reader, list filters, plan rules and the shared Audit
 src/sample/      the fictional sample world
 ```
 
-`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/report` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library is only ever loaded by the report job, never by the web app.
+`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/report`, `src/team` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, and for shared Audit PDFs (`serverExternalPackages` in `next.config.ts`). Never in the browser.
 
 ## How scores work
 

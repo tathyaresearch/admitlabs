@@ -1,7 +1,7 @@
 // Display formatting for India. Hand-rolled so the server and the browser always agree
 // (Intl month names differ between runtimes, for example "Sep" and "Sept").
 
-import { istParts } from './dates.ts';
+import { istParts, istTime } from './dates.ts';
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
 const MONTHS_LONG = [
@@ -27,6 +27,17 @@ function toDate(value: Date | string): Date {
 export function formatDate(value: Date | string): string {
   const { year, month, day } = istParts(toDate(value));
   return `${day} ${MONTHS_SHORT[month - 1]} ${year}`;
+}
+
+/** "11:52 am", in India time. */
+export function formatTime(value: Date | string): string {
+  const { hour, minute } = istTime(toDate(value));
+  return `${hour % 12 === 0 ? 12 : hour % 12}:${String(minute).padStart(2, '0')} ${hour < 12 ? 'am' : 'pm'}`;
+}
+
+/** "1 Oct 2026, 11:52 am", in India time. */
+export function formatDateTime(value: Date | string): string {
+  return `${formatDate(value)}, ${formatTime(value)}`;
 }
 
 /** "30 September 2026", in India time. */

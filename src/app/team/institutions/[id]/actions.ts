@@ -1,0 +1,196 @@
+'use server';
+
+// The team's actions on one institution. Each checks the team role (and Admin for plans) here,
+// and the database checks again: notes, links and plans are written as the signed-in team user,
+// so row level security and the database functions apply. Audits run with the service key, the
+// one path every Audit takes, only after those checks.
+
+import { revalidatePath } from 'next/cache';
+import { AuditRunError, runAudit } from '@/audit/run';
+import { TEAM_RULES } from '@/config/team';
+import { effectiveTier, type PlanRecord } from '@/domain/tiers';
+import { tidyText } from '@/domain/onboarding';
+import { getViewer } from '@/lib/auth/viewer';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
+import { writeRivalActions } from '@/rivals/jobs';
+import { paidStartFrom } from '@/team/plans';
+
+export interface ActionState {
+  status: 'idle' | 'done' | 'error';
+  message: string | null;
+  /** Changes on every reply, so a form can reset after a success. */
+  attempt: number;
+}
+
+const reply = (previous: ActionState, status: ActionState['status'], message: string | null): ActionState => ({ status, message, attempt: previous.attempt + 1 });
+
+async function teamUser() {
+  const viewer = await getViewer();
+  return viewer?.teamRole ? viewer : null;
+}
+
+const NOT_TEAM = 'Only the AdmitLabs team can do this.';
+const NOT_ADMIN = 'Only an Admin changes plans.';
+
+const pagePath = (institutionId: string) => `/team/institutions/${institutionId}`;
+
+// Notes -------------------------------------------------------------------------------------------
+
+export async function addNoteAction(institutionId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
+  if (!(await teamUser())) return reply(previous, 'error', NOT_TEAM);
+  const body = String(formData.get('body') ?? '').replace(/\r\n/g, '\n').trim();
+  if (!body) return reply(previous, 'error', 'Write the note first.');
+  if (body.length > 2000) return reply(previous, 'error', 'Keep a note under 2,000 characters.');
+  const supabase = await createClient();
+  const { error } = await supabase.from('notes').insert({ institution_id: institutionId, body: tidyNote(body) });
+  if (error) return reply(previous, 'error', 'The note could not be saved. Try again.');
+  revalidatePath(pagePath(institutionId));
+  return reply(previous, 'done', 'Note added.');
+}
+
+/** Plain text, without em or en dashes, keeping line breaks. */
+function tidyNote(body: string): string {
+  return body
+    .split('\n')
+    .map((line) => (line.trim() ? tidyText(line) : ''))
+    .join('\n');
+}
+
+export async function removeNoteAction(institutionId: string, noteId: string): Promise<void> {
+  if (!(await teamUser())) return;
+  const supabase = await createClient();
+  await supabase.from('notes').delete().eq('id', noteId);
+  revalidatePath(pagePath(institutionId));
+}
+
+// Share links ------------------------------------------------------------------------------------
+
+export async function shareAuditAction(institutionId: string, auditId: string, previous: ActionState): Promise<ActionState> {
+  if (!(await teamUser())) return reply(previous, 'error', NOT_TEAM);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('create_share_link', { p_audit: auditId, p_days: TEAM_RULES.shareLinkDays });
+  if (error) {
+    const message = error.message.includes('signed_up')
+      ? 'This institution has signed up, so it has its own dashboard. Links are for prospects.'
+      : error.message.includes('not_team_audit')
+        ? 'Only a team Audit can be shared. Run one first.'
+        : 'The link could not be made. Try again.';
+    return reply(previous, 'error', message);
+  }
+  revalidatePath(pagePath(institutionId));
+  return reply(previous, 'done', `Link ready. It works for ${TEAM_RULES.shareLinkDays} days.`);
+}
+
+export async function stopLinkAction(institutionId: string, token: string): Promise<void> {
+  const viewer = await teamUser();
+  if (!viewer) return;
+  const supabase = await createClient();
+  await supabase.from('share_links').update({ stopped_at: new Date().toISOString(), stopped_by: viewer.userId }).eq('token', token).is('stopped_at', null);
+  revalidatePath(pagePath(institutionId));
+}
+
+// Audit now -----------------------------------------------------------------------------------------
+
+function planRecord(row: { tier: PlanRecord['tier']; starts_at: string; ends_at: string | null } | null): PlanRecord | null {
+  return row ? { tier: row.tier, startsAt: new Date(row.starts_at), endsAt: row.ends_at ? new Date(row.ends_at) : null } : null;
+}
+
+/**
+ * A Client's own Audit, refreshed by the team at any time (they see it, with the usual notice).
+ * For anyone else a private team Audit: a Paid owner's once-a-month refresh stays theirs.
+ */
+export async function auditNowAction(institutionId: string, previous: ActionState): Promise<ActionState> {
+  const viewer = await teamUser();
+  if (!viewer) return reply(previous, 'error', NOT_TEAM);
+  const supabase = await createClient();
+  const [status, plan] = await Promise.all([
+    supabase.from('institution_status').select('claimed').eq('institution_id', institutionId).maybeSingle(),
+    supabase.from('plans').select('tier, starts_at, ends_at').eq('institution_id', institutionId).maybeSingle(),
+  ]);
+  const now = new Date();
+  const client = Boolean(status.data?.claimed) && effectiveTier(planRecord(plan.data), now) === 'client';
+  const admin = createAdminClient();
+  try {
+    if (client) {
+      await runAudit(admin, { institutionId, asOf: now, trigger: 'manual', createdBy: viewer.userId });
+      await writeRivalActions(admin, institutionId, now);
+    } else {
+      await runAudit(admin, { institutionId, asOf: now, trigger: 'manual', kind: 'team', createdBy: viewer.userId });
+    }
+  } catch (error) {
+    if (error instanceof AuditRunError) return reply(previous, 'error', error.message);
+    throw error;
+  }
+  revalidatePath(pagePath(institutionId));
+  revalidatePath('/team');
+  const done = client
+    ? 'Their Audit is refreshed. They see it now, with the usual notice.'
+    : status.data?.claimed
+      ? 'Team Audit saved. Only the team sees it.'
+      : 'Team Audit saved. It stays private until you share it.';
+  return reply(previous, 'done', done);
+}
+
+// Plans (Admin) --------------------------------------------------------------------------------------
+
+function planError(message: string): string {
+  if (message.includes('plan_future')) return 'Paid starts on the day of payment, never in the future.';
+  if (message.includes('plan_over')) return 'A Paid plan from that day would already have ended.';
+  if (message.includes('not_signed_up')) return 'Only an institution that has signed up can have a plan.';
+  if (message.includes('no_active_plan')) return 'There is no active plan to end.';
+  if (message.includes('not_admin')) return NOT_ADMIN;
+  return 'The plan could not be changed. Try again.';
+}
+
+/** The day a Paid or Client plan starts, its first Audit runs (spec section 11). */
+async function firstAudit(institutionId: string, userId: string): Promise<string | null> {
+  const admin = createAdminClient();
+  const now = new Date();
+  try {
+    await runAudit(admin, { institutionId, asOf: now, trigger: 'scheduled', createdBy: userId });
+    await writeRivalActions(admin, institutionId, now);
+    return null;
+  } catch (error) {
+    if (error instanceof AuditRunError) return error.message;
+    throw error;
+  }
+}
+
+export async function startPaidAction(institutionId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
+  const viewer = await teamUser();
+  if (viewer?.teamRole !== 'admin') return reply(previous, 'error', NOT_ADMIN);
+  const now = new Date();
+  const startsAt = paidStartFrom(String(formData.get('startsOn') ?? ''), now);
+  if (!startsAt) return reply(previous, 'error', 'Pick the day of payment: today, or a day in the last 6 months.');
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('set_plan', { p_institution: institutionId, p_tier: 'paid', p_starts_at: startsAt.toISOString() });
+  if (error) return reply(previous, 'error', planError(error.message));
+  const problem = await firstAudit(institutionId, viewer.userId);
+  revalidatePath(pagePath(institutionId));
+  revalidatePath('/team');
+  return reply(previous, 'done', problem ? `Paid has started. The first Paid Audit could not run: ${problem}` : 'Paid has started, and the first Paid Audit is ready.');
+}
+
+export async function makeClientAction(institutionId: string, previous: ActionState): Promise<ActionState> {
+  const viewer = await teamUser();
+  if (viewer?.teamRole !== 'admin') return reply(previous, 'error', NOT_ADMIN);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('set_plan', { p_institution: institutionId, p_tier: 'client', p_starts_at: new Date().toISOString() });
+  if (error) return reply(previous, 'error', planError(error.message));
+  const problem = await firstAudit(institutionId, viewer.userId);
+  revalidatePath(pagePath(institutionId));
+  revalidatePath('/team');
+  return reply(previous, 'done', problem ? `They are a Client now. The first Client Audit could not run: ${problem}` : 'They are a Client now, and their first Client Audit is ready.');
+}
+
+export async function endPlanAction(institutionId: string, previous: ActionState): Promise<ActionState> {
+  const viewer = await teamUser();
+  if (viewer?.teamRole !== 'admin') return reply(previous, 'error', NOT_ADMIN);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('end_plan', { p_institution: institutionId });
+  if (error) return reply(previous, 'error', planError(error.message));
+  revalidatePath(pagePath(institutionId));
+  revalidatePath('/team');
+  return reply(previous, 'done', 'The plan has ended. They are on Free now, and keep their last Audit score and past reports.');
+}

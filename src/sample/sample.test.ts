@@ -20,10 +20,12 @@ import {
   SAMPLE_PROGRAM_KEYS,
   SAMPLE_RIVALS,
   SAMPLE_RUNS,
+  SAMPLE_SHARES,
   SAMPLE_USERS,
   TEAM_EMAIL,
   profileResult,
   sampleId,
+  sampleToken,
   trackResult,
 } from './index.ts';
 
@@ -118,6 +120,15 @@ describe('sample rivals', () => {
 
   test('team notes are only about real sample institutions', () => {
     for (const note of SAMPLE_NOTES) assert.ok(bySlug.has(note.slug));
+  });
+
+  test('sample share links are for prospects, made after their team Audit', () => {
+    assert.ok(SAMPLE_SHARES.length > 0);
+    for (const share of SAMPLE_SHARES) {
+      assert.equal(bySlug.get(share.slug)?.isProspect, true, share.slug);
+      assert.ok((SAMPLE_RUNS[share.slug] ?? []).some((run) => run.kind === 'team' && run.day < share.createdAt), share.slug);
+      assert.match(sampleToken(share.slug), /^[0-9a-f]{32}$/);
+    }
   });
 });
 

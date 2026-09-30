@@ -1,10 +1,17 @@
 // Who is looking: the signed-in user, their team role, their institution and its plan.
 // Read on the server once per request. Row level security applies to every query here.
+//
+// The AdmitLabs team can open an institution's dashboard read only ("view as", spec section 13:
+// everything the institution sees). Then the viewer carries that institution as a Member would,
+// so every screen shows exactly what its plan shows and no owner action is offered. The team can
+// already read everything, so this never widens what anyone can see or change.
 
+import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { effectiveTier, type PlanRecord } from '@/domain/tiers';
 import type { InstitutionType, MembershipRole, TeamRole, Tier } from '@/domain/types';
 import { createClient } from '@/lib/supabase/server';
+import { VIEW_AS_COOKIE } from '@/lib/team/view-as';
 
 export interface ViewerInstitution {
   id: string;
@@ -30,7 +37,11 @@ export interface Viewer {
   plan: ViewerPlan | null;
   /** The tier that applies right now (a Paid plan past its end counts as Free). */
   tier: Tier;
+  /** A team user looking at an institution's dashboard, read only. */
+  viewingAs: boolean;
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const getViewer = cache(async (): Promise<Viewer | null> => {
   const supabase = await createClient();
@@ -52,7 +63,26 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
       .maybeSingle(),
   ]);
 
-  const institution = membership.data?.institution ?? null;
+  const teamRole = team.data?.role ?? null;
+  let institution: ViewerInstitution | null = membership.data?.institution ?? null;
+  let role: MembershipRole | null = membership.data?.role ?? null;
+  let viewingAs = false;
+  if (teamRole) {
+    const viewed = (await cookies()).get(VIEW_AS_COOKIE)?.value;
+    if (viewed && UUID.test(viewed)) {
+      const { data } = await supabase
+        .from('institutions')
+        .select('id, slug, name, type, city, state, website, instagram, youtube, institution_status(claimed)')
+        .eq('id', viewed)
+        .maybeSingle();
+      if (data?.institution_status?.claimed) {
+        const { id, slug, name, type, city, state, website, instagram, youtube } = data;
+        institution = { id, slug, name, type, city, state, website, instagram, youtube };
+        role = 'member';
+        viewingAs = true;
+      }
+    }
+  }
   let plan: ViewerPlan | null = null;
   if (institution) {
     const { data } = await supabase.from('plans').select('tier, starts_at, ends_at, free_program_id').eq('institution_id', institution.id).maybeSingle();
@@ -69,10 +99,11 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   return {
     userId,
     email,
-    teamRole: team.data?.role ?? null,
-    membership: membership.data && institution ? { role: membership.data.role, institution } : null,
+    teamRole,
+    membership: role && institution ? { role, institution } : null,
     plan,
     tier: effectiveTier(plan, new Date()),
+    viewingAs,
   };
 });
 

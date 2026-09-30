@@ -13,7 +13,7 @@ import styles from './ads.module.css';
 // The title only names the page for the team, so the team area stays invisible to everyone else.
 export async function generateMetadata(): Promise<Metadata> {
   const viewer = await getViewer();
-  return { title: viewer?.teamRole ? 'Rival ads' : 'Page not found' };
+  return { title: viewer?.teamRole ? 'Manual entry' : 'Page not found' };
 }
 
 export default async function RivalAdsPage() {
@@ -36,17 +36,17 @@ export default async function RivalAdsPage() {
     <div className={styles.page}>
       <PageHeader
         eyebrow="AdmitLabs team"
-        title="Rival ads"
-        description="What rivals promise in their ads, entered by hand until a provider can collect them. Paid and Client institutions tracking the rival see each one with its link and date."
+        title="Manual entry"
+        description="What a provider cannot collect yet, entered by hand. For now that is what rivals promise in their ads. Paid and Client institutions tracking the rival see each one with its link and date."
       />
 
-      <Section id="add" title="Add an ad" description="Only rivals someone tracks are listed.">
+      <Section id="add" title="Add a rival ad" description="Only rivals someone tracks are listed.">
         <Card>
           <AdForm rivals={rivals} today={today} />
         </Card>
       </Section>
 
-      <Section id="entered" title="Entered ads" description="The latest 50, newest first.">
+      <Section id="entered" title="Rival ads entered" description="The latest 50, newest first.">
         <Card>
           {ads.data?.length ? (
             <ul className={styles.list}>

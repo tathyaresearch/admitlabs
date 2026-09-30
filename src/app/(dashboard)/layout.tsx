@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { INSTITUTION_NAV } from '@/components/shell/nav';
 import { AppShell } from '@/components/shell/AppShell';
+import { ViewAsBar } from '@/components/team/ViewAsBar';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
@@ -15,8 +16,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       sections={INSTITUTION_NAV}
       homeHref="/"
       email={viewer.email}
-      roleLabel={MEMBERSHIP_ROLE_LABELS[role]}
+      roleLabel={viewer.viewingAs ? 'AdmitLabs team, read only' : MEMBERSHIP_ROLE_LABELS[role]}
       unread={count ?? 0}
+      banner={viewer.viewingAs ? <ViewAsBar name={institution.name} /> : undefined}
       context={{
         title: institution.name,
         detail: `${INSTITUTION_TYPE_LABELS[institution.type]}, ${institution.city}`,
