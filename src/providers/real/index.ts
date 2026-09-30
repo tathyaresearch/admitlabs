@@ -26,4 +26,7 @@ export const realAnalysis: AnalysisProvider = {
   async contentIdeas() {
     throw new ProviderNotConnectedError('analysis');
   },
+  async fixAdvice() {
+    throw new ProviderNotConnectedError('analysis');
+  },
 };

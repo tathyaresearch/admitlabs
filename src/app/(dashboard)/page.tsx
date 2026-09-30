@@ -1,30 +1,35 @@
+import { overviewView } from '@/audit/view';
+import { CompactFixList } from '@/components/audit/AuditLists';
+import { ScorePanel } from '@/components/audit/ScorePanel';
 import { ButtonLink } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Data';
-import { Notice } from '@/components/ui/Feedback';
+import { EmptyState, Notice } from '@/components/ui/Feedback';
 import { Icon, type IconName } from '@/components/ui/Icon';
-import { Card, CardLink, Eyebrow, FactList, PageHeader } from '@/components/ui/Layout';
+import { Card, CardLink, Eyebrow, FactList, PageHeader, Section } from '@/components/ui/Layout';
+import { limitFor } from '@/config/entitlements';
 import { formatDate } from '@/domain/format';
 import { planReminder } from '@/domain/tiers';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
-import { createClient } from '@/lib/supabase/server';
+import { loadAuditPage, nextAuditText } from '@/lib/audit/load';
 import styles from './home.module.css';
 
 export const metadata = { title: 'Home' };
 
-const FEATURES: ReadonlyArray<{ href: string; name: string; question: string; text: string; phase: number; icon: IconName }> = [
-  { href: '/audit', name: 'Audit', question: 'How do we look?', text: 'Checks your public presence the way a student sees it, and gives you a score.', phase: 2, icon: 'audit' },
-  { href: '/rivals', name: 'Rivals', question: "Who's ahead of us?", text: 'Tracks 3 to 5 competing institutions: their score, best content and moves.', phase: 3, icon: 'rivals' },
-  { href: '/demand', name: 'Demand', question: 'What do students want?', text: 'Listens to what students search and ask online, grouped, never personal.', phase: 4, icon: 'demand' },
+const LATER: ReadonlyArray<{ href: string; name: string; question: string; text: string; phase: number; icon: IconName }> = [
+  { href: '/rivals', name: 'Rivals', question: "Who's ahead of us?", text: 'Your rivals, their score, best content and moves.', phase: 3, icon: 'rivals' },
+  { href: '/demand', name: 'Demand', question: 'What do students want?', text: 'What students search and ask, grouped, never personal.', phase: 4, icon: 'demand' },
 ];
 
 export default async function HomePage() {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
-  const supabase = await createClient();
-  const { data: programs } = await supabase.from('programs').select('id, name').eq('institution_id', institution.id).order('name');
+  const data = await loadAuditPage(viewer);
   const reminder = planReminder(viewer.plan, new Date());
-  const freeProgram = viewer.tier === 'free' ? programs?.find((program) => program.id === viewer.plan?.freeProgramId) : undefined;
+  const view = data.audit ? overviewView(data.audit, { institutionType: institution.type, programNames: data.names }) : null;
+  const topFixes = view ? view.fixes.slice(0, limitFor('audit_what_to_fix', 'free') ?? 3) : [];
+  const activePrograms = data.programs.filter((program) => !program.archived);
+  const freeProgram = viewer.tier === 'free' ? activePrograms.find((program) => program.id === viewer.plan?.freeProgramId) : undefined;
 
   return (
     <div className={styles.page}>
@@ -58,33 +63,77 @@ export default async function HomePage() {
         </Notice>
       ) : null}
 
-      <section aria-labelledby="features-title" className={styles.features}>
-        <h2 id="features-title" className="visually-hidden">
-          Drishti features
-        </h2>
-        {FEATURES.map((feature, index) => (
-          <CardLink key={feature.href} href={feature.href} className={styles.feature}>
-            <div className={styles.featureTop}>
-              <Eyebrow>
-                0{index + 1} / {feature.name}
-              </Eyebrow>
-              <Icon name={feature.icon} size={22} />
-            </div>
-            <h3 className={styles.featureQuestion}>{feature.question}</h3>
-            <p className={styles.featureText}>{feature.text}</p>
-            <Tag variant="quiet">Arrives in Phase {feature.phase}</Tag>
-          </CardLink>
-        ))}
-      </section>
+      {view && data.audit ? (
+        <section aria-labelledby="score-title" className={styles.scoreBlock}>
+          <div className={styles.blockHead}>
+            <h2 id="score-title" className={styles.blockTitle}>
+              Your Audit
+            </h2>
+            <p className={styles.blockMeta}>
+              Checked {formatDate(data.audit.runAt)}. {nextAuditText(data)}.
+            </p>
+          </div>
+          <ScorePanel view={view} />
+        </section>
+      ) : (
+        <EmptyState
+          icon="audit"
+          title={viewer.tier === 'free' && !viewer.plan?.freeProgramId ? 'Pick the program your free Audit covers' : 'Your first Audit is on its way'}
+          action={
+            viewer.tier === 'free' && !viewer.plan?.freeProgramId && role === 'owner' ? (
+              <ButtonLink href="/onboarding" iconAfter="arrowRight">
+                Pick a program
+              </ButtonLink>
+            ) : undefined
+          }
+        >
+          {data.nextAudit ? `${nextAuditText(data)}.` : 'Your score and what to fix first will show here.'}
+        </EmptyState>
+      )}
+
+      <div className={styles.split}>
+        {view ? (
+          <Section
+            id="top-fixes"
+            title="Top 3 fixes"
+            description="The fixes that could add the most to your score."
+            actions={
+              <ButtonLink href="/audit#fix" size="sm" variant="quiet" iconAfter="arrowRight">
+                See all
+              </ButtonLink>
+            }
+          >
+            {topFixes.length ? <CompactFixList items={topFixes} /> : <p className={styles.note}>Every check is Strong. Keep it that way.</p>}
+          </Section>
+        ) : null}
+
+        <Section id="next" title="Coming to your dashboard" description="Rivals, Demand and your 3 things to do each month.">
+          <div className={styles.later}>
+            {LATER.map((feature) => (
+              <CardLink key={feature.href} href={feature.href}>
+                <span className={styles.laterCard}>
+                  <span className={styles.laterTop}>
+                    <Eyebrow>{feature.name}</Eyebrow>
+                    <Icon name={feature.icon} size={20} />
+                  </span>
+                  <span className={styles.laterQuestion}>{feature.question}</span>
+                  <span className={styles.laterText}>{feature.text}</span>
+                  <Tag variant="quiet">Arrives in Phase {feature.phase}</Tag>
+                </span>
+              </CardLink>
+            ))}
+          </div>
+        </Section>
+      </div>
 
       <div className={styles.split}>
         <Card>
           <div className={styles.cardHead}>
             <h2 className={styles.cardTitle}>Programs</h2>
-            <span className={styles.count}>{programs?.length ?? 0}</span>
+            <span className={styles.count}>{activePrograms.length}</span>
           </div>
           <ul className={styles.programs}>
-            {(programs ?? []).map((program) => (
+            {activePrograms.map((program) => (
               <li key={program.id} className={styles.program}>
                 <span>{program.name}</span>
                 {freeProgram?.id === program.id ? <Tag>Free Audit</Tag> : null}

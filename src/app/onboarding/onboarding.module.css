@@ -1,17 +1,53 @@
 .page {
   min-height: 100dvh;
   display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: var(--space-8);
-  padding: var(--space-10) var(--gutter);
+  grid-template-rows: auto 1fr;
 }
 
-.card {
-  display: grid;
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--topbar-height);
+  padding: 0 var(--gutter);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbarEnd {
+  display: flex;
+  align-items: center;
   gap: var(--space-3);
-  justify-items: start;
-  max-width: 32rem;
+  min-width: 0;
+}
+
+.signedIn {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 30rem) {
+  .signedIn {
+    display: none;
+  }
+}
+
+.body {
+  display: grid;
+  align-content: start;
+  gap: var(--space-8);
+  width: 100%;
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: var(--space-12) var(--gutter) var(--space-20);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-2);
 }
 
 .eyebrow {
@@ -29,15 +65,52 @@
   color: var(--text-muted);
 }
 
-.text strong {
-  color: var(--text);
+.form {
+  display: grid;
+  gap: var(--space-8);
 }
 
-.note {
-  margin: var(--space-2) 0;
-  padding: var(--space-3) var(--space-4);
-  border: 1px dashed var(--line-medium);
-  border-radius: var(--radius-sm);
-  font: var(--type-small);
-  font-weight: var(--weight-medium);
+.group {
+  display: grid;
+  gap: var(--space-5);
+  margin: 0;
+  padding: var(--space-6) 0 0;
+  border: 0;
+  border-top: 1px solid var(--line-medium);
+  min-width: 0;
+}
+
+.groupTitle {
+  float: left;
+  width: 100%;
+  padding: 0;
+  margin-bottom: var(--space-1);
+  font: var(--type-section);
+  letter-spacing: var(--tracking-section);
+}
+
+.group > .groupTitle + * {
+  clear: both;
+}
+
+.pair {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 40rem) {
+  .pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.actions {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+}
+
+.fine {
+  font: var(--type-caption);
+  color: var(--text-muted);
 }

@@ -3,6 +3,7 @@ import { describe, test } from 'node:test';
 import { checksForLevel } from '../domain/checks.ts';
 import { hasDashes } from '../domain/copy.ts';
 import { istDate } from '../domain/dates.ts';
+import { auditSchedule, latestScheduledRun } from '../domain/schedule.ts';
 import { paidPlanEndsAt } from '../domain/tiers.ts';
 import { CHECK_KEYS } from '../domain/types.ts';
 import {
@@ -160,10 +161,34 @@ describe('sample profiles', () => {
     assert.throws(() => trackResult('SSX', '2026-06'));
   });
 
-  test('every institution has run dates', () => {
+  test('every institution has runs; 6 months of history for Eastgate and Brightpath', () => {
     for (const institution of SAMPLE_INSTITUTIONS) assert.ok((SAMPLE_RUNS[institution.slug] ?? []).length > 0, institution.slug);
-    assert.equal(SAMPLE_RUNS['eastgate-university']?.length, 6);
-    assert.equal(SAMPLE_RUNS['brightpath-skills']?.length, 6);
+    assert.equal(SAMPLE_RUNS['eastgate-university']?.filter((run) => run.kind === 'own').length, 6);
+    assert.equal(SAMPLE_RUNS['brightpath-skills']?.filter((run) => run.kind === 'own').length, 6);
+  });
+
+  test('own runs follow the plan schedule; rival and team runs only where they belong', () => {
+    const tracked = new Set(SAMPLE_RIVALS.map(([, rival]) => rival));
+    for (const institution of SAMPLE_INSTITUTIONS) {
+      const runs = SAMPLE_RUNS[institution.slug] ?? [];
+      assert.deepEqual(
+        runs.map((run) => run.day),
+        [...runs.map((run) => run.day)].sort(),
+        `${institution.slug} runs in date order`,
+      );
+      for (const run of runs) {
+        if (run.kind === 'own') {
+          assert.ok(institution.plan && institution.claimedAt, `${institution.slug} own runs need a signup`);
+          const plan = { tier: institution.plan.tier, startsAt: istDate(institution.plan.startsAt, 10), endsAt: institution.plan.endsAt ? istDate(institution.plan.endsAt, 10) : null };
+          const schedule = auditSchedule(plan, istDate(run.day, 10));
+          assert.ok(schedule, institution.slug);
+          assert.equal(latestScheduledRun(schedule, istDate(run.day, 23))?.toISOString(), istDate(run.day, 10).toISOString(), `${institution.slug} ${run.day} is a scheduled day`);
+          if (run.trigger === 'signup') assert.equal(run.day, institution.claimedAt, `${institution.slug} signup Audit on the signup day`);
+        }
+        if (run.kind === 'rival') assert.ok(tracked.has(institution.slug), `${institution.slug} rival runs need someone tracking it`);
+        if (run.kind === 'team') assert.ok(institution.isProspect, `${institution.slug} team runs are for prospects`);
+      }
+    }
   });
 });
 

@@ -82,8 +82,12 @@
   gap: var(--space-2);
 }
 
-.card {
+/* Zero specificity, so a page's own layout class (grid, flex) always wins, whatever order the CSS loads in. */
+:where(.card) {
   display: block;
+}
+
+.card {
   background: var(--surface-raised);
   border: 1px solid var(--line-raised);
   border-radius: var(--radius-md);

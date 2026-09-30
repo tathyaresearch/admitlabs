@@ -1,6 +1,12 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import type { ItemPart, ListItem } from '@/audit/view';
+import { FixList, WorkingList } from '@/components/audit/AuditLists';
+import { PlaceholderList } from '@/components/audit/Placeholders';
+import { ProgramScoreList, ProgramTabs } from '@/components/audit/Programs';
 import { HeadToHead } from '@/components/charts/HeadToHead';
+import { CityPicker } from '@/components/institution/CityPicker';
+import { ProgramPicker } from '@/components/institution/ProgramPicker';
 import { HistoryLine } from '@/components/charts/HistoryLine';
 import { ScoreDial } from '@/components/charts/ScoreDial';
 import { Sparkline } from '@/components/charts/Sparkline';
@@ -32,6 +38,7 @@ const NAV = [
   ['buttons', 'Buttons'],
   ['forms', 'Forms'],
   ['results', 'Results'],
+  ['audit', 'Audit'],
   ['data', 'Data'],
   ['charts', 'Charts'],
   ['layout', 'Layout'],
@@ -97,6 +104,99 @@ const SAMPLE_COLUMNS: Column<SampleRow>[] = [
   { key: 'pillar', header: 'Pillar', render: (row) => row.pillar },
   { key: 'result', header: 'Result', render: (row) => <ResultMeter result={row.result} size="sm" /> },
   { key: 'points', header: 'Points', align: 'end', numeric: true, render: (row) => row.points },
+];
+
+const SAMPLE_CHECKED = '2026-09-10T04:30:00Z';
+
+const samplePart = (overrides: Partial<ItemPart>): ItemPart => ({
+  checkId: 'sample',
+  programId: null,
+  programName: null,
+  result: 'okay',
+  previousResult: null,
+  points: 15,
+  maxPoints: 25,
+  checkedAt: SAMPLE_CHECKED,
+  detail: null,
+  ...overrides,
+});
+
+const SAMPLE_WORKING: ListItem[] = [
+  {
+    rank: 1,
+    key: 'google_search',
+    name: 'Google search',
+    pillar: 'discovered',
+    strength: 'okay',
+    difficulty: null,
+    points: 6,
+    parts: [
+      samplePart({
+        checkId: 'w1',
+        programId: 'bba',
+        programName: 'BBA',
+        points: 18,
+        maxPoints: 30,
+        detail: { finding: 'Position 8 on Google for “BBA in Guwahati”.', whyItMatters: null, howToFix: null, difficulty: null, sourceUrl: 'https://search.example' },
+      }),
+    ],
+  },
+  {
+    rank: 2,
+    key: 'instagram_activity',
+    name: 'Instagram',
+    pillar: 'discovered',
+    strength: 'okay',
+    difficulty: null,
+    points: 5,
+    parts: [
+      samplePart({
+        checkId: 'w2',
+        previousResult: 'weak',
+        detail: { finding: 'About 2.1 posts a week over the last 4 weeks. 47% of them are reels.', whyItMatters: null, howToFix: null, difficulty: null, sourceUrl: 'https://instagram.example' },
+      }),
+    ],
+  },
+];
+
+const SAMPLE_FIXES: ListItem[] = [
+  {
+    rank: 1,
+    key: 'placement_proof',
+    name: 'Placement proof',
+    pillar: 'trusted',
+    strength: null,
+    difficulty: 'medium',
+    points: 7,
+    parts: [
+      samplePart({
+        checkId: 'f1',
+        result: 'weak',
+        points: 9,
+        maxPoints: 30,
+        detail: {
+          finding: 'Only general claims about placements for BBA, with no numbers.',
+          whyItMatters: 'Placements and results are the biggest worry for most students and parents.',
+          howToFix: 'Replace general claims with real numbers for BBA.',
+          difficulty: 'medium',
+          sourceUrl: 'https://northbank-college.example/placements',
+        },
+      }),
+    ],
+  },
+  {
+    rank: 2,
+    key: 'fees_shown',
+    name: 'Fees shown',
+    pillar: 'chosen',
+    strength: null,
+    difficulty: 'easy',
+    points: 4.2,
+    parts: [
+      samplePart({ checkId: 'f2', programId: 'bca', programName: 'BCA', result: 'weak', points: 7.5 }),
+      samplePart({ checkId: 'f3', programId: 'bcom', programName: 'B.Com', result: 'missing', points: 0 }),
+    ],
+  },
 ];
 
 const HISTORY = [
@@ -427,6 +527,24 @@ export default async function DesignSystemPage() {
                 </div>
               </Card>
             </div>
+            <div className={styles.grid2}>
+              <Card>
+                <Specimen label="City picker: all of India, the state comes with the city">
+                  <CityPicker id="ds-city" defaultCity="Guwahati" defaultState="Assam" />
+                </Specimen>
+              </Card>
+              <Card>
+                <Specimen label="Program picker: the fixed list, plus Other">
+                  <ProgramPicker
+                    id="ds-programs"
+                    defaultPrograms={[
+                      { name: 'BBA', programKey: 'bba' },
+                      { name: 'Aviation Safety', programKey: null },
+                    ]}
+                  />
+                </Specimen>
+              </Card>
+            </div>
             <Card>
               <Specimen label="Segmented control">
                 <SegmentedDemo />
@@ -482,6 +600,57 @@ export default async function DesignSystemPage() {
                     <Difficulty value="medium" />
                     <Difficulty value="hard" />
                   </div>
+                </Specimen>
+              </Card>
+            </div>
+          </Section>
+
+          <Section
+            id="audit"
+            title="Audit"
+            description="What's working comes first. Fixes are ranked by the points they could add. A program check that needs work in several programs is one item that names them."
+          >
+            <Card>
+              <Specimen label="Program switcher (a locked program links to the plan)">
+                <ProgramTabs
+                  allLabel="All programs"
+                  active={null}
+                  entries={[
+                    { id: 'bba', name: 'BBA', state: 'scored', score: { overall: 46, change: 5 } },
+                    { id: 'bca', name: 'BCA', state: 'scored', score: { overall: 52, change: null } },
+                    { id: 'bcom', name: 'B.Com', state: 'locked' },
+                  ]}
+                />
+              </Specimen>
+            </Card>
+            <div className={styles.grid2}>
+              <Card>
+                <Specimen label="What's working">
+                  <WorkingList items={SAMPLE_WORKING} />
+                </Specimen>
+              </Card>
+              <Card>
+                <Specimen label="What to fix">
+                  <FixList items={SAMPLE_FIXES} />
+                </Specimen>
+              </Card>
+            </div>
+            <div className={styles.grid2}>
+              <Card>
+                <Specimen label="By program">
+                  <ProgramScoreList
+                    nextAuditText="Next Audit on 15 Oct 2026"
+                    entries={[
+                      { id: 'mba', name: 'MBA', state: 'scored', score: { overall: 84, change: 2 } },
+                      { id: 'data', name: 'B.Sc Data Analytics', state: 'next' },
+                      { id: 'bcom', name: 'B.Com', state: 'locked' },
+                    ]}
+                  />
+                </Specimen>
+              </Card>
+              <Card>
+                <Specimen label="Locked list: shapes only, never real data">
+                  <LockedPanel title="14 more fixes, ranked" description="Paid shows the full ranked list, with how to fix each one." placeholder={<PlaceholderList rows={3} />} />
                 </Specimen>
               </Card>
             </div>

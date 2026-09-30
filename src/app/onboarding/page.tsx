@@ -1,9 +1,12 @@
 import { redirect } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { Wordmark } from '@/components/ui/Brand';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Layout';
 import { signOut } from '@/lib/auth/actions';
 import { requireViewer } from '@/lib/auth/guards';
+import { createClient } from '@/lib/supabase/server';
+import { OnboardingForm } from './OnboardingForm';
+import { ProgramChoice } from './ProgramChoice';
 import styles from './onboarding.module.css';
 
 export const metadata = { title: 'Set up your institution' };
@@ -11,25 +14,67 @@ export const metadata = { title: 'Set up your institution' };
 export default async function OnboardingPage() {
   const viewer = await requireViewer();
   if (viewer.teamRole) redirect('/team');
-  if (viewer.membership) redirect('/');
+  const supabase = await createClient();
+
+  if (!viewer.membership) {
+    // Someone the owner invited joins as a Member when they sign in; no form for them.
+    const { data: joined } = await supabase.rpc('accept_invites');
+    if (joined) redirect('/');
+
+    return (
+      <Frame step={1} email={viewer.email}>
+        <header className={styles.head}>
+          <p className={styles.eyebrow}>Step 1 of 2</p>
+          <h1 className={styles.title}>Set up your institution</h1>
+          <p className={styles.text}>Tell us who you are and where students find you. It takes about two minutes.</p>
+        </header>
+        <OnboardingForm />
+      </Frame>
+    );
+  }
+
+  const { membership } = viewer;
+  const needsProgram = membership.role === 'owner' && viewer.tier === 'free' && !viewer.plan?.freeProgramId;
+  if (!needsProgram) redirect('/');
+
+  const { data: programs } = await supabase
+    .from('programs')
+    .select('id, name')
+    .eq('institution_id', membership.institution.id)
+    .is('archived_at', null)
+    .order('name');
 
   return (
-    <main className={styles.page}>
-      <Wordmark height={20} />
-      <Card padding="lg" className={styles.card}>
-        <p className={styles.eyebrow}>Welcome to Drishti</p>
-        <h1 className={styles.title}>Set up your institution</h1>
+    <Frame step={2} email={viewer.email}>
+      <header className={styles.head}>
+        <p className={styles.eyebrow}>Step 2 of 2</p>
+        <h1 className={styles.title}>Pick the program your free Audit covers</h1>
         <p className={styles.text}>
-          You&apos;re signed in as <strong>{viewer.email}</strong>. Next you will add your institution, its programs and its public links, and pick the
-          program your free Audit covers.
+          {membership.institution.name} is set up. Your free Audit checks one program, plus everything the institution shares, like Instagram and reviews.
         </p>
-        <p className={styles.note}>Onboarding arrives in Phase 2.</p>
-        <form action={signOut}>
-          <Button type="submit" variant="secondary" icon="signOut">
-            Sign out
-          </Button>
-        </form>
-      </Card>
-    </main>
+      </header>
+      <ProgramChoice programs={programs ?? []} />
+    </Frame>
+  );
+}
+
+function Frame({ step, email, children }: { step: 1 | 2; email: string; children: ReactNode }) {
+  return (
+    <div className={styles.page}>
+      <header className={styles.topbar}>
+        <Wordmark height={19} />
+        <div className={styles.topbarEnd}>
+          <span className={styles.signedIn}>{email}</span>
+          <form action={signOut}>
+            <Button type="submit" variant="quiet" size="sm" icon="signOut">
+              Sign out
+            </Button>
+          </form>
+        </div>
+      </header>
+      <main id="main" className={styles.body} data-step={step}>
+        {children}
+      </main>
+    </div>
   );
 }

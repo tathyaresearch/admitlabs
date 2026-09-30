@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
 import { TIERS } from '../domain/types.ts';
@@ -30,6 +31,13 @@ describe('entitlements (spec section 10)', () => {
     assert.equal(canSee('demand_mentions', 'free'), false);
     assert.equal(canSee('monthly_report', 'free'), false);
     assert.equal(canSee('alerts', 'free'), false);
+  });
+
+  test('the database enforces the same Free Top 3 (private.free_top_limit in the audit_access migration)', () => {
+    const migration = readFileSync(new URL('../../supabase/migrations/20261001120100_audit_access.sql', import.meta.url), 'utf8');
+    const limit = /create function private\.free_top_limit\(\)[\s\S]*?select (\d+);/.exec(migration)?.[1];
+    assert.equal(Number(limit), limitFor('audit_whats_working', 'free'));
+    assert.equal(Number(limit), limitFor('audit_what_to_fix', 'free'));
   });
 
   test('blurred rows are placeholders for Free only', () => {

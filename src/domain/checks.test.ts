@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { CHECKS, checkLooksAt, checkName, checksForLevel, checksForPillar, getCheck } from './checks.ts';
+import {
+  CHECKS,
+  INSTITUTION_CHECK_KEYS,
+  PROGRAM_CHECK_KEYS,
+  checkLooksAt,
+  checkName,
+  checksForLevel,
+  checksForPillar,
+  compareChecks,
+  getCheck,
+  isProgramCheck,
+} from './checks.ts';
 import { CHECK_KEYS } from './types.ts';
 
 describe('check catalogue (spec 7.2)', () => {
@@ -23,6 +34,17 @@ describe('check catalogue (spec 7.2)', () => {
       ['admission_steps', 'ai_answers', 'fees_shown', 'google_search', 'placement_proof', 'program_page'],
     );
     assert.equal(checksForLevel('institution').length, 11);
+  });
+
+  test('the program and institution key lists agree with the catalogue', () => {
+    assert.deepEqual([...PROGRAM_CHECK_KEYS].sort(), checksForLevel('program').map((check) => check.key).sort());
+    assert.deepEqual([...INSTITUTION_CHECK_KEYS], checksForLevel('institution').map((check) => check.key));
+    for (const key of CHECK_KEYS) assert.equal(isProgramCheck(key), getCheck(key).level === 'program', key);
+  });
+
+  test('checks sort by pillar, then in spec order', () => {
+    const shuffled = [...CHECK_KEYS].reverse();
+    assert.deepEqual(shuffled.sort(compareChecks), [...CHECK_KEYS]);
   });
 
   test('approvals means skilling recognition for skilling institutes', () => {

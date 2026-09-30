@@ -37,6 +37,9 @@ const PATHS = {
   institution: 'M3.5 20.5h17M5 20.5v-9M19 20.5v-9M9.5 20.5v-9M14.5 20.5v-9M3.5 9 12 3.5 20.5 9z',
   grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
   spark: 'M12 3v5M12 16v5M3 12h5M16 12h5M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6',
+  refresh: 'M19.5 12a7.5 7.5 0 1 1-2.4-5.5M19.5 4v4h-4',
+  plus: 'M12 5v14M5 12h14',
+  user: 'M12 11.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5a7.5 7.5 0 0 1 15 0',
 } as const;
 
 export type IconName = keyof typeof PATHS;

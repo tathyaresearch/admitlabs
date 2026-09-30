@@ -34,7 +34,24 @@ export function slugify(text: string): string {
     .slice(0, 80);
 }
 
-/** A page on the institution's own website. */
+/**
+ * Mock sources never point at a real site or account. A link on any other host becomes a
+ * .example stand in (www.college.ac.in becomes college-ac-in.example), so an institution
+ * onboarded with its real website still only gets sample links.
+ */
+export function exampleUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.endsWith('.example')) return url;
+    const host = parsed.hostname.replace(/^www\./, '').replace(/\./g, '-');
+    const path = parsed.pathname === '/' ? '' : parsed.pathname;
+    return `https://${host}.example${path}${parsed.search}${parsed.hash}`;
+  } catch {
+    return 'https://unknown.example';
+  }
+}
+
+/** A page on the institution's own website (as a .example link in mocks). */
 export function sitePage(institution: InstitutionRef, path: string): string {
-  return `${institution.website.replace(/\/+$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
+  return `${exampleUrl(institution.website).replace(/\/+$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
 }

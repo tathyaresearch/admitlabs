@@ -20,10 +20,12 @@ interface AppShellProps {
   /** Shown at the foot of the sidebar: whose dashboard this is. */
   context?: { title: string; detail: string; tag?: string };
   showNotifications?: boolean;
+  /** Unread notifications, shown on the bell. */
+  unread?: number;
   children: ReactNode;
 }
 
-export function AppShell({ sections, homeHref, email, roleLabel, context, showNotifications = true, children }: AppShellProps) {
+export function AppShell({ sections, homeHref, email, roleLabel, context, showNotifications = true, unread = 0, children }: AppShellProps) {
   return (
     <div className={styles.shell}>
       <a className="skip-link" href="#main">
@@ -55,8 +57,18 @@ export function AppShell({ sections, homeHref, email, roleLabel, context, showNo
           <div className={styles.topbarActions}>
             <ThemeToggle />
             {showNotifications ? (
-              <Link href="/notifications" className={styles.topbarIcon} aria-label="Notifications" title="Notifications">
+              <Link
+                href="/notifications"
+                className={styles.topbarIcon}
+                aria-label={unread ? `Notifications, ${unread} new` : 'Notifications'}
+                title="Notifications"
+              >
                 <Icon name="bell" size={20} />
+                {unread ? (
+                  <span className={styles.badge} aria-hidden="true">
+                    {unread > 9 ? '9+' : unread}
+                  </span>
+                ) : null}
               </Link>
             ) : null}
             <AccountMenu email={email} roleLabel={roleLabel} institutionName={context?.title} />

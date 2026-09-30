@@ -3,6 +3,7 @@
 import { DEMAND_FIXTURES } from '../../sample/demand.ts';
 import { SAMPLE_CONTENT } from '../../sample/rivals.ts';
 import type { AnalysisProvider } from '../analysis.ts';
+import { writeFixAdvice } from './fix-advice.ts';
 import { rngFor } from './random.ts';
 
 const GENERAL_REASONS = [
@@ -28,5 +29,9 @@ export const mockAnalysis: AnalysisProvider = {
       const question = questions.find((candidate) => candidate.questionIndex === idea.question);
       return question ? [{ text: idea.text, basedOn: question.text, sourceUrl: question.sourceUrl }] : [];
     });
+  },
+
+  async fixAdvice(input) {
+    return writeFixAdvice(input);
   },
 };

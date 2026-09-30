@@ -77,5 +77,7 @@ async function verify(email: string, next: string | null, rawToken: string): Pro
     supabase.from('team_users').select('role').eq('user_id', data.user.id).maybeSingle(),
     supabase.from('memberships').select('role').eq('user_id', data.user.id).limit(1).maybeSingle(),
   ]);
-  redirect(next ?? homePath({ isTeam: Boolean(team.data), hasInstitution: Boolean(membership.data) }));
+  // Someone an owner invited joins that institution as a Member when they first sign in.
+  const joined = !team.data && !membership.data ? Boolean((await supabase.rpc('accept_invites')).data) : false;
+  redirect(next ?? homePath({ isTeam: Boolean(team.data), hasInstitution: Boolean(membership.data) || joined }));
 }

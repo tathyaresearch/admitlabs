@@ -46,6 +46,10 @@ export type CheckKey = (typeof CHECK_KEYS)[number];
 export const AUDIT_KINDS = ['free', 'paid', 'client', 'team', 'rival'] as const;
 export type AuditKind = (typeof AUDIT_KINDS)[number];
 
+/** How an Audit started: at signup, on its schedule, or by a manual refresh. */
+export const AUDIT_TRIGGERS = ['signup', 'scheduled', 'manual'] as const;
+export type AuditTrigger = (typeof AUDIT_TRIGGERS)[number];
+
 export const RIVAL_MOVE_KINDS = ['new_program', 'fee_change', 'new_page', 'admission_dates'] as const;
 export type RivalMoveKind = (typeof RIVAL_MOVE_KINDS)[number];
 

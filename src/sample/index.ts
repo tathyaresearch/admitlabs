@@ -4,7 +4,6 @@ import type { InstitutionRef, ProgramRef } from '../providers/types.ts';
 import { institutionId, programId } from './ids.ts';
 import type { SampleInstitution } from './institutions.ts';
 
-export * from './cities.ts';
 export * from './demand.ts';
 export * from './ids.ts';
 export * from './institutions.ts';

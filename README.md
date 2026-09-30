@@ -40,7 +40,35 @@ Sign in with any sample email. The 6-digit code arrives in Mailpit at http://127
 | team@admitlabs.example | AdmitLabs team |
 | admin@admitlabs.example | AdmitLabs admin |
 
-Any other email creates a new account and goes to onboarding.
+Any other email creates a new account and goes to onboarding: the institution's details, then the one program a free Audit covers, then the first Audit runs.
+
+## Try the Audit on each tier
+
+The sample covers Free (Northbank, Silverline), Paid (Eastgate) and Client (Brightpath). To see one institution on every tier, sign up with a new email, then switch its tier here (in the product only an Admin does this):
+
+```
+npm run tier -- --institution <slug> --tier paid
+npm run tier -- --institution <slug> --tier client
+npm run tier -- --institution <slug> --tier free
+npm run tier -- --institution <slug> --tier paid --from 2026-03-01
+```
+
+A Paid or Client plan that starts today runs its first Audit straight away, covering every program. The last line makes a Paid plan that has already ended, so Free rules apply again. The slug of a new institution comes from its name, for example `new-horizon-college`.
+
+## Audits by hand
+
+Schedules (spec section 11) run through one script, with mock providers:
+
+```
+npm run audit -- --due
+npm run audit -- --due --date 2026-10-15 --dry-run
+npm run audit -- --institution northbank-college
+npm run audit -- --institution riverbend-college --kind team
+```
+
+- `--due` runs every scheduled Audit due that day: Free every 3 months from signup, Paid and Client monthly on the plan start day. A run missed on its day still happens the next time this runs.
+- `--institution` runs one Audit now. An institution's own Audit follows its plan. `--kind team` or `--kind rival` runs a private team or rival Audit instead.
+- Paid gets one extra refresh each calendar month (the Refresh button on the Audit page). A second one is refused by the server and by the database.
 
 ## Local addresses
 
@@ -65,19 +93,25 @@ Any other email creates a new account and goes to onboarding.
 | `npm run db:start` / `db:stop` | Starts or stops Drishti's local Supabase |
 | `npm run db:reset` | Rebuilds the database and reloads the sample data |
 | `npm run db:types` | Regenerates `src/lib/supabase/database.types.ts` |
-| `npm run collect -- --institution <slug or all> --month 2026-09` | Runs the providers by hand and stores signals |
+| `npm run audit -- ...` | Runs Audits by hand (see above) |
+| `npm run tier -- ...` | Switches a local institution's tier (see above) |
 
 ## Layout
 
 ```
-supabase/        config, migrations (schema and RLS), RLS tests, email template
-scripts/         env, seed, collect, dash check (TypeScript run directly by Node)
+supabase/        config, migrations (schema, row level security, owner actions), database tests, email template
+scripts/         env, seed, audit, tier, dash check (TypeScript run directly by Node)
 src/app/         routes: (product)/drishti, login, (dashboard), onboarding, team, share, design-system
-src/components/  ui, charts and the app shell
-src/domain/      pure logic: types, checks, dates, tiers, formatting
-src/config/      every adjustable value: scoring, plans, entitlements, schedules, providers
+src/components/  ui, charts, audit screens, institution inputs and the app shell
+src/domain/      pure logic: the scoring engine (domain/scoring), checks, schedules, onboarding checks, dates, tiers
+src/config/      every adjustable value: scoring, plans, entitlements, schedules, providers, cities, programs
 src/providers/   the provider interface, mock providers, and real provider slots
+src/audit/       one Audit end to end (collect, score, save) and what the Audit screens show
 src/sample/      the fictional sample world
 ```
 
-`src/domain`, `src/config`, `src/providers` and `src/sample` never import Next.js, so Node runs their tests directly.
+`src/domain`, `src/config`, `src/providers`, `src/audit` and `src/sample` never import Next.js, so Node runs their tests directly.
+
+## How scores work
+
+The scoring engine is in `src/domain/scoring`: pure functions, no database. Facts from the providers become Strong, Okay, Weak or Missing (spec 7.5), then pillar, program and overall scores (spec 7.4), rounded to whole numbers with halves rounding up. Every number comes from the active row in `scoring_config` (version 1 is `src/config/scoring.v1.ts`), and each Audit records the version it used.

@@ -27,7 +27,7 @@ import {
   youtubeFacts,
 } from './facts.ts';
 import { rngFor } from './random.ts';
-import { intendedResult, sitePage, slugify } from './shared.ts';
+import { exampleUrl, intendedResult, sitePage, slugify } from './shared.ts';
 
 const DAY_MS = 86_400_000;
 
@@ -186,7 +186,7 @@ export function instagramInstitutionSignals(target: Target, asOf: Date): AnySign
 export function youtubeInstitutionSignals(target: Target, asOf: Date): AnySignal[] {
   if (target.kind !== 'institution') return [];
   const { institution } = target;
-  const channel = institution.youtube;
+  const channel = institution.youtube ? exampleUrl(institution.youtube) : null;
   const source = channel ?? `https://youtube.example/results?search_query=${encodeURIComponent(institution.name)}`;
   return [
     makeSignal('youtube', 'youtube', target, youtubeFacts(intendedResult(institution, 'youtube', null, asOf), rngFor('youtube', institution.slug, monthKey(asOf)), channel), source, asOf),
@@ -202,7 +202,8 @@ export const mockSocials: Provider = {
     if (target.kind !== 'institution') return [];
     const { institution } = target;
     const value = otherSocialsFacts(intendedResult(institution, 'other_socials', null, asOf), rngFor('socials', institution.slug, monthKey(asOf)), institution.otherLinks);
-    const source = institution.otherLinks.facebook ?? institution.otherLinks.linkedin ?? `https://facebook.example/search?q=${encodeURIComponent(institution.name)}`;
+    const link = institution.otherLinks.facebook ?? institution.otherLinks.linkedin;
+    const source = link ? exampleUrl(link) : `https://facebook.example/search?q=${encodeURIComponent(institution.name)}`;
     return [makeSignal('socials', 'other_socials', target, value, source, asOf)];
   },
 };

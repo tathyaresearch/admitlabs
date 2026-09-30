@@ -91,6 +91,7 @@ export type Database = {
           pillar: Database["public"]["Enums"]["pillar"]
           points_awarded: number
           points_max: number
+          previous_result: Database["public"]["Enums"]["check_result"] | null
           program_id: string | null
           result: Database["public"]["Enums"]["check_result"]
           strength_rank: number | null
@@ -104,6 +105,7 @@ export type Database = {
           pillar: Database["public"]["Enums"]["pillar"]
           points_awarded: number
           points_max: number
+          previous_result?: Database["public"]["Enums"]["check_result"] | null
           program_id?: string | null
           result: Database["public"]["Enums"]["check_result"]
           strength_rank?: number | null
@@ -117,6 +119,7 @@ export type Database = {
           pillar?: Database["public"]["Enums"]["pillar"]
           points_awarded?: number
           points_max?: number
+          previous_result?: Database["public"]["Enums"]["check_result"] | null
           program_id?: string | null
           result?: Database["public"]["Enums"]["check_result"]
           strength_rank?: number | null
@@ -142,26 +145,38 @@ export type Database = {
         Row: {
           audit_id: string
           chosen: number
+          chosen_change: number | null
           discovered: number
+          discovered_change: number | null
           overall: number
+          overall_change: number | null
           program_id: string
           trusted: number
+          trusted_change: number | null
         }
         Insert: {
           audit_id: string
           chosen: number
+          chosen_change?: number | null
           discovered: number
+          discovered_change?: number | null
           overall: number
+          overall_change?: number | null
           program_id: string
           trusted: number
+          trusted_change?: number | null
         }
         Update: {
           audit_id?: string
           chosen?: number
+          chosen_change?: number | null
           discovered?: number
+          discovered_change?: number | null
           overall?: number
+          overall_change?: number | null
           program_id?: string
           trusted?: number
+          trusted_change?: number | null
         }
         Relationships: [
           {
@@ -183,39 +198,60 @@ export type Database = {
       audits: {
         Row: {
           chosen: number
+          chosen_change: number | null
           config_version: number
           created_by: string | null
           discovered: number
+          discovered_change: number | null
           id: string
           institution_id: string
           kind: Database["public"]["Enums"]["audit_kind"]
           overall: number
+          overall_change: number | null
+          previous_audit_id: string | null
+          program_count: number
           run_at: string
+          trigger: Database["public"]["Enums"]["audit_trigger"]
           trusted: number
+          trusted_change: number | null
         }
         Insert: {
           chosen: number
+          chosen_change?: number | null
           config_version: number
           created_by?: string | null
           discovered: number
+          discovered_change?: number | null
           id?: string
           institution_id: string
           kind: Database["public"]["Enums"]["audit_kind"]
           overall: number
+          overall_change?: number | null
+          previous_audit_id?: string | null
+          program_count?: number
           run_at?: string
+          trigger: Database["public"]["Enums"]["audit_trigger"]
           trusted: number
+          trusted_change?: number | null
         }
         Update: {
           chosen?: number
+          chosen_change?: number | null
           config_version?: number
           created_by?: string | null
           discovered?: number
+          discovered_change?: number | null
           id?: string
           institution_id?: string
           kind?: Database["public"]["Enums"]["audit_kind"]
           overall?: number
+          overall_change?: number | null
+          previous_audit_id?: string | null
+          program_count?: number
           run_at?: string
+          trigger?: Database["public"]["Enums"]["audit_trigger"]
           trusted?: number
+          trusted_change?: number | null
         }
         Relationships: [
           {
@@ -230,6 +266,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audits_previous_audit_id_fkey"
+            columns: ["previous_audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
             referencedColumns: ["id"]
           },
         ]
@@ -414,7 +457,53 @@ export type Database = {
           website?: string
           youtube?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "institutions_city_listed"
+            columns: ["city", "state"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["name", "state"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          email: string
+          id: string
+          institution_id: string
+          invited_by: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          institution_id: string
+          invited_by?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          institution_id?: string
+          invited_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       memberships: {
         Row: {
@@ -562,6 +651,7 @@ export type Database = {
       }
       programs: {
         Row: {
+          archived_at: string | null
           created_at: string
           id: string
           institution_id: string
@@ -569,6 +659,7 @@ export type Database = {
           program_key: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           id?: string
           institution_id: string
@@ -576,6 +667,7 @@ export type Database = {
           program_key?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           id?: string
           institution_id?: string
@@ -914,10 +1006,58 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_invites: { Args: never; Returns: string }
+      add_program: {
+        Args: { p_name: string; p_program_key: string }
+        Returns: string
+      }
+      archive_program: { Args: { p_program: string }; Returns: undefined }
+      institution_people: {
+        Args: { p_institution: string }
+        Returns: {
+          email: string
+          joined_at: string
+          role: Database["public"]["Enums"]["membership_role"]
+          user_id: string
+        }[]
+      }
+      invite_member: { Args: { p_email: string }; Returns: string }
+      mark_notifications_read: { Args: { p_ids?: string[] }; Returns: number }
+      onboard_institution: {
+        Args: {
+          p_city: string
+          p_instagram: string
+          p_name: string
+          p_other_links: Json
+          p_programs: Json
+          p_state: string
+          p_type: Database["public"]["Enums"]["institution_type"]
+          p_website: string
+          p_youtube: string
+        }
+        Returns: string
+      }
+      record_audit: { Args: { payload: Json }; Returns: string }
+      remove_member: { Args: { p_user: string }; Returns: undefined }
+      revoke_invite: { Args: { p_invite: string }; Returns: undefined }
+      set_free_program: { Args: { p_program: string }; Returns: undefined }
+      update_institution: {
+        Args: {
+          p_city: string
+          p_instagram: string
+          p_name: string
+          p_other_links: Json
+          p_state: string
+          p_type: Database["public"]["Enums"]["institution_type"]
+          p_website: string
+          p_youtube: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       audit_kind: "free" | "paid" | "client" | "team" | "rival"
+      audit_trigger: "signup" | "scheduled" | "manual"
       check_key:
         | "google_search"
         | "instagram_activity"
@@ -1095,6 +1235,7 @@ export const Constants = {
   public: {
     Enums: {
       audit_kind: ["free", "paid", "client", "team", "rival"],
+      audit_trigger: ["signup", "scheduled", "manual"],
       check_key: [
         "google_search",
         "instagram_activity",

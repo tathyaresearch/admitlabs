@@ -2,7 +2,7 @@
 // website uses a .example domain. Social links also use .example hosts, so no sample link
 // can ever point at a real account.
 
-import type { InstitutionType, Tier } from '../domain/types.ts';
+import type { AuditTrigger, InstitutionType, Tier } from '../domain/types.ts';
 
 export interface SampleProgram {
   name: string;
@@ -244,16 +244,45 @@ export const SAMPLE_RIVALS: ReadonlyArray<readonly [string, string, boolean, str
   ['silverline-college', 'brightpath-skills', false, '2026-07-22'],
 ];
 
-/** When each institution's signals are collected: own Audits, rival runs and team Audits (India dates). */
-export const SAMPLE_RUNS: Readonly<Record<string, readonly string[]>> = {
-  'eastgate-university': ['2026-04-15', '2026-05-15', '2026-06-15', '2026-07-15', '2026-08-15', '2026-09-15'],
-  'brightpath-skills': ['2026-04-02', '2026-05-02', '2026-06-02', '2026-07-02', '2026-08-02', '2026-09-02'],
-  'northbank-college': ['2026-06-10', '2026-09-10'],
-  'silverline-college': ['2026-07-22', '2026-09-01'],
-  'highfield-university': ['2026-08-01', '2026-09-01'],
-  'loomcraft-skills': ['2026-08-01', '2026-09-01'],
-  'riverbend-college': ['2026-09-18'],
-  'cedar-skill-institute': ['2026-09-18'],
+/**
+ * One Audit run in the sample world. `own` runs are the institution's own Audits on its plan
+ * (Free, Paid or Client); `rival` runs score a record others track; `team` runs are prospect
+ * Audits the AdmitLabs team ran. Days are India dates; runs happen at 10 am.
+ */
+export interface SampleRun {
+  day: string;
+  kind: 'own' | 'rival' | 'team';
+  trigger: AuditTrigger;
+}
+
+const monthly = (days: readonly string[]): SampleRun[] => days.map((day) => ({ day, kind: 'own', trigger: 'scheduled' }));
+
+/** Every Audit run in the sample, in date order per institution. */
+export const SAMPLE_RUNS: Readonly<Record<string, readonly SampleRun[]>> = {
+  // Paid from 15 Apr: monthly on the 15th. The extra refresh is left unused, so it can be tried.
+  'eastgate-university': monthly(['2026-04-15', '2026-05-15', '2026-06-15', '2026-07-15', '2026-08-15', '2026-09-15']),
+  // Client from 2 Mar: monthly on the 2nd (history kept from April).
+  'brightpath-skills': monthly(['2026-04-02', '2026-05-02', '2026-06-02', '2026-07-02', '2026-08-02', '2026-09-02']),
+  // Free from 10 Jun: at signup, then every 3 months on the 10th.
+  'northbank-college': [
+    { day: '2026-06-10', kind: 'own', trigger: 'signup' },
+    { day: '2026-09-10', kind: 'own', trigger: 'scheduled' },
+  ],
+  // Free from 22 Jul (next free Audit 22 Oct). Also scored on 1 Sep for the three institutions that track it.
+  'silverline-college': [
+    { day: '2026-07-22', kind: 'own', trigger: 'signup' },
+    { day: '2026-09-01', kind: 'rival', trigger: 'scheduled' },
+  ],
+  'highfield-university': [
+    { day: '2026-08-01', kind: 'rival', trigger: 'scheduled' },
+    { day: '2026-09-01', kind: 'rival', trigger: 'scheduled' },
+  ],
+  'loomcraft-skills': [
+    { day: '2026-08-01', kind: 'rival', trigger: 'scheduled' },
+    { day: '2026-09-01', kind: 'rival', trigger: 'scheduled' },
+  ],
+  'riverbend-college': [{ day: '2026-09-18', kind: 'team', trigger: 'manual' }],
+  'cedar-skill-institute': [{ day: '2026-09-18', kind: 'team', trigger: 'manual' }],
 };
 
 /** "Today" for the sample world. */

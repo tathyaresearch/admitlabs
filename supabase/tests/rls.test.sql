@@ -37,6 +37,8 @@ insert into auth.users (id, email, aud, role) values
   ('10000000-0000-4000-8000-000000000005', 'admin@rls.test', 'authenticated', 'authenticated'),
   ('10000000-0000-4000-8000-000000000006', 'nobody@rls.test', 'authenticated', 'authenticated');
 
+insert into public.cities (name, state) values ('Guwahati', 'Assam'), ('Jorhat', 'Assam'), ('Silchar', 'Assam') on conflict do nothing;
+
 insert into public.institutions (id, slug, name, type, city, state, website) values
   ('20000000-0000-4000-8000-00000000000a', 'rls-a', 'RLS A', 'college', 'Guwahati', 'Assam', 'https://rls-a.example'),
   ('20000000-0000-4000-8000-00000000000b', 'rls-b', 'RLS B', 'college', 'Guwahati', 'Assam', 'https://rls-b.example'),

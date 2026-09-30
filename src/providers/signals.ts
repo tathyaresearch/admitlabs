@@ -1,121 +1,48 @@
 // Raw facts each provider returns, one shape per signal key. These are measurements a real
 // provider would report (a search position, a review count), never a Strong or Weak result.
-// Turning facts into results is the scoring engine's job.
+// Turning facts into results is the scoring engine's job. The Audit check shapes live in
+// the domain (src/domain/facts.ts) so the engine depends on nothing here.
 
 import type { ContentPlatform, DemandKind, Language, RivalMoveKind, Sentiment } from '../domain/types.ts';
+import type {
+  AdmissionStepsValue,
+  AiAnswersValue,
+  ApprovalsValue,
+  EasyEnquiryValue,
+  FacultyLeadersValue,
+  FeesShownValue,
+  GoogleProfileValue,
+  GoogleSearchValue,
+  InstagramActivityValue,
+  MobileFriendlyValue,
+  OtherSocialsValue,
+  PageSpeedValue,
+  PlacementProofValue,
+  ProgramPageValue,
+  ReviewRatingValue,
+  StudentsInContentValue,
+  YoutubeValue,
+} from '../domain/facts.ts';
 
-export interface GoogleSearchValue {
-  query: string;
-  /** Position in Google results, or null when not in the top `resultsChecked`. */
-  position: number | null;
-  resultsChecked: number;
-}
-
-export interface InstagramActivityValue {
-  handle: string | null;
-  exists: boolean;
-  postsPerWeek: number;
-  /** Share of posts that are reels, 0 to 1. */
-  reelShare: number;
-  weeksChecked: number;
-}
-
-export interface GoogleProfileValue {
-  exists: boolean;
-  reviewCount: number;
-}
-
-export interface YoutubeValue {
-  exists: boolean;
-  channelUrl: string | null;
-  lastUploadDaysAgo: number | null;
-  monthsWithUploads: number;
-  monthsChecked: number;
-}
-
-export interface AiAnswersValue {
-  question: string;
-  assistantsAsked: number;
-  assistantsNaming: number;
-  knownWhenAskedByName: boolean;
-}
-
-export interface OtherSocialsValue {
-  platforms: { platform: 'facebook' | 'linkedin'; exists: boolean; daysSinceLastPost: number | null }[];
-}
-
-export interface PlacementProofValue {
-  found: boolean;
-  hasNumbers: boolean;
-  hasCompanies: boolean;
-  year: number | null;
-  updatedDaysAgo: number | null;
-  vagueClaimsOnly: boolean;
-}
-
-export interface ReviewRatingValue {
-  reviewCount: number;
-  rating: number | null;
-  /** Share of reviews with a reply from the institution, 0 to 1. */
-  replyRate: number;
-}
-
-/** Two providers feed approvals: the website (what is shown) and official records (what is held). */
-export type ApprovalsValue =
-  | { source: 'site'; shown: string[]; withProof: string[] }
-  | { source: 'official'; recognition: 'statutory' | 'skilling'; held: string[] };
-
-export interface FacultyLeadersValue {
-  facultyPage: boolean;
-  names: boolean;
-  photos: boolean;
-  qualifications: boolean;
-  leadersInContent: boolean;
-}
-
-export interface StudentsInContentValue {
-  monthsChecked: number;
-  monthsWithStudents: number;
-  mostlyStockPhotos: boolean;
-}
-
-export interface FeesShownValue {
-  disclosure: 'full' | 'partial' | 'on_request' | 'none';
-  amountText: string | null;
-  pageUrl: string | null;
-}
-
-export interface ProgramPageValue {
-  ownPage: boolean;
-  onCombinedPage: boolean;
-  wordCount: number | null;
-  pageUrl: string | null;
-}
-
-export interface EasyEnquiryValue {
-  pagesChecked: number;
-  pagesWithForm: number;
-  pagesWithWhatsapp: number;
-  contactPageOnly: boolean;
-  formWorks: boolean;
-}
-
-export interface AdmissionStepsValue {
-  stepsListed: boolean;
-  datesListed: boolean;
-  vague: boolean;
-}
-
-export interface MobileFriendlyValue {
-  loads: boolean;
-  issues: string[];
-}
-
-export interface PageSpeedValue {
-  loads: boolean;
-  /** Google speed score for mobile, 0 to 100. */
-  mobileScore: number | null;
-}
+export type {
+  AdmissionStepsValue,
+  AiAnswersValue,
+  ApprovalsValue,
+  EasyEnquiryValue,
+  FacultyLeadersValue,
+  FeesShownValue,
+  GoogleProfileValue,
+  GoogleSearchValue,
+  InstagramActivityValue,
+  MobileFriendlyValue,
+  OtherSocialsValue,
+  PageSpeedValue,
+  PlacementProofValue,
+  ProgramPageValue,
+  ReviewRatingValue,
+  StudentsInContentValue,
+  YoutubeValue,
+} from '../domain/facts.ts';
 
 export interface RivalMoveValue {
   kind: RivalMoveKind;

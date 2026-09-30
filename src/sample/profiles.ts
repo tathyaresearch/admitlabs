@@ -11,25 +11,10 @@
 //               Cedar Skill Institute (about 50)
 //   At risk:    Loomcraft Skills Institute (about 32), Riverbend College (about 27)
 
-import { checksForLevel } from '../domain/checks.ts';
+import { isProgramCheck, type InstitutionCheckKey, type ProgramCheckKey } from '../domain/checks.ts';
 import type { CheckKey, CheckResult } from '../domain/types.ts';
 
 export const PROFILE_MONTHS = ['2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09'] as const;
-
-export type InstitutionCheckKey =
-  | 'instagram_activity'
-  | 'google_profile'
-  | 'youtube'
-  | 'other_socials'
-  | 'review_rating'
-  | 'approvals'
-  | 'faculty_leaders'
-  | 'students_in_content'
-  | 'easy_enquiry'
-  | 'mobile_friendly'
-  | 'page_speed';
-
-export type ProgramCheckKey = 'google_search' | 'ai_answers' | 'placement_proof' | 'fees_shown' | 'program_page' | 'admission_steps';
 
 /** One letter for every month, or one letter per month in PROFILE_MONTHS. */
 export type Track = string;
@@ -244,8 +229,6 @@ export const SAMPLE_PROFILES: Readonly<Record<string, SampleProfile>> = {
 
 const LETTERS: Readonly<Record<string, CheckResult>> = { S: 'strong', O: 'okay', W: 'weak', M: 'missing' };
 
-const PROGRAM_CHECK_KEYS = new Set<CheckKey>(checksForLevel('program').map((check) => check.key));
-
 /** The letter a track gives for a month. Months before or after the range use the nearest end. */
 export function trackResult(track: Track, month: string): CheckResult {
   if (track.length !== 1 && track.length !== PROFILE_MONTHS.length) {
@@ -267,12 +250,12 @@ export function trackResult(track: Track, month: string): CheckResult {
 export function profileResult(slug: string, checkKey: CheckKey, programKey: string | null, month: string): CheckResult | null {
   const profile = SAMPLE_PROFILES[slug];
   if (!profile) return null;
-  if (PROGRAM_CHECK_KEYS.has(checkKey)) {
-    const entry = profile.program[checkKey as ProgramCheckKey];
+  if (isProgramCheck(checkKey)) {
+    const entry = profile.program[checkKey];
     if (typeof entry === 'string') return trackResult(entry, month);
     const track = programKey ? entry[programKey] : undefined;
     if (!track) throw new Error(`No ${checkKey} track for program "${programKey}" in ${slug}`);
     return trackResult(track, month);
   }
-  return trackResult(profile.institution[checkKey as InstitutionCheckKey], month);
+  return trackResult(profile.institution[checkKey], month);
 }

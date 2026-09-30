@@ -1,23 +1,23 @@
 // Seeds Drishti's local database with the fictional sample world (spec section 20).
-// Runs as part of `npm run db:reset`, which rebuilds the database first. Signals, rival moves,
-// rival content and Demand items come from the mock providers through the same pipeline a
-// real run would use. Audit scores are written by the scoring engine in Phase 2.
+// Runs as part of `npm run db:reset`, which rebuilds the database first. Every sample Audit
+// runs through the same path as a live one (mock providers, then the scoring engine, then
+// record_audit). Rival moves, rival content and Demand items come from the mock providers too.
 
-import { createClient } from '@supabase/supabase-js';
+import { INDIA_CITIES } from '../src/config/cities.ts';
 import { SCORING_V1 } from '../src/config/scoring.v1.ts';
+import { runAudit } from '../src/audit/run.ts';
 import { istDate, monthKey, monthStart } from '../src/domain/dates.ts';
 import { paidPlanEndsAt } from '../src/domain/tiers.ts';
-import { CHECK_KEYS, TIER_LABELS, type CheckKey } from '../src/domain/types.ts';
+import { TIER_LABELS } from '../src/domain/types.ts';
 import type { Database, Json } from '../src/lib/supabase/database.types.ts';
 import { collect } from '../src/providers/collect.ts';
 import { getAnalysisProvider, getProvider } from '../src/providers/registry.ts';
-import type { AnySignal, Signal } from '../src/providers/types.ts';
+import type { Signal } from '../src/providers/types.ts';
 import {
   ADMIN_EMAIL,
   DEMAND_MONTHS,
   DEMAND_REGIONS,
   SAMPLE_ADS,
-  SAMPLE_CITIES,
   SAMPLE_INSTITUTIONS,
   SAMPLE_NOTES,
   SAMPLE_PROGRAM_KEYS,
@@ -31,24 +31,19 @@ import {
   sampleId,
   sampleInstitution,
   toInstitutionRef,
-  toProgramRefs,
 } from '../src/sample/index.ts';
-import { assertDrishtiLocal, fail } from './lib/local.ts';
+import { serviceClient } from './lib/db.ts';
+import { fail } from './lib/local.ts';
 
 type Tables = Database['public']['Tables'];
 type Row<T extends keyof Tables> = Tables[T]['Insert'];
 
 const DAY_MS = 86_400_000;
 
-const url = assertDrishtiLocal(process.env.NEXT_PUBLIC_SUPABASE_URL);
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? fail('SUPABASE_SERVICE_ROLE_KEY is not set. Run `npm run env:local`.');
-const db = createClient<Database>(url.origin, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+const db = serviceClient();
 
 const json = (value: unknown): Json => JSON.parse(JSON.stringify(value)) as Json;
 const at = (ymd: string, hour = 10) => istDate(ymd, hour).toISOString();
-const CHECK_KEY_SET: ReadonlySet<string> = new Set(CHECK_KEYS);
-type CheckSignal = Extract<AnySignal, { key: CheckKey }>;
-const isCheckSignal = (signal: AnySignal): signal is CheckSignal => CHECK_KEY_SET.has(signal.key);
 
 async function insert<T extends keyof Tables>(table: T, rows: Row<T>[]): Promise<void> {
   for (let start = 0; start < rows.length; start += 500) {
@@ -95,7 +90,7 @@ async function main(): Promise<void> {
   const userId = (email: string | null) => (email ? (users.get(email) ?? null) : null);
   const requireUser = (email: string) => users.get(email) ?? fail(`Sample user ${email} was not created.`);
 
-  await insert('cities', SAMPLE_CITIES.map((city) => ({ name: city.name, state: city.state })));
+  await insert('cities', INDIA_CITIES.map((city) => ({ name: city.name, state: city.state })));
   await insert('scoring_config', [
     {
       version: SCORING_V1.version,
@@ -185,33 +180,36 @@ async function main(): Promise<void> {
     })),
   );
 
-  // Audit signals on each institution's run dates (own Audits, rival runs and team Audits).
-  const signalRows: Row<'signals'>[] = [];
-  let runs = 0;
+  // Audits: every sample run, own, rival and team, through the live path (collect, score, save).
+  const auditCounts = { own: 0, rival: 0, team: 0 };
+  let signalCount = 0;
   for (const sample of SAMPLE_INSTITUTIONS) {
-    const institution = toInstitutionRef(sample);
-    for (const day of SAMPLE_RUNS[sample.slug] ?? []) {
-      const asOf = istDate(day, 10);
-      runs += 1;
-      const found = [
-        ...(await collect({ kind: 'institution', institution }, asOf)),
-        ...(await Promise.all(toProgramRefs(sample).map((program) => collect({ kind: 'program', institution, program }, asOf)))).flat(),
-      ];
-      for (const signal of found) {
-        if (!isCheckSignal(signal) || !signal.institutionId) continue;
-        signalRows.push({
-          institution_id: signal.institutionId,
-          program_id: signal.programId,
-          provider: signal.provider,
-          check_key: signal.key,
-          value: json(signal.value),
-          source_url: signal.sourceUrl,
-          fetched_at: signal.fetchedAt,
-        });
-      }
+    for (const run of SAMPLE_RUNS[sample.slug] ?? []) {
+      const result = await runAudit(db, {
+        institutionId: institutionId(sample.slug),
+        asOf: istDate(run.day, 10),
+        trigger: run.trigger,
+        kind: run.kind === 'own' ? undefined : run.kind,
+        createdBy: run.kind === 'team' ? requireUser(TEAM_EMAIL) : null,
+      });
+      auditCounts[run.kind] += 1;
+      signalCount += result.signals;
     }
   }
-  await insert('signals', signalRows);
+
+  // Earlier "Audit ready" notifications have been read. The newest one for each institution is new.
+  const { data: notices, error: noticeError } = await db.from('notifications').select('id, institution_id').order('created_at', { ascending: false });
+  if (noticeError) fail(`Could not read notifications: ${noticeError.message}`);
+  const newest = new Set<string>();
+  const older: string[] = [];
+  for (const notice of notices ?? []) {
+    if (newest.has(notice.institution_id)) older.push(notice.id);
+    else newest.add(notice.institution_id);
+  }
+  if (older.length) {
+    const { error } = await db.from('notifications').update({ read: true }).in('id', older);
+    if (error) fail(`Could not mark older notifications read: ${error.message}`);
+  }
 
   // Rival moves, found by weekly site checks from 1 August to today.
   const tracked = [...new Set(SAMPLE_RIVALS.map(([, rival]) => rival))];
@@ -344,7 +342,9 @@ async function main(): Promise<void> {
   const prospects = SAMPLE_INSTITUTIONS.filter((sample) => sample.isProspect).length;
   console.log('\nSample data ready.');
   console.log(`  Institutions ${SAMPLE_INSTITUTIONS.length} (${prospects} prospects, team only), programs ${programCount}, users ${SAMPLE_USERS.length}`);
-  console.log(`  Signals ${signalRows.length} from ${runs} runs. Rival moves ${moves.size}, best content ${contentRows.length}, ads ${SAMPLE_ADS.length}`);
+  console.log(
+    `  Audits ${auditCounts.own} own, ${auditCounts.rival} rival, ${auditCounts.team} team, from ${signalCount} signals. Rival moves ${moves.size}, best content ${contentRows.length}, ads ${SAMPLE_ADS.length}`,
+  );
   console.log(`  Demand pulls ${pullRows.length} with ${itemRows.length} grouped items`);
   console.log('\nSign in at http://localhost:3000/login with any of these:');
   for (const user of SAMPLE_USERS) {

@@ -77,6 +77,30 @@ describe('mock providers', () => {
     assert.deepEqual(signals, await collectAll(newcomer, programs));
   });
 
+  test('an institution onboarded with real links still only gets .example sources', async () => {
+    const real: InstitutionRef = {
+      id: '00000000-0000-4000-8000-00000000abcf',
+      slug: 'real-looking-college',
+      name: 'Real Looking College',
+      type: 'college',
+      city: 'Pune',
+      state: 'Maharashtra',
+      website: 'https://www.real-looking-college.ac.in/',
+      instagram: 'reallookingcollege',
+      youtube: 'https://www.youtube.com/@reallookingcollege',
+      otherLinks: { facebook: 'https://www.facebook.com/reallookingcollege', linkedin: 'https://www.linkedin.com/school/real-looking-college' },
+      programKeys: ['bba'],
+    };
+    const programs = [{ id: '00000000-0000-4000-8000-00000000abd0', name: 'BBA', programKey: 'bba' }];
+    const signals = await collectAll(real, programs);
+    for (const signal of signals) assert.ok(new URL(signal.sourceUrl).hostname.endsWith('.example'), signal.sourceUrl);
+    const youtube = signals.find((signal) => signal.key === 'youtube');
+    const channel = youtube?.key === 'youtube' ? youtube.value.channelUrl : null;
+    assert.ok(channel === null || new URL(channel).hostname.endsWith('.example'), String(channel));
+    const fees = signals.find((signal) => signal.key === 'fees_shown');
+    assert.equal(fees?.sourceUrl, 'https://real-looking-college-ac-in.example/programs/bba#fees');
+  });
+
   test('switching a provider to real makes it throw until it is connected', async () => {
     const env = { DRISHTI_PROVIDER_SEARCH: 'real' };
     const program = toProgramRefs(eastgate)[0];
