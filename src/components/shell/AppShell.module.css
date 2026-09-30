@@ -24,7 +24,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-8);
-    padding: var(--space-6) var(--space-4) var(--space-5);
+    padding: var(--space-5) var(--space-3) var(--space-5);
     border-right: 1px solid var(--line);
     overflow-y: auto;
   }
@@ -32,7 +32,9 @@
 
 .brand {
   display: inline-flex;
-  padding: var(--space-1) var(--space-2);
+  align-items: center;
+  height: 2rem;
+  padding: 0 var(--space-3);
   color: var(--text);
   width: fit-content;
 }
@@ -46,33 +48,29 @@
 
 .navSection {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .navLabel {
-  padding: 0 var(--space-3);
-  font-size: var(--text-micro);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
+  padding: 0 var(--space-3) var(--space-1);
+  font: var(--type-caption-strong);
   color: var(--text-muted);
 }
 
 .navList {
   display: grid;
-  gap: 2px;
+  gap: 1px;
 }
 
 .navLink {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: 2.5rem;
+  min-height: 2.25rem;
   padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 0.9375rem;
-  font-weight: var(--weight-semibold);
+  font: var(--type-strong);
   text-decoration: none;
   transition:
     background-color var(--duration-fast) var(--ease-out),
@@ -84,29 +82,30 @@
   background: var(--surface-hover);
 }
 
-/* The current page: an inverted block. */
+/* The current page: a calm raised pill, not a shout. */
 .navLinkActive,
 .navLinkActive:hover {
-  color: var(--surface);
-  background: var(--text);
+  color: var(--text);
+  background: var(--surface-raised);
+  font-weight: var(--weight-heading);
+  box-shadow: inset 0 0 0 1px var(--line-raised);
 }
 
 .context {
   display: grid;
-  gap: var(--space-1);
+  gap: 2px;
   justify-items: start;
   padding: var(--space-4) var(--space-3) 0;
   border-top: 1px solid var(--line);
 }
 
 .contextTitle {
-  font-weight: var(--weight-bold);
-  letter-spacing: -0.01em;
-  line-height: 1.25;
+  font: var(--type-strong);
+  font-weight: var(--weight-heading);
 }
 
 .contextDetail {
-  font-size: var(--text-caption);
+  font: var(--type-caption);
   color: var(--text-muted);
   margin-bottom: var(--space-2);
 }
@@ -148,8 +147,8 @@
 
   .topbarContext {
     display: block;
-    font-size: var(--text-small);
-    font-weight: var(--weight-semibold);
+    font: var(--type-small);
+    font-weight: var(--weight-medium);
     color: var(--text-muted);
   }
 }
@@ -157,20 +156,21 @@
 .topbarActions {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 2px;
   margin-left: auto;
 }
 
 .topbarIcon {
   display: inline-grid;
   place-items: center;
-  width: var(--touch-target);
-  height: var(--touch-target);
+  width: var(--control-height);
+  height: var(--control-height);
   border-radius: var(--radius-sm);
-  color: var(--text);
+  color: var(--text-muted);
 }
 
 .topbarIcon:hover {
+  color: var(--text);
   background: var(--surface-hover);
 }
 
@@ -178,7 +178,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  height: var(--touch-target);
+  height: var(--control-height);
   padding: 0 var(--space-2) 0 var(--space-1);
   border: 0;
   border-radius: var(--radius-sm);
@@ -192,14 +192,14 @@
 .avatar {
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: var(--radius-full);
-  background: var(--surface-inverse);
-  color: var(--text-inverse);
-  font-size: var(--text-micro);
-  font-weight: var(--weight-heavy);
-  letter-spacing: 0.02em;
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line-medium);
+  font: var(--type-caption-strong);
+  font-weight: var(--weight-heading);
 }
 
 .accountChevron {
@@ -212,30 +212,29 @@
   top: calc(var(--topbar-height) - 4px);
   right: var(--gutter);
   margin: 0;
-  width: min(18rem, calc(100vw - 2rem));
+  width: min(17rem, calc(100vw - 2rem));
   padding: var(--space-2);
   background: var(--surface-raised);
   color: var(--text);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line-medium);
   border-radius: var(--radius-md);
 }
 
 .menuHead {
   display: grid;
   gap: 2px;
-  padding: var(--space-3) var(--space-3) var(--space-3);
+  padding: var(--space-3);
   border-bottom: 1px solid var(--line-raised);
   margin-bottom: var(--space-2);
 }
 
 .menuEmail {
-  font-weight: var(--weight-semibold);
-  font-size: var(--text-small);
+  font: var(--type-strong);
   overflow-wrap: anywhere;
 }
 
 .menuRole {
-  font-size: var(--text-caption);
+  font: var(--type-caption);
   color: var(--text-muted);
 }
 
@@ -244,13 +243,12 @@
   align-items: center;
   gap: var(--space-3);
   width: 100%;
-  min-height: var(--touch-target);
+  min-height: var(--control-height);
   padding: 0 var(--space-3);
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
-  font-weight: var(--weight-semibold);
-  font-size: var(--text-small);
+  font: var(--type-strong);
   text-align: left;
 }
 
@@ -269,8 +267,8 @@
 
 @media (min-width: 64rem) {
   .main {
-    padding-top: var(--space-10);
-    padding-bottom: var(--space-16);
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-20);
   }
 }
 
@@ -304,8 +302,8 @@
   border: 0;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.6875rem;
-  font-weight: var(--weight-semibold);
+  font: var(--type-caption-strong);
+  font-size: var(--size-micro);
   text-decoration: none;
 }
 
@@ -327,7 +325,7 @@
   background: var(--surface-raised);
   color: var(--text);
   border: 0;
-  border-top: 1px solid var(--line-strong);
+  border-top: 1px solid var(--line-medium);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
@@ -340,7 +338,7 @@
   height: 4px;
   margin: 0 auto var(--space-4);
   border-radius: var(--radius-full);
-  background: var(--line-strong);
+  background: var(--line-medium);
 }
 
 .sheetList {
@@ -355,12 +353,13 @@
   min-height: 3rem;
   padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
-  font-weight: var(--weight-semibold);
+  font: var(--type-strong);
   text-decoration: none;
 }
 
 .sheetLink[aria-current='page'] {
   background: var(--surface-hover);
+  font-weight: var(--weight-heading);
 }
 
 .sheetExtra {

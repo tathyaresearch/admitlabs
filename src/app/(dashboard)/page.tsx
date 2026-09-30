@@ -46,7 +46,6 @@ export default async function HomePage() {
 
       {reminder.stage === 'ends_soon' || reminder.stage === 'ends_very_soon' ? (
         <Notice
-          tone="inverse"
           icon="info"
           title={`Your Paid plan ends in ${reminder.daysLeft} ${reminder.daysLeft === 1 ? 'day' : 'days'}.`}
           action={

@@ -4,7 +4,7 @@
 }
 
 .page > header {
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .stats {
@@ -25,12 +25,11 @@
 }
 
 .name {
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-heading);
 }
 
 .site {
-  font-size: var(--text-caption);
-  font-weight: var(--weight-regular);
+  font: var(--type-caption);
   color: var(--text-muted);
 }
 
@@ -40,11 +39,11 @@
 }
 
 .muted {
-  font-size: var(--text-caption);
+  font: var(--type-caption);
   color: var(--text-muted);
 }
 
 .fine {
-  font-size: var(--text-caption);
+  font: var(--type-caption);
   color: var(--text-muted);
 }

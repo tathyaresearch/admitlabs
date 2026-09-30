@@ -10,10 +10,11 @@
   line-height: 1;
 }
 
+/* A logo lockup, not a heading: it keeps the wordmark's heavy weight. */
 .product {
   font-weight: var(--weight-heavy);
   font-stretch: var(--width-narrow);
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: var(--tracking-title);
 }
 
 .by {
@@ -33,13 +34,13 @@
 }
 
 .sm {
-  font-size: 1.0625rem;
+  font-size: 1rem;
 }
 
 .md {
-  font-size: 1.375rem;
+  font-size: 1.25rem;
 }
 
 .lg {
-  font-size: 2.25rem;
+  font-size: 1.75rem;
 }

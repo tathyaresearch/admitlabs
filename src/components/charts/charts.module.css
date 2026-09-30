@@ -14,13 +14,13 @@
 .dialTrack {
   fill: none;
   stroke: var(--chart-track);
-  stroke-width: 8;
+  stroke-width: 6;
 }
 
 .dialValue {
   fill: none;
   stroke: var(--text);
-  stroke-width: 8;
+  stroke-width: 6;
 }
 
 .dialTick {
@@ -35,20 +35,16 @@
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .dialNumber {
-  font-size: clamp(3rem, 2.2rem + 3vw, 4.25rem);
-  font-weight: var(--weight-heavy);
-  font-stretch: var(--width-condensed);
-  letter-spacing: -0.045em;
-  line-height: 0.85;
+  font: var(--type-score-medium);
+  letter-spacing: var(--tracking-score);
 }
 
 .dialCaption {
-  font-size: var(--text-caption);
-  font-weight: var(--weight-semibold);
+  font: var(--type-caption-strong);
   color: var(--text-muted);
 }
 
@@ -92,15 +88,15 @@
 
 .axisText {
   fill: var(--text-muted);
-  font-size: 11px;
-  font-weight: var(--weight-semibold);
+  font-size: var(--size-micro);
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
 .bandText {
   fill: var(--text-muted);
-  font-size: 11px;
-  font-weight: var(--weight-semibold);
+  font-size: var(--size-micro);
+  font-weight: var(--weight-medium);
 }
 
 .crosshair {
@@ -125,8 +121,8 @@
 
 .endLabel {
   fill: var(--text);
-  font-size: 13px;
-  font-weight: var(--weight-bold);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-heading);
 }
 
 .tooltip {
@@ -134,7 +130,7 @@
   transform: translate(-50%, -100%);
   display: grid;
   gap: 2px;
-  min-width: 8.5rem;
+  min-width: 8rem;
   padding: var(--space-2) var(--space-3);
   background: var(--surface-inverse);
   color: var(--text-inverse);
@@ -145,21 +141,19 @@
 }
 
 .tooltipValue {
-  font-size: 1.125rem;
-  font-weight: var(--weight-heavy);
-  line-height: 1.1;
+  font: var(--type-card);
+  font-weight: var(--weight-bold);
 }
 
 .tooltipLabel {
-  font-size: var(--text-micro);
-  font-weight: var(--weight-semibold);
+  font: var(--type-caption-strong);
 }
 
 .tooltipRow {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
-  font-size: var(--text-caption);
+  font: var(--type-caption);
 }
 
 .h2h {
@@ -173,8 +167,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-5);
-  font-size: var(--text-caption);
-  font-weight: var(--weight-semibold);
+  font: var(--type-caption-strong);
 }
 
 .legend li {
@@ -194,25 +187,25 @@
 
 .barTrack {
   fill: var(--chart-track);
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .rowLabel {
   fill: var(--text);
-  font-size: 13px;
-  font-weight: var(--weight-semibold);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-medium);
 }
 
 .barValue {
   fill: var(--text);
-  font-size: 12px;
-  font-weight: var(--weight-bold);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-heading);
 }
 
 .barValueMuted {
   fill: var(--text-muted);
-  font-size: 12px;
-  font-weight: var(--weight-bold);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-heading);
 }
 
 .hitArea {

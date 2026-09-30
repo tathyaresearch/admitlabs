@@ -5,12 +5,12 @@
 
 .table {
   width: 100%;
-  font-size: var(--text-small);
+  font: var(--type-small);
 }
 
 .caption {
   text-align: left;
-  font-weight: var(--weight-bold);
+  font: var(--type-card);
   padding-bottom: var(--space-3);
 }
 
@@ -19,21 +19,23 @@
   padding: var(--space-3) var(--space-4);
   text-align: left;
   vertical-align: middle;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-raised);
 }
 
 .table thead th {
-  font-size: var(--text-micro);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
+  font: var(--type-caption-strong);
   color: var(--text-muted);
   white-space: nowrap;
-  border-bottom-color: var(--line-strong);
+  border-bottom-color: var(--line-medium);
 }
 
 .table tbody th {
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
+}
+
+.table tbody tr:last-child th,
+.table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .table tbody tr {
@@ -78,7 +80,11 @@
 
   .table tbody tr {
     padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--line-raised);
+  }
+
+  .table tbody tr:last-child {
+    border-bottom: 0;
   }
 
   .table tbody th,
@@ -92,7 +98,7 @@
   }
 
   .table tbody th {
-    font-size: var(--text-body);
+    font: var(--type-strong);
     padding-bottom: var(--space-2);
     text-align: left;
   }
@@ -100,7 +106,6 @@
   .table tbody td::before {
     content: attr(data-label);
     color: var(--text-muted);
-    font-weight: var(--weight-semibold);
     text-align: left;
   }
 }

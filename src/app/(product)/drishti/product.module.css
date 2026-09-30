@@ -20,27 +20,28 @@
   display: grid;
   align-content: center;
   justify-items: start;
-  gap: var(--space-6);
+  gap: var(--space-5);
   max-width: var(--page-max);
   width: 100%;
   margin: 0 auto;
   padding: var(--space-16) 0;
 }
 
+/* The product page may be larger than the dashboard, but stays calm too. */
 .title {
-  max-width: 16ch;
-  font-size: var(--text-display);
-  line-height: var(--leading-tight);
-  letter-spacing: -0.04em;
+  max-width: 18ch;
+  font: var(--type-display);
+  letter-spacing: var(--tracking-display);
 }
 
 .lede {
-  max-width: 38rem;
-  font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
+  max-width: 36rem;
+  font: var(--type-lead);
+  font-size: var(--size-section);
   color: var(--text-muted);
 }
 
 .note {
-  font-size: var(--text-caption);
+  font: var(--type-caption);
   color: var(--text-muted);
 }

@@ -18,7 +18,7 @@
 
 .placeholder {
   filter: blur(7px);
-  opacity: 0.7;
+  opacity: 0.6;
   user-select: none;
   pointer-events: none;
 }
@@ -33,32 +33,32 @@
   display: grid;
   justify-items: center;
   gap: var(--space-2);
-  max-width: 22rem;
+  max-width: 21rem;
   padding: var(--space-6);
   text-align: center;
   background: var(--surface-raised);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line-medium);
   border-radius: var(--radius-md);
 }
 
 .lock {
   display: grid;
   place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 1px solid var(--line-strong);
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--line-medium);
   border-radius: var(--radius-full);
   margin-bottom: var(--space-1);
+  color: var(--text-muted);
 }
 
 .title {
-  font-weight: var(--weight-bold);
-  font-size: var(--text-h4);
-  letter-spacing: -0.01em;
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
 }
 
 .description {
-  font-size: var(--text-small);
+  font: var(--type-small);
   color: var(--text-muted);
   margin-bottom: var(--space-2);
 }

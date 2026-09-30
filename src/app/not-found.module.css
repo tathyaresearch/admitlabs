@@ -10,23 +10,22 @@
   display: grid;
   align-content: center;
   justify-items: start;
-  gap: var(--space-4);
-  max-width: 36rem;
+  gap: var(--space-3);
+  max-width: 34rem;
 }
 
 .code {
-  font-size: var(--num-hero);
-  font-weight: var(--weight-heavy);
-  font-stretch: var(--width-condensed);
-  letter-spacing: -0.05em;
-  line-height: 0.85;
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
 }
 
 .title {
-  font-size: var(--text-h1);
-  line-height: var(--leading-tight);
+  font: var(--type-title);
+  letter-spacing: var(--tracking-title);
 }
 
 .text {
+  font: var(--type-lead);
   color: var(--text-muted);
+  margin-bottom: var(--space-3);
 }

@@ -249,30 +249,46 @@ export default async function DesignSystemPage() {
             </Card>
           </Section>
 
-          <Section id="type" title="Type" description="Bricolage Grotesque only, with weight, width and optical size axes. No second font.">
+          <Section
+            id="type"
+            title="Type"
+            description="Bricolage Grotesque only. A calm scale: small, confident headings at 600. Only score numbers go to 700 and above. Every style comes from src/styles/tokens.css."
+          >
             <Card>
               <div className={styles.typeScale}>
-                <Specimen label="Display, 700, tight">
+                <Specimen label="Display: product page only, 36 to 56px, 600">
                   <p className={styles.tDisplay}>See where you stand.</p>
                 </Specimen>
-                <Specimen label="Heading 1">
-                  <p className={styles.tH1}>Who&apos;s ahead of us?</p>
+                <Specimen label="Page title: 24 to 28px, 600">
+                  <p className={styles.tTitle}>Who&apos;s ahead of us?</p>
                 </Specimen>
-                <Specimen label="Heading 2">
-                  <p className={styles.tH2}>What students want this month</p>
+                <Specimen label="Section title: 17px, 600">
+                  <p className={styles.tSection}>What students want this month</p>
                 </Specimen>
-                <Specimen label="Heading 3">
-                  <p className={styles.tH3}>What to fix first</p>
+                <Specimen label="Card title: 15px, 600">
+                  <p className={styles.tCard}>What to fix first</p>
                 </Specimen>
-                <Specimen label="Body, 16px">
+                <Specimen label="Lead: 15px, for descriptions under titles">
+                  <p className={styles.tLead}>A monthly view of how your institution looks to students.</p>
+                </Specimen>
+                <Specimen label="Body: 14px">
                   <p>Plain language, short sentences. A low score is an opportunity to fix something, never a failure.</p>
                 </Specimen>
-                <Specimen label="Small and caption">
+                <Specimen label="Small and label: 13px. Caption: 12px">
                   <p className={styles.tSmall}>Checked 15 Sep 2026 on eastgate-university.example/fees</p>
                   <p className={styles.tCaption}>Captions and metadata sit in the muted text colour.</p>
                 </Specimen>
-                <Specimen label="Eyebrow">
+                <Specimen label="Eyebrow: 12px, 500">
                   <Eyebrow>01 / Audit</Eyebrow>
+                </Specimen>
+                <Specimen label="Numbers: the score (800, condensed) is the one big, bold thing">
+                  <div className={styles.numbers}>
+                    <span className={styles.tScore}>73</span>
+                    <span className={styles.tScoreMedium}>73</span>
+                    <span className={styles.tScoreSmall}>73</span>
+                    <span className={styles.tMetric}>₹9,999</span>
+                  </div>
+                  <p className={styles.tCaption}>Score 72 to 104px, dial 44 to 56px, pillar 24px (700), other numbers 22px (600).</p>
                 </Specimen>
               </div>
             </Card>
@@ -302,7 +318,11 @@ export default async function DesignSystemPage() {
             </div>
           </Section>
 
-          <Section id="space" title="Space and shape" description="A 4px spacing scale, small radii, hairline borders. Depth comes from surface steps, never shadows.">
+          <Section
+            id="space"
+            title="Space and shape"
+            description="A 4px spacing scale with generous gaps between blocks, small radii and quiet hairlines. Depth comes from surface steps, never shadows."
+          >
             <div className={styles.grid2}>
               <Card>
                 <div className={styles.spaceScale}>
@@ -319,8 +339,8 @@ export default async function DesignSystemPage() {
                   {[
                     ['xs', '2px buttons, tags'],
                     ['sm', '4px fields'],
-                    ['md', '6px cards'],
-                    ['lg', '10px sheets'],
+                    ['md', '8px cards'],
+                    ['lg', '12px sheets'],
                   ].map(([name, use]) => (
                     <div key={name} className={styles.radius}>
                       <span className={styles.radiusBox} style={{ borderRadius: `var(--radius-${name})` }} />
@@ -332,7 +352,11 @@ export default async function DesignSystemPage() {
             </div>
           </Section>
 
-          <Section id="buttons" title="Buttons" description="Primary is an inverted block: the one thing to press. Sharp 2px corners, 700 weight, 44px touch targets.">
+          <Section
+            id="buttons"
+            title="Buttons"
+            description="Primary is an inverted block: the one thing to press. Sharp 2px corners, 600 weight, 40px tall with a mouse and 44px on touch screens."
+          >
             <Card>
               <div className={styles.stack}>
                 <div className={styles.row}>

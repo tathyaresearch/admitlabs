@@ -8,8 +8,8 @@
 }
 
 .quiet {
-  background: var(--surface-sunken);
-  border: 1px solid var(--line);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-raised);
 }
 
 .inverse {
@@ -17,22 +17,27 @@
 }
 
 .noticeIcon {
-  margin-top: 2px;
+  margin-top: 1px;
+  color: var(--text-muted);
+}
+
+.inverse .noticeIcon {
+  color: var(--text);
 }
 
 .noticeBody {
   display: grid;
-  gap: var(--space-1);
+  gap: 2px;
   min-width: 0;
 }
 
 .noticeTitle {
-  font-weight: var(--weight-bold);
-  letter-spacing: -0.01em;
+  font: var(--type-strong);
+  font-weight: var(--weight-heading);
 }
 
 .noticeText {
-  font-size: var(--text-small);
+  font: var(--type-small);
   color: var(--text-muted);
 }
 
@@ -60,25 +65,26 @@
 .empty {
   display: grid;
   justify-items: start;
-  gap: var(--space-3);
+  gap: var(--space-2);
   padding: var(--space-10) var(--space-6);
-  border: 1px dashed var(--line-strong);
+  border: 1px dashed var(--line-medium);
   border-radius: var(--radius-md);
 }
 
 .emptyIcon {
   display: grid;
   place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border: 1px solid var(--line-strong);
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--line-medium);
   border-radius: var(--radius-sm);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: var(--text-muted);
 }
 
 .emptyTitle {
-  font-size: var(--text-h3);
-  letter-spacing: var(--tracking-snug);
+  font: var(--type-section);
+  letter-spacing: var(--tracking-section);
 }
 
 .emptyText {
@@ -87,7 +93,7 @@
 }
 
 .emptyAction {
-  margin-top: var(--space-2);
+  margin-top: var(--space-3);
 }
 
 .skeletonGroup {

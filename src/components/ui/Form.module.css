@@ -4,25 +4,20 @@
 }
 
 .label {
-  font-size: var(--text-small);
-  font-weight: var(--weight-semibold);
-  letter-spacing: -0.005em;
+  font: var(--type-label);
   padding: 0;
 }
 
 .hint {
-  font-size: var(--text-caption);
+  font: var(--type-caption);
   color: var(--text-muted);
-  line-height: 1.45;
 }
 
 .error {
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
-  font-size: var(--text-caption);
-  font-weight: var(--weight-semibold);
-  line-height: 1.45;
+  font: var(--type-caption-strong);
 }
 
 .error svg {
@@ -32,16 +27,23 @@
 
 .control {
   width: 100%;
-  min-height: var(--touch-target);
+  min-height: var(--control-height);
   padding: 0 var(--space-3);
   background: var(--field);
   color: var(--text);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
-  font-size: var(--text-body);
+  font: var(--type-body);
   transition:
     border-color var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out);
+}
+
+/* Phones zoom into fields with text under 16px, so fields stay at 16px there. */
+@media (pointer: coarse) {
+  .control {
+    font-size: 1rem;
+  }
 }
 
 .control::placeholder {
@@ -70,10 +72,9 @@
 }
 
 .textarea {
-  min-height: 7rem;
+  min-height: 6.5rem;
   padding: var(--space-3);
   resize: vertical;
-  line-height: var(--leading-body);
 }
 
 .selectWrap {
@@ -107,7 +108,7 @@
 
 .choices {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
   margin-top: var(--space-1);
 }
 
@@ -115,7 +116,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-  min-height: var(--touch-target);
+  min-height: 2.25rem;
   padding: var(--space-2) 0;
 }
 
@@ -125,8 +126,7 @@
 }
 
 .choiceLabel {
-  font-size: var(--text-body);
-  line-height: 1.4;
+  font: var(--type-body);
   cursor: pointer;
 }
 
@@ -136,8 +136,8 @@
   flex: none;
   display: grid;
   place-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.125rem;
+  height: 1.125rem;
   margin: 1px 0 0;
   border: 1.5px solid var(--line-strong);
   background: var(--field);
@@ -157,8 +157,8 @@
 
 .checkbox::before {
   content: '';
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.6875rem;
+  height: 0.6875rem;
   background: var(--surface);
   clip-path: polygon(14% 52%, 0 66%, 38% 100%, 100% 22%, 86% 8%, 38% 72%);
   transform: scale(0);
@@ -167,8 +167,8 @@
 
 .radio::before {
   content: '';
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 0.4375rem;
+  height: 0.4375rem;
   border-radius: var(--radius-full);
   background: var(--surface);
   transform: scale(0);

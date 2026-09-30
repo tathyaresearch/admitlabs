@@ -72,7 +72,7 @@ export default async function PlanPage() {
       <PageHeader eyebrow="Plan and access" title={title} description={description} />
 
       {reminder.stage === 'ends_soon' || reminder.stage === 'ends_very_soon' ? (
-        <Notice tone="inverse" title={`Your Paid plan ends ${daysText(reminder.daysLeft ?? 0)}, on ${formatDate(plan?.endsAt as Date)}.`}>
+        <Notice title={`Your Paid plan ends ${daysText(reminder.daysLeft ?? 0)}, on ${formatDate(plan?.endsAt as Date)}.`}>
           It does not renew on its own. When it ends you move to Free, and you keep your last Audit score.
         </Notice>
       ) : null}

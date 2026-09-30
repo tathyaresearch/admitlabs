@@ -2,14 +2,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55em;
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
   line-height: 1;
   white-space: nowrap;
 }
 
 /* Strong sits in an inverted block. Swapping the current colours keeps it right inside inverted blocks too. */
 .invertedResult {
-  padding: 0.32em 0.55em;
+  padding: 0.34em 0.55em;
   border-radius: var(--radius-xs);
   background: var(--text);
   color: var(--surface);
@@ -43,29 +43,25 @@
   border-style: dashed;
 }
 
-.word {
-  letter-spacing: -0.005em;
-}
-
 .sm {
   --meter-width: 0.5rem;
   --meter-height: 0.3125rem;
   --meter-gap: 2px;
-  font-size: var(--text-caption);
+  font-size: var(--size-caption);
 }
 
 .md {
-  --meter-width: 0.75rem;
-  --meter-height: 0.4375rem;
+  --meter-width: 0.6875rem;
+  --meter-height: 0.375rem;
   --meter-gap: 3px;
-  font-size: var(--text-small);
+  font-size: var(--size-small);
 }
 
 .lg {
-  --meter-width: 1.125rem;
-  --meter-height: 0.625rem;
+  --meter-width: 1rem;
+  --meter-height: 0.5625rem;
   --meter-gap: 4px;
-  font-size: var(--text-body);
+  font-size: var(--size-body);
 }
 
 .lg .segment {
@@ -75,13 +71,11 @@
 .scoreLabel {
   display: inline-flex;
   align-items: center;
-  padding: 0.3em 0.6em;
-  border: 1px solid var(--line-strong);
+  padding: 0.34em 0.6em;
+  border: 1px solid var(--line-medium);
   border-radius: var(--radius-xs);
-  font-size: var(--text-caption);
-  font-weight: var(--weight-bold);
+  font: var(--type-caption-strong);
   line-height: 1;
-  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 
@@ -95,16 +89,16 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35em;
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
   white-space: nowrap;
 }
 
 .delta-md {
-  font-size: var(--text-small);
+  font-size: var(--size-small);
 }
 
 .delta-sm {
-  font-size: var(--text-caption);
+  font-size: var(--size-caption);
   color: var(--text-muted);
 }
 
@@ -112,14 +106,10 @@
   display: inline-flex;
   align-items: baseline;
   gap: 0.45em;
-  font-size: var(--text-small);
-  font-weight: var(--weight-semibold);
+  font: var(--type-strong);
 }
 
 .difficultyLabel {
-  font-size: var(--text-micro);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
+  font: var(--type-caption);
   color: var(--text-muted);
 }

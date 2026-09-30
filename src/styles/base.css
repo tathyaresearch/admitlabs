@@ -15,10 +15,7 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
-  font-family: var(--font-sans);
-  font-size: var(--text-body);
-  font-weight: var(--weight-regular);
-  line-height: var(--leading-body);
+  font: var(--type-body);
   letter-spacing: var(--tracking-body);
   color: var(--text);
   background: var(--surface);
@@ -49,6 +46,7 @@ body {
   --text-inverse: var(--inv-text-inverse);
   --line: var(--inv-line);
   --line-raised: var(--inv-line-raised);
+  --line-medium: var(--inv-line-medium);
   --line-strong: var(--inv-line-strong);
   --focus: var(--inv-focus);
   --field: var(--inv-field);
@@ -65,9 +63,9 @@ h4,
 h5,
 h6 {
   margin: 0;
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-tight);
-  line-height: var(--leading-snug);
+  font-weight: var(--weight-heading);
+  letter-spacing: var(--tracking-section);
+  line-height: var(--leading-title);
   text-wrap: balance;
 }
 
@@ -120,6 +118,11 @@ table {
   border-collapse: collapse;
 }
 
+strong,
+b {
+  font-weight: var(--weight-heading);
+}
+
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
@@ -150,7 +153,7 @@ table {
   padding: var(--space-2) var(--space-4);
   background: var(--surface-inverse);
   color: var(--text-inverse);
-  font-weight: var(--weight-bold);
+  font: var(--type-strong);
   text-decoration: none;
   border-radius: var(--radius-xs);
   transform: translateY(-200%);

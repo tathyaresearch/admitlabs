@@ -4,8 +4,7 @@
 }
 
 .label {
-  font-size: var(--text-small);
-  font-weight: var(--weight-semibold);
+  font: var(--type-label);
 }
 
 .cells {
@@ -13,19 +12,18 @@
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--space-2);
-  max-width: 22rem;
+  max-width: 20rem;
 }
 
 .cell {
   display: grid;
   place-items: center;
   aspect-ratio: 5 / 6;
-  min-height: 3.25rem;
+  min-height: 3rem;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
   background: var(--field);
-  font-size: 1.75rem;
-  font-weight: var(--weight-bold);
+  font: var(--type-metric);
   font-variant-numeric: tabular-nums;
   line-height: 1;
   transition:
@@ -60,6 +58,5 @@
 }
 
 .error {
-  font-size: var(--text-caption);
-  font-weight: var(--weight-semibold);
+  font: var(--type-caption-strong);
 }

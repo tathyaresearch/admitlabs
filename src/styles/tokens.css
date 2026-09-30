@@ -4,6 +4,9 @@
   No accent colour. No gradients. No glow. Contrast comes from size, weight, width and
   black and ivory surface flips.
 
+  This file is the one place for the look. Change a value here and every screen and the
+  design system page follow.
+
   How theming works:
   - Two palettes (--dk-* and --lt-*) are defined once.
   - A theme maps the semantic tokens (--surface, --text, ...) to one palette and the
@@ -12,7 +15,7 @@
     With no data-theme on <html>, the device setting decides.
   - .invert (in base.css) flips a block to the other palette, whatever the theme is.
 
-  Every text pairing below is 4.5:1 or better, and control borders are 3:1 or better
+  Every text pairing below is 4.5:1 or better, and field borders are 3:1 or better
   (checked in src/domain/format.test.ts and on the design system page).
 */
 
@@ -26,17 +29,21 @@
   /* Greys between the brand colours: black, graphite, slate, ivory. */
   --grey-975: #141417;
   --grey-950: #1e1f23; /* graphite */
+  --grey-940: #212226;
   --grey-930: #242529;
   --grey-925: #26272b;
+  --grey-920: #2a2b30;
   --grey-900: #303237;
   --grey-850: #3f4146;
   --grey-800: #4d4f55;
   --grey-700: #5e6066; /* small text on ivory, 5.17:1 */
-  --grey-600: #74777d; /* control borders, 3:1 or more on every surface */
+  --grey-600: #74777d; /* field borders, 3:1 or more on every surface */
   --grey-500: #8a8d94; /* slate */
   --grey-400: #a4a4a5;
   --grey-300: #bebab5;
+  --grey-250: #cbc4b7;
   --grey-200: #d8d1c5;
+  --grey-175: #e2d9ca;
   --grey-150: #e5dcce;
   --grey-100: #ece3d2;
 
@@ -51,12 +58,13 @@
   --dk-text: var(--ivory);
   --dk-text-muted: var(--slate);
   --dk-text-inverse: var(--black);
-  --dk-line: var(--grey-925);
-  --dk-line-raised: var(--grey-900);
+  --dk-line: var(--grey-940);
+  --dk-line-raised: var(--grey-920);
+  --dk-line-medium: var(--grey-850);
   --dk-line-strong: var(--grey-600);
   --dk-focus: var(--ivory);
   --dk-field: var(--grey-975);
-  --dk-chart-grid: var(--grey-900);
+  --dk-chart-grid: var(--grey-920);
   --dk-chart-track: var(--grey-850);
 
   /* Light palette: ivory surface. */
@@ -70,48 +78,75 @@
   --lt-text: var(--black);
   --lt-text-muted: var(--grey-700);
   --lt-text-inverse: var(--ivory);
-  --lt-line: var(--grey-200);
-  --lt-line-raised: var(--grey-200);
+  --lt-line: var(--grey-175);
+  --lt-line-raised: var(--grey-175);
+  --lt-line-medium: var(--grey-250);
   --lt-line-strong: var(--grey-600);
   --lt-focus: var(--black);
   --lt-field: var(--ivory);
-  --lt-chart-grid: var(--grey-200);
+  --lt-chart-grid: var(--grey-175);
   --lt-chart-track: var(--grey-150);
 
-  /* Type: Bricolage Grotesque only. Hierarchy from size, weight and width. */
+  /*
+    Type. Bricolage Grotesque only. Hierarchy from size, weight and width.
+    A calm dashboard scale: small, confident headings; the score is the one big, bold thing.
+  */
   --font-sans: var(--font-bricolage), sans-serif;
 
-  --text-display: clamp(2.75rem, 1.5rem + 4.8vw, 4.75rem);
-  --text-h1: clamp(2rem, 1.35rem + 2.4vw, 3rem);
-  --text-h2: clamp(1.5rem, 1.2rem + 1.1vw, 2rem);
-  --text-h3: 1.25rem;
-  --text-h4: 1.0625rem;
-  --text-body: 1rem;
-  --text-small: 0.875rem;
-  --text-caption: 0.8125rem;
-  --text-micro: 0.75rem;
-  --num-hero: clamp(4.75rem, 3rem + 7.5vw, 8.75rem);
-  --num-large: clamp(2.5rem, 1.9rem + 2.2vw, 3.5rem);
-  --num-medium: 1.75rem;
+  --size-display: clamp(2.25rem, 1.7rem + 2.2vw, 3.5rem); /* product page hero: 36 to 56px */
+  --size-title: clamp(1.5rem, 1.4rem + 0.4vw, 1.75rem); /* page titles: 24 to 28px */
+  --size-section: 1.0625rem; /* section titles: 17px */
+  --size-card: 0.9375rem; /* card titles: 15px */
+  --size-lead: 0.9375rem; /* descriptions under titles: 15px */
+  --size-body: 0.875rem; /* body and interface text: 14px */
+  --size-small: 0.8125rem; /* secondary text, table cells, form labels: 13px */
+  --size-caption: 0.75rem; /* captions, table headers, tags: 12px */
+  --size-micro: 0.6875rem; /* chart axes and phone tab labels only: 11px */
+  --size-score: clamp(4.5rem, 3.5rem + 4vw, 6.5rem); /* the big score: 72 to 104px */
+  --size-score-medium: clamp(2.75rem, 2.4rem + 1.4vw, 3.5rem); /* a score inside a dial: 44 to 56px */
+  --size-score-small: 1.5rem; /* pillar scores: 24px */
+  --size-metric: 1.375rem; /* counts, prices, stats: 22px */
 
+  /* 600 for headings. 700 and up only for score numbers (and the AdmitLabs wordmark). */
   --weight-regular: 400;
   --weight-medium: 500;
+  --weight-heading: 600;
   --weight-semibold: 600;
   --weight-bold: 700;
+  --weight-score: 800;
   --weight-heavy: 800;
 
+  --tracking-display: -0.035em;
+  --tracking-title: -0.022em;
+  --tracking-section: -0.012em;
+  --tracking-body: -0.003em;
+  --tracking-score: -0.045em;
+
+  --leading-display: 1.06;
+  --leading-title: 1.2;
+  --leading-section: 1.35;
+  --leading-body: 1.5;
+
+  /* Text styles. Use with `font:` plus the matching letter-spacing. */
+  --type-display: var(--weight-heading) var(--size-display) / var(--leading-display) var(--font-sans);
+  --type-title: var(--weight-heading) var(--size-title) / var(--leading-title) var(--font-sans);
+  --type-section: var(--weight-heading) var(--size-section) / var(--leading-section) var(--font-sans);
+  --type-card: var(--weight-heading) var(--size-card) / var(--leading-section) var(--font-sans);
+  --type-lead: var(--weight-regular) var(--size-lead) / var(--leading-body) var(--font-sans);
+  --type-body: var(--weight-regular) var(--size-body) / var(--leading-body) var(--font-sans);
+  --type-strong: var(--weight-medium) var(--size-body) / var(--leading-body) var(--font-sans);
+  --type-small: var(--weight-regular) var(--size-small) / var(--leading-body) var(--font-sans);
+  --type-label: var(--weight-medium) var(--size-small) / 1.4 var(--font-sans);
+  --type-caption: var(--weight-regular) var(--size-caption) / 1.45 var(--font-sans);
+  --type-caption-strong: var(--weight-medium) var(--size-caption) / 1.45 var(--font-sans);
+  --type-score: var(--weight-score) condensed var(--size-score) / 0.85 var(--font-sans);
+  --type-score-medium: var(--weight-score) condensed var(--size-score-medium) / 0.85 var(--font-sans);
+  --type-score-small: var(--weight-bold) semi-condensed var(--size-score-small) / 1 var(--font-sans);
+  --type-metric: var(--weight-heading) var(--size-metric) / 1.1 var(--font-sans);
+
   --width-condensed: 75%;
-  --width-narrow: 85%;
+  --width-narrow: 87.5%;
   --width-normal: 100%;
-
-  --tracking-tight: -0.035em;
-  --tracking-snug: -0.02em;
-  --tracking-body: -0.005em;
-  --tracking-wide: 0.08em;
-
-  --leading-tight: 1.04;
-  --leading-snug: 1.15;
-  --leading-body: 1.55;
 
   /* Space: 4px base */
   --space-1: 0.25rem;
@@ -120,17 +155,24 @@
   --space-4: 1rem;
   --space-5: 1.25rem;
   --space-6: 1.5rem;
+  --space-7: 1.75rem;
   --space-8: 2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
+  --space-14: 3.5rem;
   --space-16: 4rem;
   --space-20: 5rem;
   --space-24: 6rem;
 
+  /* Layout rhythm: the gap between blocks on a page, and inside a section. */
+  --page-gap: var(--space-12);
+  --section-gap: var(--space-4);
+  --card-padding: var(--space-6);
+
   --radius-xs: 2px;
   --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 10px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
   --radius-full: 999px;
 
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -139,16 +181,24 @@
   --duration: 200ms;
   --duration-slow: 360ms;
 
-  --page-max: 1200px;
+  --page-max: 1120px;
   --gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
-  --sidebar-width: 15.5rem;
-  --topbar-height: 4rem;
-  --bottombar-height: 4.25rem;
+  --sidebar-width: 15rem;
+  --topbar-height: 3.5rem;
+  --bottombar-height: 4rem;
+  --control-height: 2.5rem;
   --touch-target: 2.75rem;
 
   --z-sticky: 10;
   --z-nav: 20;
   --z-overlay: 50;
+}
+
+/* Fingers need bigger targets than a mouse. */
+@media (pointer: coarse) {
+  :root {
+    --control-height: var(--touch-target);
+  }
 }
 
 /* Dark theme: the default. */
@@ -166,6 +216,7 @@
   --text-inverse: var(--dk-text-inverse);
   --line: var(--dk-line);
   --line-raised: var(--dk-line-raised);
+  --line-medium: var(--dk-line-medium);
   --line-strong: var(--dk-line-strong);
   --focus: var(--dk-focus);
   --field: var(--dk-field);
@@ -184,6 +235,7 @@
   --inv-text-inverse: var(--lt-text-inverse);
   --inv-line: var(--lt-line);
   --inv-line-raised: var(--lt-line-raised);
+  --inv-line-medium: var(--lt-line-medium);
   --inv-line-strong: var(--lt-line-strong);
   --inv-focus: var(--lt-focus);
   --inv-field: var(--lt-field);
@@ -205,6 +257,7 @@
   --text-inverse: var(--lt-text-inverse);
   --line: var(--lt-line);
   --line-raised: var(--lt-line-raised);
+  --line-medium: var(--lt-line-medium);
   --line-strong: var(--lt-line-strong);
   --focus: var(--lt-focus);
   --field: var(--lt-field);
@@ -223,6 +276,7 @@
   --inv-text-inverse: var(--dk-text-inverse);
   --inv-line: var(--dk-line);
   --inv-line-raised: var(--dk-line-raised);
+  --inv-line-medium: var(--dk-line-medium);
   --inv-line-strong: var(--dk-line-strong);
   --inv-focus: var(--dk-focus);
   --inv-field: var(--dk-field);
@@ -245,6 +299,7 @@
     --text-inverse: var(--lt-text-inverse);
     --line: var(--lt-line);
     --line-raised: var(--lt-line-raised);
+    --line-medium: var(--lt-line-medium);
     --line-strong: var(--lt-line-strong);
     --focus: var(--lt-focus);
     --field: var(--lt-field);
@@ -263,6 +318,7 @@
     --inv-text-inverse: var(--dk-text-inverse);
     --inv-line: var(--dk-line);
     --inv-line-raised: var(--dk-line-raised);
+    --inv-line-medium: var(--dk-line-medium);
     --inv-line-strong: var(--dk-line-strong);
     --inv-focus: var(--dk-focus);
     --inv-field: var(--dk-field);
