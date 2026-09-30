@@ -1,8 +1,8 @@
 // Mock analysis: text from a written bank that follows the copy rules. No Claude calls.
 
-import { DEMAND_FIXTURES } from '../../sample/demand.ts';
 import { SAMPLE_CONTENT } from '../../sample/rivals.ts';
 import type { AnalysisProvider } from '../analysis.ts';
+import { demandFixture, localize, placeWords } from './demand-bank.ts';
 import { writeFixAdvice } from './fix-advice.ts';
 import { rngFor } from './random.ts';
 import { writeRivalAction } from './rival-actions.ts';
@@ -23,12 +23,13 @@ export const mockAnalysis: AnalysisProvider = {
     return rngFor('why', institutionSlug, title).pick(GENERAL_REASONS);
   },
 
-  async contentIdeas({ programKey, questions }) {
-    const fixture = DEMAND_FIXTURES[programKey];
+  async contentIdeas({ programKey, questions, region }) {
+    const fixture = demandFixture(programKey);
     if (!fixture) return [];
+    const words = region ? placeWords(region.scope, region.region, region.state) : null;
     return fixture.ideas.flatMap((idea) => {
       const question = questions.find((candidate) => candidate.questionIndex === idea.question);
-      return question ? [{ text: idea.text, basedOn: question.text, sourceUrl: question.sourceUrl }] : [];
+      return question ? [{ text: words ? localize(idea.text, words) : idea.text, basedOn: question.text, sourceUrl: question.sourceUrl }] : [];
     });
   },
 

@@ -22,8 +22,12 @@ export interface QuestionFixture {
   source: DemandPlatform;
 }
 
+/** The usual five worries (spec 9.4), and "new" for any other found this month. */
+export type WorryTheme = 'fees' | 'placements' | 'hostel' | 'safety' | 'recognition' | 'new';
+
 export interface WorryFixture {
   text: string;
+  theme: WorryTheme;
   base: number;
   source: DemandPlatform;
   /** A worry found this month beyond the usual five. */
@@ -50,12 +54,12 @@ function worries(
   newWorry: { text: string; base: number },
 ): WorryFixture[] {
   return [
-    { text: 'Fees and hidden charges', base: fees, source: 'reddit' },
-    { text: 'Placements that are real', base: placements, source: 'quora' },
-    { text: 'Hostel quality and cost', base: hostel, source: 'reddit' },
-    { text: 'Safety on campus and in hostels', base: safety, source: 'x' },
-    { text: 'Recognition of the course', base: recognition, source: 'quora' },
-    { text: newWorry.text, base: newWorry.base, source: 'reddit', isNew: true },
+    { text: 'Fees and hidden charges', theme: 'fees', base: fees, source: 'reddit' },
+    { text: 'Placements that are real', theme: 'placements', base: placements, source: 'quora' },
+    { text: 'Hostel quality and cost', theme: 'hostel', base: hostel, source: 'reddit' },
+    { text: 'Safety on campus and in hostels', theme: 'safety', base: safety, source: 'x' },
+    { text: 'Recognition of the course', theme: 'recognition', base: recognition, source: 'quora' },
+    { text: newWorry.text, theme: 'new', base: newWorry.base, source: 'reddit', isNew: true },
   ];
 }
 

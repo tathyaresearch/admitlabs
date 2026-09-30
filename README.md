@@ -92,6 +92,27 @@ npm run rivals -- --actions --institution eastgate-university
 - `--check` runs one weekly check now. `--actions` rebuilds one institution's 3 things to do (they also follow each Paid or Client Audit).
 - Rival ads are entered by the team at `/team/ads`.
 
+## Demand
+
+What students search, ask and worry about (spec section 9), grouped: a topic, a count and a source, never a person. Demand is pulled once per region (city, state, All India) and program, and shared by every institution that needs it.
+
+- **Paid and Client** see their city, state or All India (the switch at the top), for all their programs or one: the fastest rising course or career, what students worry about most, the season clock, 5 content ideas built on real questions, the top questions, the worries (the usual five plus anything new), what is rising and falling, and what students say about them and the rivals they track (from each one's state).
+- **Free** sees one rising trend, for its Free program in its city (`demand_highlight`), and one "Paid shows everything students are asking" card with counts (`demand_teaser`). Home shows the same highlight on every plan.
+- **Plan rules, enforced by the database:** Paid and Client read only their own regions and programs. Mentions come only through `demand_mentions`, only about the institution and its tracked rivals.
+- Hindi and Assamese items show in English with a language tag; the original wording stays in the data.
+- Programs added under Other have no shared key, so Demand does not cover them yet.
+
+Pulls run monthly on the 28th, with mock providers, through one script:
+
+```
+npm run demand -- --due
+npm run demand -- --due --date 2026-10-28 --dry-run
+npm run demand -- --first --institution <slug>
+```
+
+- `--due` runs every pull due that day: each region and program an institution that has signed up needs, for the month (this month from the 28th, last month before it). A course or career rising 40% or more in a city (`DEMAND_RULES` in `src/config/demand.ts`) alerts every Paid and Client institution there that offers the program.
+- A new signup, or a program added in Settings, gets any region and program nobody needed before straight away, without alerts. `--first` does the same by hand.
+
 ## Local addresses
 
 | What | Address |
@@ -118,23 +139,25 @@ npm run rivals -- --actions --institution eastgate-university
 | `npm run audit -- ...` | Runs Audits by hand (see above) |
 | `npm run tier -- ...` | Switches a local institution's tier (see above) |
 | `npm run rivals -- ...` | Runs rival Audits, weekly checks and 3 things to do by hand (see above) |
+| `npm run demand -- ...` | Runs the monthly Demand pulls by hand (see above) |
 
 ## Layout
 
 ```
 supabase/        config, migrations (schema, row level security, owner actions), database tests, email template
-scripts/         env, seed, audit, tier, rivals, dash check (TypeScript run directly by Node)
+scripts/         env, seed, audit, tier, rivals, demand, dash check (TypeScript run directly by Node)
 src/app/         routes: (product)/drishti, login, (dashboard), onboarding, team, share, design-system
-src/components/  ui, charts, audit and rivals screens, institution inputs and the app shell
+src/components/  ui, charts, audit, rivals and demand screens, institution inputs and the app shell
 src/domain/      pure logic: the scoring engine (domain/scoring), checks, schedules, onboarding checks, dates, tiers
 src/config/      every adjustable value: scoring, plans, entitlements, schedules, providers, cities, programs
 src/providers/   the provider interface, mock providers, and real provider slots
 src/audit/       one Audit end to end (collect, score, save) and what the Audit screens show
 src/rivals/      comparisons, verdicts, change rules, the 3 things to do, and the rival jobs
+src/demand/      regions, the pull schedule, ranking and spikes, the season clock, the page view, and the pulls
 src/sample/      the fictional sample world
 ```
 
-`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals` and `src/sample` never import Next.js, so Node runs their tests directly.
+`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand` and `src/sample` never import Next.js, so Node runs their tests directly.
 
 ## How scores work
 

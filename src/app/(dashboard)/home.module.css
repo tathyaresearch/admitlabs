@@ -55,44 +55,6 @@
   }
 }
 
-.later {
-  display: grid;
-  gap: var(--space-3);
-}
-
-@media (min-width: 48rem) {
-  .later {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-4);
-  }
-}
-
-.laterCard {
-  display: grid;
-  justify-items: start;
-  gap: var(--space-1);
-}
-
-.laterTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: var(--space-2);
-  color: var(--text-muted);
-}
-
-.laterQuestion {
-  font: var(--type-card);
-  letter-spacing: var(--tracking-section);
-}
-
-.laterText {
-  font: var(--type-small);
-  color: var(--text-muted);
-  margin-bottom: var(--space-2);
-}
-
 .cardHead {
   display: flex;
   align-items: baseline;

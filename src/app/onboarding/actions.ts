@@ -10,6 +10,7 @@ import { listedProgram } from '@/config/programs';
 import { checkInstitution, checkPrograms, type InstitutionFields } from '@/domain/onboarding';
 import { effectiveTier } from '@/domain/tiers';
 import { getViewer } from '@/lib/auth/viewer';
+import { pullDemandFirst } from '@/lib/demand/first';
 import { friendlyError } from '@/lib/institution/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -65,6 +66,8 @@ export async function onboardAction(previous: OnboardingState, formData: FormDat
     if (error?.message.includes('already_onboarded')) redirect('/');
     return reply({ formError: friendlyError(error?.message) });
   }
+
+  await pullDemandFirst(institutionId);
 
   // A claimed record may already have a Paid or Client plan (set by the team). Then there is no
   // Free program to pick, and the first Audit runs straight away.

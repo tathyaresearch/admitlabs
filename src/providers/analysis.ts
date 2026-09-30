@@ -5,7 +5,7 @@
 
 import type { ProviderMode } from '../config/providers.ts';
 import type { CheckFacts } from '../domain/facts.ts';
-import type { CheckKey, CheckResult, ContentPlatform, Difficulty, InstitutionType } from '../domain/types.ts';
+import type { CheckKey, CheckResult, ContentPlatform, DemandScope, Difficulty, InstitutionType } from '../domain/types.ts';
 import type { Opportunity } from '../rivals/opportunities.ts';
 import type { RivalContentValue } from './signals.ts';
 
@@ -29,6 +29,8 @@ export interface FixAdvice {
 
 export interface ContentIdeaInput {
   programKey: string;
+  /** The region the questions come from, so ideas fit the place (and its languages). */
+  region?: { scope: DemandScope; region: string; state: string | null };
   questions: ReadonlyArray<{ text: string; sourceUrl: string; questionIndex: number | null }>;
 }
 

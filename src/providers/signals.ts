@@ -70,7 +70,7 @@ export interface DemandItemValue {
   changePct: number | null;
   rank: number | null;
   /** For mentions: which institution the grouped mention is about. */
-  about: { slug: string; name: string } | null;
+  about: { id: string | null; slug: string; name: string } | null;
   sentiment: Sentiment | null;
   meta: Readonly<Record<string, string | number | boolean | null>>;
 }

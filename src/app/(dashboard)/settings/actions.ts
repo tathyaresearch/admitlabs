@@ -7,6 +7,7 @@
 import { revalidatePath } from 'next/cache';
 import { checkInstitution, checkPrograms, type InstitutionFields } from '@/domain/onboarding';
 import { getViewer } from '@/lib/auth/viewer';
+import { pullDemandFirst } from '@/lib/demand/first';
 import { friendlyError } from '@/lib/institution/errors';
 import { createClient } from '@/lib/supabase/server';
 
@@ -73,11 +74,15 @@ export async function saveProgramsAction(previous: FormState, formData: FormData
 
   const wanted = new Set(programs.value.map((program) => program.name.toLowerCase()));
   const current = new Set((active ?? []).map((program) => program.name.toLowerCase()));
+  let added = 0;
   for (const program of programs.value) {
     if (current.has(program.name.toLowerCase())) continue;
     const { error } = await supabase.rpc('add_program', { p_name: program.name, p_program_key: program.programKey ?? '' });
     if (error) return reply(previous, { status: 'error', message: friendlyError(error.message) });
+    added += 1;
   }
+  // A new program gets its Demand straight away, if nobody in the region needed it before.
+  if (added) await pullDemandFirst(viewer.membership.institution.id);
   for (const program of active ?? []) {
     if (wanted.has(program.name.toLowerCase())) continue;
     const { error } = await supabase.rpc('archive_program', { p_program: program.id });

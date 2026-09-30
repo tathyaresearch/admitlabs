@@ -385,6 +385,7 @@ export type Database = {
           pulled_at: string
           region: string
           scope: Database["public"]["Enums"]["demand_scope"]
+          state: string | null
         }
         Insert: {
           id?: string
@@ -393,6 +394,7 @@ export type Database = {
           pulled_at?: string
           region: string
           scope: Database["public"]["Enums"]["demand_scope"]
+          state?: string | null
         }
         Update: {
           id?: string
@@ -401,6 +403,7 @@ export type Database = {
           pulled_at?: string
           region?: string
           scope?: Database["public"]["Enums"]["demand_scope"]
+          state?: string | null
         }
         Relationships: []
       }
@@ -1092,6 +1095,35 @@ export type Database = {
         Returns: string
       }
       archive_program: { Args: { p_program: string }; Returns: undefined }
+      demand_highlight: {
+        Args: { p_institution: string }
+        Returns: {
+          change_pct: number
+          count: number
+          found_at: string
+          month: string
+          program_name: string
+          region: string
+          source_url: string
+          text: string
+        }[]
+      }
+      demand_mentions: {
+        Args: { p_institution: string }
+        Returns: {
+          count: number
+          found_at: string
+          institution_id: string
+          month: string
+          sentiment: Database["public"]["Enums"]["sentiment"]
+          source_url: string
+          text: string
+        }[]
+      }
+      demand_teaser: {
+        Args: { p_institution: string }
+        Returns: Record<string, unknown>
+      }
       institution_people: {
         Args: { p_institution: string }
         Returns: {
@@ -1127,6 +1159,7 @@ export type Database = {
         Returns: number
       }
       record_audit: { Args: { payload: Json }; Returns: string }
+      record_demand_pull: { Args: { payload: Json }; Returns: string }
       record_rival_check: { Args: { payload: Json }; Returns: number }
       remove_member: { Args: { p_user: string }; Returns: undefined }
       revoke_invite: { Args: { p_invite: string }; Returns: undefined }

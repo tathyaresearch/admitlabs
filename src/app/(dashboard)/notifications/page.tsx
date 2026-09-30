@@ -21,6 +21,7 @@ const ICONS: Readonly<Record<string, IconName>> = {
 const LINK_TEXT: Readonly<Record<string, string>> = {
   audit_ready: 'See your Audit',
   rival_move: 'See the rival',
+  demand_spike: 'See Demand',
 };
 
 export default async function NotificationsPage() {

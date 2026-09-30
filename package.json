@@ -24,7 +24,8 @@
     "env:local": "node scripts/env-local.ts",
     "audit": "node --env-file=.env.local scripts/audit.ts",
     "tier": "node --env-file=.env.local scripts/tier.ts",
-    "rivals": "node --env-file=.env.local scripts/rivals.ts"
+    "rivals": "node --env-file=.env.local scripts/rivals.ts",
+    "demand": "node --env-file=.env.local scripts/demand.ts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
