@@ -84,8 +84,8 @@ export function Problem() {
   );
 }
 
-/** One of the three features: an ivory tile with its icon, its place among the three, its question and a large picture. */
-function FeatureTile({ feature, className, children }: { feature: Feature; className?: string; children: ReactNode }) {
+/** One of the three features: an ivory tile with its icon, its place among the three, its question and a large picture. The website shows them too. */
+export function FeatureTile({ feature, className, children }: { feature: Feature; className?: string; children: ReactNode }) {
   const id = `tile-${feature.key}`;
   const place = FEATURES.indexOf(feature) + 1;
   return (
@@ -128,7 +128,7 @@ function Tile({ id, eyebrow, title, lede, className, children }: { id: string; e
   );
 }
 
-function featureOf(key: Feature['key']): Feature {
+export function featureOf(key: Feature['key']): Feature {
   const feature = FEATURES.find((item) => item.key === key);
   if (!feature) throw new Error(`No feature ${key}`);
   return feature;

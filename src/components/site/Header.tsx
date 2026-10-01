@@ -1,6 +1,7 @@
 // The website's header: the wordmark, links to the home page's sections, and the two buttons.
 // Wide: everything in one row. Narrow: the wordmark, the main button and a menu.
 
+import Link from 'next/link';
 import { Wordmark } from '@/components/ui/Brand';
 import { ButtonLink } from '@/components/ui/Button';
 import { appLink } from '@/lib/urls';
@@ -12,10 +13,11 @@ export function SiteHeader() {
   return (
     <header className={styles.header} data-theme="dark">
       <div className={`${styles.container} ${styles.headerInner}`}>
-        <a href="#top" className={styles.homeLink} aria-label="AdmitLabs, back to the top">
+        {/* No prefetch: on the home page it would fetch the page that is already open. */}
+        <Link href="/" prefetch={false} className={styles.homeLink} aria-label="AdmitLabs, home">
           <Wordmark height={21} />
-        </a>
-        <nav className={styles.nav} aria-label="On this page">
+        </Link>
+        <nav className={styles.nav} aria-label="Main">
           {NAV.map((item) => (
             <a key={item.href} href={item.href} className={styles.navLink}>
               {item.label}

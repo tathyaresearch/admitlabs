@@ -4,11 +4,14 @@
 // Pages still check the user on the server; this is not the only guard.
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { routeFor } from '@/lib/hosts';
+import { redirectBecomesRelative, routeFor } from '@/lib/hosts';
 import { updateSession } from '@/lib/supabase/proxy';
 import { APP_URL, SITE_URL } from '@/lib/urls';
 
 const PUBLIC_PREFIXES = ['/login', '/drishti', '/share', '/site'];
+
+/** The route handler that sends a dashboard path on to the dashboard's address, when this cannot. */
+const TO_DASHBOARD = '/site/to-dashboard';
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) return true;
@@ -18,8 +21,20 @@ function isPublic(pathname: string): boolean {
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  const route = routeFor({ host: request.headers.get('host') ?? request.nextUrl.host, pathname, search }, { site: SITE_URL, app: APP_URL });
-  if (route.kind === 'redirect') return NextResponse.redirect(route.url, route.permanent ? 308 : 307);
+  const host = request.headers.get('host') ?? request.nextUrl.host;
+  const route = routeFor({ host, pathname, search }, { site: SITE_URL, app: APP_URL });
+  if (route.kind === 'redirect') {
+    // Locally the dashboard has the server's own address, and Next would make this redirect
+    // relative, keeping the visitor on the website's address. A route handler sends it instead.
+    const target = new URL(route.url);
+    if (target.origin === new URL(APP_URL).origin && redirectBecomesRelative(route.url, request.nextUrl.origin, host)) {
+      // The path rides in the route's own segments; the query stays the visitor's.
+      const hop = request.nextUrl.clone();
+      hop.pathname = `${TO_DASHBOARD}${target.pathname}`;
+      return NextResponse.rewrite(hop);
+    }
+    return NextResponse.redirect(route.url, route.permanent ? 308 : 307);
+  }
   if (route.kind === 'pass') return NextResponse.next();
   if (route.kind === 'site') {
     const url = request.nextUrl.clone();
@@ -40,5 +55,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|brand/).*)'],
+  // robots.txt and sitemap.xml answer by address themselves, with no sign-in on any address.
+  // Pictures in public/brand and public/work (the website's Our work) are served as they are:
+  // Next's image optimizer asks for them with no address, which would read as the dashboard's.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|brand/|work/|robots.txt|sitemap.xml).*)'],
 };

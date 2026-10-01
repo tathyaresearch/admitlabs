@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
+import { SiteFooter } from '@/components/site/Footer';
 import { SiteHeader } from '@/components/site/Header';
 import { Hero } from '@/components/site/Hero';
+import { Audience, DrishtiSection, Faq, FinalCall, HowWeWork, OurWork, Services, Tathya } from '@/components/site/Sections';
 import { System } from '@/components/site/System';
 import { loadShowcase } from '@/product/showcase';
 import styles from '@/components/site/site.module.css';
@@ -43,7 +45,16 @@ export default async function SitePage() {
       <main id="main">
         <Hero showcase={showcase} />
         <System />
+        <Services />
+        <DrishtiSection showcase={showcase} />
+        <Audience />
+        <OurWork />
+        <HowWeWork />
+        <Tathya />
+        <Faq />
+        <FinalCall />
       </main>
+      <SiteFooter />
     </div>
   );
 }

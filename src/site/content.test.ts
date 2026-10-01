@@ -37,6 +37,39 @@ describe('the website copy', () => {
     );
   });
 
+  test('who we work with, only: never who we don’t, and no prices anywhere', () => {
+    for (const text of ALL) {
+      assert.doesNotMatch(text, /\bschools?\b|edtech|government (?:bod|institut|college)/i, text);
+      assert.doesNotMatch(text, /₹|\brs\.?\s?\d|\binr\b/i, text);
+    }
+    assert.deepEqual(content.AUDIENCE.lines, ['Private colleges.', 'Private universities.', 'Skilling and training institutes.']);
+  });
+
+  test('the FAQ answers as approved', () => {
+    assert.deepEqual(
+      content.FAQ.items.map((item) => item.question),
+      ['Do you run ads?', 'Who do you work with?', 'Do we own the pages and content?', 'Is Drishti free?', 'How do we start?'],
+    );
+    assert.match(content.FAQ.items[0]?.answer ?? '', /^No\. We create content only\./);
+    assert.match(content.FAQ.items[2]?.answer ?? '', /^Yes\./);
+  });
+
+  test('our work stays hidden and Tathya has no link until the user sets them', async () => {
+    const { SITE_SETTINGS } = await import('../config/site.ts');
+    const { WORK_SAMPLES } = await import('./work.ts');
+    assert.equal(SITE_SETTINGS.showWork, false);
+    assert.equal(WORK_SAMPLES.length, 0);
+    assert.equal(SITE_SETTINGS.tathyaUrl, null);
+    assert.equal(content.FOOTER.email, 'hello@admitlabs.in');
+  });
+
+  test('a service tile names its service in the enquiry', () => {
+    assert.equal(content.aboutService('admit-campaign'), 'We’d like to talk about Admit Campaign.');
+    assert.equal(content.aboutService('something-else'), null);
+    assert.equal(content.aboutService(null), null);
+    assert.equal(content.ENQUIRY.thanks, 'Thanks. We’ll reply within one working day.');
+  });
+
   test('the system: the three pillars in the score’s order, with every check Drishti runs', () => {
     assert.deepEqual(
       content.SYSTEM.pillars.map((pillar) => [pillar.name, pillar.line]),

@@ -21,7 +21,7 @@ export function SiteMenu({ links, work }: { links: ReadonlyArray<{ href: string;
         <Icon name={open ? 'close' : 'menu'} size={18} />
       </button>
       <div id={MENU_ID} ref={menu} popover="auto" className={styles.menu} onToggle={(event) => setOpen(event.newState === 'open')}>
-        <nav className={styles.menuLinks} aria-label="On this page">
+        <nav className={styles.menuLinks} aria-label="Main">
           {links.map((link) => (
             <a key={link.href} href={link.href} className={styles.menuLink} onClick={close}>
               {link.label}

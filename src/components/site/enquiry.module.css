@@ -1,0 +1,142 @@
+/* The "Work with us" page: the words on the left, the form on an ivory card on the right. */
+
+.section {
+  padding-block: clamp(3rem, 2rem + 4vw, 6rem) var(--section-pad);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-10);
+}
+
+@media (min-width: 64rem) {
+  .grid {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: start;
+    gap: var(--space-16);
+  }
+
+  .intro {
+    position: sticky;
+    top: 6rem;
+  }
+}
+
+.intro {
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.title {
+  font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.036em;
+  text-wrap: balance;
+}
+
+.lede {
+  max-width: 30rem;
+  font-size: clamp(1.0625rem, 0.98rem + 0.35vw, 1.3125rem);
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.write {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.write a {
+  color: var(--text);
+  text-underline-offset: 0.2em;
+}
+
+.card {
+  container-type: inline-size;
+  padding: clamp(1.375rem, 0.9rem + 2vw, 2.5rem);
+  border-radius: 1.5rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.row {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@container (min-width: 32rem) {
+  .row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+/* The field only bots fill in: off the screen, out of the reading order. */
+.trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.submitRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-2);
+}
+
+@container (max-width: 26rem) {
+  .submitRow > button {
+    flex: 1 1 100%;
+  }
+}
+
+.consent {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.thanks {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+  padding-block: var(--space-6);
+}
+
+.thanksIcon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+
+.thanksTitle {
+  max-width: 22ch;
+  font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.thanksLink {
+  font: var(--type-strong);
+  font-weight: var(--weight-heading);
+  color: var(--text);
+  text-underline-offset: 0.25em;
+}

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { routeFor } from './hosts.ts';
+import { isWebsiteAddress, redirectBecomesRelative, routeFor } from './hosts.ts';
 
 // One app, two addresses: the website and the dashboard each answer only their own pages.
 
@@ -64,5 +64,28 @@ describe('routing by address', () => {
 
   test('addresses match whatever their case', () => {
     assert.deepEqual(at('AdmitLabs.in', '/'), { kind: 'site', path: '/site' });
+  });
+
+  test('a redirect Next would make relative is spotted: locally, to the dashboard from the website', () => {
+    const server = 'http://localhost:3000';
+    assert.equal(redirectBecomesRelative('http://localhost:3000/login', server, 'admitlabs.localhost:3000'), true);
+    // Same address: relative is right. Another address: kept as it is.
+    assert.equal(redirectBecomesRelative('http://localhost:3000/login', server, 'localhost:3000'), false);
+    assert.equal(redirectBecomesRelative('http://admitlabs.localhost:3000/drishti', server, 'localhost:3000'), false);
+    // Live, the dashboard never has the server's own address.
+    assert.equal(redirectBecomesRelative('https://app.admitlabs.in/login', 'https://admitlabs.in', 'admitlabs.in'), false);
+    assert.equal(redirectBecomesRelative('https://app.admitlabs.in/login', server, 'admitlabs.in'), false);
+  });
+
+  test('only the website address (and its www) may be crawled', () => {
+    assert.equal(isWebsiteAddress('admitlabs.in', LIVE), true);
+    assert.equal(isWebsiteAddress('www.admitlabs.in', LIVE), true);
+    assert.equal(isWebsiteAddress('AdmitLabs.in', LIVE), true);
+    assert.equal(isWebsiteAddress('admitlabs.localhost:3000', LOCAL), true);
+    assert.equal(isWebsiteAddress('app.admitlabs.in', LIVE), false);
+    assert.equal(isWebsiteAddress('localhost:3000', LOCAL), false);
+    assert.equal(isWebsiteAddress('drishti-preview.vercel.app', LIVE), false);
+    const shared = { site: 'http://localhost:3000', app: 'http://localhost:3000' };
+    assert.equal(isWebsiteAddress('localhost:3000', shared), false);
   });
 });

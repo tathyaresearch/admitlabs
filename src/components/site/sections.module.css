@@ -1,0 +1,892 @@
+/*
+  The AdmitLabs website below the system: services, Drishti, who we work with, our work (hidden
+  for now), how we work, Tathya, the FAQ, the final call and the footer. The shared container,
+  eyebrow and counting number live in ./site.module.css. Motion is tied to the scroll and the
+  settled state is the default, as there.
+*/
+
+.section {
+  padding-block: var(--section-pad);
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* Two black sections in a row get a hairline between them. */
+.ruled {
+  border-top: 1px solid var(--line);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 46rem;
+  margin-bottom: clamp(2.5rem, 1.75rem + 2.5vw, 4.5rem);
+}
+
+.title {
+  font-size: clamp(2rem, 1.3rem + 2.8vw, 3.5rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.lede {
+  max-width: 40rem;
+  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.1875rem);
+  line-height: 1.55;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.lede a {
+  color: var(--text);
+  text-underline-offset: 0.2em;
+}
+
+/* Services: three ivory tiles, each with a simple picture of what we make -------------------- */
+
+.services {
+  --tile-pad: clamp(1.375rem, 1rem + 1.2vw, 2rem);
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 64rem) {
+  .services {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.service {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+  padding: var(--tile-pad);
+  border-radius: 1.375rem;
+  background: var(--surface);
+  color: var(--text);
+  transition: translate var(--duration) var(--ease-out);
+}
+
+.service:hover {
+  translate: 0 -2px;
+}
+
+.service:has(.serviceLink:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.serviceHead {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+}
+
+.serviceIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.875rem;
+  height: 2.875rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+
+.serviceName {
+  font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.serviceLine {
+  font-size: var(--size-lead);
+  line-height: 1.6;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* The picture: the dark page panel on the ivory tile, as on the product page. */
+.servicePicture {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 17rem;
+  padding: var(--space-5);
+  border-radius: 1rem;
+  background: var(--surface-panel);
+  color: var(--text);
+  pointer-events: none;
+  user-select: none;
+}
+
+.serviceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  font: var(--type-strong);
+  font-weight: var(--weight-heading);
+  color: var(--text);
+  text-underline-offset: 0.25em;
+}
+
+/* The whole tile follows its link. */
+.serviceLink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.serviceLink:focus-visible {
+  outline: none;
+}
+
+.serviceLink svg {
+  transition: translate var(--duration) var(--ease-out);
+}
+
+.service:hover .serviceLink svg {
+  translate: 3px 0;
+}
+
+.servicesNote {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--line-medium);
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.015em;
+}
+
+/* Program Growth: a program's own page, on a phone. */
+.phone {
+  display: grid;
+  gap: var(--space-3);
+  width: min(100%, 11.5rem);
+  padding: var(--space-3) var(--space-3) var(--space-4);
+  border: 1.5px solid var(--line-strong);
+  border-radius: 1.5rem;
+  background: var(--surface);
+}
+
+.phoneTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.phoneAvatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font-size: 0.625rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.02em;
+}
+
+.phoneName {
+  display: grid;
+  gap: 2px;
+  font-size: 0.6875rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.2;
+}
+
+.phoneName span:last-child {
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+
+.phoneBio {
+  display: grid;
+  gap: 4px;
+}
+
+.phoneBio span {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-medium);
+}
+
+.phoneBio span:last-child {
+  width: 62%;
+}
+
+.phoneGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.phoneTile {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--surface-raised);
+  color: var(--text-muted);
+}
+
+.phoneTile:nth-child(1),
+.phoneTile:nth-child(5) {
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+
+/* Institution Branding: posts in three columns, outcomes, people and proof. */
+.brand {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 20rem;
+}
+
+.brandColumn {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+}
+
+.brandHead {
+  font: var(--type-caption-strong);
+  font-size: var(--size-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.post {
+  display: grid;
+  align-content: space-between;
+  gap: var(--space-3);
+  aspect-ratio: 4 / 5;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+}
+
+.postLines {
+  display: grid;
+  gap: 4px;
+}
+
+.postLines span {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-medium);
+}
+
+.postLines span:last-child {
+  width: 60%;
+}
+
+.postBold {
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+
+.postBold .postLines span {
+  background: color-mix(in srgb, var(--text-inverse) 25%, transparent);
+}
+
+/* Admit Campaign: content through the year, at its fullest in admission season. */
+.season {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 21rem;
+}
+
+.seasonWindow {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  font: var(--type-caption-strong);
+  font-size: var(--size-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.seasonWindow span {
+  grid-column: 4 / span 3;
+  padding-bottom: var(--space-1);
+  border-bottom: 1.5px solid var(--text);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.seasonBars {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  align-items: end;
+  gap: 6px;
+  height: 11rem;
+  border-bottom: 1px solid var(--line-medium);
+}
+
+.seasonBar {
+  height: var(--h);
+  border-radius: 3px 3px 0 0;
+  background: var(--line-strong);
+  transform-origin: bottom;
+}
+
+.seasonBar[data-season='true'] {
+  background: var(--text);
+}
+
+.seasonMonths {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+  font: var(--type-caption);
+  font-size: var(--size-micro);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Drishti ----------------------------------------------------------------------------------- */
+
+.stats {
+  display: grid;
+  gap: var(--space-4) var(--space-8);
+  margin-bottom: clamp(2.5rem, 1.75rem + 2.5vw, 4rem);
+}
+
+@media (min-width: 40rem) {
+  .stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-medium);
+}
+
+@media (min-width: 40rem) {
+  .stat {
+    display: grid;
+    gap: var(--space-2);
+  }
+}
+
+.statNumber {
+  --count: var(--to);
+  counter-reset: count var(--count);
+  min-width: 2ch;
+  font: var(--type-num-hero);
+  font-size: clamp(2.75rem, 2.2rem + 2.2vw, 4rem);
+  letter-spacing: var(--tracking-num-hero);
+}
+
+.statNumber::after {
+  content: counter(count);
+}
+
+.statLabel {
+  font-size: var(--size-lead);
+  color: var(--text-muted);
+}
+
+.drishtiFoot {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: clamp(2.5rem, 1.75rem + 2.5vw, 4rem);
+}
+
+@media (min-width: 48rem) {
+  .drishtiFoot {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+.free {
+  font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+@media (max-width: 39.99rem) {
+  .actions > * {
+    flex: 1 1 100%;
+  }
+}
+
+.caption {
+  margin-top: var(--space-6);
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Who we work with: ivory, three large lines ------------------------------------------------ */
+
+.audienceLines {
+  display: grid;
+  margin-top: var(--space-6);
+}
+
+.audienceLine {
+  position: relative;
+  view-timeline-name: --audience-line;
+  padding-block: clamp(0.75rem, 0.5rem + 1vw, 1.5rem);
+  font-size: clamp(2.25rem, 1.2rem + 4.4vw, 5rem);
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+/* The rule under each line. */
+.audienceLine::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 1.5px;
+  background: var(--text);
+  transform-origin: left;
+}
+
+.audiencePrograms {
+  margin-top: var(--space-6);
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+  color: var(--text-muted);
+}
+
+/* Our work (hidden until the samples are ready) */
+
+.work {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .work {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.workItem {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+.workImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+}
+
+.workMeta {
+  font: var(--type-caption-strong);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.workTitle {
+  font-size: var(--size-section);
+  font-weight: var(--weight-heading);
+}
+
+.workResult {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* How we work: four steps, joined by a line that fills as the page moves ---------------------- */
+
+.how {
+  position: relative;
+  view-timeline-name: --how-steps;
+}
+
+.howTrack {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--line-medium);
+}
+
+.howFill {
+  display: block;
+  height: 100%;
+  background: var(--text);
+  transform-origin: left;
+}
+
+.howSteps {
+  display: grid;
+  gap: var(--space-8);
+}
+
+@media (min-width: 40rem) {
+  .howSteps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .howSteps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.howStep {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding-top: var(--space-6);
+}
+
+.howNumber {
+  font: var(--type-num-hero);
+  font-size: clamp(2.25rem, 1.9rem + 1.4vw, 3.25rem);
+  letter-spacing: var(--tracking-num-hero);
+  color: var(--text-muted);
+}
+
+.howName {
+  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.025em;
+}
+
+.howLine {
+  max-width: 18rem;
+  font-size: var(--size-lead);
+  line-height: 1.55;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* Tathya, for students: a quiet graphite band */
+
+.tathyaSection {
+  padding-block: 0 var(--section-pad);
+}
+
+.tathya {
+  display: grid;
+  gap: var(--space-5);
+  padding: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem);
+  border: 1px solid var(--line-raised);
+  border-radius: 1.125rem;
+  background: var(--surface-raised);
+}
+
+@media (min-width: 48rem) {
+  .tathya {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+.tathyaName {
+  margin-top: var(--space-2);
+  font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.03em;
+}
+
+.tathyaLine {
+  margin-top: var(--space-2);
+  max-width: 34rem;
+  font-size: var(--size-lead);
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* FAQ */
+
+.faqGrid {
+  display: grid;
+  gap: var(--space-8);
+}
+
+@media (min-width: 64rem) {
+  .faqGrid {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: start;
+    gap: var(--space-16);
+  }
+
+  .faqGrid .head {
+    margin-bottom: 0;
+  }
+}
+
+.faqList {
+  border-top: 1px solid var(--line-medium);
+}
+
+.faqItem {
+  border-bottom: 1px solid var(--line-medium);
+}
+
+.faqQuestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
+  font-size: var(--size-section);
+  font-weight: var(--weight-heading);
+  cursor: pointer;
+  list-style: none;
+}
+
+.faqQuestion::-webkit-details-marker {
+  display: none;
+}
+
+.faqQuestion svg {
+  flex: none;
+  transition: rotate var(--duration) var(--ease-out);
+}
+
+.faqItem[open] .faqQuestion svg {
+  rotate: 45deg;
+}
+
+.faqAnswer {
+  max-width: 44rem;
+  padding-bottom: var(--space-6);
+  font-size: var(--size-lead);
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* An answer opens smoothly where the browser can animate to its own height. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (interpolate-size: allow-keywords) {
+    .faqItem {
+      interpolate-size: allow-keywords;
+    }
+
+    .faqItem::details-content {
+      height: 0;
+      overflow: clip;
+      transition:
+        height var(--duration-slow) var(--ease-out),
+        content-visibility var(--duration-slow) allow-discrete;
+    }
+
+    .faqItem[open]::details-content {
+      height: auto;
+    }
+  }
+}
+
+/* Final call: ivory */
+
+.final {
+  text-align: center;
+}
+
+.finalInner {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
+}
+
+.finalTitle {
+  max-width: 15ch;
+  font-size: clamp(2.5rem, 1.4rem + 4.4vw, 5rem);
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.finalLine {
+  font-size: var(--size-lead);
+  color: var(--text-muted);
+}
+
+.final .actions {
+  justify-content: center;
+}
+
+/* Footer */
+
+.footer {
+  padding-block: var(--space-12) var(--space-10);
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.footerInner {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@media (min-width: 48rem) {
+  .footerInner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+.footerBrand {
+  display: grid;
+  gap: var(--space-3);
+  color: var(--text);
+}
+
+.copyright {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-8);
+}
+
+.footerLink {
+  font: var(--type-label);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.footerLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Scroll motion: each piece is whole once all of it is in view, so nothing waits half drawn at
+   the foot of the page or on a tall screen. -------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+
+    .services > .reveal:nth-child(2),
+    .stats > .reveal:nth-child(2) {
+      animation-range: entry 8% entry 68%;
+    }
+
+    .services > .reveal:nth-child(3),
+    .stats > .reveal:nth-child(3) {
+      animation-range: entry 16% entry 76%;
+    }
+
+    /* The campaign's bars rise as the tile comes into view. */
+    .seasonBar {
+      animation: bar-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 20% entry 100%;
+    }
+
+    /* Numbers count up as they come into view. */
+    .statNumber {
+      animation: stat-count linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 100%;
+    }
+
+    /* Each line rises in, and its rule draws from the left. */
+    .audienceLine {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+
+    .audienceLine::after {
+      animation: fill-across linear both;
+      animation-timeline: --audience-line;
+      animation-range: entry 20% entry 100%;
+    }
+
+    .howFill {
+      animation: fill-across linear both;
+      animation-timeline: --how-steps;
+      animation-range: entry 20% entry 100%;
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes bar-rise {
+  from {
+    transform: scaleY(0.08);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes stat-count {
+  from {
+    --count: 0;
+  }
+
+  to {
+    --count: var(--to);
+  }
+}
+
+@keyframes fill-across {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}

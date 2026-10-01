@@ -549,6 +549,48 @@ export type Database = {
         }
         Relationships: []
       }
+      enquiries: {
+        Row: {
+          created_at: string
+          email: string
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          institution: string
+          message: string | null
+          name: string
+          phone: string
+          program: string | null
+          role: Database["public"]["Enums"]["enquiry_role"]
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          institution: string
+          message?: string | null
+          name: string
+          phone: string
+          program?: string | null
+          role: Database["public"]["Enums"]["enquiry_role"]
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          institution?: string
+          message?: string | null
+          name?: string
+          phone?: string
+          program?: string | null
+          role?: Database["public"]["Enums"]["enquiry_role"]
+        }
+        Relationships: []
+      }
       institution_details: {
         Row: {
           admissions_email: string | null
@@ -1735,6 +1777,10 @@ export type Database = {
         Args: { p_added: Json; p_picked: string[] }
         Returns: string[]
       }
+      set_enquiry_handled: {
+        Args: { p_enquiry: string; p_handled: boolean }
+        Returns: undefined
+      }
       set_free_program: { Args: { p_program: string }; Returns: undefined }
       set_plan: {
         Args: {
@@ -1752,6 +1798,18 @@ export type Database = {
         Returns: undefined
       }
       shared_audit: { Args: { p_token: string }; Returns: Json }
+      submit_enquiry: {
+        Args: {
+          p_email: string
+          p_institution: string
+          p_message: string
+          p_name: string
+          p_phone: string
+          p_program: string
+          p_role: Database["public"]["Enums"]["enquiry_role"]
+        }
+        Returns: undefined
+      }
       team_people: {
         Args: never
         Returns: {
@@ -1809,6 +1867,12 @@ export type Database = {
         | "idea"
       demand_scope: "city" | "state" | "india"
       difficulty: "easy" | "medium" | "hard"
+      enquiry_role:
+        | "founder_director"
+        | "principal_dean"
+        | "admissions"
+        | "marketing"
+        | "other"
       feature: "audit" | "rivals" | "demand"
       institution_type: "college" | "university" | "skilling"
       language: "en" | "hi" | "as"
@@ -1990,6 +2054,13 @@ export const Constants = {
       ],
       demand_scope: ["city", "state", "india"],
       difficulty: ["easy", "medium", "hard"],
+      enquiry_role: [
+        "founder_director",
+        "principal_dean",
+        "admissions",
+        "marketing",
+        "other",
+      ],
       feature: ["audit", "rivals", "demand"],
       institution_type: ["college", "university", "skilling"],
       language: ["en", "hi", "as"],

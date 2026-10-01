@@ -37,6 +37,28 @@ function isFramework(pathname: string): boolean {
   return pathname.startsWith('/_next/') || pathname.startsWith('/__next') || /\/[^/]*\.[a-z0-9]+$/i.test(pathname);
 }
 
+/**
+ * Whether Next would turn this redirect from src/proxy.ts into a relative one. It does when the
+ * redirect points at the server's own address (`serverOrigin`, localhost:3000 when run locally),
+ * whatever address the request came to. From another address the visitor would then stay there:
+ * locally, a dashboard path on the website's address would come straight back to the website.
+ */
+export function redirectBecomesRelative(url: string, serverOrigin: string, host: string): boolean {
+  const target = new URL(url);
+  return target.origin === new URL(serverOrigin).origin && target.host !== host.toLowerCase();
+}
+
+/**
+ * Whether a request came to the website's own address (or its www), when the website has one.
+ * Only there may search engines crawl (robots.txt); the dashboard and previews stay out.
+ */
+export function isWebsiteAddress(host: string, origins: { site: string; app: string }): boolean {
+  const site = new URL(origins.site);
+  if (site.host === new URL(origins.app).host) return false;
+  const asked = host.toLowerCase();
+  return asked === site.host || asked === `www.${site.host}`;
+}
+
 export function routeFor(request: Request, origins: { site: string; app: string }): HostRoute {
   const site = new URL(origins.site);
   const app = new URL(origins.app);

@@ -1,6 +1,9 @@
 // The AdmitLabs website's words (admitlabs.in), in one place, as approved on 2026-10-01. Short,
 // confident, plain. No dashes, curly quotes only (src/site/content.test.ts checks).
 
+import { SITE_SETTINGS } from '../config/site.ts';
+import { RIVAL_RULES } from '../config/rivals.ts';
+import { CHECKS } from '../domain/checks.ts';
 import { PILLAR_LABELS, PILLARS, type Pillar } from '../domain/types.ts';
 import { SCORE } from '../product/content.ts';
 
@@ -12,12 +15,12 @@ export const CTA = {
   signIn: 'Sign in',
 } as const;
 
-/** The header's links, to sections of the home page. */
+/** The header's links, to sections of the home page (from any page of the website). */
 export const NAV = [
-  { href: '#services', label: 'Services' },
-  { href: '#drishti', label: 'Drishti' },
-  { href: '#how', label: 'How we work' },
-  { href: '#faq', label: 'FAQ' },
+  { href: '/#services', label: 'Services' },
+  { href: '/#drishti', label: 'Drishti' },
+  { href: '/#how', label: 'How we work' },
+  { href: '/#faq', label: 'FAQ' },
 ] as const;
 
 export const HERO = {
@@ -58,4 +61,116 @@ export const SYSTEM = {
     /** On the way back round the loop. */
     back: 'Next month',
   },
+} as const;
+
+export type ServiceKey = 'program-growth' | 'institution-branding' | 'admit-campaign';
+
+export const SERVICES = {
+  eyebrow: 'Services',
+  title: 'Three ways we grow your admissions.',
+  items: [
+    { key: 'program-growth', name: 'Program Growth', line: 'A content page for one program, with its own identity. Built for the students you want next. You own it.' },
+    { key: 'institution-branding', name: 'Institution Branding', line: 'Content for your official page that shows your outcomes, your people and your proof.' },
+    { key: 'admit-campaign', name: 'Admit Campaign', line: 'A focused content push for admission season.' },
+  ] satisfies ReadonlyArray<{ key: ServiceKey; name: string; line: string }>,
+  /** Each tile's link, to the enquiry form with that service already named. */
+  link: 'Work with us',
+  note: 'We create content. We don’t run ads.',
+} as const;
+
+/** What the enquiry form's message starts with when someone comes from a service tile. */
+export function aboutService(key: string | null | undefined): string | null {
+  const service = SERVICES.items.find((item) => item.key === key);
+  return service ? `We’d like to talk about ${service.name}.` : null;
+}
+
+export const DRISHTI = {
+  eyebrow: 'Drishti',
+  title: 'Drishti by AdmitLabs.',
+  lede: 'See where you stand, who’s ahead, and what students want.',
+  stats: [
+    { value: CHECKS.length, label: 'checks in every Audit' },
+    { value: RIVAL_RULES.max, label: 'rivals tracked, side by side' },
+    { value: 1, label: 'report every month' },
+  ],
+  free: 'Free to start.',
+  explore: 'Explore Drishti',
+  explorePath: '/drishti',
+} as const;
+
+export const AUDIENCE = {
+  eyebrow: 'Who we work with',
+  lines: ['Private colleges.', 'Private universities.', 'Skilling and training institutes.'],
+  programs: 'Professional and career programs.',
+} as const;
+
+/** Our work: built, and hidden until the content samples are ready (SITE_SETTINGS.showWork). */
+export const WORK = {
+  eyebrow: 'Our work',
+  title: 'Content that students choose.',
+} as const;
+
+export const HOW = {
+  eyebrow: 'How we work',
+  title: 'Start with an Audit. Then we run it with you.',
+  steps: [
+    { name: 'Audit', line: 'We see where you stand today, with Drishti.' },
+    { name: 'Blueprint', line: 'We plan what to build first, and why.' },
+    { name: 'Run', line: 'Our team creates the content, every month.' },
+    { name: 'Report', line: 'You see what changed, and what comes next.' },
+  ],
+} as const;
+
+export const TATHYA = {
+  eyebrow: 'For students',
+  name: 'Tathya',
+  line: 'Every government opportunity a student qualifies for, with real odds. Sirf data.',
+  link: 'Visit Tathya',
+} as const;
+
+export const FAQ = {
+  eyebrow: 'FAQ',
+  title: 'Questions, answered.',
+  more: 'Something else? Write to',
+  items: [
+    { question: 'Do you run ads?', answer: 'No. We create content only. We don’t run, buy or manage ads.' },
+    { question: 'Who do you work with?', answer: 'Private colleges, private universities, and skilling and training institutes, for professional and career programs.' },
+    { question: 'Do we own the pages and content?', answer: 'Yes. The pages we build and everything on them are yours.' },
+    { question: 'Is Drishti free?', answer: 'Yes, to start. Your first Audit is free, and Free stays free. Paid adds every check, your rivals in full, what students want and a report every month.' },
+    { question: 'How do we start?', answer: 'Get your free Audit. It takes about two minutes. Or tell us about your institution, and we’ll get back to you.' },
+  ],
+} as const;
+
+export const FINAL = {
+  title: 'See where you stand this month.',
+  line: 'Your first Audit is free. It takes about two minutes.',
+} as const;
+
+export const FOOTER = {
+  name: 'AdmitLabs',
+  email: SITE_SETTINGS.email,
+  drishti: 'Drishti',
+} as const;
+
+/** The "Work with us" page. */
+export const ENQUIRY = {
+  eyebrow: 'Work with us',
+  title: 'Tell us about your institution.',
+  lede: 'A few details, and we’ll reply within one working day.',
+  orWrite: 'Or write to us at',
+  fields: {
+    name: { label: 'Your name' },
+    institution: { label: 'Institution' },
+    role: { label: 'Your role', placeholder: 'Choose one' },
+    email: { label: 'Email' },
+    phone: { label: 'Phone' },
+    program: { label: 'Program to grow', hint: 'Optional. For example, BBA.' },
+    message: { label: 'Anything else?', hint: 'Optional.' },
+  },
+  send: 'Send',
+  consent: 'We use these details only to reply to you.',
+  thanks: 'Thanks. We’ll reply within one working day.',
+  home: 'Back to the home page',
+  limit: 'You’ve already sent us a few today. We’ll be in touch soon.',
+  failed: `That didn’t send. Please try again, or write to ${SITE_SETTINGS.email}.`,
 } as const;

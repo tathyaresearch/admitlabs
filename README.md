@@ -21,7 +21,7 @@ npm run db:reset
 npm run dev
 ```
 
-Then open http://localhost:3000.
+Then open http://localhost:3000 for the dashboard, or http://admitlabs.localhost:3000 for the website.
 
 - `db:start` creates Drishti's own local signing key if it is missing, then starts Drishti's Supabase (project `drishti`, ports 55320 to 55329, so it runs next to other local stacks).
 - `db:reset` rebuilds the database from `supabase/migrations`, writes `.env.local` from `supabase status`, and loads the sample data.
@@ -160,14 +160,28 @@ The AdmitLabs team area at `/team` (spec section 13), for `team@admitlabs.exampl
 - **Plans** (Admin only, on the institution page): start Paid from the day of payment (today, or up to 6 months back; always 6 months), make them a Client, or end the plan now. The first Audit of a new plan runs straight away. The database refuses these for anyone but an Admin (`set_plan`, `end_plan`).
 - **Sharing** (prospects and rival records only): **Create a link** makes a private link to the latest team Audit. It works for 90 days unless the team stops it sooner. It opens without signing in, at `/share/<token>`, and is never indexed: the score and pillars, the top 3 fixes with how to fix them, then "Want AdmitLabs to fix this for you? hello@admitlabs.in" and "Get your free Audit". Below, folded: what's working, the rest of the fixes under one line saying "AdmitLabs can fix any of these.", and every check with its result, what was found, the source and the date. How to fix is sent for the top 3 fixes only. **Download PDF** gives the same content as a PDF, on the team page and on the shared page. An expired or stopped link says so and offers the free Audit. A link keeps working after the prospect signs up; their team Audits and notes stay invisible to them.
 - **Manual entry** (`/team/ads`): rival ads, entered by hand until a provider can collect them.
+- **Enquiries** (`/team/enquiries`): everyone who wrote in through the website's Work with us form, newest first, with their role, institution, email, phone, program and message. New shows the ones nobody has handled yet; All shows every one. **Mark as handled** moves one out of New (and **Mark as new** brings it back). Every team user sees them. No emails are sent.
 - **Team users** (`/team/users`): an Admin adds someone by email as Team or Admin (someone who has signed in before joins at once, anyone else at first sign in), changes roles and removes people. There is always at least one Admin.
-- **On a phone**, the four team pages sit in the bottom bar.
+- **On a phone**, the five team pages sit in the bottom bar.
 
 The limits (90 days, top 3 fixes, 100 rows a run, 50 a page, Paid ending within 30 days) are `TEAM_RULES` in `src/config/team.ts`. The sample data includes a live shared Audit for Cedar Skill Institute; `npm run db:reset` prints its link.
 
+## Website
+
+The AdmitLabs website (spec section 22), later served at admitlabs.in, is part of this app. Open http://admitlabs.localhost:3000; no sign in, and it works with the database stopped (only sending the form needs it).
+
+- **Two addresses, one app.** The address a request comes to decides what answers (`src/lib/hosts.ts`, applied by `src/proxy.ts`): on the website's address, the website and `/drishti`; on the dashboard's address (http://localhost:3000), the dashboard. Dashboard paths on the website's address move to the dashboard's, and `/drishti` on the dashboard's address moves to the website's. The addresses are `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_PRODUCT_URL` in `.env`. The website's pages live at `/site` inside the app.
+- **Pages.** The home page and Work with us (`/work-with-us`), with the product page beside them. The words are in `src/site/content.ts`; a test checks them (no dashes, no prices, the FAQ as approved, and only who we work with).
+- **Fixed black and ivory**, like the product page. The Drishti pictures are the dashboard's own components with the product page's sample institution, and say "Sample institution. Fictional data."
+- **Motion** is CSS, with two small scripts (`PlayWhenSeen`, `Loop`) and no animation library. The hero card measures on load (on a phone, when it comes into view) and lights the headline's three words; the system's track draws as it scrolls in, and a dot laps it every 10 seconds while it is on screen, lighting each step; numbers count up and lines draw. With reduced motion nothing moves and everything shows settled.
+- **Work with us** saves each enquiry to the `enquiries` table through `submit_enquiry`, the only way in. The form and the database check the same limits. A hidden field catches bots (they are told it went, and nothing is kept), and one email can send at most 3 a day. A service tile's "Work with us" link names that service in the message. The team sees them under Enquiries.
+- **Settings** (`SITE_SETTINGS` in `src/config/site.ts`): `showWork` turns on Our work once there are samples in `src/site/work.ts` (images in `public/work/`); `tathyaUrl` adds the "Visit Tathya" button; `email` is the contact address.
+- **Search and sharing.** Each page has its own title, description and link preview image (`opengraph-image.tsx`, 1200 by 630). `robots.txt` lets search engines in only on the website's address and points them to `sitemap.xml`; on any other address it asks them to stay out.
+- **Fonts.** Bricolage Grotesque and Inter come through `next/font`, for the website, the product page and the dashboard. Only their basic Latin files are preloaded. The other files (latin-ext, which has the rupee sign, and the rest) load when a page uses one of their characters.
+
 ## Product page
 
-`/drishti` (spec section 15) is the landing page, later served at admitlabs.in/drishti. Open http://localhost:3000/drishti; no sign in, and it works with the database stopped.
+`/drishti` (spec section 15) is the landing page, later served at admitlabs.in/drishti. Open http://admitlabs.localhost:3000/drishti; no sign in, and it works with the database stopped.
 
 - **Fixed black and ivory.** The page sets its own sections, so it looks the same whatever the device setting: black, with ivory for the problem, the score and the final call.
 - **Real previews, fictional data.** Each preview is the dashboard's own component, filled with Eastgate University in August 2026, worked out in memory from the sample world with the real scoring engine (`src/sample/world.ts`). Every preview says "Sample institution. Fictional data." The page is prerendered at build and never reads the database.
@@ -181,7 +195,8 @@ The limits (90 days, top 3 fixes, 100 rows a run, 50 a page, Paid ending within 
 | What | Address |
 |---|---|
 | App | http://localhost:3000 |
-| Product page | http://localhost:3000/drishti |
+| Website | http://admitlabs.localhost:3000 |
+| Product page | http://admitlabs.localhost:3000/drishti |
 | Design system | http://localhost:3000/design-system |
 | Supabase Studio | http://127.0.0.1:55323 |
 | Mailpit | http://127.0.0.1:55324 |
@@ -211,8 +226,8 @@ The limits (90 days, top 3 fixes, 100 rows a run, 50 a page, Paid ending within 
 ```
 supabase/        config, migrations (schema, row level security, owner actions), database tests, email template
 scripts/         env, seed, audit, tier, rivals, demand, report, dash check (TypeScript run directly by Node)
-src/app/         routes: (product)/drishti, login, (dashboard), onboarding, team, share, design-system
-src/components/  ui, charts, audit, rivals, demand, report, team and share screens, institution inputs and the app shell
+src/app/         routes: (site)/site (the website), (product)/drishti, login, (dashboard), onboarding, team, share, design-system
+src/components/  ui, charts, audit, rivals, demand, report, team and share screens, the website, institution inputs and the app shell
 src/domain/      pure logic: the scoring engine (domain/scoring), checks, schedules, onboarding checks, dates, tiers
 src/config/      every adjustable value: scoring, plans, entitlements, schedules, providers, cities, programs
 src/providers/   the provider interface, mock providers, and real provider slots
@@ -223,10 +238,11 @@ src/report/      the monthly report (its schedule, the 3 things to do, the snaps
 src/team/        team tools: the bulk list reader, list filters, plan rules and the shared Audit
 src/graphics/    the gauges, line icons, brand logos (with their sources) and platform marks, shared by the screens and the PDFs
 src/product/     the product page: its words (numbers from config) and its preview data
+src/site/        the website: its words, the Work with us form's rules and the Our work samples
 src/sample/      the fictional sample world, and that world worked out in memory (world.ts, report.ts)
 ```
 
-`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/report`, `src/team`, `src/graphics`, `src/product` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, for shared Audit PDFs and for the sample report (`serverExternalPackages` in `next.config.ts`). Never in the browser.
+`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/report`, `src/team`, `src/graphics`, `src/product`, `src/site` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, for shared Audit PDFs and for the sample report (`serverExternalPackages` in `next.config.ts`). Never in the browser.
 
 ## How scores work
 

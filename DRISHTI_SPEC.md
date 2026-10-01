@@ -68,24 +68,32 @@ Same base as Tathya, so the team already knows it.
 
 ## 4. Routing
 
-One Next.js app, two route groups.
+One Next.js app, two addresses. Which pages answer depends on the address a request comes to (`src/lib/hosts.ts`, applied by `src/proxy.ts`).
+
+| Address | What it serves |
+|---|---|
+| admitlabs.in | The AdmitLabs website (section 22) and the product page at `/drishti`. Dashboard paths move to the dashboard's address |
+| app.admitlabs.in | The dashboard (the routes below). `/drishti` moves to the website's address |
+| www.admitlabs.in | Moves to admitlabs.in for good |
 
 | Route | Surface |
 |---|---|
-| `/drishti` | Product page (later served at admitlabs.in/drishti) |
+| `/` (website) | AdmitLabs home page |
+| `/work-with-us` (website) | Work with us: the enquiry form |
+| `/drishti` (website) | Product page |
 | `/login` | Email OTP login |
 | `/onboarding` | Institution setup |
-| `/` (logged in) | Dashboard home (later served at app.admitlabs.in) |
+| `/` (dashboard, logged in) | Dashboard home |
 | `/audit`, `/audit/[programId]` | Audit |
 | `/rivals`, `/rivals/[rivalId]` | Rivals |
 | `/demand` | Demand |
 | `/reports` | Monthly PDF reports |
 | `/plan` | Plan and access |
 | `/settings` | Institution details, users |
-| `/team/...` | AdmitLabs team area (team roles only) |
+| `/team/...` | AdmitLabs team area (team roles only), including Enquiries |
 | `/share/[token]` | Shared Audit link for prospects (read only, no login) |
 
-Domain mapping (admitlabs.in/drishti and app.admitlabs.in) is decided at deployment. Build so this is a config change only.
+The addresses are settings in `.env` (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_PRODUCT_URL`), so moving them is a config change only. Locally the website is http://admitlabs.localhost:3000 and the dashboard http://localhost:3000. The website's pages live at `/site` inside the app. Search engines may crawl only the website's address (`robots.txt`), which lists its pages in `sitemap.xml`.
 
 ---
 
@@ -463,6 +471,7 @@ Keep it short enough to read in 5 minutes.
 | Institution detail | Everything the institution sees, plus private notes, tier control (Admin), manual refresh |
 | Share | Create a share link or PDF of a prospect's Audit |
 | Manual entry | Enter rival ads and any data a provider can't collect yet |
+| Enquiries | Everyone who wrote in through the website's Work with us form, newest first: name, role, institution, email, phone, program and message. New or All. Mark as handled, or back to new. Every team user sees them. No emails are sent |
 
 **Team rules**
 
@@ -581,11 +590,13 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 | `institution_details` | institution_id, the details added by the institution (section 6), updated_at, updated_by. Never read by scoring |
 | `program_details` | program_id, institution_id, the details added for each program (section 6), updated_at, updated_by. Never read by scoring |
 | `scoring_config` | version, weights (jsonb), result_shares (jsonb), thresholds (jsonb), labels (jsonb), active (bool) |
+| `enquiries` | id, created_at, name, institution, role (founder_director, principal_dean, admissions, marketing, other), email, phone, program, message, handled_at, handled_by (website, section 22) |
 
 **Row Level Security:**
 - Institution users only see their own institution's data, filtered by plan.
 - Team and Admin see everything.
 - Notes are team only.
+- Enquiries: anyone can send one, only through `submit_enquiry` (at most 3 a day from one email). Only the team reads them and marks them handled.
 - Rival data is only reachable through the `rivals` link of the viewing institution.
 - Plan gating must be enforced on the server, not only hidden in the UI.
 
@@ -649,7 +660,9 @@ Stop at the end of each phase for review. Do not start the next phase without ap
 | 6. Team tools | Team area, bulk Audit, notes, share links, tier control, manual refresh | Team can take a prospect from bulk Audit to shared link |
 | 7. Product page | `/drishti` landing page | Page complete, on brand, works on phone |
 
-**Later (not now):** connect real providers one by one, Claude API for analysis, Razorpay, reminders by email, WhatsApp, deployment to Vercel with admitlabs.in/drishti and app.admitlabs.in.
+**After phase 7:** the AdmitLabs website (section 22), in the same app, so the website, the product page and the dashboard share one design system, one set of fonts and one deploy.
+
+**Later (not now):** connect real providers one by one, Claude API for analysis, Razorpay, reminders by email, WhatsApp, deployment to Vercel with admitlabs.in (the website and /drishti) and app.admitlabs.in.
 
 ---
 
@@ -678,3 +691,40 @@ Fictional only. No real institution names.
 - Whether AdmitLabs serves two direct rivals for the same program in the same city (services decision)
 - Moving thresholds from fixed rules to peer comparison (after enough Audits)
 - Final hex values, confirmed against the brand identity PDF
+
+---
+
+## 22. AdmitLabs website (admitlabs.in)
+
+The main AdmitLabs website, built in this app (section 4) with the same design system as `/drishti` and the dashboard. It turns a visitor into a free Audit or an enquiry.
+
+**What AdmitLabs is:** an education only content partner. Three services (content only, never ads) and two products: Drishti for institutions and Tathya for students.
+
+**Pages:** the home page (`/`), Work with us (`/work-with-us`) and the product page (`/drishti`, section 15). One header on every page: Services, Drishti, How we work, FAQ, "Work with us" and "Get your free Audit" (a menu on a phone). One footer: "© 2026 AdmitLabs" (the current year), the email, Drishti and Sign in.
+
+**Home page sections, in order:**
+
+1. **Hero**: "Get discovered, trusted, and chosen." Two buttons: "Get your free Audit" (main) and "Work with us". The proof line "Education only. 120+ education companies worked with." Beside it, a sample Drishti Audit card that measures on load (on a phone, when it comes into view); as each pillar fills, its word in the headline lights
+2. **The system**: Discovered, Trusted and Chosen with the Drishti checks under each, then the monthly loop: Measure (Drishti), Fix (our team), Repeat (a report every month)
+3. **Services**: Program Growth, Institution Branding and Admit Campaign, each with a picture and a "Work with us" link that names the service in the form. "We create content. We don't run ads." No prices
+4. **Drishti**: 17 checks, 5 rivals, 1 report; the three feature tiles from the product page (sample data); "Get your free Audit" and "Explore Drishti"
+5. **Who we work with**: private colleges, private universities, and skilling and training institutes, for professional and career programs
+6. **Our work**: content samples. Hidden until there are samples (`src/site/work.ts`) and `SITE_SETTINGS.showWork` is on
+7. **How we work**: Audit, Blueprint, Run, Report
+8. **Tathya**: one line for students. Its button shows once `SITE_SETTINGS.tathyaUrl` is set
+9. **FAQ**: ads, who we work with, who owns the content, whether Drishti is free, how to start
+10. **Final call**: "See where you stand this month." with both buttons
+
+**Rules:**
+
+- Say only who we work with, never who we don't.
+- No service prices on the website. No discounts.
+- Every sample says "Sample institution. Fictional data."
+- Motion is CSS, with two small scripts and no animation library. The hero card and the sections play once and settle; a dot laps the system's loop every 10 seconds while it is on screen. With reduced motion nothing moves and everything shows settled. Lighthouse 90 or more on a phone.
+- Works on a phone, with no stretched cards.
+
+**Work with us:** name, institution, role (Founder or director, Principal or dean, Admissions, Marketing, Other), email and phone are required; the program to grow and a message are optional. Then "Thanks. We'll reply within one working day." Each enquiry is saved to `enquiries` (section 16) and shows in the team's Enquiries list (section 13). No emails are sent. A hidden field turns bots away, and one email can send at most 3 a day.
+
+**Search and sharing:** every page has its own title, description and link preview image (1200 by 630: the headline beside the sample Audit card).
+
+**Settings** (`src/config/site.ts`): `showWork`, `tathyaUrl` and the contact email.
