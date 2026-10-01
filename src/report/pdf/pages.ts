@@ -7,8 +7,8 @@ import { Circle, Line, Link, Page, Polyline, Svg, Text, View } from '@react-pdf/
 import { PILLAR_LABELS, PILLARS } from '../../domain/types.ts';
 import { THING_SOURCE_LABELS, type Thing } from '../things.ts';
 import type { ReportData, ReportFix, ReportFixRow } from '../data.ts';
-import { BigNumber, clamp, Footer, Keep, LabelChip, Lockup, Meter, PageHead, ScoreBar, SectionTitle } from './parts.ts';
-import { COLORS, FONT_CONDENSED, PAGE, styles } from './theme.ts';
+import { arrowValue, BigNumber, clamp, Footer, Keep, LabelChip, Lockup, Meter, PageHead, ScoreBar, SectionTitle, ValueText } from './parts.ts';
+import { COLORS, NUM, PAGE, styles } from './theme.ts';
 
 const CONTENT_WIDTH = PAGE.width - PAGE.side * 2;
 const GRID_GAP = 10;
@@ -66,13 +66,13 @@ export function CoverPage({ data }: PageProps): ReactElement {
         View,
         { style: { flexDirection: 'row', alignItems: 'flex-end', marginTop: 10 } },
         h(BigNumber, { value: data.cover.score, size: 148, color: COLORS.ivory }),
-        h(Text, { style: { fontSize: 15, color: COLORS.slate, marginLeft: 10, marginBottom: 14 } }, '/ 100'),
+        h(Text, { style: { ...NUM, fontSize: 15, color: COLORS.slate, marginLeft: 10, marginBottom: 14 } }, '/ 100'),
       ),
       h(
         View,
         { style: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16 } },
         h(LabelChip, { label: data.cover.label, dark: true }),
-        data.cover.change ? h(Text, { style: { fontSize: 10, fontWeight: 500 } }, data.cover.change) : null,
+        data.cover.change ? h(ValueText, { text: data.cover.change, style: { fontSize: 10, fontWeight: 500 } }) : null,
       ),
       h(Text, { style: { fontSize: 15, fontWeight: 500, lineHeight: 1.35, letterSpacing: -0.2, marginTop: 18, maxWidth: 400, ...clamp(3) } }, data.cover.verdict),
     ),
@@ -127,7 +127,7 @@ function HistoryChart({ points }: { points: ReportData['summary']['history'] }):
         Text,
         {
           key: `score-${point.month}`,
-          style: { position: 'absolute', left: x(index) - 14, width: 28, top: y(point.score) - 13, textAlign: 'center', fontSize: 7.5, fontWeight: index === points.length - 1 ? 600 : 400 },
+          style: { ...NUM, position: 'absolute', left: x(index) - 14, width: 28, top: y(point.score) - 13, textAlign: 'center', fontSize: 7.5, fontWeight: index === points.length - 1 ? 600 : 400 },
         },
         String(point.score),
       ),
@@ -162,13 +162,13 @@ export function SummaryPage({ data }: PageProps): ReactElement {
             View,
             { style: { flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 } },
             h(BigNumber, { value: summary.overall, size: 72 }),
-            h(Text, { style: { fontSize: 11, color: COLORS.muted, marginLeft: 6, marginBottom: 8 } }, '/ 100'),
+            h(Text, { style: { ...NUM, fontSize: 11, color: COLORS.muted, marginLeft: 6, marginBottom: 8 } }, '/ 100'),
           ),
           h(
             View,
             { style: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 } },
             h(LabelChip, { label: summary.label }),
-            summary.change ? h(Text, { style: { fontSize: 8.5, fontWeight: 500 } }, summary.change) : null,
+            summary.change ? h(ValueText, { text: summary.change, style: { fontSize: 8.5, fontWeight: 500 } }) : null,
           ),
         ),
         h(View, null, h(Text, { style: { ...styles.caption, marginBottom: 4 } }, 'Overall score, month by month'), h(HistoryChart, { points: summary.history })),
@@ -181,13 +181,13 @@ export function SummaryPage({ data }: PageProps): ReactElement {
             View,
             { key: pillar.pillar, style: { width: THIRD, padding: 12, borderWidth: 0.75, borderColor: COLORS.lineMedium, borderRadius: 3 } },
             h(Text, { style: { fontSize: 9, fontWeight: 600 } }, pillar.name),
-            h(View, { style: { marginTop: 8, marginBottom: 8 } }, h(BigNumber, { value: pillar.score, size: 26, condensed: false })),
+            h(View, { style: { marginTop: 8, marginBottom: 8 } }, h(BigNumber, { value: pillar.score, size: 26 })),
             h(ScoreBar, { score: pillar.score }),
             h(
               View,
               { style: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 } },
               h(Text, { style: styles.caption }, pillar.label),
-              pillar.change ? h(Text, { style: { ...styles.caption, color: COLORS.black } }, pillar.change) : null,
+              pillar.change ? h(ValueText, { text: pillar.change, style: { ...styles.caption, color: COLORS.black } }) : null,
             ),
           ),
         ),
@@ -201,7 +201,7 @@ export function SummaryPage({ data }: PageProps): ReactElement {
           h(
             Keep,
             { key: item.rank, style: { flexDirection: 'row', paddingVertical: 10, borderTopWidth: 0.75, borderTopColor: index === 0 ? COLORS.black : COLORS.line } },
-            h(Text, { style: { width: 22, fontSize: 10, fontWeight: 600 } }, String(index + 1)),
+            h(Text, { style: { ...NUM, width: 22, fontSize: 10, fontWeight: 600 } }, String(index + 1)),
             h(
               View,
               { style: { flex: 1, paddingRight: 12 } },
@@ -209,7 +209,7 @@ export function SummaryPage({ data }: PageProps): ReactElement {
               item.programs ? h(Text, { style: { ...styles.caption, ...clamp(1) } }, item.programs) : null,
               item.finding ? h(Text, { style: { ...styles.small, color: COLORS.muted, marginTop: 3, ...clamp(2) } }, item.finding) : null,
             ),
-            h(View, { style: { width: 128, alignItems: 'flex-end', gap: 5 } }, h(Meter, { result: item.result }), h(Text, { style: { ...styles.caption, textAlign: 'right' } }, item.worth)),
+            h(View, { style: { width: 128, alignItems: 'flex-end', gap: 5 } }, h(Meter, { result: item.result }), h(ValueText, { text: item.worth, style: { ...styles.caption, textAlign: 'right' } })),
           ),
         ),
         ...(data.working.length === 0 ? [h(Text, { key: 'none', style: styles.small }, 'Your first strengths show here once a check reaches Okay.')] : []),
@@ -248,7 +248,7 @@ export function FixBlock({ fix, first, compact }: { fix: ReportFix; first: boole
         h(
           View,
           { style: { alignItems: 'flex-end' } },
-          h(Text, { style: { fontSize: 8.5, fontWeight: 600 } }, fix.gain),
+          h(ValueText, { text: fix.gain, style: { fontSize: 8.5, fontWeight: 600 } }),
           fix.difficulty ? h(Text, { style: styles.caption }, fix.difficulty) : null,
         ),
       ),
@@ -310,10 +310,11 @@ export function FixesPage({ data, compact = false }: PageProps): ReactElement {
                         h(
                           Text,
                           { style: { flex: 1, paddingRight: 8, fontSize: 8.5, fontWeight: 500, ...clamp(1) } },
-                          `${item.rank}.  ${item.name}`,
+                          h(Text, { style: NUM }, `${item.rank}.`),
+                          `  ${item.name}`,
                           item.programs ? h(Text, { style: { fontSize: 7, fontWeight: 400, color: COLORS.muted } }, `   ${item.programs}`) : null,
                         ),
-                        h(Text, { style: { ...styles.caption, textAlign: 'right' } }, item.difficulty ? `${item.gain}  ·  ${item.difficulty}` : item.gain),
+                        h(Text, { style: { ...styles.caption, textAlign: 'right' } }, h(ValueText, { text: item.gain }), item.difficulty ? `  ·  ${item.difficulty}` : ''),
                       ),
                     ),
                   ),
@@ -343,9 +344,9 @@ function ProgramCard({ program }: { program: ReportData['programs'][number] }): 
         View,
         { style: { flexDirection: 'row', alignItems: 'flex-end' } },
         h(BigNumber, { value: program.score, size: 34 }),
-        h(Text, { style: { fontSize: 8.5, color: COLORS.muted, marginLeft: 4, marginBottom: 4 } }, '/ 100'),
+        h(Text, { style: { ...NUM, fontSize: 8.5, color: COLORS.muted, marginLeft: 4, marginBottom: 4 } }, '/ 100'),
       ),
-      h(View, { style: { alignItems: 'flex-end', gap: 4 } }, h(LabelChip, { label: program.label }), program.change ? h(Text, { style: styles.caption }, program.change) : null),
+      h(View, { style: { alignItems: 'flex-end', gap: 4 } }, h(LabelChip, { label: program.label }), program.change ? h(ValueText, { text: program.change, style: styles.caption }) : null),
     ),
     h(
       View,
@@ -358,7 +359,7 @@ function ProgramCard({ program }: { program: ReportData['programs'][number] }): 
             View,
             { style: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 } },
             h(Text, { style: { fontSize: 7.5, color: COLORS.muted } }, PILLAR_LABELS[pillar]),
-            h(Text, { style: { fontSize: 7.5, fontWeight: 600 } }, String(program.pillars[pillar])),
+            h(Text, { style: { ...NUM, fontSize: 7.5, fontWeight: 600 } }, String(program.pillars[pillar])),
           ),
           h(ScoreBar, { score: program.pillars[pillar], height: 2.5 }),
         ),
@@ -404,11 +405,11 @@ function ProgramTable({ programs }: { programs: ReportData['programs'] }): React
         View,
         { key: index, wrap: false, style: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4, borderBottomWidth: 0.5, borderBottomColor: COLORS.line } },
         h(Text, { style: { ...cell('name'), fontSize: 8, fontWeight: 500, ...clamp(1) } }, program.name),
-        h(Text, { style: { ...cell('score'), fontSize: 9, fontWeight: 700 } }, String(program.score)),
-        h(Text, { style: { ...cell('change'), fontSize: 7, color: COLORS.muted } }, program.change ?? ''),
-        h(Text, { style: { ...cell('discovered'), fontSize: 8 } }, String(program.pillars.discovered)),
-        h(Text, { style: { ...cell('trusted'), fontSize: 8 } }, String(program.pillars.trusted)),
-        h(Text, { style: { ...cell('chosen'), fontSize: 8 } }, String(program.pillars.chosen)),
+        h(Text, { style: { ...NUM, ...cell('score'), fontSize: 9, fontWeight: 600 } }, String(program.score)),
+        h(ValueText, { text: program.change ?? '', style: { ...cell('change'), fontSize: 7, color: COLORS.muted } }),
+        h(Text, { style: { ...NUM, ...cell('discovered'), fontSize: 8 } }, String(program.pillars.discovered)),
+        h(Text, { style: { ...NUM, ...cell('trusted'), fontSize: 8 } }, String(program.pillars.trusted)),
+        h(Text, { style: { ...NUM, ...cell('chosen'), fontSize: 8 } }, String(program.pillars.chosen)),
         h(Text, { style: { ...cell('fix'), fontSize: 7, color: COLORS.muted, ...clamp(1) } }, program.topFix ?? 'Every check is Strong'),
       ),
     ),
@@ -488,18 +489,18 @@ export function RivalsPage({ data }: PageProps): ReactElement {
                 color: ink,
               },
             },
-            h(Text, { style: { ...cell('rank'), fontSize: 9, fontWeight: 600, color: ink } }, row.rank === null ? '' : String(row.rank)),
+            h(Text, { style: { ...NUM, ...cell('rank'), fontSize: 9, fontWeight: 600, color: ink } }, row.rank === null ? '' : String(row.rank)),
             h(
               Text,
               { style: { ...cell('name'), fontSize: 9.5, fontWeight: row.you ? 600 : 500, color: ink, ...clamp(1) } },
               row.name,
               row.you ? h(Text, { style: { fontSize: 7.5, fontWeight: 400, color: COLORS.slate } }, '   You') : null,
             ),
-            h(Text, { style: { ...cell('overall'), fontSize: 10, fontWeight: 700, color: ink } }, number(row.overall)),
-            h(Text, { style: { ...cell('discovered'), fontSize: 9, color: ink } }, number(row.pillars?.discovered)),
-            h(Text, { style: { ...cell('trusted'), fontSize: 9, color: ink } }, number(row.pillars?.trusted)),
-            h(Text, { style: { ...cell('chosen'), fontSize: 9, color: ink } }, number(row.pillars?.chosen)),
-            h(Text, { style: { ...cell('change'), fontSize: 8, color: row.you ? COLORS.slate : COLORS.muted } }, row.overall === null ? 'Not scored yet' : (row.change ?? '')),
+            h(Text, { style: { ...NUM, ...cell('overall'), fontSize: 10, fontWeight: 600, color: ink } }, number(row.overall)),
+            h(Text, { style: { ...NUM, ...cell('discovered'), fontSize: 9, color: ink } }, number(row.pillars?.discovered)),
+            h(Text, { style: { ...NUM, ...cell('trusted'), fontSize: 9, color: ink } }, number(row.pillars?.trusted)),
+            h(Text, { style: { ...NUM, ...cell('chosen'), fontSize: 9, color: ink } }, number(row.pillars?.chosen)),
+            h(ValueText, { text: row.overall === null ? 'Not scored yet' : (row.change ?? ''), style: { ...cell('change'), fontSize: 8, color: row.you ? COLORS.slate : COLORS.muted } }),
           );
         }),
       ),
@@ -557,7 +558,8 @@ export function DemandPage({ data, compact = false }: PageProps): ReactElement {
           h(
             View,
             { key: index, style: { width: THIRD, padding: 12, borderWidth: 0.75, borderColor: COLORS.lineMedium, borderRadius: 3 } },
-            h(BigNumber, { value: trend.change || 'New', size: 20, condensed: false }),
+            // A change is a number in Inter ("↑ 47%"); a new trend says so in words.
+            arrowValue(trend.change) ? h(BigNumber, { value: arrowValue(trend.change) ?? '', size: 20 }) : h(Text, { style: { fontSize: 20, fontWeight: 600, lineHeight: 1 } }, trend.change || 'New'),
             h(Text, { style: { fontSize: 9.5, fontWeight: 600, marginTop: 8, lineHeight: 1.3, ...clamp(3) } }, trend.text),
             h(Text, { style: { ...styles.caption, marginTop: 4, ...clamp(2) } }, `${trend.count}  ·  ${trend.program}`),
           ),
@@ -571,7 +573,7 @@ export function DemandPage({ data, compact = false }: PageProps): ReactElement {
           h(
             Keep,
             { key: index, style: { flexDirection: 'row', paddingVertical: 6, borderTopWidth: 0.75, borderTopColor: index === 0 ? COLORS.black : COLORS.line } },
-            h(Text, { style: { width: 20, fontSize: 9, fontWeight: 600 } }, String(index + 1)),
+            h(Text, { style: { ...NUM, width: 20, fontSize: 9, fontWeight: 600 } }, String(index + 1)),
             h(
               View,
               { style: { flex: 1 } },
@@ -589,7 +591,7 @@ export function DemandPage({ data, compact = false }: PageProps): ReactElement {
           h(
             Keep,
             { key: index, style: { flexDirection: 'row', paddingVertical: 6, borderTopWidth: 0.75, borderTopColor: index === 0 ? COLORS.black : COLORS.line } },
-            h(Text, { style: { width: 20, fontSize: 9, fontWeight: 600 } }, String(index + 1)),
+            h(Text, { style: { ...NUM, width: 20, fontSize: 9, fontWeight: 600 } }, String(index + 1)),
             h(
               View,
               { style: { flex: 1 } },
@@ -624,7 +626,7 @@ export function ClosingPage({ data, compact = false }: PageProps): ReactElement 
           h(
             View,
             { key: index, style: { flexDirection: 'row', paddingVertical: 9, borderTopWidth: index === 0 ? 0 : 0.75, borderTopColor: COLORS.lineDark } },
-            h(View, { style: { width: 40 } }, h(Text, { style: { fontFamily: FONT_CONDENSED, fontWeight: 800, fontSize: 30, lineHeight: 1, color: COLORS.ivory } }, String(index + 1))),
+            h(View, { style: { width: 40 } }, h(Text, { style: { ...NUM, fontWeight: 600, fontSize: 28, lineHeight: 1, letterSpacing: -1, color: COLORS.ivory } }, String(index + 1))),
             h(
               View,
               { style: { flex: 1 } },

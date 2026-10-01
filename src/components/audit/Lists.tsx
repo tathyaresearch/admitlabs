@@ -3,9 +3,9 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { pointsToGainText, pointsWorthText, type ItemPart, type ListItem } from '@/audit/view';
+import type { ItemPart, ListItem } from '@/audit/view';
 import { Icon } from '@/components/ui/Icon';
-import { Difficulty, ResultMeter } from '@/components/ui/Results';
+import { Difficulty, PointsValue, ResultMeter } from '@/components/ui/Results';
 import { DIFFICULTY_LABELS } from '@/domain/types';
 import { PartResults } from './Parts';
 import styles from './audit.module.css';
@@ -15,13 +15,6 @@ const href = (basePath: string, item: ListItem) => `${basePath}?check=${item.key
 function programNames(parts: readonly ItemPart[]): string | null {
   const names = parts.flatMap((part) => (part.programName ? [part.programName] : []));
   return names.length > 1 ? names.join(', ') : null;
-}
-
-/** "Up to 3 points", for the shorter rows. */
-function gainShort(points: number): string {
-  if (points < 0.5) return 'Under 1 point';
-  const rounded = Math.round(points);
-  return `Up to ${rounded} ${rounded === 1 ? 'point' : 'points'}`;
 }
 
 /** The top fixes as numbered cards: what's wrong, the points it could add, how hard it is. */
@@ -34,7 +27,7 @@ export function FixCards({ items, basePath = '' }: { items: readonly ListItem[];
           <li key={item.rank}>
             <Link href={href(basePath, item)} scroll={false} className={styles.fixCard}>
               <span className={styles.fixTop}>
-                <span className={styles.fixNumber}>
+                <span className={`${styles.fixNumber} num`}>
                   <span className="visually-hidden">Fix </span>
                   {item.rank}
                 </span>
@@ -48,7 +41,7 @@ export function FixCards({ items, basePath = '' }: { items: readonly ListItem[];
               <span className={styles.fixFoot}>
                 <span className={styles.gain}>
                   <Icon name="arrowUp" size={14} />
-                  {pointsToGainText(item.points)}
+                  <PointsValue kind="gain" points={item.points} />
                 </span>
                 <Icon name="arrowRight" size={16} className={styles.chevron} />
               </span>
@@ -60,11 +53,17 @@ export function FixCards({ items, basePath = '' }: { items: readonly ListItem[];
   );
 }
 
-function Row({ to, name, sub, result, meta }: { to: string; name: string; sub?: string | null; result: ReactNode; meta: string }) {
+function Row({ to, rank, name, sub, result, meta }: { to: string; rank?: number; name: string; sub?: string | null; result: ReactNode; meta: ReactNode }) {
   return (
     <Link href={to} scroll={false} className={styles.row}>
       <span className={styles.rowName}>
-        {name}
+        {rank ? (
+          <span>
+            <span className="num">{rank}.</span> {name}
+          </span>
+        ) : (
+          name
+        )}
         {sub ? <span className={styles.rowSub}>{sub}</span> : null}
       </span>
       <span>{result}</span>
@@ -91,10 +90,11 @@ export function FixRows({ items }: { items: readonly ListItem[] }) {
           <Row
             key={item.rank}
             to={href('', item)}
-            name={`${item.rank}. ${item.name}`}
+            rank={item.rank}
+            name={item.name}
             sub={[names, difficulty].filter(Boolean).join('. ') || null}
             result={<ItemResult item={item} />}
-            meta={gainShort(item.points)}
+            meta={<PointsValue kind="gain" points={item.points} />}
           />
         );
       })}
@@ -113,7 +113,7 @@ export function WorkingRows({ items }: { items: readonly ListItem[] }) {
           name={item.name}
           sub={programNames(item.parts)}
           result={<ItemResult item={item} />}
-          meta={pointsWorthText(item.points).replace(' of your score', '')}
+          meta={<PointsValue kind="earned" points={item.points} />}
         />
       ))}
     </div>

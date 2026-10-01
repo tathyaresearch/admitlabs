@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import type { ReactNode } from 'react';
-import { bricolage } from '@/lib/fonts';
+import { bricolage, inter } from '@/lib/fonts';
 import { parseTheme, THEME_COOKIE } from '@/lib/theme';
 import '@/styles/tokens.css';
 import '@/styles/base.css';
@@ -24,7 +24,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
-    <html lang="en-IN" data-theme={theme ?? undefined} className={bricolage.variable}>
+    <html lang="en-IN" data-theme={theme ?? undefined} className={`${bricolage.variable} ${inter.variable}`}>
       <body>{children}</body>
     </html>
   );

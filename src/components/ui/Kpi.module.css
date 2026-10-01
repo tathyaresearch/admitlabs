@@ -1,0 +1,95 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+@media (min-width: 48rem) {
+  .card {
+    padding: var(--space-5) var(--card-padding);
+  }
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.label {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aside {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.number {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.value {
+  font: var(--type-num-kpi);
+  letter-spacing: var(--tracking-num);
+}
+
+.hero .value {
+  font: var(--type-num-hero);
+  letter-spacing: var(--tracking-num-hero);
+}
+
+.suffix {
+  font: var(--type-num);
+  color: var(--text-muted);
+}
+
+.hero .suffix {
+  font-size: var(--size-body);
+}
+
+.suffixWords {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.icon {
+  display: inline-flex;
+  align-self: center;
+  color: var(--text-muted);
+}
+
+.track {
+  display: block;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--chart-track);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--text);
+}
+
+.note {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}

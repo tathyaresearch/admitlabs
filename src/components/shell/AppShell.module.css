@@ -1,7 +1,15 @@
+/*
+  The dashboard frame. Depth comes from layered surfaces, not lines: the sidebar sits on the
+  page colour (black, or ivory in the light theme), the page sits on a panel one step away, and
+  cards sit one step further. Inside the panel, --surface is the panel colour, so anything that
+  paints "the page" matches it.
+*/
+
 .shell {
   min-height: 100dvh;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  background: var(--surface);
 }
 
 @media (min-width: 64rem) {
@@ -23,20 +31,80 @@
     height: 100dvh;
     display: flex;
     flex-direction: column;
-    gap: var(--space-8);
-    padding: var(--space-5) var(--space-3) var(--space-5);
-    border-right: 1px solid var(--line);
+    gap: var(--space-6);
+    padding: var(--space-3) var(--space-3) var(--space-4);
     overflow-y: auto;
   }
 }
 
-.brand {
-  display: inline-flex;
+/* Whose dashboard this is, and their plan. */
+.context {
+  display: flex;
   align-items: center;
-  height: 2rem;
-  padding: 0 var(--space-3);
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
   color: var(--text);
-  width: fit-content;
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.context:hover {
+  background: var(--surface-hover);
+}
+
+.mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.mark-md {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: var(--size-small);
+}
+
+.mark-sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--size-micro);
+}
+
+.brandMark {
+  flex: none;
+  color: var(--surface-inverse);
+}
+
+.contextText {
+  display: grid;
+  min-width: 0;
+}
+
+.contextTitle,
+.contextDetail {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contextTitle {
+  font: var(--type-strong);
+  font-weight: var(--weight-heading);
+  letter-spacing: var(--tracking-section);
+}
+
+.contextDetail {
+  font: var(--type-caption);
+  color: var(--text-muted);
 }
 
 .sidebarNav {
@@ -48,18 +116,11 @@
 
 .navSection {
   display: grid;
-  gap: var(--space-1);
-}
-
-.navLabel {
-  padding: 0 var(--space-3) var(--space-1);
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
 }
 
 .navList {
   display: grid;
-  gap: 1px;
+  gap: 2px;
 }
 
 .navLink {
@@ -68,7 +129,7 @@
   gap: var(--space-3);
   min-height: 2.25rem;
   padding: 0 var(--space-3);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--text-muted);
   font: var(--type-strong);
   text-decoration: none;
@@ -82,126 +143,102 @@
   background: var(--surface-hover);
 }
 
-/* The current page: a calm raised pill, not a shout. */
+/* The current page: a calm filled pill and full-strength text. */
 .navLinkActive,
 .navLinkActive:hover {
   color: var(--text);
-  background: var(--surface-raised);
+  background: var(--surface-hover);
   font-weight: var(--weight-heading);
-  box-shadow: inset 0 0 0 1px var(--line-raised);
 }
 
-.context {
+.navIcon {
+  flex: none;
+}
+
+.navText {
+  flex: 1;
+  min-width: 0;
+}
+
+.navCount {
+  min-width: 1.375rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font: var(--type-num-caption);
+  font-size: var(--size-micro);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.sidebarFoot {
   display: grid;
-  gap: 2px;
-  justify-items: start;
-  padding: var(--space-4) var(--space-3) 0;
-  border-top: 1px solid var(--line);
+  gap: var(--space-3);
 }
 
-.contextTitle {
-  font: var(--type-strong);
-  font-weight: var(--weight-heading);
+.madeBy {
+  padding: 0 var(--space-2);
+  color: var(--text-muted);
 }
 
-.contextDetail {
+/* Account: at the foot of the sidebar on desktop, in the top bar on a phone. */
+
+.accountSide {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.accountSide:hover {
+  background: var(--surface-hover);
+}
+
+.accountText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.accountEmail,
+.accountRole {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accountEmail {
+  font: var(--type-small);
+  font-weight: var(--weight-medium);
+}
+
+.accountRole {
   font: var(--type-caption);
   color: var(--text-muted);
-  margin-bottom: var(--space-2);
 }
 
-/* Top bar */
-
-.column {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
+.accountMore {
+  flex: none;
+  color: var(--text-muted);
 }
 
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-nav);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  height: var(--topbar-height);
-  padding: 0 var(--gutter);
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-
-.topbarBrand {
-  display: inline-flex;
-  color: var(--text);
-}
-
-.topbarContext {
-  display: none;
-}
-
-@media (min-width: 64rem) {
-  .topbarBrand {
-    display: none;
-  }
-
-  .topbarContext {
-    display: block;
-    font: var(--type-small);
-    font-weight: var(--weight-medium);
-    color: var(--text-muted);
-  }
-}
-
-.topbarActions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: auto;
-}
-
-.topbarIcon {
-  position: relative;
+.accountButton {
   display: inline-grid;
   place-items: center;
   width: var(--control-height);
   height: var(--control-height);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-}
-
-.topbarIcon:hover {
-  color: var(--text);
-  background: var(--surface-hover);
-}
-
-/* Unread count on the bell: a small inverted block. */
-.badge {
-  position: absolute;
-  top: 0.3rem;
-  right: 0.25rem;
-  min-width: 1.05rem;
-  height: 1.05rem;
-  padding: 0 0.25rem;
-  border-radius: var(--radius-full);
-  background: var(--text);
-  color: var(--surface);
-  font: var(--type-caption-strong);
-  font-size: 0.625rem;
-  line-height: 1.05rem;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.accountButton {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  height: var(--control-height);
-  padding: 0 var(--space-2) 0 var(--space-1);
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: transparent;
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .accountButton:hover {
@@ -209,42 +246,45 @@
 }
 
 .avatar {
+  flex: none;
   display: grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: var(--radius-full);
-  background: var(--surface-raised);
+  background: var(--surface-nested);
   color: var(--text);
-  box-shadow: inset 0 0 0 1px var(--line-medium);
   font: var(--type-caption-strong);
   font-weight: var(--weight-heading);
-}
-
-.accountChevron {
-  color: var(--text-muted);
 }
 
 .menu {
   position: fixed;
   inset: auto;
-  top: calc(var(--topbar-height) - 4px);
-  right: var(--gutter);
   margin: 0;
-  width: min(17rem, calc(100vw - 2rem));
+  width: min(16rem, calc(100vw - 2rem));
   padding: var(--space-2);
   background: var(--surface-raised);
   color: var(--text);
-  border: 1px solid var(--line-medium);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--line-raised);
+  border-radius: var(--radius-lg);
+}
+
+.menuSide {
+  left: var(--space-3);
+  bottom: 5.5rem;
+}
+
+.menuTop {
+  top: calc(var(--topbar-height) - 4px);
+  right: var(--gutter);
 }
 
 .menuHead {
   display: grid;
   gap: 2px;
-  padding: var(--space-3);
-  border-bottom: 1px solid var(--line-raised);
-  margin-bottom: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  margin-bottom: var(--space-1);
 }
 
 .menuEmail {
@@ -265,30 +305,142 @@
   min-height: var(--control-height);
   padding: 0 var(--space-3);
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: transparent;
   font: var(--type-strong);
   text-align: left;
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .menuItem:hover {
   background: var(--surface-hover);
 }
 
-/* Main */
+/* The page */
+
+.column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel {
+  --surface: var(--surface-panel);
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+}
+
+@media (min-width: 64rem) {
+  .column {
+    padding: var(--space-2) var(--space-2) var(--space-2) 0;
+  }
+
+  .panel {
+    border-radius: var(--card-radius);
+  }
+}
+
+.banner {
+  padding: var(--space-3) var(--space-3) 0;
+}
+
+.banner > * {
+  border-radius: var(--radius-md);
+}
 
 .main {
   width: 100%;
   max-width: calc(var(--page-max) + 2 * var(--gutter));
   margin: 0 auto;
-  padding: var(--space-8) var(--gutter) calc(var(--bottombar-height) + var(--space-12));
+  padding: var(--space-6) var(--gutter) calc(var(--bottombar-height) + var(--space-10));
 }
 
 @media (min-width: 64rem) {
   .main {
-    padding-top: var(--space-12);
-    padding-bottom: var(--space-20);
+    padding-top: var(--space-10);
+    padding-bottom: var(--space-16);
   }
+}
+
+/* Top bar (phone and tablet) */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: var(--topbar-height);
+  padding: 0 var(--space-2) 0 var(--gutter);
+  background: var(--surface);
+}
+
+@media (min-width: 64rem) {
+  .topbar {
+    display: none;
+  }
+}
+
+.topbarContext {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.topbarTitle {
+  font: var(--type-strong);
+  font-weight: var(--weight-heading);
+  letter-spacing: var(--tracking-section);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbarActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.topbarIcon {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.topbarIcon:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+/* Unread count on the bell: a small inverted block. */
+.badge {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.2rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.25rem;
+  border-radius: var(--radius-full);
+  background: var(--text);
+  color: var(--surface);
+  font: var(--type-num-caption);
+  font-size: 0.625rem;
+  line-height: 1.05rem;
+  text-align: center;
 }
 
 /* Bottom bar (phone) */
@@ -324,6 +476,7 @@
   font: var(--type-caption-strong);
   font-size: var(--size-micro);
   text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .bottomLink[data-active='true'] {
@@ -344,7 +497,6 @@
   background: var(--surface-raised);
   color: var(--text);
   border: 0;
-  border-top: 1px solid var(--line-medium);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
@@ -371,7 +523,7 @@
   gap: var(--space-3);
   min-height: 3rem;
   padding: 0 var(--space-3);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font: var(--type-strong);
   text-decoration: none;
 }

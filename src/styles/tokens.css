@@ -27,6 +27,7 @@
   --slate: #8a8d94;
 
   /* Greys between the brand colours: black, graphite, slate, ivory. */
+  --grey-985: #111114; /* the dashboard's page panel, one step above black */
   --grey-975: #141417;
   --grey-950: #1e1f23; /* graphite */
   --grey-940: #212226;
@@ -53,6 +54,9 @@
   --dk-surface-raised: var(--graphite);
   --dk-surface-sunken: var(--grey-975);
   --dk-surface-hover: var(--grey-930);
+  --dk-surface-panel: var(--grey-985);
+  --dk-surface-nested: var(--grey-930);
+  --dk-card-border: transparent;
   --dk-surface-inverse: var(--ivory);
   --dk-surface-inverse-hover: var(--grey-150);
   --dk-text: var(--ivory);
@@ -73,6 +77,9 @@
   --lt-surface-raised: var(--ivory);
   --lt-surface-sunken: var(--grey-100);
   --lt-surface-hover: var(--grey-150);
+  --lt-surface-panel: var(--grey-100);
+  --lt-surface-nested: var(--grey-100);
+  --lt-card-border: var(--grey-175);
   --lt-surface-inverse: var(--black);
   --lt-surface-inverse-hover: var(--graphite);
   --lt-text: var(--black);
@@ -88,14 +95,17 @@
   --lt-chart-track: var(--grey-150);
 
   /*
-    Type. Bricolage Grotesque only. Hierarchy from size, weight and width.
-    A calm dashboard scale: small, confident headings; the score is the one big, bold thing.
+    Type. Bricolage Grotesque for every word: headings, text and buttons. Hierarchy from size,
+    weight and width. Inter for numbers that stand on their own (scores, points, prices, counts,
+    percentages, table numbers), always with tabular figures; numbers inside a sentence stay in
+    Bricolage. A calm dashboard scale: tight, confident headings; the score is the one big thing.
   */
   --font-sans: var(--font-bricolage), sans-serif;
+  --font-numeric: var(--font-inter), var(--font-bricolage), sans-serif;
 
   --size-display: clamp(2.25rem, 1.7rem + 2.2vw, 3.5rem); /* product page hero: 36 to 56px */
-  --size-title: clamp(1.5rem, 1.4rem + 0.4vw, 1.75rem); /* page titles: 24 to 28px */
-  --size-section: 1.0625rem; /* section titles: 17px */
+  --size-title: clamp(1.625rem, 1.4rem + 0.7vw, 2rem); /* page titles: 26 to 32px */
+  --size-section: 1.125rem; /* section titles: 18px */
   --size-card: 0.9375rem; /* card titles: 15px */
   --size-lead: 0.9375rem; /* descriptions under titles: 15px */
   --size-body: 0.875rem; /* body and interface text: 14px */
@@ -106,21 +116,26 @@
   --size-score-medium: clamp(2.75rem, 2.4rem + 1.4vw, 3.5rem); /* a score inside a dial: 44 to 56px */
   --size-score-small: 1.5rem; /* pillar scores: 24px */
   --size-metric: 1.375rem; /* counts, prices, stats: 22px */
+  --size-num-hero: clamp(3.5rem, 2.9rem + 2vw, 4.5rem); /* the overall score in Inter: 56 to 72px */
+  --size-num-kpi: clamp(1.5rem, 1.35rem + 0.5vw, 1.75rem); /* a number card's value: 24 to 28px */
 
-  /* 600 for headings. 700 and up only for score numbers (and the AdmitLabs wordmark). */
+  /* 600 for headings, 650 for page titles. 700 and up only for score numbers (and the wordmark). */
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-heading: 600;
+  --weight-title: 650;
   --weight-semibold: 600;
   --weight-bold: 700;
   --weight-score: 800;
   --weight-heavy: 800;
 
   --tracking-display: -0.035em;
-  --tracking-title: -0.022em;
+  --tracking-title: -0.03em;
   --tracking-section: -0.012em;
   --tracking-body: -0.003em;
   --tracking-score: -0.045em;
+  --tracking-num-hero: -0.05em;
+  --tracking-num: -0.02em;
 
   --leading-display: 1.06;
   --leading-title: 1.2;
@@ -129,7 +144,7 @@
 
   /* Text styles. Use with `font:` plus the matching letter-spacing. */
   --type-display: var(--weight-heading) var(--size-display) / var(--leading-display) var(--font-sans);
-  --type-title: var(--weight-heading) var(--size-title) / var(--leading-title) var(--font-sans);
+  --type-title: var(--weight-title) var(--size-title) / 1.12 var(--font-sans);
   --type-section: var(--weight-heading) var(--size-section) / var(--leading-section) var(--font-sans);
   --type-card: var(--weight-heading) var(--size-card) / var(--leading-section) var(--font-sans);
   --type-lead: var(--weight-regular) var(--size-lead) / var(--leading-body) var(--font-sans);
@@ -143,6 +158,12 @@
   --type-score-medium: var(--weight-score) condensed var(--size-score-medium) / 0.85 var(--font-sans);
   --type-score-small: var(--weight-bold) semi-condensed var(--size-score-small) / 1 var(--font-sans);
   --type-metric: var(--weight-heading) var(--size-metric) / 1.1 var(--font-sans);
+
+  /* Numbers in Inter. Pair with letter-spacing and the .num class (tabular figures). */
+  --type-num-hero: var(--weight-heading) var(--size-num-hero) / 0.9 var(--font-numeric);
+  --type-num-kpi: var(--weight-heading) var(--size-num-kpi) / 1 var(--font-numeric);
+  --type-num: var(--weight-medium) var(--size-small) / 1.4 var(--font-numeric);
+  --type-num-caption: var(--weight-medium) var(--size-caption) / 1.4 var(--font-numeric);
 
   --width-condensed: 75%;
   --width-narrow: 87.5%;
@@ -164,10 +185,16 @@
   --space-20: 5rem;
   --space-24: 6rem;
 
-  /* Layout rhythm: the gap between blocks on a page, and inside a section. */
+  /*
+    Layout rhythm, on an 8px grid: 48px between blocks on a page, 16px inside a section and
+    between cards. One card style everywhere: 12px corners, 24px padding (16px on a phone).
+  */
   --page-gap: var(--space-12);
   --section-gap: var(--space-4);
+  --card-gap: var(--space-4);
   --card-padding: var(--space-6);
+  --card-padding-sm: var(--space-4);
+  --card-radius: var(--radius-lg);
 
   --radius-xs: 2px;
   --radius-sm: 4px;
@@ -177,7 +204,7 @@
 
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --duration-fast: 120ms;
+  --duration-fast: 150ms;
   --duration: 200ms;
   --duration-slow: 360ms;
 
@@ -209,6 +236,9 @@
   --surface-raised: var(--dk-surface-raised);
   --surface-sunken: var(--dk-surface-sunken);
   --surface-hover: var(--dk-surface-hover);
+  --surface-panel: var(--dk-surface-panel);
+  --surface-nested: var(--dk-surface-nested);
+  --card-border: var(--dk-card-border);
   --surface-inverse: var(--dk-surface-inverse);
   --surface-inverse-hover: var(--dk-surface-inverse-hover);
   --text: var(--dk-text);
@@ -228,6 +258,9 @@
   --inv-surface-raised: var(--lt-surface-raised);
   --inv-surface-sunken: var(--lt-surface-sunken);
   --inv-surface-hover: var(--lt-surface-hover);
+  --inv-surface-panel: var(--lt-surface-panel);
+  --inv-surface-nested: var(--lt-surface-nested);
+  --inv-card-border: var(--lt-card-border);
   --inv-surface-inverse: var(--lt-surface-inverse);
   --inv-surface-inverse-hover: var(--lt-surface-inverse-hover);
   --inv-text: var(--lt-text);
@@ -250,6 +283,9 @@
   --surface-raised: var(--lt-surface-raised);
   --surface-sunken: var(--lt-surface-sunken);
   --surface-hover: var(--lt-surface-hover);
+  --surface-panel: var(--lt-surface-panel);
+  --surface-nested: var(--lt-surface-nested);
+  --card-border: var(--lt-card-border);
   --surface-inverse: var(--lt-surface-inverse);
   --surface-inverse-hover: var(--lt-surface-inverse-hover);
   --text: var(--lt-text);
@@ -269,6 +305,9 @@
   --inv-surface-raised: var(--dk-surface-raised);
   --inv-surface-sunken: var(--dk-surface-sunken);
   --inv-surface-hover: var(--dk-surface-hover);
+  --inv-surface-panel: var(--dk-surface-panel);
+  --inv-surface-nested: var(--dk-surface-nested);
+  --inv-card-border: var(--dk-card-border);
   --inv-surface-inverse: var(--dk-surface-inverse);
   --inv-surface-inverse-hover: var(--dk-surface-inverse-hover);
   --inv-text: var(--dk-text);
@@ -292,6 +331,9 @@
     --surface-raised: var(--lt-surface-raised);
     --surface-sunken: var(--lt-surface-sunken);
     --surface-hover: var(--lt-surface-hover);
+    --surface-panel: var(--lt-surface-panel);
+    --surface-nested: var(--lt-surface-nested);
+    --card-border: var(--lt-card-border);
     --surface-inverse: var(--lt-surface-inverse);
     --surface-inverse-hover: var(--lt-surface-inverse-hover);
     --text: var(--lt-text);
@@ -311,6 +353,9 @@
     --inv-surface-raised: var(--dk-surface-raised);
     --inv-surface-sunken: var(--dk-surface-sunken);
     --inv-surface-hover: var(--dk-surface-hover);
+    --inv-surface-panel: var(--dk-surface-panel);
+    --inv-surface-nested: var(--dk-surface-nested);
+    --inv-card-border: var(--dk-card-border);
     --inv-surface-inverse: var(--dk-surface-inverse);
     --inv-surface-inverse-hover: var(--dk-surface-inverse-hover);
     --inv-text: var(--dk-text);

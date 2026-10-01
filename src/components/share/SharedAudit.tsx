@@ -8,9 +8,8 @@ import { SectionHead } from '@/components/audit/AuditHeader';
 import { SummaryBand } from '@/components/audit/SummaryBand';
 import { ProductLockup } from '@/components/ui/Brand';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
-import { Difficulty, ResultMeter } from '@/components/ui/Results';
+import { Difficulty, PointsValue, ResultMeter } from '@/components/ui/Results';
 import { ADMITLABS_EMAIL } from '@/config/team';
-import { pointsToGainText, pointsWorthText } from '@/audit/view';
 import { formatDate, hostAndPath, plural } from '@/domain/format';
 import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS } from '@/domain/types';
 import { ADMITLABS_CAN_FIX, sharedView, type SharedAudit } from '@/team/share';
@@ -45,7 +44,7 @@ function TopFix({ item }: { item: ListItem }) {
   return (
     <li className={styles.card}>
       <span className={styles.cardTop}>
-        <span className={styles.number}>{item.rank}</span>
+        <span className={`${styles.number} num`}>{item.rank}</span>
         {item.difficulty ? <Difficulty value={item.difficulty} /> : null}
       </span>
       <span className={styles.cardTitle}>{item.name}</span>
@@ -63,7 +62,9 @@ function TopFix({ item }: { item: ListItem }) {
         </p>
       ) : null}
       {part ? <Source part={part} /> : null}
-      <p className={styles.gain}>{pointsToGainText(item.points)}</p>
+      <p className={styles.gain}>
+        <PointsValue kind="gain" points={item.points} />
+      </p>
     </li>
   );
 }
@@ -74,10 +75,14 @@ function MoreFix({ item }: { item: ListItem }) {
     <div className={styles.row}>
       <div className={styles.rowHead}>
         <span className={styles.rowName}>
-          {item.rank}. {item.name}
+          <span>
+            <span className="num">{item.rank}.</span> {item.name}
+          </span>
           <PartResults parts={item.parts} showNames={item.parts.length > 1} />
         </span>
-        <span className={styles.muted}>{pointsToGainText(item.points)}</span>
+        <span className={styles.muted}>
+          <PointsValue kind="gain" points={item.points} />
+        </span>
       </div>
       {part?.detail?.finding ? <p className={styles.text}>{part.detail.finding}</p> : null}
       <p className={styles.canFix}>{ADMITLABS_CAN_FIX}</p>
@@ -153,7 +158,9 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
                         {item.name}
                         <ResultMeter result={item.strength ?? 'okay'} size="sm" />
                       </span>
-                      <span className={styles.muted}>{pointsWorthText(item.points)}</span>
+                      <span className={styles.muted}>
+                        <PointsValue kind="earned" points={item.points} />
+                      </span>
                     </div>
                     {part?.detail?.finding ? <p className={styles.text}>{part.detail.finding}</p> : null}
                   </div>

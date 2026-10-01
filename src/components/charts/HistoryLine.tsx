@@ -80,7 +80,7 @@ export function HistoryLine({ points, label = 'Overall score by month', height: 
         {[0, ...bands.map((band) => band.min).filter((min) => min > 0), 100].map((tick) => (
           <g key={tick}>
             <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(tick)} y2={y(tick)} className={styles.grid} />
-            <text x={MARGIN.left - 10} y={y(tick)} className={styles.axisText} textAnchor="end" dominantBaseline="middle">
+            <text x={MARGIN.left - 10} y={y(tick)} className={`${styles.axisText} num`} textAnchor="end" dominantBaseline="middle">
               {tick}
             </text>
           </g>
@@ -105,14 +105,14 @@ export function HistoryLine({ points, label = 'Overall score by month', height: 
         {points.map((point, index) => (
           <circle key={point.month} cx={x(index)} cy={y(point.score)} r={index === shown || index === lastIndex ? 5 : 3.5} className={styles.point} />
         ))}
-        <text x={x(lastIndex)} y={y(last.score) - 14} className={styles.endLabel} textAnchor="middle">
+        <text x={x(lastIndex)} y={y(last.score) - 14} className={`${styles.endLabel} num`} textAnchor="middle">
           {Math.round(last.score)}
         </text>
       </svg>
 
       {shownPoint ? (
         <div className={styles.tooltip} style={{ left: Math.min(Math.max(x(shown ?? 0), 80), width - 80), top: y(shownPoint.score) - 12 }} aria-hidden="true">
-          <span className={styles.tooltipValue}>{Math.round(shownPoint.score)}</span>
+          <span className={`${styles.tooltipValue} num`}>{Math.round(shownPoint.score)}</span>
           <span className={styles.tooltipLabel}>{formatMonth(shownPoint.month)}</span>
           {previous ? (
             <span className={styles.tooltipLabel}>
@@ -136,7 +136,7 @@ export function HistoryLine({ points, label = 'Overall score by month', height: 
           {points.map((point) => (
             <tr key={point.month}>
               <th scope="row">{formatMonth(point.month)}</th>
-              <td>{Math.round(point.score)}</td>
+              <td className="num">{Math.round(point.score)}</td>
             </tr>
           ))}
         </tbody>

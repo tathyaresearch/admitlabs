@@ -5,6 +5,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { IconButton } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
 import { THEME_COOKIE, type ThemeChoice } from '@/lib/theme';
 
 function subscribe(onChange: () => void) {
@@ -24,17 +25,28 @@ function currentTheme(): ThemeChoice {
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
 
-export function ThemeToggle() {
+function choose(next: ThemeChoice) {
+  document.documentElement.dataset.theme = next;
+  document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
+}
+
+function useTheme(): { theme: ThemeChoice; next: ThemeChoice } {
   const theme = useSyncExternalStore(subscribe, currentTheme, () => 'dark' as ThemeChoice);
-  const next: ThemeChoice = theme === 'dark' ? 'light' : 'dark';
+  return { theme, next: theme === 'dark' ? 'light' : 'dark' };
+}
+
+export function ThemeToggle() {
+  const { theme, next } = useTheme();
+  return <IconButton icon={theme === 'dark' ? 'sun' : 'moon'} label={`Switch to the ${next} theme`} onClick={() => choose(next)} />;
+}
+
+/** The same switch as a row in the account menu. */
+export function ThemeMenuItem({ className }: { className?: string }) {
+  const { theme, next } = useTheme();
   return (
-    <IconButton
-      icon={theme === 'dark' ? 'sun' : 'moon'}
-      label={`Switch to the ${next} theme`}
-      onClick={() => {
-        document.documentElement.dataset.theme = next;
-        document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
-      }}
-    />
+    <button type="button" className={className} onClick={() => choose(next)}>
+      <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
+      {next === 'light' ? 'Light theme' : 'Dark theme'}
+    </button>
   );
 }

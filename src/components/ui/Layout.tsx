@@ -2,6 +2,36 @@ import Link from 'next/link';
 import type { ElementType, HTMLAttributes, ReactNode } from 'react';
 import styles from './Layout.module.css';
 
+/**
+ * The top of every redesigned page: the title (the same word as in the sidebar) and the one
+ * question the page answers, with an optional caption and actions on the right.
+ */
+export function PageHead({
+  title,
+  question,
+  caption,
+  actions,
+  titleAs: Title = 'h1',
+}: {
+  title: ReactNode;
+  question: ReactNode;
+  caption?: ReactNode;
+  actions?: ReactNode;
+  /** 'p' in a picture of a page (the product page), so the real page keeps its one h1. */
+  titleAs?: 'h1' | 'p';
+}) {
+  return (
+    <header className={styles.pageHead}>
+      <div className={styles.pageHeadText}>
+        <Title className={styles.pageHeadTitle}>{title}</Title>
+        <p className={styles.pageHeadQuestion}>{question}</p>
+        {caption ? <p className={styles.pageHeadCaption}>{caption}</p> : null}
+      </div>
+      {actions ? <div className={styles.pageActions}>{actions}</div> : null}
+    </header>
+  );
+}
+
 /** Page title block: eyebrow, title, description, actions. One per page. */
 export function PageHeader({
   eyebrow,

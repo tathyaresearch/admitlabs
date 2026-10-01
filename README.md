@@ -115,7 +115,7 @@ npm run demand -- --first --institution <slug>
 
 ## Monthly report
 
-One PDF a month (spec section 12), readable in 5 minutes: 7 pages, never more than 8. A black cover, then ivory pages in the dashboard's style, set in Bricolage Grotesque (embedded from `src/report/fonts`, with its licence): your score and what's working, what to fix (the top 5 in detail, the rest ranked), program by program, you and your rivals with the month's key moves, what students in your city want, the 3 things to do this month, and the sources and dates checked. On Paid only, the last page ends with one quiet line: "Want AdmitLabs to do this for you? hello@admitlabs.in".
+One PDF a month (spec section 12), readable in 5 minutes: 7 pages, never more than 8. A black cover, then ivory pages in the dashboard's style, set in Bricolage Grotesque with numbers in Inter (both embedded from `src/report/fonts`, with their licences): your score and what's working, what to fix (the top 5 in detail, the rest ranked), program by program, you and your rivals with the month's key moves, what students in your city want, the 3 things to do this month, and the sources and dates checked. On Paid only, the last page ends with one quiet line: "Want AdmitLabs to do this for you? hello@admitlabs.in".
 
 - **Who gets one:** Paid and Client, made on the 1st for the month just ended, from what was known at the end of that month. Making a month again replaces it. After a Paid plan ends, past reports stay downloadable; no new ones are made.
 - **Where it lives:** a private storage bucket (`reports`). `/reports` lists them; a download asks for a link that works for one minute, as the signed-in person, so the database checks membership every time. Free sees one "Paid gets a monthly report" card.

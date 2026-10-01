@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { INSTITUTION_NAV } from '@/components/shell/nav';
-import { AppShell } from '@/components/shell/AppShell';
+import { AppShell, initialsOf } from '@/components/shell/AppShell';
 import { ViewAsBar } from '@/components/team/ViewAsBar';
-import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
+import { formatDate } from '@/domain/format';
+import { MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
 
@@ -11,6 +12,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const { institution, role } = viewer.membership;
   const supabase = await createClient();
   const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('institution_id', institution.id).eq('read', false);
+  // The plan, in the sidebar under the name: "Paid until 15 Oct 2026", "Free plan", "Client plan".
+  const planLine = viewer.tier === 'paid' && viewer.plan?.endsAt ? `Paid until ${formatDate(viewer.plan.endsAt)}` : `${TIER_LABELS[viewer.tier]} plan`;
   return (
     <AppShell
       sections={INSTITUTION_NAV}
@@ -19,11 +22,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       roleLabel={viewer.viewingAs ? 'AdmitLabs team, read only' : MEMBERSHIP_ROLE_LABELS[role]}
       unread={count ?? 0}
       banner={viewer.viewingAs ? <ViewAsBar name={institution.name} /> : undefined}
-      context={{
-        title: institution.name,
-        detail: `${INSTITUTION_TYPE_LABELS[institution.type]}, ${institution.city}`,
-        tag: `${TIER_LABELS[viewer.tier]} plan`,
-      }}
+      context={{ title: institution.name, detail: planLine, mark: { kind: 'initials', text: initialsOf(institution.name) } }}
     >
       {children}
     </AppShell>

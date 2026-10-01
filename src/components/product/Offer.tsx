@@ -3,6 +3,7 @@
 
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { CellText } from '@/components/ui/Results';
 import { ENTITLEMENTS, type EntitlementGroup } from '@/config/entitlements';
 import { TIER_LABELS, TIERS } from '@/domain/types';
 import { appLink } from '@/lib/urls';
@@ -33,7 +34,7 @@ export function Plans() {
                   {card.name}
                 </h3>
                 <p className={styles.price}>
-                  <span className={styles.priceValue}>{card.price}</span>
+                  <span className={`${styles.priceValue} num`}>{card.price}</span>
                   <span className={styles.priceTerm}>{card.term}</span>
                 </p>
                 <p className={styles.planLine}>{card.line}</p>
@@ -86,7 +87,7 @@ export function Plans() {
                       <th scope="row">{row.label}</th>
                       {TIERS.map((tier) => (
                         <td key={tier} className={row.cells[tier].access === 'none' ? styles.no : undefined}>
-                          {row.cells[tier].text}
+                          <CellText text={row.cells[tier].text} />
                         </td>
                       ))}
                     </tr>

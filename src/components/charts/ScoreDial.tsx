@@ -41,7 +41,7 @@ export function ScoreDial({ score, size = 220, label = 'Overall score' }: { scor
         })}
       </svg>
       <figcaption className={styles.dialCenter} aria-hidden="true">
-        <span className={styles.dialNumber}>{value}</span>
+        <span className={`${styles.dialNumber} num`}>{value}</span>
         <span className={styles.dialCaption}>{label}</span>
       </figcaption>
     </figure>

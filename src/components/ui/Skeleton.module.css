@@ -1,0 +1,70 @@
+.page {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--space-6);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.cards {
+  display: grid;
+  gap: var(--card-gap);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cards > :first-child {
+  grid-column: 1 / -1;
+}
+
+@container (min-width: 52rem) {
+  .cards {
+    grid-template-columns: minmax(0, 2.4fr) repeat(3, minmax(0, 1fr));
+  }
+
+  .cards > :first-child {
+    grid-column: auto;
+  }
+}
+
+.card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  min-height: 9rem;
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+.list {
+  display: grid;
+  margin-top: var(--space-6);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+.row {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--card-padding-sm);
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.lines {
+  display: grid;
+  flex: 1;
+  gap: var(--space-2);
+}
+
+.round {
+  flex: none;
+  border-radius: var(--radius-full);
+}

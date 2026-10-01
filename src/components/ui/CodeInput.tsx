@@ -37,7 +37,7 @@ export function CodeInput({ id, name, label, length = 6, error, onComplete, auto
         {Array.from({ length }, (_, index) => {
           const active = index === Math.min(value.length, length - 1);
           return (
-            <span key={index} className={styles.cell} data-filled={value[index] ? 'true' : undefined} data-active={active ? 'true' : undefined} aria-hidden="true">
+            <span key={index} className={`${styles.cell} num`} data-filled={value[index] ? 'true' : undefined} data-active={active ? 'true' : undefined} aria-hidden="true">
               {value[index] ?? ''}
             </span>
           );

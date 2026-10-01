@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { overviewView, pointsToGainText } from '@/audit/view';
+import { overviewView } from '@/audit/view';
+import { PointsValue } from '@/components/ui/Results';
 import { AuditHeader, SectionHead } from '@/components/audit/AuditHeader';
 import { SummaryBand } from '@/components/audit/SummaryBand';
 import { ActionButton, CopyLink, NoteForm, PaidStartForm } from '@/components/team/InstitutionPanels';
@@ -125,9 +126,11 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
                     <div key={item.rank} className={styles.item}>
                       <div className={styles.itemHead}>
                         <span className={styles.itemTitle}>
-                          {item.rank}. {item.name}
+                          <span className="num">{item.rank}.</span> {item.name}
                         </span>
-                        <span className={styles.itemMeta}>{pointsToGainText(item.points)}</span>
+                        <span className={styles.itemMeta}>
+                          <PointsValue kind="gain" points={item.points} />
+                        </span>
                       </div>
                       {detail?.finding ? <p className={styles.itemBody}>{detail.finding}</p> : null}
                     </div>
@@ -146,12 +149,13 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
                     <div className={styles.itemHead}>
                       <span className={styles.itemTitle}>{formatDateTime(row.runAt)}</span>
                       <span className={styles.itemMeta}>
-                        {row.overall}, {scoreLabel(row.overall)}
+                        <span className="num">{row.overall}</span>, {scoreLabel(row.overall)}
                       </span>
                     </div>
                     <p className={styles.itemMeta}>
                       <span>
-                        Discovered {row.discovered}, Trusted {row.trusted}, Chosen {row.chosen}
+                        Discovered <span className="num">{row.discovered}</span>, Trusted <span className="num">{row.trusted}</span>, Chosen{' '}
+                        <span className="num">{row.chosen}</span>
                       </span>
                       {row.topFix ? <span>Top fix: {row.topFix}</span> : null}
                     </p>
@@ -173,7 +177,7 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
                       <div className={styles.itemHead}>
                         <span className={styles.itemTitle}>{formatDateTime(row.runAt)}</span>
                         <span className={styles.itemMeta}>
-                          {row.overall}, {scoreLabel(row.overall)}
+                          <span className="num">{row.overall}</span>, {scoreLabel(row.overall)}
                         </span>
                       </div>
                     </div>
@@ -193,7 +197,15 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
                       <span className={styles.itemTitle}>
                         {program.name} {program.archived ? <Tag variant="quiet">Removed</Tag> : null}
                       </span>
-                      <span className={styles.itemMeta}>{score ? `${score.scores.overall}, ${scoreLabel(score.scores.overall)}` : 'Not in this Audit'}</span>
+                      <span className={styles.itemMeta}>
+                        {score ? (
+                          <>
+                            <span className="num">{score.scores.overall}</span>, {scoreLabel(score.scores.overall)}
+                          </>
+                        ) : (
+                          'Not in this Audit'
+                        )}
+                      </span>
                     </div>
                   </div>
                 );

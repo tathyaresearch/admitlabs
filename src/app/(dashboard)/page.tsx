@@ -1,28 +1,37 @@
-import { overviewView } from '@/audit/view';
-import { FixCards } from '@/components/audit/Lists';
-import { SummaryBand } from '@/components/audit/SummaryBand';
-import { DemandHighlight } from '@/components/demand/DemandHighlight';
-import { MonthThings } from '@/components/report/MonthThings';
-import { RivalSnapshot } from '@/components/rivals/RivalSnapshot';
+import { historyByMonth, overviewView } from '@/audit/view';
+import { DemandCard } from '@/components/home/DemandCard';
+import { HomeSummary } from '@/components/home/HomeSummary';
+import { NextSteps, type NextStep } from '@/components/home/NextSteps';
+import { RivalsCard } from '@/components/home/RivalsCard';
 import { ButtonLink } from '@/components/ui/Button';
-import { Tag } from '@/components/ui/Data';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
-import { Icon } from '@/components/ui/Icon';
-import { Card, FactList, PageHeader, Section } from '@/components/ui/Layout';
+import { PageHead } from '@/components/ui/Layout';
 import { limitFor } from '@/config/entitlements';
-import { formatDate } from '@/domain/format';
+import { monthKey } from '@/domain/dates';
 import { planReminder } from '@/domain/tiers';
-import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { loadAuditPage, nextAuditText } from '@/lib/audit/load';
 import { loadCityIdeas, loadHighlight } from '@/lib/demand/load';
 import { loadActions, loadRivalSnapshot } from '@/lib/rivals/load';
-import { threeThings } from '@/report/things';
-import styles from './home.module.css';
+import { fixThing, threeThings, type Thing } from '@/report/things';
+import styles from '@/components/home/home.module.css';
 
 export const metadata = { title: 'Home' };
 
+/** Where a thing to do opens: the check in the Audit, the rival, or Demand. */
+function thingHref(thing: Thing): string {
+  switch (thing.source) {
+    case 'audit':
+      return thing.checkKey ? `/audit?check=${thing.checkKey}` : '/audit';
+    case 'rivals':
+      return thing.rivalId ? `/rivals/${thing.rivalId}` : '/rivals';
+    default:
+      return '/demand';
+  }
+}
 
+// Home answers one question: "How are we doing this month?" The answer and the numbers first,
+// then what to do next, then rivals and demand.
 export default async function HomePage() {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
@@ -38,63 +47,48 @@ export default async function HomePage() {
   ]);
   const reminder = planReminder(viewer.plan, new Date());
   const view = data.audit ? overviewView(data.audit, { institutionType: institution.type, programNames: data.names }) : null;
-  const topFixes = view ? view.fixes.slice(0, limitFor('audit_what_to_fix', 'free') ?? 3) : [];
-  const things = full
-    ? threeThings({
-        institutionType: institution.type,
-        place: institution.city,
-        fixes: view?.fixes ?? [],
-        lessons: lessons.map((lesson) => ({ text: lesson.text, detail: lesson.detail, checkKey: lesson.checkKey, rivalId: lesson.rivalId })),
-        ideas,
-      })
-    : [];
-  const activePrograms = data.programs.filter((program) => !program.archived);
-  const freeProgram = viewer.tier === 'free' ? activePrograms.find((program) => program.id === viewer.plan?.freeProgramId) : undefined;
+
+  const steps: NextStep[] = !view
+    ? []
+    : full
+      ? threeThings({
+          institutionType: institution.type,
+          place: institution.city,
+          fixes: view.fixes,
+          lessons: lessons.map((lesson) => ({ text: lesson.text, detail: lesson.detail, checkKey: lesson.checkKey, rivalId: lesson.rivalId })),
+          ideas,
+        }).map((thing, index) => ({ key: `${thing.source}-${index}`, source: thing.source, title: thing.title, detail: thing.detail, href: thingHref(thing) }))
+      : view.fixes.slice(0, limitFor('audit_what_to_fix', 'free') ?? 3).map((fix) => {
+          const thing = fixThing(fix, institution.type);
+          return { key: fix.key, source: thing.source, title: thing.title, detail: thing.detail, href: `/audit?check=${fix.key}` };
+        });
+
+  // Score history is a Paid and Client feature; Free sees the latest Audit only.
+  const trend = full ? { points: historyByMonth(data.history, (runAt) => monthKey(new Date(runAt))) } : null;
+  // Only an Audit on the current plan: a Paid plan ending before its next Audit says so in the notice instead.
+  const note = data.nextAudit && data.nextAudit.tier === viewer.tier ? `${nextAuditText(data)}.` : null;
 
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow={`${INSTITUTION_TYPE_LABELS[institution.type]} in ${institution.city}, ${institution.state}`}
-        title={institution.name}
-        meta={
-          <>
-            <Tag variant="solid">{TIER_LABELS[viewer.tier]} plan</Tag>
-            <Tag>{viewer.viewingAs ? 'Read only' : MEMBERSHIP_ROLE_LABELS[role]}</Tag>
-            <a className={styles.site} href={institution.website} target="_blank" rel="noreferrer">
-              {institution.website.replace(/^https?:\/\//, '')}
-              <Icon name="external" size={14} />
-              <span className="visually-hidden"> (opens in a new tab)</span>
-            </a>
-          </>
-        }
-      />
-
-      {reminder.stage === 'ends_soon' || reminder.stage === 'ends_very_soon' ? (
-        <Notice
-          icon="info"
-          title={`Your Paid plan ends in ${reminder.daysLeft} ${reminder.daysLeft === 1 ? 'day' : 'days'}.`}
-          action={
-            <ButtonLink href="/plan" size="sm" variant="secondary">
-              See your plan
-            </ButtonLink>
-          }
-        >
-          It does not renew on its own. When it ends you move to Free and keep your last Audit score.
-        </Notice>
-      ) : null}
+    <div className={styles.home}>
+      <div className={styles.summary}>
+        <PageHead title="Home" question="How are we doing this month?" />
+        {reminder.stage === 'ends_soon' || reminder.stage === 'ends_very_soon' ? (
+          <Notice
+            icon="info"
+            title={`Your Paid plan ends in ${reminder.daysLeft} ${reminder.daysLeft === 1 ? 'day' : 'days'}.`}
+            action={
+              <ButtonLink href="/plan" size="sm" variant="secondary">
+                See your plan
+              </ButtonLink>
+            }
+          >
+            It does not renew on its own. When it ends you move to Free and keep your last Audit score.
+          </Notice>
+        ) : null}
+      </div>
 
       {view && data.audit ? (
-        <section aria-labelledby="score-title" className={styles.scoreBlock}>
-          <div className={styles.blockHead}>
-            <h2 id="score-title" className={styles.blockTitle}>
-              Your Audit
-            </h2>
-            <p className={styles.blockMeta}>
-              Checked {formatDate(data.audit.runAt)}. {nextAuditText(data)}.
-            </p>
-          </div>
-          <SummaryBand view={view} />
-        </section>
+        <HomeSummary view={view} checkedAt={data.audit.runAt} trend={trend} note={note} auditHref="/audit" />
       ) : (
         <EmptyState
           icon="audit"
@@ -111,93 +105,25 @@ export default async function HomePage() {
         </EmptyState>
       )}
 
-      {full && things.length ? (
-        <Section id="month-things" title="3 things to do this month" description="The steps that could make the most difference this month, in order.">
-          <MonthThings things={things} />
-        </Section>
+      {view ? (
+        <NextSteps
+          id="next"
+          title={full ? '3 things to do this month' : 'Fix these first'}
+          description={full ? 'In order: the steps that could make the most difference this month.' : 'The changes that could add the most to your score.'}
+          steps={steps}
+          empty={<p className={styles.cardText}>Every check is Strong. Keep it that way.</p>}
+        />
       ) : null}
 
-      {!full && view ? (
-        <Section
-          id="top-fixes"
-          title="Fix these first"
-          description="The changes that could add the most to your score."
-          actions={
-            <ButtonLink href="/audit" size="sm" variant="quiet" iconAfter="arrowRight">
-              Open your Audit
-            </ButtonLink>
-          }
-        >
-          {topFixes.length ? <FixCards items={topFixes} basePath="/audit" /> : <p className={styles.note}>Every check is Strong. Keep it that way.</p>}
-        </Section>
-      ) : null}
-
-      <Section
-        id="rivals"
-        title="Your rivals"
-        description="Where you stand against the rivals you track."
-        actions={
-          rivals.rivals.length ? (
-            <ButtonLink href="/rivals" size="sm" variant="quiet" iconAfter="arrowRight">
-              Open Rivals
-            </ButtonLink>
-          ) : undefined
-        }
-      >
-        <RivalSnapshot snapshot={rivals} youName={institution.name} canChoose={role === 'owner'} />
-      </Section>
-
-      <Section
-        id="demand"
-        title="What students want"
-        description={`The fastest rising course or career in ${institution.city} this month.`}
-        actions={
-          <ButtonLink href="/demand" size="sm" variant="quiet" iconAfter="arrowRight">
-            Open Demand
-          </ButtonLink>
-        }
-      >
-        <DemandHighlight highlight={highlight} />
-      </Section>
-
-      <div className={styles.split}>
-        <Card>
-          <div className={styles.cardHead}>
-            <h2 className={styles.cardTitle}>Programs</h2>
-            <span className={styles.count}>{activePrograms.length}</span>
-          </div>
-          <ul className={styles.programs}>
-            {activePrograms.map((program) => (
-              <li key={program.id} className={styles.program}>
-                <span>{program.name}</span>
-                {freeProgram?.id === program.id ? <Tag>Free Audit</Tag> : null}
-              </li>
-            ))}
-          </ul>
-          {freeProgram ? <p className={styles.note}>Your Free Audit covers one program: {freeProgram.name}.</p> : null}
-        </Card>
-
-        <Card>
-          <div className={styles.cardHead}>
-            <h2 className={styles.cardTitle}>Plan</h2>
-            <Tag variant="solid">{TIER_LABELS[viewer.tier]}</Tag>
-          </div>
-          <FactList
-            items={[
-              { label: 'Started', value: viewer.plan ? formatDate(viewer.plan.startsAt) : 'Not set' },
-              {
-                label: 'Ends',
-                value: viewer.plan?.endsAt ? formatDate(viewer.plan.endsAt) : viewer.tier === 'client' ? 'While your service is active' : 'No end date',
-              },
-              ...(viewer.tier === 'paid' ? [{ label: 'Renews', value: 'Only if you choose to' }] : []),
-            ]}
-          />
-          <div className={styles.cardFoot}>
-            <ButtonLink href="/plan" variant="secondary" size="sm" iconAfter="arrowRight">
-              Plan and access
-            </ButtonLink>
-          </div>
-        </Card>
+      <div className={styles.pair}>
+        <RivalsCard
+          ladder={rivals.ladder}
+          standings={rivals.standings?.map((rival) => ({ id: rival.id, name: rival.name, standing: rival.standing })) ?? null}
+          verdict={rivals.verdict}
+          rivalsHref="/rivals"
+          chooseHref={role === 'owner' ? '/rivals/choose' : null}
+        />
+        <DemandCard highlight={highlight} demandHref="/demand" place={institution.city} />
       </div>
     </div>
   );

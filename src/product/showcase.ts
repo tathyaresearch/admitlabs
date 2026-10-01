@@ -3,10 +3,10 @@
 // out from the sample world in memory with the real scoring engine (src/sample/world.ts). No
 // database. Built once per server; the page is prerendered, so in practice once per build.
 
-import { overviewView, type AuditView } from '../audit/view.ts';
+import { historyByMonth, overviewView, type AuditView } from '../audit/view.ts';
 import { regionPlace } from '../demand/regions.ts';
 import { demandView, type DemandView } from '../demand/view.ts';
-import { istDate } from '../domain/dates.ts';
+import { istDate, monthKey } from '../domain/dates.ts';
 import type { InstitutionType } from '../domain/types.ts';
 import { buildReport, type ReportData } from '../report/data.ts';
 import { monthEnd } from '../report/schedule.ts';
@@ -19,6 +19,8 @@ import { sampleMoves, type SampleMoveRow } from '../sample/world.ts';
 export interface Showcase {
   institution: { id: string; name: string; type: InstitutionType; city: string };
   audit: AuditView;
+  /** For the picture of Home: when the Audit ran, and the overall score by month. */
+  home: { checkedAt: string; trend: Array<{ month: string; score: number }> };
   rivals: {
     rows: LadderRow[];
     verdict: string;
@@ -41,6 +43,7 @@ async function build(): Promise<Showcase> {
   return {
     institution: { id: institution.id, name: institution.name, type: institution.type, city: institution.city },
     audit: overviewView(audit, { institutionType: institution.type, programNames: input.programNames }),
+    home: { checkedAt: audit.runAt, trend: historyByMonth(input.history, (runAt) => monthKey(new Date(runAt))) },
     rivals: {
       rows: ladder(
         { id: institution.id, name: institution.name, overall: audit.scores.overall, change: audit.changes.overall },

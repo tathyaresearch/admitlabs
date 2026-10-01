@@ -46,20 +46,20 @@ export default async function BulkRunPage({ params }: { params: Promise<{ runId:
               </span>
             </span>
             <span className={styles.rowScore}>
-              {row.overall !== null ? <span className={styles.rowScoreNumber}>{row.overall}</span> : null}
+              {row.overall !== null ? <span className={`${styles.rowScoreNumber} num`}>{row.overall}</span> : null}
               <span>{row.overall !== null ? scoreLabel(row.overall) : 'No Audit'}</span>
             </span>
             <span className={styles.pillarsMini}>
               {row.pillars ? (
                 <>
                   <span>
-                    Discovered <strong>{row.pillars.discovered}</strong>
+                    Discovered <strong className="num">{row.pillars.discovered}</strong>
                   </span>
                   <span>
-                    Trusted <strong>{row.pillars.trusted}</strong>
+                    Trusted <strong className="num">{row.pillars.trusted}</strong>
                   </span>
                   <span>
-                    Chosen <strong>{row.pillars.chosen}</strong>
+                    Chosen <strong className="num">{row.pillars.chosen}</strong>
                   </span>
                 </>
               ) : null}

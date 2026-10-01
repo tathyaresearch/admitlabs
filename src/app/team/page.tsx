@@ -46,7 +46,7 @@ export default async function TeamHomePage({ searchParams }: { searchParams: Pro
         <div className={styles.counts}>
           {shortcuts.map((item) => (
             <Link key={item.label} href={`/team${item.href}`} className={styles.count}>
-              <span className={styles.countValue}>{item.value}</span>
+              <span className={`${styles.countValue} num`}>{item.value}</span>
               <span className={styles.countLabel}>{item.label}</span>
             </Link>
           ))}

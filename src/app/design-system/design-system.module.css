@@ -295,23 +295,23 @@
 }
 
 .tScore {
-  font: var(--type-score);
-  letter-spacing: var(--tracking-score);
+  font: var(--weight-heading) var(--size-score) / 0.9 var(--font-numeric);
+  letter-spacing: var(--tracking-num-hero);
 }
 
 .tScoreMedium {
-  font: var(--type-score-medium);
-  letter-spacing: var(--tracking-score);
+  font: var(--weight-heading) var(--size-score-medium) / 0.9 var(--font-numeric);
+  letter-spacing: var(--tracking-num-hero);
 }
 
 .tScoreSmall {
-  font: var(--type-score-small);
-  letter-spacing: -0.03em;
+  font: var(--type-num-kpi);
+  letter-spacing: var(--tracking-num);
 }
 
 .tMetric {
-  font: var(--type-metric);
-  letter-spacing: var(--tracking-title);
+  font: var(--weight-heading) var(--size-metric) / 1.1 var(--font-numeric);
+  letter-spacing: var(--tracking-num);
 }
 
 .weights {

@@ -72,12 +72,12 @@ export function HeadToHead({ rows, rivalName, youName = 'You' }: { rows: readonl
               </text>
               <rect x={LABEL_WIDTH} y={top} width={plot} height={BAR} className={styles.barTrack} />
               <rect x={LABEL_WIDTH} y={top} width={Math.max(2, scale(row.you))} height={BAR} rx={2} className={styles.youFill} />
-              <text x={LABEL_WIDTH + scale(row.you) + 8} y={top + BAR / 2} className={styles.barValue} dominantBaseline="middle">
+              <text x={LABEL_WIDTH + scale(row.you) + 8} y={top + BAR / 2} className={`${styles.barValue} num`} dominantBaseline="middle">
                 {Math.round(row.you)}
               </text>
               <rect x={LABEL_WIDTH} y={top + BAR + GAP} width={plot} height={BAR} className={styles.barTrack} />
               <rect x={LABEL_WIDTH} y={top + BAR + GAP} width={Math.max(2, scale(row.rival))} height={BAR} rx={2} fill={`url(#${hatchId})`} />
-              <text x={LABEL_WIDTH + scale(row.rival) + 8} y={top + BAR + GAP + BAR / 2} className={styles.barValueMuted} dominantBaseline="middle">
+              <text x={LABEL_WIDTH + scale(row.rival) + 8} y={top + BAR + GAP + BAR / 2} className={`${styles.barValueMuted} num`} dominantBaseline="middle">
                 {Math.round(row.rival)}
               </text>
             </g>
@@ -89,10 +89,10 @@ export function HeadToHead({ rows, rivalName, youName = 'You' }: { rows: readonl
         <div className={styles.tooltip} style={{ left: LABEL_WIDTH + plot / 2, top: (active ?? 0) * ROW }} aria-hidden="true">
           <span className={styles.tooltipLabel}>{activeRow.label}</span>
           <span className={styles.tooltipRow}>
-            <span className={styles.tooltipValue}>{Math.round(activeRow.you)}</span> {youName}
+            <span className={`${styles.tooltipValue} num`}>{Math.round(activeRow.you)}</span> {youName}
           </span>
           <span className={styles.tooltipRow}>
-            <span className={styles.tooltipValue}>{Math.round(activeRow.rival)}</span> {rivalName}
+            <span className={`${styles.tooltipValue} num`}>{Math.round(activeRow.rival)}</span> {rivalName}
           </span>
         </div>
       ) : null}

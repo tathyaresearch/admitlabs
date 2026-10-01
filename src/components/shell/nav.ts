@@ -26,6 +26,7 @@ export const INSTITUTION_NAV: readonly NavSection[] = [
   {
     label: 'Account',
     items: [
+      { href: '/notifications', label: 'Notifications', icon: 'bell' },
       { href: '/plan', label: 'Plan', icon: 'plan' },
       { href: '/settings', label: 'Settings', icon: 'settings' },
     ],

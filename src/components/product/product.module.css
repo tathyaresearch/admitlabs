@@ -1,7 +1,8 @@
 /*
   The product page (spec section 15). A composed page, not a dashboard: mostly black, with ivory
-  sections at three moments (the problem, the score, the final call). Contrast comes from scale
-  and from black and ivory surface flips only. Monochrome, Bricolage only, no gradients or glow.
+  sections at three moments (the problem, how it works, the final call). Contrast comes from scale
+  and from black and ivory surface flips only. Monochrome, Bricolage for words and Inter for
+  numbers, no gradients or glow.
   The page sets data-theme itself, so it looks the same whatever the device setting.
 */
 
@@ -91,7 +92,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-6);
-  height: 4rem;
+  height: 3.5rem;
 }
 
 .homeLink {
@@ -222,54 +223,70 @@
   padding-top: calc(var(--overlap) + var(--section-pad));
 }
 
-/* Previews: real dashboard components with sample data, in an app window ----------------------- */
+/* The hero picture: Home as the dashboard shows it, in a plain app window ----------------------- */
 
-.preview {
+.window {
   display: grid;
-  gap: var(--space-3);
-  max-width: 68rem;
+  gap: var(--space-4);
+  max-width: 75rem;
   margin-inline: auto;
 }
 
-.frame {
+.windowFrame {
+  container-type: inline-size;
+  height: clamp(28rem, 16rem + 34vw, 46rem);
   overflow: hidden;
-  background: var(--surface);
-  color: var(--text);
   border: 1px solid var(--line-raised);
   border-radius: 1rem;
-}
-
-.frameBar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 2.75rem;
-  padding: var(--space-2) var(--space-4);
-  border-bottom: 1px solid var(--line);
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-.frameDivider {
-  width: 1px;
-  height: 0.875rem;
-  background: var(--line-medium);
-}
-
-.frameTitle {
+  background: var(--surface);
   color: var(--text);
-  font-weight: var(--weight-medium);
 }
 
-.screen {
+.windowScreen {
   display: grid;
-  gap: var(--space-6);
-  padding: clamp(1rem, 0.5rem + 2vw, 2rem);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  height: 100%;
+  text-align: left;
   pointer-events: none;
   user-select: none;
 }
 
-.previewCaption {
+.windowSidebar {
+  display: none;
+}
+
+.windowPanel {
+  --surface: var(--surface-panel);
+  min-width: 0;
+  padding: var(--space-6) var(--space-4);
+  background: var(--surface);
+}
+
+@container (min-width: 56rem) {
+  .windowScreen {
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  }
+
+  .windowSidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--space-3);
+  }
+
+  .windowSidebar > :last-child {
+    margin-top: auto;
+  }
+
+  .windowPanel {
+    margin: var(--space-2) var(--space-2) 0 0;
+    padding: var(--space-10);
+    border-radius: 0.75rem 0.75rem 0 0;
+  }
+}
+
+.windowCaption {
   font: var(--type-caption);
   color: var(--text-muted);
   text-align: center;
@@ -291,7 +308,7 @@
 
   .problemGrid .head {
     position: sticky;
-    top: calc(4rem + var(--space-10));
+    top: calc(3.5rem + var(--space-10));
     margin-bottom: 0;
   }
 }
@@ -327,48 +344,310 @@
   line-height: 1.55;
 }
 
-/* Features ----------------------------------------------------------------------------------- */
+/* What Drishti does: one bento grid ----------------------------------------------------------- */
 
-.feature {
-  display: grid;
-  gap: clamp(2rem, 1.5rem + 2vw, 3.5rem);
-  padding-block: clamp(3rem, 2rem + 3vw, 5.5rem);
-  border-top: 1px solid var(--line);
-}
-
-.feature:last-child {
-  padding-bottom: 0;
-}
-
-.featureText {
-  display: grid;
-  gap: var(--space-6);
-}
-
-@media (min-width: 64rem) {
-  .featureText {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--space-6) var(--space-16);
-    align-items: end;
-  }
-}
-
-.featureLead {
+.bento {
+  --tile-pad: clamp(1.5rem, 1.2rem + 1vw, 2rem);
   display: grid;
   gap: var(--space-4);
 }
 
-.featureQuestion {
-  font-size: clamp(1.875rem, 1.35rem + 2vw, 3rem);
-  font-weight: var(--weight-heading);
-  line-height: 1.06;
-  letter-spacing: -0.035em;
+@media (min-width: 48rem) {
+  .bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tileWide {
+    grid-column: span 2;
+  }
 }
 
-.featureBody {
-  display: grid;
-  gap: var(--space-5);
+@media (min-width: 64rem) {
+  .bento {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tileWideLarge {
+    grid-column: span 2;
+  }
 }
+
+.tile {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+  padding: var(--tile-pad);
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: var(--surface-raised);
+}
+
+.tileText {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 36rem;
+}
+
+.tileTitle {
+  font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.tileLede {
+  font-size: var(--size-lead);
+  line-height: 1.55;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.tileLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  font: var(--type-strong);
+  color: var(--text);
+  text-underline-offset: 0.25em;
+}
+
+/* A piece of the dashboard inside a tile: the page panel, with the app's own cards on it. */
+.picture {
+  --surface: var(--surface-panel);
+  display: grid;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  pointer-events: none;
+  user-select: none;
+}
+
+.pictureHead {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.pictureTitle {
+  font: var(--type-card);
+  font-size: 1rem;
+  letter-spacing: var(--tracking-section);
+}
+
+.pictureMeta {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.fixList {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.fixRow {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 3rem;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+@container (max-width: 30rem) {
+  .fixRow {
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  }
+
+  .fixRow > :nth-child(3) {
+    display: none;
+  }
+}
+
+.fixNumber {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-nested);
+  font: var(--type-num-caption);
+  font-weight: var(--weight-heading);
+}
+
+.fixName {
+  font: var(--type-strong);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fixGain {
+  font: var(--type-small);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.fixGain :global(.num) {
+  color: var(--text);
+  font-weight: var(--weight-heading);
+}
+
+.risingList {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-raised);
+}
+
+.risingRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.risingRow :global(.num) {
+  color: var(--text);
+}
+
+/* The score tile */
+
+.scorePillars {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@container (min-width: 36rem) {
+  .scorePillars {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.scorePillar {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--surface-panel);
+}
+
+.scorePillarName {
+  font-size: 1.375rem;
+  font-weight: var(--weight-heavy);
+  font-stretch: var(--width-narrow);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.scorePillarQuestion {
+  font: var(--type-strong);
+  font-weight: var(--weight-heading);
+}
+
+.scorePillarText {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.scorePillarChecks {
+  padding-top: var(--space-2);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.scorePillarChecks :global(.num) {
+  color: var(--text);
+  font-weight: var(--weight-heading);
+}
+
+.resultsKey {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-5);
+}
+
+@container (min-width: 36rem) {
+  .resultsKey {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.resultsKeyItem {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.resultsKeyShare {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* The report tile: the words, then a page of the sample report, cut by the tile's edge. */
+
+.paperCrop {
+  height: 15rem;
+  margin: auto calc(-1 * var(--space-2)) calc(-1 * var(--tile-pad));
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (min-width: 64rem) {
+  .tileReport {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    grid-template-rows: auto 1fr;
+    gap: var(--space-6) var(--space-10);
+  }
+
+  .tileReport .tileLink {
+    align-self: start;
+  }
+
+  .tileReport .paperCrop {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    height: 19rem;
+    margin: 0 0 calc(-1 * var(--tile-pad));
+  }
+}
+
+/* The rules tile */
+
+.trustList {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: auto;
+}
+
+.trustPoint {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: var(--space-3);
+  font-size: var(--size-lead);
+  line-height: 1.5;
+}
+
+.trustPoint svg {
+  margin-top: 0.25em;
+}
+
+.bentoCaption {
+  margin-top: var(--space-5);
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Plan points (./Offer.tsx) */
 
 .points {
   display: grid;
@@ -386,110 +665,6 @@
 
 .point svg {
   margin-top: 0.2em;
-}
-
-.note {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-/* The score (ivory) --------------------------------------------------------------------------- */
-
-.pillars {
-  display: grid;
-  gap: var(--space-4);
-}
-
-@media (min-width: 64rem) {
-  .pillars {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.pillar {
-  display: grid;
-  gap: var(--space-4);
-  align-content: start;
-  padding: clamp(1.5rem, 1.25rem + 1vw, 2.25rem);
-  border: 1px solid var(--line-medium);
-  border-radius: 1.25rem;
-}
-
-.pillarName {
-  font-size: clamp(1.75rem, 1.5rem + 1vw, 2.375rem);
-  font-weight: var(--weight-heavy);
-  font-stretch: var(--width-narrow);
-  line-height: 1;
-  letter-spacing: -0.03em;
-}
-
-.pillarQuestion {
-  font-size: var(--size-section);
-  font-weight: var(--weight-heading);
-}
-
-.pillarText {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  padding-top: var(--space-2);
-}
-
-.chip {
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--line-medium);
-  border-radius: var(--radius-full);
-  font: var(--type-caption);
-}
-
-/* The results key, in an inverted strip on the ivory section. */
-.key {
-  display: grid;
-  gap: var(--space-6);
-  margin-top: var(--space-6);
-  padding: clamp(1.5rem, 1.25rem + 1vw, 2.25rem);
-  border-radius: 1.25rem;
-  background: var(--surface);
-  color: var(--text);
-}
-
-@media (min-width: 64rem) {
-  .key {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 2.2fr);
-    align-items: center;
-  }
-}
-
-.keyTitle {
-  font-size: var(--size-section);
-  font-weight: var(--weight-heading);
-}
-
-.keyItems {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-5) var(--space-6);
-}
-
-@media (min-width: 48rem) {
-  .keyItems {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.keyItem {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.keyShare {
-  font: var(--type-caption);
-  color: var(--text-muted);
 }
 
 /* How it works ------------------------------------------------------------------------------- */
@@ -522,8 +697,8 @@
 }
 
 .stepNumber {
-  font: var(--type-score-medium);
-  letter-spacing: var(--tracking-score);
+  font: var(--weight-heading) var(--size-score-medium) / 0.9 var(--font-numeric);
+  letter-spacing: var(--tracking-num-hero);
   margin-bottom: var(--space-3);
 }
 
@@ -616,10 +791,9 @@
 
 .priceValue {
   font-size: clamp(2.75rem, 2.2rem + 2.2vw, 3.75rem);
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-heading);
   line-height: 1;
   letter-spacing: -0.04em;
-  font-variant-numeric: tabular-nums;
 }
 
 .priceTerm {

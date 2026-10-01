@@ -4,12 +4,12 @@
   align-items: start;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
 }
 
 .quiet {
   background: var(--surface-raised);
-  border: 1px solid var(--line-raised);
+  border: 1px solid var(--card-border);
 }
 
 .inverse {

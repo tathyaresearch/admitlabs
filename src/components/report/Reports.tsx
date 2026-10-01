@@ -4,6 +4,7 @@
 
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { Counted } from '@/components/ui/Results';
 import { formatDate, formatMonth } from '@/domain/format';
 import { reportFacts, type ReportRow } from '@/lib/reports/load';
 import audit from '@/components/audit/audit.module.css';
@@ -36,7 +37,9 @@ export function LatestReport({ report, place }: { report: ReportRow; place: stri
         <p className={styles.facts}>
           <span>Made {formatDate(report.madeAt)}</span>
           {reportFacts(report).map((fact) => (
-            <span key={fact}>{fact}</span>
+            <span key={fact}>
+              <Counted text={fact} />
+            </span>
           ))}
         </p>
         <AnchorButton href={href(report)} icon="download" className={styles.download}>
@@ -48,7 +51,7 @@ export function LatestReport({ report, place }: { report: ReportRow; place: stri
         <ol className={styles.insideList}>
           {reportContents(place).map((item, index) => (
             <li key={item} className={styles.insideItem}>
-              <span className={styles.insideNumber}>{index + 1}</span>
+              <span className={`${styles.insideNumber} num`}>{index + 1}</span>
               {item}
             </li>
           ))}
@@ -65,7 +68,15 @@ export function EarlierReports({ reports }: { reports: readonly ReportRow[] }) {
         <div key={report.month} className={styles.row}>
           <p className={styles.rowMonth}>
             {formatMonth(report.month)}
-            <span className={styles.rowFacts}>{[`Made ${formatDate(report.madeAt)}`, ...reportFacts(report)].join('  ·  ')}</span>
+            <span className={styles.rowFacts}>
+              Made {formatDate(report.madeAt)}
+              {reportFacts(report).map((fact) => (
+                <span key={fact}>
+                  {'  ·  '}
+                  <Counted text={fact} />
+                </span>
+              ))}
+            </span>
           </p>
           <AnchorButton href={href(report)} variant="secondary" size="sm" icon="download">
             <span className="visually-hidden">{formatMonth(report.month)} </span>PDF

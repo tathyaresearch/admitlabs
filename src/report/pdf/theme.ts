@@ -1,6 +1,7 @@
-// The report's look: the dashboard's brand on A4 (spec section 14). Strictly monochrome, Bricolage
-// Grotesque only (embedded from src/report/fonts), contrast from size, weight, width and black and
-// ivory flips. Small text on ivory uses grey 700 (5.17:1); slate is only used on black.
+// The report's look: the dashboard's brand on A4 (spec section 14). Strictly monochrome. Bricolage
+// Grotesque for every word; Inter for numbers that stand on their own, with tabular figures (both
+// embedded from src/report/fonts, with their licences). Contrast from size, weight, width and black
+// and ivory flips. Small text on ivory uses grey 700 (5.17:1); slate is only used on black.
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -25,7 +26,10 @@ export const COLORS = {
 
 export const FONT = 'Bricolage';
 export const FONT_SEMI_CONDENSED = 'Bricolage SemiCondensed';
-export const FONT_CONDENSED = 'Bricolage Condensed';
+export const FONT_NUMERIC = 'Inter';
+
+/** A number that stands on its own: Inter with tabular figures, as on the dashboard. */
+export const NUM: { fontFamily: string; fontFeatureSettings: Array<'tnum'> } = { fontFamily: FONT_NUMERIC, fontFeatureSettings: ['tnum'] };
 
 // Beside this file when Node runs it (the report job, scripts, tests); from the project folder
 // when the app runs it on the server (bundled code lives elsewhere).
@@ -49,7 +53,14 @@ export function registerFonts(): void {
     ],
   });
   Font.register({ family: FONT_SEMI_CONDENSED, src: file('BricolageGrotesque-SemiCondensedBold.ttf'), fontWeight: 700 });
-  Font.register({ family: FONT_CONDENSED, src: file('BricolageGrotesque-CondensedExtraBold.ttf'), fontWeight: 800 });
+  Font.register({
+    family: FONT_NUMERIC,
+    fonts: [
+      { src: file('Inter-Regular.ttf'), fontWeight: 400 },
+      { src: file('Inter-Medium.ttf'), fontWeight: 500 },
+      { src: file('Inter-SemiBold.ttf'), fontWeight: 600 },
+    ],
+  });
   Font.registerHyphenationCallback((word) => [word]);
   registered = true;
 }

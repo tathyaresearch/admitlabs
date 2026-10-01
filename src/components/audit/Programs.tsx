@@ -37,7 +37,7 @@ export function ProgramTabs({ entries, active, allLabel }: { entries: readonly P
         return (
           <Link key={entry.id} href={href} className={styles.tab} aria-current={current ? 'page' : undefined}>
             {entry.name}
-            {entry.score ? <span className={styles.tabScore}>{entry.score.overall}</span> : null}
+            {entry.score ? <span className={`${styles.tabScore} num`}>{entry.score.overall}</span> : null}
           </Link>
         );
       })}

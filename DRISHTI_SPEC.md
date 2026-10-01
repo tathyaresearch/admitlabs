@@ -57,7 +57,7 @@ Same base as Tathya, so the team already knows it.
 | Data access | Direct Supabase client. No ORM |
 | Styling | CSS Modules + CSS custom properties (design tokens). No Tailwind, no component library, no shadcn |
 | Charts | Hand-built SVG components, monochrome |
-| PDF report | @react-pdf/renderer with Bricolage Grotesque embedded |
+| PDF report | @react-pdf/renderer with Bricolage Grotesque and Inter embedded |
 | Scoring | Pure functions: data in, score out. No database calls inside the engine |
 | Tests | Node's built-in test runner |
 | Hosting (later) | Vercel |
@@ -480,7 +480,9 @@ Confirm these hex values against the AdmitLabs brand identity PDF before Phase 1
 
 **Type**
 
-- **Bricolage Grotesque only.** No second font. Load from Google Fonts for web, embed the font files for the PDF.
+- **Bricolage Grotesque** for all headings, text and buttons.
+- **Inter** only for numbers that stand on their own: scores, points, prices, counts, percentages and numbers in tables. Always with tabular figures, so numbers line up. Numbers and dates inside a sentence stay in Bricolage, so a sentence reads in one font.
+- No other font. Both load from Google Fonts for web. The PDF embeds both font files, committed with their open font licences.
 - Hierarchy through size, weight and width.
 - Wordmark: "Admit" at weight 800, "Labs" at weight 400. Product name shown as "Drishti by AdmitLabs".
 
@@ -514,16 +516,15 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 **Sections, in order:**
 
-1. **Hero**: "See where you stand, who's ahead, and what students want." Button: "Get your free Audit"
+1. **Hero**: "See where you stand, who's ahead, and what students want." One button: "Get your free Audit". A large picture of the dashboard's Home in an app window (sample data)
 2. **The problem**: institutions guess what students see and what rivals do
-3. **Three features**: Audit, Rivals, Demand, each with a real-looking screen preview (sample data)
-4. **The score**: Discovered, Trusted, Chosen, explained simply
-5. **How it works**: enter details, Drishti checks everything, see results, get a monthly report
-6. **Sample report**: preview of the monthly PDF
-7. **Plans**: Free and Paid (₹9,999 for 6 months, no auto-renew)
-8. **For AdmitLabs clients**: included free, with the team acting on it
-9. **FAQ**: data sources, privacy, what "public data only" means, renewal
-10. **Final call to action**: "Get your free Audit"
+3. **What Drishti does**: one bento grid. The three features (Audit, Rivals, Demand), each with a real-looking screen preview (sample data); the score (Discovered, Trusted, Chosen, explained simply); the monthly report; and public data only
+4. **How it works**: enter details, Drishti checks everything, see results, get a monthly report
+5. **Sample report**: preview of the monthly PDF
+6. **Plans**: Free and Paid (₹9,999 for 6 months, no auto-renew)
+7. **For AdmitLabs clients**: included free, with the team acting on it
+8. **FAQ**: data sources, privacy, what "public data only" means, renewal
+9. **Final call to action**: "Get your free Audit"
 
 "Get your free Audit" leads to `/login` then `/onboarding`.
 
@@ -604,7 +605,7 @@ Each data source is a **provider** with one shared interface: it takes an instit
 5. **Grouped only** for Demand. No individual students.
 6. **Official access only** for every platform.
 7. **Plan limits enforced on the server.**
-8. **Monochrome and Bricolage Grotesque only.** No em dashes or en dashes.
+8. **Monochrome. Bricolage Grotesque for words, Inter for numbers that stand on their own.** No em dashes or en dashes.
 9. **Opportunity, not shame** in every piece of copy.
 10. **No discounts** on any plan.
 

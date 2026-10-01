@@ -1,7 +1,7 @@
 // What students say about you and your rivals (spec 9.4): grouped topics from public posts,
 // with counts and sources. You first, then each rival you track. Never a person.
 
-import { countWords } from '@/demand/text';
+import { formatCount } from '@/domain/format';
 import type { MentionRow } from '@/lib/demand/load';
 import { Source } from './Source';
 import styles from './demand.module.css';
@@ -21,7 +21,9 @@ function Topics({ items, empty }: { items: readonly MentionRow[]; empty: string 
         <li key={`${item.text}-${item.sourceUrl}`} className={styles.topic}>
           <span className={styles.topicText}>{item.text}</span>
           <span className={styles.topicMeta}>
-            <span>{countWords('mention', item.count)}</span>
+            <span>
+              <span className="num">{formatCount(item.count)}</span> {item.count === 1 ? 'mention' : 'mentions'}
+            </span>
             <Source url={item.sourceUrl} />
           </span>
         </li>

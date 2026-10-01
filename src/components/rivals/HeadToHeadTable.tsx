@@ -65,7 +65,7 @@ export function HeadToHeadTable({ you, rows, institutionType }: { you: { name: s
         {COLUMNS.map((column) => (
           <span key={column} className={styles.cell}>
             <span className={styles.cellLabel}>{COLUMN_LABELS[column]}</span>
-            <span className={styles.score}>
+            <span className={`${styles.score} num`}>
               <span className="visually-hidden">{COLUMN_LABELS[column]} </span>
               {you.scores ? you.scores[column] : ''}
             </span>
@@ -93,7 +93,7 @@ export function HeadToHeadTable({ you, rows, institutionType }: { you: { name: s
                 return (
                   <span key={column} className={styles.cell}>
                     <span className={styles.cellLabel}>{COLUMN_LABELS[column]}</span>
-                    <span className={styles.score} data-lead={lead}>
+                    <span className={`${styles.score} num`} data-lead={lead}>
                       <span className="visually-hidden">{COLUMN_LABELS[column]} </span>
                       {theirs ?? ''}
                       <span className="visually-hidden">{theirs === null ? 'Checking now' : yours === null ? '' : leadText(yours, theirs)}</span>

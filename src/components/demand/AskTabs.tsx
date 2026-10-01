@@ -3,10 +3,10 @@
 // and falling. Every row shows how often and where it was found. Grouped, never a person.
 
 import { Folded } from '@/components/audit/Lists';
-import { Icon } from '@/components/ui/Icon';
+import { Change } from '@/components/ui/Results';
 import { Tabs } from '@/components/ui/Tabs';
 import { DEMAND_RULES } from '@/config/demand';
-import { changeWords, countWords, LANGUAGE_TAGS } from '@/demand/text';
+import { countWords, LANGUAGE_TAGS } from '@/demand/text';
 import type { DemandRow, DemandView, WorryRow } from '@/demand/view';
 import { joinNames } from '@/domain/format';
 import { Source } from './Source';
@@ -19,7 +19,7 @@ function QuestionItems({ items, start, showProgram }: { items: readonly DemandRo
         const tag = LANGUAGE_TAGS[item.language];
         return (
           <li key={item.id} className={styles.item}>
-            <span className={styles.itemRank}>{start + index}</span>
+            <span className={`${styles.itemRank} num`}>{start + index}</span>
             <span className={styles.itemBody}>
               <span className={styles.itemText}>{item.text}</span>
               <span className={styles.itemMeta}>
@@ -42,7 +42,7 @@ function WorryItems({ items, showProgram }: { items: readonly WorryRow[]; showPr
     <ol className={styles.list}>
       {items.map((item, index) => (
         <li key={item.key} className={styles.item}>
-          <span className={styles.itemRank}>{index + 1}</span>
+          <span className={`${styles.itemRank} num`}>{index + 1}</span>
           <span className={styles.itemBody}>
             <span className={styles.itemText}>{item.text}</span>
             <span className={styles.itemMeta}>
@@ -67,13 +67,12 @@ function TrendItems({ items, showProgram }: { items: readonly DemandRow[]; showP
     <ol className={styles.list}>
       {items.map((item, index) => (
         <li key={item.id} className={styles.item}>
-          <span className={styles.itemRank}>{index + 1}</span>
+          <span className={`${styles.itemRank} num`}>{index + 1}</span>
           <span className={styles.itemBody}>
             <span className={styles.itemText}>{item.text}</span>
             <span className={styles.itemMeta}>
               <span className={styles.change}>
-                <Icon name={(item.changePct ?? 0) >= 0 ? 'arrowUp' : 'arrowDown'} size={14} />
-                {changeWords(item.changePct)}
+                <Change value={item.changePct} unit="%" />
               </span>
               <span>{countWords(item.kind, item.count)}</span>
               {showProgram ? <span>{item.programName}</span> : null}

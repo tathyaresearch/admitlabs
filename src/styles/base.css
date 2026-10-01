@@ -39,6 +39,9 @@ body {
   --surface-raised: var(--inv-surface-raised);
   --surface-sunken: var(--inv-surface-sunken);
   --surface-hover: var(--inv-surface-hover);
+  --surface-panel: var(--inv-surface-panel);
+  --surface-nested: var(--inv-surface-nested);
+  --card-border: var(--inv-card-border);
   --surface-inverse: var(--inv-surface-inverse);
   --surface-inverse-hover: var(--inv-surface-inverse-hover);
   --text: var(--inv-text);
@@ -165,6 +168,35 @@ b {
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/*
+  The one rule for numbers that stand on their own: scores, pillar scores, points, changes,
+  prices, counts, percentages, ranks and numbers in tables. Give the element .num and it is set
+  in Inter with tabular figures, so numbers line up. !important on purpose: a component's own
+  `font` shorthand resets the family and the figures, and this rule must win everywhere.
+  Numbers inside a sentence, and dates, stay in Bricolage (no .num).
+*/
+.num {
+  font-family: var(--font-numeric) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* Loading placeholders: blocks the shape of what is coming, with a soft fade. No shimmer. */
+.skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: var(--surface-nested);
+  animation: skeleton-fade 1.2s var(--ease-in-out) infinite alternate;
+}
+
+@keyframes skeleton-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -27,7 +27,6 @@ export const CTA = {
   paid: 'Start with a free Audit',
   paidNote: 'For now, the AdmitLabs team switches Paid on for you.',
   signIn: 'Sign in',
-  how: 'See how it works',
 } as const;
 
 export const PROBLEM = {
@@ -40,14 +39,18 @@ export const PROBLEM = {
   ],
 } as const;
 
+/** The features section: a bento grid of what Drishti does. */
+export const FEATURES_HEAD = {
+  eyebrow: 'What Drishti does',
+  title: 'Three questions. Answered every month.',
+} as const;
+
 export interface Feature {
   key: 'audit' | 'rivals' | 'demand';
   number: string;
   name: string;
   question: string;
   lede: string;
-  points: readonly string[];
-  note: string;
 }
 
 export const FEATURES: readonly Feature[] = [
@@ -56,13 +59,7 @@ export const FEATURES: readonly Feature[] = [
     number: '01',
     name: 'Audit',
     question: 'How do we look?',
-    lede: 'A score out of 100 for how easily students find you, trust you and choose you.',
-    points: [
-      `${CHECKS.length} checks across Google, your website, Instagram, YouTube and more.`,
-      'What’s working, and what to fix first, ranked by the points it could add.',
-      'Every result with what was found, where, and when.',
-    ],
-    note: 'A low score is a list of what to fix first.',
+    lede: `A score out of 100 from ${CHECKS.length} checks: how easily students find you, trust you and choose you. Then what to fix first, ranked by the points it could add.`,
   },
   {
     key: 'rivals',
@@ -70,12 +67,6 @@ export const FEATURES: readonly Feature[] = [
     name: 'Rivals',
     question: 'Who’s ahead of us?',
     lede: `Pick ${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals. See where you lead, where they lead, and what changed.`,
-    points: [
-      'Head to head, pillar by pillar.',
-      'Their new programs, fee changes and admission dates, checked every week.',
-      'Their best posts, and the idea to learn from them.',
-    ],
-    note: 'Learn from rivals, never copy. They never know you track them.',
   },
   {
     key: 'demand',
@@ -83,10 +74,23 @@ export const FEATURES: readonly Feature[] = [
     name: 'Demand',
     question: 'What do students want?',
     lede: 'What students in your city search for, ask and worry about, every month.',
-    points: ['Rising courses and careers.', 'The top questions and worries: fees, placements, hostel, safety.', '5 content ideas, each built on a real question.'],
-    note: 'Grouped only. Never one student.',
   },
 ];
+
+/** The report tile in the features grid. The full sample sits further down the page. */
+export const REPORT_TILE = {
+  name: 'Report',
+  title: 'A short report on the 1st.',
+  lede: 'With Paid, one PDF every month: your score, your rivals, what students want, and 3 things to do.',
+  link: 'See the sample report',
+} as const;
+
+/** The rules every result follows, as one tile. */
+export const TRUST_TILE = {
+  name: 'Public data only',
+  title: 'Nothing private. Ever.',
+  points: ['Every result shows what was found, where and when.', 'Learn from rivals, never copy. They never know you track them.', 'Demand is grouped. Never one student.'],
+} as const;
 
 const PILLAR_STORY: Readonly<Record<Pillar, { question: string; text: string }>> = {
   discovered: { question: 'Can students find you?', text: 'Search, maps, social media and AI answers.' },

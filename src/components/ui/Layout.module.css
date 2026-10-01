@@ -1,3 +1,34 @@
+.pageHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-6);
+}
+
+.pageHeadText {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.pageHeadTitle {
+  font: var(--type-title);
+  letter-spacing: var(--tracking-title);
+}
+
+.pageHeadQuestion {
+  font: var(--type-lead);
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.pageHeadCaption {
+  margin-top: var(--space-1);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
 .pageHeader {
   display: flex;
   flex-wrap: wrap;
@@ -87,10 +118,11 @@
   display: block;
 }
 
+/* One card style everywhere: a raised surface, 12px corners, no line in the dark theme. */
 .card {
   background: var(--surface-raised);
-  border: 1px solid var(--line-raised);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
   min-width: 0;
 }
 
@@ -106,7 +138,7 @@
 }
 
 .interactive:hover {
-  border-color: var(--line-medium);
+  background: var(--surface-nested);
 }
 
 .cardLink {
@@ -122,7 +154,7 @@
 }
 
 .pad-md {
-  padding: var(--space-5);
+  padding: var(--card-padding-sm);
 }
 
 .pad-lg {

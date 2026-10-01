@@ -19,7 +19,7 @@ function Step({ number, title, done, children }: { number: number; title: string
   return (
     <section className={styles.facts} aria-labelledby={`step-${number}`}>
       <div className={styles.stepHead}>
-        <span className={styles.stepNumber} data-done={done ? 'true' : 'false'}>
+        <span className={`${styles.stepNumber} num`} data-done={done ? 'true' : 'false'}>
           {number}
         </span>
         <h2 id={`step-${number}`} className={styles.itemTitle}>
@@ -185,20 +185,20 @@ export function BulkAudit({ maxRows }: { maxRows: number }) {
                   <span className={styles.rowSub}>{result.status === 'audited' ? (result.reused ? 'Record reused' : 'New prospect') : result.message}</span>
                 </span>
                 <span className={styles.rowScore}>
-                  {result.overall !== null ? <span className={styles.rowScoreNumber}>{result.overall}</span> : null}
+                  {result.overall !== null ? <span className={`${styles.rowScoreNumber} num`}>{result.overall}</span> : null}
                   <span>{result.label ?? 'No Audit'}</span>
                 </span>
                 <span className={styles.pillarsMini}>
                   {result.pillars ? (
                     <>
                       <span>
-                        Discovered <strong>{result.pillars.discovered}</strong>
+                        Discovered <strong className="num">{result.pillars.discovered}</strong>
                       </span>
                       <span>
-                        Trusted <strong>{result.pillars.trusted}</strong>
+                        Trusted <strong className="num">{result.pillars.trusted}</strong>
                       </span>
                       <span>
-                        Chosen <strong>{result.pillars.chosen}</strong>
+                        Chosen <strong className="num">{result.pillars.chosen}</strong>
                       </span>
                     </>
                   ) : null}

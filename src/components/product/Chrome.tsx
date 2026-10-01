@@ -10,9 +10,8 @@ import styles from './product.module.css';
 
 const NAV = [
   { href: '#features', label: 'Features' },
-  { href: '#score', label: 'The score' },
+  { href: '#how', label: 'How it works' },
   { href: '#plans', label: 'Plans' },
-  { href: '#faq', label: 'FAQ' },
 ] as const;
 
 export function ProductHeader() {

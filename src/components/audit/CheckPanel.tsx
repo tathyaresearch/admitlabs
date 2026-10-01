@@ -6,11 +6,11 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { pointsEarnedText, type AreaRow } from '@/audit/view';
+import type { AreaRow } from '@/audit/view';
 import { SourceLine } from '@/components/ui/Data';
 import { Icon } from '@/components/ui/Icon';
 import { SidePanel } from '@/components/ui/Overlay';
-import { Difficulty, ResultMeter } from '@/components/ui/Results';
+import { Difficulty, PointsValue, ResultMeter } from '@/components/ui/Results';
 import { formatDate } from '@/domain/format';
 import { PILLAR_LABELS } from '@/domain/types';
 import { WasMarker } from './Parts';
@@ -55,7 +55,9 @@ function PanelBody({ row }: { row: AreaRow }) {
           <div className={styles.panelPartHead}>
             {part.programName ? <p className={styles.panelProgram}>{part.programName}</p> : null}
             <ResultMeter result={part.result} size="lg" />
-            <span className={styles.points}>{pointsEarnedText(part.points, part.maxPoints)}</span>
+            <span className={styles.points}>
+              <PointsValue kind="fraction" points={part.points} max={part.maxPoints} unit />
+            </span>
           </div>
           <WasMarker part={part} long />
 

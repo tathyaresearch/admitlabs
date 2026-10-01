@@ -29,7 +29,7 @@ function CheckRow({ row }: { row: AreaRow }) {
           <span className={styles.varies}>{summary.kind === 'varies' ? 'Varies by program' : 'Not in this Audit'}</span>
         )}
       </span>
-      <span className={styles.rowMeta}>{points}</span>
+      <span className={`${styles.rowMeta} num`}>{points}</span>
       <Icon name="chevronRight" size={16} className={styles.chevron} />
     </Link>
   );
@@ -45,7 +45,14 @@ export function ChecksTable({ view }: { view: AuditView }) {
             <summary className={styles.groupSummary}>
               <span className={styles.groupTitle}>{PILLAR_LABELS[area.pillar]}</span>
               <span className={styles.groupMeta}>
-                {`${area.rows.length} checks${toImprove ? `, ${toImprove} to improve` : ''}`}
+                <span>
+                  <span className="num">{area.rows.length}</span> checks
+                  {toImprove ? (
+                    <>
+                      , <span className="num">{toImprove}</span> to improve
+                    </>
+                  ) : null}
+                </span>
                 <Icon name="chevronDown" size={16} className={styles.groupIcon} />
               </span>
             </summary>

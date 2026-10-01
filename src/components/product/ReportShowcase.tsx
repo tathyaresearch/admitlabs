@@ -40,7 +40,7 @@ function Cover({ data }: { data: ReportData }) {
         <span className={papers.rule} />
         <p className={papers.over}>Overall score</p>
         <p className={papers.score}>
-          <span className={papers.scoreNumber}>{data.cover.score}</span>
+          <span className={`${papers.scoreNumber} num`}>{data.cover.score}</span>
           <span className={papers.scoreOut}>/ 100</span>
         </p>
         <p className={papers.row} style={{ justifyContent: 'flex-start' }}>
@@ -59,7 +59,7 @@ function Summary({ data }: { data: ReportData }) {
         <p className={papers.over}>Score summary</p>
         <p className={papers.title}>Your score in {data.monthLabel.split(' ')[0]}</p>
         <p className={papers.score}>
-          <span className={papers.scoreNumber}>{data.summary.overall}</span>
+          <span className={`${papers.scoreNumber} num`}>{data.summary.overall}</span>
           <span className={papers.scoreOut}>/ 100</span>
         </p>
         <div className={papers.bars}>
@@ -67,7 +67,7 @@ function Summary({ data }: { data: ReportData }) {
             <div key={pillar.pillar} className={papers.bar}>
               <p className={papers.barHead}>
                 <span>{pillar.name}</span>
-                <span className={papers.barValue}>{pillar.score}</span>
+                <span className={`${papers.barValue} num`}>{pillar.score}</span>
               </p>
               <span className={papers.track}>
                 <span className={papers.fill} style={{ display: 'block', width: `${pillar.score}%` }} />
@@ -81,7 +81,7 @@ function Summary({ data }: { data: ReportData }) {
         <ol className={papers.list}>
           {data.working.map((item) => (
             <li key={item.rank} className={papers.item}>
-              <span className={papers.itemNumber}>{item.rank}</span>
+              <span className={`${papers.itemNumber} num`}>{item.rank}</span>
               <span>{item.name}</span>
             </li>
           ))}
@@ -93,16 +93,17 @@ function Summary({ data }: { data: ReportData }) {
   );
 }
 
-function Things({ data }: { data: ReportData }) {
+/** The report's "3 things to do" page. `className` places it: in the stack below, or on its own. */
+export function ThingsPaper({ data, className = papers.things }: { data: ReportData; className?: string }) {
   return (
-    <div className={`${papers.page} ${papers.things}`} data-theme="light">
+    <div className={`${papers.page} ${className}`} data-theme="light">
       <div className={papers.sheet}>
         <p className={papers.over}>This month</p>
         <p className={papers.title}>3 things to do this month</p>
         <ol className={papers.block}>
           {data.things.map((thing, index) => (
             <li key={thing.source} className={papers.blockItem}>
-              <span className={papers.blockNumber}>{index + 1}</span>
+              <span className={`${papers.blockNumber} num`}>{index + 1}</span>
               <span>
                 <span className={papers.blockSource}>{THING_SOURCE_LABELS[thing.source]}</span>
                 <span className={papers.blockTitle}>{thing.title}</span>
@@ -148,7 +149,7 @@ export function ReportShowcase({ data }: { data: ReportData }) {
         <div className={`${papers.stack} ${styles.reveal}`} aria-hidden="true">
           <Cover data={data} />
           <Summary data={data} />
-          <Things data={data} />
+          <ThingsPaper data={data} />
         </div>
       </div>
     </section>

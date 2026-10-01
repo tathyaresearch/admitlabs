@@ -68,15 +68,16 @@ describe('the monthly report PDF', () => {
     assert.match(raw, /\/MediaBox\s*\[0 0 595\.28\d* 841\.89\d*\]/);
   });
 
-  test('Bricolage Grotesque only, embedded in the file', async () => {
+  test('words in Bricolage Grotesque, numbers in Inter, both embedded in the file', async () => {
     const pdf = await renderReport(buildReport(await sampleReportInput({ tier: 'client' })));
     const raw = pdf.toString('latin1');
     const used = fonts(raw);
     assert.ok(used.length >= 5, used.join(', '));
     assert.ok(
-      used.every((name) => name.startsWith('BricolageGrotesque')),
+      used.every((name) => name.startsWith('BricolageGrotesque') || name.startsWith('Inter')),
       used.join(', '),
     );
+    assert.ok(used.some((name) => name.startsWith('Inter')), `numbers in Inter: ${used.join(', ')}`);
     assert.equal((raw.match(/\/FontFile2/g) ?? []).length, used.length, 'every font is embedded');
   });
 

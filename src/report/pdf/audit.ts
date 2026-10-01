@@ -7,9 +7,9 @@ import { Document, Link, Page, Text, View, renderToBuffer } from '@react-pdf/ren
 import { ADMITLABS_CAN_FIX } from '../../team/share.ts';
 import type { AuditPdfData } from '../audit.ts';
 import type { ReportFix } from '../data.ts';
-import { BigNumber, clamp, Keep, LabelChip, Lockup, Meter, PageHead, ScoreBar, SectionTitle } from './parts.ts';
+import { BigNumber, clamp, Keep, LabelChip, Lockup, Meter, PageHead, ScoreBar, SectionTitle, ValueText } from './parts.ts';
 import { ContentPage, FixBlock, ProgramsPage } from './pages.ts';
-import { COLORS, PAGE, registerFonts, styles } from './theme.ts';
+import { COLORS, NUM, PAGE, registerFonts, styles } from './theme.ts';
 
 const CONTENT_WIDTH = PAGE.width - PAGE.side * 2;
 const THIRD = (CONTENT_WIDTH - 20) / 3;
@@ -41,7 +41,7 @@ function AuditCover({ data }: { data: AuditPdfData }): ReactElement {
         View,
         { style: { flexDirection: 'row', alignItems: 'flex-end', marginTop: 10 } },
         h(BigNumber, { value: data.cover.score, size: 148, color: COLORS.ivory }),
-        h(Text, { style: { fontSize: 15, color: COLORS.slate, marginLeft: 10, marginBottom: 14 } }, '/ 100'),
+        h(Text, { style: { ...NUM, fontSize: 15, color: COLORS.slate, marginLeft: 10, marginBottom: 14 } }, '/ 100'),
       ),
       h(View, { style: { flexDirection: 'row', alignItems: 'center', marginTop: 16 } }, h(LabelChip, { label: data.cover.label, dark: true })),
       h(Text, { style: { fontSize: 15, fontWeight: 500, lineHeight: 1.35, letterSpacing: -0.2, marginTop: 18, maxWidth: 400, ...clamp(3) } }, data.cover.verdict),
@@ -63,7 +63,7 @@ function AuditSummaryPage({ data }: { data: AuditPdfData }): ReactElement {
       h(
         View,
         { key: 'overall', style: { flexDirection: 'row', alignItems: 'flex-end', gap: 14 } },
-        h(View, { style: { flexDirection: 'row', alignItems: 'flex-end' } }, h(BigNumber, { value: data.cover.score, size: 72 }), h(Text, { style: { fontSize: 11, color: COLORS.muted, marginLeft: 6, marginBottom: 8 } }, '/ 100')),
+        h(View, { style: { flexDirection: 'row', alignItems: 'flex-end' } }, h(BigNumber, { value: data.cover.score, size: 72 }), h(Text, { style: { ...NUM, fontSize: 11, color: COLORS.muted, marginLeft: 6, marginBottom: 8 } }, '/ 100')),
         h(View, { style: { marginBottom: 10 } }, h(LabelChip, { label: data.cover.label })),
       ),
       h(
@@ -74,7 +74,7 @@ function AuditSummaryPage({ data }: { data: AuditPdfData }): ReactElement {
             View,
             { key: pillar.pillar, style: { width: THIRD, padding: 12, borderWidth: 0.75, borderColor: COLORS.lineMedium, borderRadius: 3 } },
             h(Text, { style: { fontSize: 9, fontWeight: 600 } }, pillar.name),
-            h(View, { style: { marginTop: 8, marginBottom: 8 } }, h(BigNumber, { value: pillar.score, size: 26, condensed: false })),
+            h(View, { style: { marginTop: 8, marginBottom: 8 } }, h(BigNumber, { value: pillar.score, size: 26 })),
             h(ScoreBar, { score: pillar.score }),
             h(Text, { style: { ...styles.caption, marginTop: 8 } }, pillar.label),
           ),
@@ -88,7 +88,7 @@ function AuditSummaryPage({ data }: { data: AuditPdfData }): ReactElement {
           h(
             Keep,
             { key: item.rank, style: { flexDirection: 'row', paddingVertical: 10, borderTopWidth: 0.75, borderTopColor: index === 0 ? COLORS.black : COLORS.line } },
-            h(Text, { style: { width: 22, fontSize: 10, fontWeight: 600 } }, String(index + 1)),
+            h(Text, { style: { ...NUM, width: 22, fontSize: 10, fontWeight: 600 } }, String(index + 1)),
             h(
               View,
               { style: { flex: 1, paddingRight: 12 } },
@@ -96,7 +96,7 @@ function AuditSummaryPage({ data }: { data: AuditPdfData }): ReactElement {
               item.programs ? h(Text, { style: { ...styles.caption, ...clamp(1) } }, item.programs) : null,
               item.finding ? h(Text, { style: { ...styles.small, color: COLORS.muted, marginTop: 3, ...clamp(2) } }, item.finding) : null,
             ),
-            h(View, { style: { width: 128, alignItems: 'flex-end', gap: 5 } }, h(Meter, { result: item.result }), h(Text, { style: { ...styles.caption, textAlign: 'right' } }, item.worth)),
+            h(View, { style: { width: 128, alignItems: 'flex-end', gap: 5 } }, h(Meter, { result: item.result }), h(ValueText, { text: item.worth, style: { ...styles.caption, textAlign: 'right' } })),
           ),
         ),
       ),
@@ -110,7 +110,7 @@ function MoreFix({ fix, first }: { fix: ReportFix; first: boolean }): ReactEleme
   return h(
     Keep,
     { style: { flexDirection: 'row', paddingVertical: 8, borderTopWidth: 0.75, borderTopColor: first ? COLORS.black : COLORS.line } },
-    h(Text, { style: { width: 34, fontSize: 10, fontWeight: 600 } }, String(fix.rank)),
+    h(Text, { style: { ...NUM, width: 34, fontSize: 10, fontWeight: 600 } }, String(fix.rank)),
     h(
       View,
       { style: { flex: 1 } },
@@ -123,7 +123,7 @@ function MoreFix({ fix, first }: { fix: ReportFix; first: boolean }): ReactEleme
           h(Text, { style: { fontSize: 10, fontWeight: 600 } }, fix.name),
           single ? h(Meter, { result: single.result, size: 'sm' }) : fix.resultsNote ? h(Text, { style: styles.caption }, fix.resultsNote) : null,
         ),
-        h(Text, { style: { ...styles.caption, color: COLORS.black } }, fix.gain),
+        h(ValueText, { text: fix.gain, style: { ...styles.caption, color: COLORS.black } }),
       ),
       !single && fix.results.length
         ? h(

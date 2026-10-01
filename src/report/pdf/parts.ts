@@ -6,7 +6,7 @@ import { createElement as h, type ReactElement, type ReactNode } from 'react';
 import { Text, View, type Styles } from '@react-pdf/renderer';
 import type { ScoreLabel } from '../../domain/scores.ts';
 import { RESULT_LABELS, type CheckResult } from '../../domain/types.ts';
-import { COLORS, FONT_CONDENSED, FONT_SEMI_CONDENSED, styles } from './theme.ts';
+import { COLORS, FONT_NUMERIC, FONT_SEMI_CONDENSED, NUM, styles } from './theme.ts';
 
 export type Style = Styles[string];
 
@@ -99,22 +99,32 @@ export function SectionTitle({ title, lead }: { title: string; lead?: string | n
   return h(View, { style: { marginBottom: 6 } }, h(Text, { style: styles.sectionTitle }, title), lead ? h(Text, { style: styles.sectionLead }, lead) : null);
 }
 
-/** A big number in the condensed extra bold, as the dashboard shows scores. */
-export function BigNumber({ value, size, color, condensed = true }: { value: string | number; size: number; color?: string; condensed?: boolean }): ReactElement {
-  return h(
-    Text,
-    {
-      style: {
-        fontFamily: condensed ? FONT_CONDENSED : FONT_SEMI_CONDENSED,
-        fontWeight: condensed ? 800 : 700,
-        fontSize: size,
-        lineHeight: 1,
-        letterSpacing: condensed ? -size * 0.02 : -size * 0.01,
-        color,
-      },
-    },
-    String(value),
-  );
+/** A big number in Inter, as the dashboard shows scores. */
+export function BigNumber({ value, size, color }: { value: string | number; size: number; color?: string }): ReactElement {
+  return h(Text, { style: { ...NUM, fontFamily: FONT_NUMERIC, fontWeight: 600, fontSize: size, lineHeight: 1, letterSpacing: -size * 0.04, color } }, String(value));
+}
+
+/** "Up 47%" as a value: "↑ 47%". Null for anything that is not a change. */
+export function arrowValue(text: string): string | null {
+  const change = /^(Up|Down) ([\d,]+%?)$/.exec(text);
+  return change ? `${change[1] === 'Up' ? '↑' : '↓'} ${change[2]}` : null;
+}
+
+/**
+ * The report data's value words, shown as values with the number in Inter, as on the dashboard:
+ * a change ("Up 3", "Down 2 since August") reads "↑ 3", "↓ 2 since August"; points ("Up to 4
+ * points", "Worth 10 points of your score") read "+4 points", "10 points". Anything else, like
+ * "No change" or a sentence, stays as it is.
+ */
+export function ValueText({ text, style }: { text: string; style?: Style }): ReactElement {
+  const change = /^(Up|Down) ([\d,]+%?)(.*)$/.exec(text);
+  if (change) return h(Text, { style }, h(Text, { style: NUM }, `${change[1] === 'Up' ? '↑' : '↓'} ${change[2]}`), change[3]);
+  const gain = /^(?:Could add up to|Up to) ([\d,]+) (points?)$/.exec(text);
+  if (gain) return h(Text, { style }, h(Text, { style: NUM }, `+${gain[1]}`), ` ${gain[2]}`);
+  const worth = /^Worth ([\d,]+) (points?)(?: of your score)?$/.exec(text);
+  if (worth) return h(Text, { style }, h(Text, { style: NUM }, worth[1]), ` ${worth[2]}`);
+  if (/^(?:Could add less than|Less than|Worth less than) 1 point/.test(text)) return h(Text, { style }, 'Under ', h(Text, { style: NUM }, '1'), ' point');
+  return h(Text, { style }, text);
 }
 
 /** A thin score bar: black fill on a light track. */

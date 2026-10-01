@@ -18,7 +18,7 @@ export function IdeaCards({ ideas, showProgram }: { ideas: readonly IdeaRow[]; s
           <li key={idea.key}>
             <article className={styles.idea}>
               <span className={styles.ideaTop}>
-                <span className={audit.fixNumber}>
+                <span className={`${audit.fixNumber} num`}>
                   <span className="visually-hidden">Idea </span>
                   {index + 1}
                 </span>

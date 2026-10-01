@@ -4,7 +4,7 @@
 
 import { Tabs } from '@/components/ui/Tabs';
 import { Icon } from '@/components/ui/Icon';
-import { formatCount, formatDate, formatMonth, hostAndPath, plural } from '@/domain/format';
+import { formatCount, formatDate, formatMonth, hostAndPath } from '@/domain/format';
 import type { Activity, AdRow, MoveRow, PostRow } from '@/lib/rivals/load';
 import { MOVE_KIND_LABELS } from '@/rivals/text';
 import styles from './rivals.module.css';
@@ -62,9 +62,15 @@ export function PostCards({ posts, names, showRival = true }: { posts: readonly 
           </span>
           <span className={styles.postTitle}>{post.title}</span>
           <span className={styles.postNumbers}>
-            <span>{plural(post.views, 'view', 'views')}</span>
-            <span>{formatCount(post.likes)} likes</span>
-            <span>{formatCount(post.comments)} comments</span>
+            <span>
+              <span className="num">{formatCount(post.views)}</span> {post.views === 1 ? 'view' : 'views'}
+            </span>
+            <span>
+              <span className="num">{formatCount(post.likes)}</span> likes
+            </span>
+            <span>
+              <span className="num">{formatCount(post.comments)}</span> comments
+            </span>
           </span>
           <span className={styles.postWhy}>
             <span className={styles.postWhyLabel}>What to learn</span>

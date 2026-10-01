@@ -25,8 +25,8 @@ export function RivalBand({ rivalName, them, change, you, verdict, facts }: Riva
           Their overall score
         </h2>
         <p className={audit.scoreLine}>
-          <span className={audit.scoreNumber}>{them.overall}</span>
-          <span className={audit.scoreOutOf}>/ 100</span>
+          <span className={`${audit.scoreNumber} num`}>{them.overall}</span>
+          <span className={`${audit.scoreOutOf} num`}>/ 100</span>
         </p>
         <div className={audit.scoreMeta}>
           <ScoreLabel score={them.overall} />

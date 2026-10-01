@@ -408,7 +408,7 @@ export default async function DesignSystemPage() {
           <Section
             id="type"
             title="Type"
-            description="Bricolage Grotesque only. A calm scale: small, confident headings at 600. Only score numbers go to 700 and above. Every style comes from src/styles/tokens.css."
+            description="Bricolage Grotesque for every word: headings, text and buttons. Inter for numbers that stand on their own, with tabular figures (the .num class). Every style comes from src/styles/tokens.css."
           >
             <Card>
               <div className={styles.typeScale}>
@@ -437,14 +437,14 @@ export default async function DesignSystemPage() {
                 <Specimen label="Eyebrow: 12px, 500">
                   <Eyebrow>01 / Audit</Eyebrow>
                 </Specimen>
-                <Specimen label="Numbers: the score (800, condensed) is the one big, bold thing">
+                <Specimen label="Numbers in Inter, tabular figures: the score is the one big thing">
                   <div className={styles.numbers}>
-                    <span className={styles.tScore}>73</span>
-                    <span className={styles.tScoreMedium}>73</span>
-                    <span className={styles.tScoreSmall}>73</span>
-                    <span className={styles.tMetric}>₹9,999</span>
+                    <span className={`${styles.tScore} num`}>73</span>
+                    <span className={`${styles.tScoreMedium} num`}>73</span>
+                    <span className={`${styles.tScoreSmall} num`}>73</span>
+                    <span className={`${styles.tMetric} num`}>₹9,999</span>
                   </div>
-                  <p className={styles.tCaption}>Score 72 to 104px, dial 44 to 56px, pillar 24px (700), other numbers 22px (600).</p>
+                  <p className={styles.tCaption}>Score 56 to 104px, dial 44 to 56px, number cards 24 to 28px, other numbers 22px. All 600. Numbers inside a sentence stay in Bricolage: Could add up to 4 points.</p>
                 </Specimen>
               </div>
             </Card>

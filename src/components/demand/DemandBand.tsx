@@ -38,7 +38,7 @@ function TrendBlock({ trend, place, showProgram }: { trend: Trend | null; place:
         Rising fastest in {place}
       </h2>
       <p className={audit.scoreLine}>
-        <span className={audit.scoreNumber}>{Math.round(trend.changePct ?? 0)}%</span>
+        <span className={`${audit.scoreNumber} num`}>{Math.round(trend.changePct ?? 0)}%</span>
         <span className={audit.scoreOutOf}>up since last month</span>
       </p>
       <p className={styles.trendName}>{trend.text}</p>

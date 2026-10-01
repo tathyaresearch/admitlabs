@@ -34,7 +34,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <ol className={styles.features}>
             {FEATURES.map((feature, index) => (
               <li key={feature.name} className={styles.feature}>
-                <span className={styles.featureIndex}>0{index + 1}</span>
+                <span className={`${styles.featureIndex} num`}>0{index + 1}</span>
                 <span className={styles.featureName}>{feature.name}</span>
                 <span className={styles.featureQuestion}>{feature.question}</span>
               </li>

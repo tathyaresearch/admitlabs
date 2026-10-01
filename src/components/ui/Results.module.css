@@ -102,6 +102,14 @@
   color: var(--text-muted);
 }
 
+/* A change as a value: arrow and number. Inherits size and colour from where it sits. */
+.change {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  white-space: nowrap;
+}
+
 .difficulty {
   display: inline-flex;
   align-items: baseline;

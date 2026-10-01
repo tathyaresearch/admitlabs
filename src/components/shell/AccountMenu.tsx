@@ -1,8 +1,10 @@
 // The account menu. Uses the browser's popover: opens on click, closes on Escape or a click
-// outside, with no JavaScript of our own.
+// outside, with no JavaScript of our own. At the foot of the sidebar on desktop (opens upwards)
+// and in the top bar on a phone (opens downwards).
 
 import { Icon } from '@/components/ui/Icon';
 import { signOut } from '@/lib/auth/actions';
+import { ThemeMenuItem } from './ThemeToggle';
 import styles from './AppShell.module.css';
 
 function initials(email: string): string {
@@ -10,20 +12,44 @@ function initials(email: string): string {
   return (name.replace(/[^a-z]/gi, '').slice(0, 2) || 'D').toUpperCase();
 }
 
-export function AccountMenu({ email, roleLabel, institutionName }: { email: string; roleLabel: string; institutionName?: string }) {
+export function AccountMenu({
+  variant,
+  email,
+  roleLabel,
+  institutionName,
+}: {
+  variant: 'side' | 'top';
+  email: string;
+  roleLabel: string;
+  institutionName?: string;
+}) {
+  const id = `account-menu-${variant}`;
   return (
     <>
-      <button type="button" className={styles.accountButton} popoverTarget="account-menu" aria-label={`Account: ${email}`}>
-        <span className={styles.avatar} aria-hidden="true">
-          {initials(email)}
-        </span>
-        <Icon name="chevronDown" size={16} className={styles.accountChevron} />
-      </button>
-      <div id="account-menu" popover="auto" className={styles.menu}>
+      {variant === 'side' ? (
+        <button type="button" className={styles.accountSide} popoverTarget={id} aria-label={`Account: ${email}`}>
+          <span className={styles.avatar} aria-hidden="true">
+            {initials(email)}
+          </span>
+          <span className={styles.accountText}>
+            <span className={styles.accountEmail}>{email}</span>
+            <span className={styles.accountRole}>{roleLabel}</span>
+          </span>
+          <Icon name="more" size={18} className={styles.accountMore} />
+        </button>
+      ) : (
+        <button type="button" className={styles.accountButton} popoverTarget={id} aria-label={`Account: ${email}`}>
+          <span className={styles.avatar} aria-hidden="true">
+            {initials(email)}
+          </span>
+        </button>
+      )}
+      <div id={id} popover="auto" className={`${styles.menu} ${variant === 'side' ? styles.menuSide : styles.menuTop}`}>
         <div className={styles.menuHead}>
           <p className={styles.menuEmail}>{email}</p>
-          <p className={styles.menuRole}>{institutionName ? `${roleLabel}, ${institutionName}` : roleLabel}</p>
+          <p className={styles.menuRole}>{institutionName && institutionName !== roleLabel ? `${roleLabel}, ${institutionName}` : roleLabel}</p>
         </div>
+        <ThemeMenuItem className={styles.menuItem} />
         <form action={signOut}>
           <button type="submit" className={styles.menuItem}>
             <Icon name="signOut" size={18} />

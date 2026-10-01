@@ -191,8 +191,8 @@ a.tab:hover {
 }
 
 .scoreNumber {
-  font: var(--type-score);
-  letter-spacing: var(--tracking-score);
+  font: var(--weight-heading) var(--size-score) / 0.9 var(--font-numeric);
+  letter-spacing: var(--tracking-num-hero);
 }
 
 .scoreOutOf {
@@ -244,10 +244,8 @@ a.tab:hover {
 }
 
 .pillarScore {
-  font: var(--type-score-small);
-  font-size: 1.75rem;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
+  font: var(--type-num-kpi);
+  letter-spacing: var(--tracking-num);
 }
 
 .pillarTrack {

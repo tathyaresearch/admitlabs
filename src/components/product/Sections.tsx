@@ -1,30 +1,33 @@
-// The story of the product page, in spec order: the hero, the problem, the three features, the
-// score, how it works, and the final call. Plans, clients and the FAQ are in ./Offer.tsx; the
-// sample report in ./ReportShowcase.tsx.
+// The story of the product page: the hero, the problem, what Drishti does (a bento grid: the three
+// features, the score, the monthly report and public data only), how it works, and the final call.
+// Plans, clients and the FAQ are in ./Offer.tsx; the sample report in ./ReportShowcase.tsx.
 
-import type { ComponentType } from 'react';
+import type { ReactNode } from 'react';
 import { BrandMark } from '@/components/ui/Brand';
-import { AnchorButton, ButtonLink } from '@/components/ui/Button';
+import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Highlight } from '@/components/ui/Layout';
 import { ResultMeter } from '@/components/ui/Results';
 import { SCORING_V1 } from '@/config/scoring.v1';
 import { RESULT_LABELS, RESULTS } from '@/domain/types';
 import { appLink } from '@/lib/urls';
-import { CTA, FEATURES, FINAL, HERO, PROBLEM, PROOF_LINE, SCORE, STEPS, type Feature } from '@/product/content';
+import { CTA, FEATURES, FEATURES_HEAD, FINAL, HERO, PROBLEM, PROOF_LINE, REPORT_TILE, SCORE, STEPS, TRUST_TILE, type Feature } from '@/product/content';
 import type { Showcase } from '@/product/showcase';
-import { AuditSummaryPreview, DemandPreview, FixesPreview, RivalsPreview } from './Previews';
+import { AppWindow, DemandPicture, FixesPicture, LadderPicture, SAMPLE_CAPTION } from './Previews';
+import { ThingsPaper } from './ReportShowcase';
+import papers from './papers.module.css';
 import styles from './product.module.css';
 
 export function Eyebrow({ number, children }: { number?: string; children: string }) {
   return (
     <p className={styles.eyebrow}>
-      {number ? <span className={styles.eyebrowNumber}>{number}</span> : null}
+      {number ? <span className={`${styles.eyebrowNumber} num`}>{number}</span> : null}
       <span>{children}</span>
     </p>
   );
 }
 
+/** One clear promise, one button, and the product itself. */
 export function Hero({ showcase }: { showcase: Showcase }) {
   return (
     <section className={`${styles.section} ${styles.hero}`} data-theme="dark" aria-labelledby="hero-title">
@@ -41,9 +44,6 @@ export function Hero({ showcase }: { showcase: Showcase }) {
           <ButtonLink href={appLink('/login')} size="lg" iconAfter="arrowRight">
             {CTA.primary}
           </ButtonLink>
-          <AnchorButton href="#how" size="lg" variant="secondary">
-            {CTA.how}
-          </AnchorButton>
         </div>
         <p className={styles.trust}>
           <Icon name="check" size={14} />
@@ -51,7 +51,7 @@ export function Hero({ showcase }: { showcase: Showcase }) {
         </p>
       </div>
       <div className={`${styles.container} ${styles.stage}`}>
-        <AuditSummaryPreview showcase={showcase} />
+        <AppWindow showcase={showcase} />
       </div>
     </section>
   );
@@ -81,55 +81,41 @@ export function Problem() {
   );
 }
 
-const PREVIEWS: Readonly<Record<Feature['key'], ComponentType<{ showcase: Showcase }>>> = {
-  audit: FixesPreview,
-  rivals: RivalsPreview,
-  demand: DemandPreview,
-};
-
-export function Features({ showcase }: { showcase: Showcase }) {
+function Tile({
+  id,
+  eyebrow,
+  number,
+  title,
+  lede,
+  className,
+  children,
+}: {
+  id: string;
+  eyebrow: string;
+  number?: string;
+  title: string;
+  lede?: string;
+  className?: string;
+  children: ReactNode;
+}) {
   return (
-    <section id="features" className={styles.section} data-theme="dark" aria-labelledby="features-title">
-      <div className={styles.container}>
-        <div className={styles.head}>
-          <Eyebrow>What Drishti does</Eyebrow>
-          <h2 id="features-title" className={styles.title}>
-            Three questions. Answered every month.
-          </h2>
-        </div>
-        {FEATURES.map((feature) => {
-          const FeaturePreview = PREVIEWS[feature.key];
-          return (
-            <article key={feature.key} className={styles.feature} aria-labelledby={`feature-${feature.key}`}>
-              <div className={`${styles.featureText} ${styles.reveal}`}>
-                <div className={styles.featureLead}>
-                  <Eyebrow number={feature.number}>{feature.name}</Eyebrow>
-                  <h3 id={`feature-${feature.key}`} className={styles.featureQuestion}>
-                    {feature.question}
-                  </h3>
-                  <p className={styles.lede}>{feature.lede}</p>
-                </div>
-                <div className={styles.featureBody}>
-                  <ul className={styles.points}>
-                    {feature.points.map((point) => (
-                      <li key={point} className={styles.point}>
-                        <Icon name="check" size={16} />
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className={styles.note}>{feature.note}</p>
-                </div>
-              </div>
-              <div className={styles.reveal}>
-                <FeaturePreview showcase={showcase} />
-              </div>
-            </article>
-          );
-        })}
+    <article className={[styles.tile, styles.reveal, className].filter(Boolean).join(' ')} aria-labelledby={id}>
+      <div className={styles.tileText}>
+        <Eyebrow number={number}>{eyebrow}</Eyebrow>
+        <h3 id={id} className={styles.tileTitle}>
+          {title}
+        </h3>
+        {lede ? <p className={styles.tileLede}>{lede}</p> : null}
       </div>
-    </section>
+      {children}
+    </article>
   );
+}
+
+function featureOf(key: Feature['key']): Feature {
+  const feature = FEATURES.find((item) => item.key === key);
+  if (!feature) throw new Error(`No feature ${key}`);
+  return feature;
 }
 
 /** "Strong earns every point of a check", from the scoring config. */
@@ -139,47 +125,82 @@ function shareText(share: number): string {
   return `Earns ${Math.round(share * 100)}% of the points`;
 }
 
-export function ScoreSection() {
+/** What Drishti does, as one bento grid: the three features with real pictures, then the score, the report and the rules. */
+export function Features({ showcase }: { showcase: Showcase }) {
+  const audit = featureOf('audit');
+  const rivals = featureOf('rivals');
+  const demand = featureOf('demand');
   return (
-    <section id="score" className={styles.section} data-theme="light" aria-labelledby="score-title">
+    <section id="features" className={styles.section} data-theme="dark" aria-labelledby="features-title">
       <div className={styles.container}>
         <div className={styles.head}>
-          <Eyebrow>The score</Eyebrow>
-          <h2 id="score-title" className={styles.title}>
-            {SCORE.title}
+          <Eyebrow>{FEATURES_HEAD.eyebrow}</Eyebrow>
+          <h2 id="features-title" className={styles.title}>
+            {FEATURES_HEAD.title}
           </h2>
-          <p className={styles.lede}>{SCORE.lede}</p>
         </div>
-        <ul className={styles.pillars}>
-          {SCORE.pillars.map((pillar) => (
-            <li key={pillar.pillar} className={`${styles.pillar} ${styles.reveal}`}>
-              <h3 className={styles.pillarName}>{pillar.name}</h3>
-              <p className={styles.pillarQuestion}>{pillar.question}</p>
-              <p className={styles.pillarText}>{pillar.text}</p>
-              <ul className={styles.chips} aria-label={`What ${pillar.name} checks`}>
-                {pillar.checks.map((check) => (
-                  <li key={check} className={styles.chip}>
-                    {check}
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
-        <div className={`${styles.key} ${styles.reveal}`} data-theme="dark">
-          <p className={styles.keyTitle}>Every check gets one of four results.</p>
-          <ul className={styles.keyItems}>
-            {RESULTS.map((result) => (
-              <li key={result} className={styles.keyItem}>
-                <ResultMeter result={result} />
-                <span className={styles.keyShare}>
-                  <span className="visually-hidden">{RESULT_LABELS[result]}: </span>
-                  {shareText(SCORING_V1.resultShares[result])}
-                </span>
-              </li>
-            ))}
-          </ul>
+
+        <div className={styles.bento}>
+          <Tile id="tile-audit" eyebrow={audit.name} number={audit.number} title={audit.question} lede={audit.lede} className={styles.tileWide}>
+            <FixesPicture showcase={showcase} />
+          </Tile>
+
+          <Tile id="tile-rivals" eyebrow={rivals.name} number={rivals.number} title={rivals.question} lede={rivals.lede}>
+            <LadderPicture showcase={showcase} />
+          </Tile>
+
+          <Tile id="tile-demand" eyebrow={demand.name} number={demand.number} title={demand.question} lede={demand.lede}>
+            <DemandPicture showcase={showcase} />
+          </Tile>
+
+          <Tile id="tile-score" eyebrow="The score" title={SCORE.title} lede={SCORE.lede} className={styles.tileWide}>
+            <ul className={styles.scorePillars}>
+              {SCORE.pillars.map((pillar) => (
+                <li key={pillar.pillar} className={styles.scorePillar}>
+                  <p className={styles.scorePillarName}>{pillar.name}</p>
+                  <p className={styles.scorePillarQuestion}>{pillar.question}</p>
+                  <p className={styles.scorePillarText}>{pillar.text}</p>
+                  <p className={styles.scorePillarChecks}>
+                    <span className="num">{pillar.checks.length}</span> checks
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <ul className={styles.resultsKey} aria-label="Every check gets one of four results">
+              {RESULTS.map((result) => (
+                <li key={result} className={styles.resultsKeyItem}>
+                  <ResultMeter result={result} invertStrong={false} />
+                  <span className={styles.resultsKeyShare}>
+                    <span className="visually-hidden">{RESULT_LABELS[result]}: </span>
+                    {shareText(SCORING_V1.resultShares[result])}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Tile>
+
+          <Tile id="tile-report" eyebrow={REPORT_TILE.name} title={REPORT_TILE.title} lede={REPORT_TILE.lede} className={`${styles.tileWideLarge} ${styles.tileReport}`}>
+            <a href="#report" className={styles.tileLink}>
+              {REPORT_TILE.link}
+              <Icon name="arrowDown" size={16} />
+            </a>
+            <div className={styles.paperCrop} aria-hidden="true" inert>
+              <ThingsPaper data={showcase.report} className={papers.single} />
+            </div>
+          </Tile>
+
+          <Tile id="tile-trust" eyebrow={TRUST_TILE.name} title={TRUST_TILE.title}>
+            <ul className={styles.trustList}>
+              {TRUST_TILE.points.map((point) => (
+                <li key={point} className={styles.trustPoint}>
+                  <Icon name="check" size={16} />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </Tile>
         </div>
+        <p className={styles.bentoCaption}>{SAMPLE_CAPTION}</p>
       </div>
     </section>
   );
@@ -187,7 +208,7 @@ export function ScoreSection() {
 
 export function Steps() {
   return (
-    <section id="how" className={styles.section} data-theme="dark" aria-labelledby="how-title">
+    <section id="how" className={styles.section} data-theme="light" aria-labelledby="how-title">
       <div className={styles.container}>
         <div className={styles.head}>
           <Eyebrow>How it works</Eyebrow>
@@ -198,7 +219,7 @@ export function Steps() {
         <ol className={styles.steps}>
           {STEPS.items.map((step, index) => (
             <li key={step.title} className={`${styles.step} ${styles.reveal}`}>
-              <span className={styles.stepNumber} aria-hidden="true">
+              <span className={`${styles.stepNumber} num`} aria-hidden="true">
                 {String(index + 1).padStart(2, '0')}
               </span>
               <h3 className={styles.stepTitle}>{step.title}</h3>

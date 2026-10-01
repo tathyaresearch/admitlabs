@@ -42,14 +42,17 @@ export function DataTable<Row>({ caption, hideCaption, columns, rows, rowKey, em
           {rows.map((row) => (
             <tr key={rowKey(row)}>
               {columns.map((column, index) => {
-                const className = [column.align === 'end' ? styles.end : '', column.numeric ? 'tabular' : ''].filter(Boolean).join(' ') || undefined;
+                const className = column.align === 'end' ? styles.end : undefined;
+                // Numbers in a table are in Inter with tabular figures. The span keeps the phone's
+                // column label (a ::before on the cell) in Bricolage.
+                const value = column.numeric ? <span className="num">{column.render(row)}</span> : column.render(row);
                 return index === 0 ? (
                   <th key={column.key} scope="row" data-label={column.header} className={className}>
-                    {column.render(row)}
+                    {value}
                   </th>
                 ) : (
                   <td key={column.key} data-label={column.header} className={className}>
-                    {column.render(row)}
+                    {value}
                   </td>
                 );
               })}

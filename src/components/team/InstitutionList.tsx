@@ -99,7 +99,7 @@ export function InstitutionRows({ rows }: { rows: readonly TeamListRow[] }) {
             </span>
           </span>
           <span className={styles.rowScore}>
-            {row.score !== null ? <span className={styles.rowScoreNumber}>{row.score}</span> : null}
+            {row.score !== null ? <span className={`${styles.rowScoreNumber} num`}>{row.score}</span> : null}
             <span>{row.score !== null ? scoreLabel(row.score) : 'No score'}</span>
           </span>
           <span className={styles.rowCell}>

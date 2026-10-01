@@ -3,17 +3,12 @@
 // in words, with no scores and no order that could hint at one. Home reuses the lists.
 
 import { Icon } from '@/components/ui/Icon';
+import { Change } from '@/components/ui/Results';
 import { ordinal } from '@/domain/format';
 import type { LadderRow, Standing } from '@/rivals/compare';
 import { STANDING_LABELS } from '@/rivals/text';
 import audit from '@/components/audit/audit.module.css';
 import styles from './rivals.module.css';
-
-function shortChange(change: number | null): string {
-  if (change === null) return '';
-  if (change === 0) return 'No change';
-  return `${change > 0 ? 'Up' : 'Down'} ${Math.abs(change)}`;
-}
 
 /** You and your rivals by overall score, highest first, you in an inverted row. */
 export function LadderList({ rows, youName }: { rows: readonly LadderRow[]; youName: string }) {
@@ -23,7 +18,7 @@ export function LadderList({ rows, youName }: { rows: readonly LadderRow[]; youN
         const width = Math.max(0, Math.min(100, row.overall ?? 0));
         return (
           <li key={row.id} className={[styles.ladderRow, row.you ? `invert ${styles.ladderYou}` : ''].join(' ')}>
-            <span className={styles.ladderRank}>{row.rank ?? ''}</span>
+            <span className={`${styles.ladderRank} num`}>{row.rank ?? ''}</span>
             <span className={styles.ladderName}>
               <span className={styles.ladderNameText}>{row.you ? 'You' : row.name}</span>
               {row.you ? <span className={styles.ladderSub}>{youName}</span> : null}
@@ -31,11 +26,11 @@ export function LadderList({ rows, youName }: { rows: readonly LadderRow[]; youN
             <span className={styles.ladderTrack} aria-hidden="true">
               <span className={styles.ladderFill} style={{ width: `${width}%` }} />
             </span>
-            <span className={styles.ladderScore}>
+            <span className={`${styles.ladderScore} num`}>
               {row.overall ?? ''}
               <span className="visually-hidden">{row.overall === null ? 'Checking now' : ' out of 100'}</span>
             </span>
-            <span className={styles.ladderChange}>{row.overall === null ? 'Checking now' : shortChange(row.change)}</span>
+            <span className={styles.ladderChange}>{row.overall === null ? 'Checking now' : <Change value={row.change} />}</span>
           </li>
         );
       })}
@@ -100,8 +95,8 @@ export function PaidStandBand({ rows, verdict, youName }: { rows: readonly Ladde
         </h2>
         {mine?.rank ? (
           <p className={styles.rankLine}>
-            <span className={styles.rankNumber}>{mine.rank}</span>
-            <span className={styles.rankSuffix}>{ordinal(mine.rank).slice(String(mine.rank).length)}</span>
+            <span className={`${styles.rankNumber} num`}>{mine.rank}</span>
+            <span className={`${styles.rankSuffix} num`}>{ordinal(mine.rank).slice(String(mine.rank).length)}</span>
             <span className={styles.rankOf}>of {scored}</span>
           </p>
         ) : null}

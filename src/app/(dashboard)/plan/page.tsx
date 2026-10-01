@@ -1,5 +1,6 @@
 import { Notice } from '@/components/ui/Feedback';
 import { Icon } from '@/components/ui/Icon';
+import { CellText } from '@/components/ui/Results';
 import { Card, FactList, Highlight, PageHeader, Section } from '@/components/ui/Layout';
 import { ENTITLEMENTS, paidUnlocks, type EntitlementGroup } from '@/config/entitlements';
 import { PLAN_RULES } from '@/config/plans';
@@ -57,7 +58,7 @@ export default async function PlanPage() {
     { label: 'Plan', value: TIER_LABELS[tier] },
     ...(plan ? [{ label: 'Started', value: formatDate(plan.startsAt) }] : []),
     ...(tier === 'paid' && plan?.endsAt ? [{ label: 'Ends', value: formatDate(plan.endsAt) }] : []),
-    ...(tier === 'paid' && reminder.daysLeft !== null ? [{ label: 'Days left', value: String(reminder.daysLeft) }] : []),
+    ...(tier === 'paid' && reminder.daysLeft !== null ? [{ label: 'Days left', value: <span className="num">{reminder.daysLeft}</span> }] : []),
     ...(tier === 'client' ? [{ label: 'Ends', value: 'While your AdmitLabs service is active' }] : []),
     ...(freeProgramName ? [{ label: 'Free Audit program', value: freeProgramName }] : []),
     { label: 'Audits', value: schedule.auditEveryMonths === 1 ? 'Every month' : `Every ${schedule.auditEveryMonths} months` },
@@ -86,7 +87,7 @@ export default async function PlanPage() {
         {tier === 'free' ? (
           <Card inverted className={styles.offer}>
             <p className={styles.offerName}>Paid</p>
-            <p className={styles.offerPrice}>{formatInr(PLAN_RULES.paid.priceInr)}</p>
+            <p className={`${styles.offerPrice} num`}>{formatInr(PLAN_RULES.paid.priceInr)}</p>
             <p className={styles.offerLength}>for {PLAN_RULES.paid.lengthMonths} months</p>
             <ul className={styles.offerPoints}>
               <li>
@@ -115,7 +116,9 @@ export default async function PlanPage() {
                     <span className={styles.unlockLabel}>
                       {row.group === 'Other' ? row.label : `${row.group}: ${row.label.charAt(0).toLowerCase()}${row.label.slice(1)}`}
                     </span>
-                    <span className={styles.unlockValue}>{row.cells[tier].text}</span>
+                    <span className={styles.unlockValue}>
+                      <CellText text={row.cells[tier].text} />
+                    </span>
                   </span>
                 </li>
               ))}
@@ -131,7 +134,9 @@ export default async function PlanPage() {
               <li key={row.key} className={styles.unlockCard}>
                 <span className={styles.unlockGroup}>{row.group}</span>
                 <span className={styles.unlockLabel}>{row.label}</span>
-                <span className={styles.unlockValue}>{row.cells.paid.text}</span>
+                <span className={styles.unlockValue}>
+                  <CellText text={row.cells.paid.text} />
+                </span>
               </li>
             ))}
           </ul>
@@ -166,7 +171,7 @@ export default async function PlanPage() {
                       <th scope="row">{row.label}</th>
                       {TIERS.map((column) => (
                         <td key={column} data-current={column === tier ? 'true' : undefined}>
-                          {row.cells[column].access === 'none' ? <span className={styles.no}>No</span> : row.cells[column].text}
+                          {row.cells[column].access === 'none' ? <span className={styles.no}>No</span> : <CellText text={row.cells[column].text} />}
                         </td>
                       ))}
                     </tr>

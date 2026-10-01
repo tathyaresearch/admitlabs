@@ -19,8 +19,8 @@
 }
 
 .rankNumber {
-  font: var(--type-score);
-  letter-spacing: var(--tracking-score);
+  font: var(--weight-heading) var(--size-score) / 0.9 var(--font-numeric);
+  letter-spacing: var(--tracking-num-hero);
 }
 
 .rankSuffix {

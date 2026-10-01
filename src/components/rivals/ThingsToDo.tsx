@@ -21,7 +21,7 @@ export function ThingsToDo({ items, rivalNames }: { items: readonly ActionRow[];
           <li key={item.rank}>
             <Link href={href} className={audit.fixCard}>
               <span className={audit.fixTop}>
-                <span className={audit.fixNumber}>
+                <span className={`${audit.fixNumber} num`}>
                   <span className="visually-hidden">Thing to do </span>
                   {item.rank}
                 </span>

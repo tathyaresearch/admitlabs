@@ -17,8 +17,8 @@
 
 /* The one big, bold thing on a screen. */
 .heroNumber {
-  font: var(--type-score);
-  letter-spacing: var(--tracking-score);
+  font: var(--weight-heading) var(--size-score) / 0.9 var(--font-numeric);
+  letter-spacing: var(--tracking-num-hero);
 }
 
 .heroOutOf {
@@ -64,8 +64,8 @@
 }
 
 .pillarScore {
-  font: var(--type-score-small);
-  letter-spacing: -0.03em;
+  font: var(--type-num-kpi);
+  letter-spacing: var(--tracking-num);
 }
 
 .pillarTrack {
@@ -94,8 +94,8 @@
 }
 
 .statValue {
-  font: var(--type-metric);
-  letter-spacing: var(--tracking-title);
+  font: var(--type-num-kpi);
+  letter-spacing: var(--tracking-num);
 }
 
 .statSub {

@@ -40,12 +40,13 @@ describe('the sample report', () => {
     assert.equal(real.sample, null, 'a real report never says it is a sample');
   });
 
-  test(`a valid PDF of ${MAX_PAGES} pages or fewer, in Bricolage Grotesque only`, async () => {
+  test(`a valid PDF of ${MAX_PAGES} pages or fewer, words in Bricolage Grotesque and numbers in Inter`, async () => {
     const pdf = await renderReport(await sampleReportData());
     const raw = pdf.toString('latin1');
     assert.equal(raw.slice(0, 5), '%PDF-');
     assert.ok(pageCount(pdf) <= MAX_PAGES, `${pageCount(pdf)} pages`);
     const fonts = [...new Set([...raw.matchAll(/\/BaseFont\s*\/(?:[A-Z]{6}\+)?([^\s/>]+)/g)].map((match) => match[1] as string))];
-    assert.ok(fonts.length > 0 && fonts.every((name) => name.startsWith('BricolageGrotesque')), fonts.join(', '));
+    assert.ok(fonts.every((name) => name.startsWith('BricolageGrotesque') || name.startsWith('Inter')), fonts.join(', '));
+    assert.ok(fonts.some((name) => name.startsWith('BricolageGrotesque')) && fonts.some((name) => name.startsWith('Inter')), fonts.join(', '));
   });
 });

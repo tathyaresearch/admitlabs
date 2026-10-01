@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { ProductFooter, ProductHeader } from '@/components/product/Chrome';
 import { Faq, ForClients, Plans } from '@/components/product/Offer';
 import { ReportShowcase } from '@/components/product/ReportShowcase';
-import { Features, FinalCall, Hero, Problem, ScoreSection, Steps } from '@/components/product/Sections';
+import { Features, FinalCall, Hero, Problem, Steps } from '@/components/product/Sections';
 import { PRODUCT_URL } from '@/lib/urls';
 import { FOOTER } from '@/product/content';
 import { loadShowcase } from '@/product/showcase';
@@ -44,7 +44,6 @@ export default async function ProductPage() {
         <Hero showcase={showcase} />
         <Problem />
         <Features showcase={showcase} />
-        <ScoreSection />
         <Steps />
         <ReportShowcase data={showcase.report} />
         <Plans />

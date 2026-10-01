@@ -72,14 +72,15 @@ describe('what goes into the shared Audit PDF', () => {
 
 describe('the shared Audit PDF file', () => {
   for (const [slug, type] of SAMPLES) {
-    test(`a valid A4 PDF of ${MAX_PAGES} pages or fewer, in Bricolage Grotesque only (${type})`, async () => {
+    test(`a valid A4 PDF of ${MAX_PAGES} pages or fewer, words in Bricolage Grotesque and numbers in Inter (${type})`, async () => {
       const pdf = await renderAuditPdf(buildAuditPdf(await sampleShared(slug), OPTIONS));
       const raw = pdf.toString('latin1');
       assert.equal(raw.slice(0, 5), '%PDF-');
       assert.ok(pageCount(pdf) <= MAX_PAGES, `${pageCount(pdf)} pages`);
       assert.match(raw, /\/MediaBox\s*\[0 0 595\.28\d* 841\.89\d*\]/);
       const used = fonts(raw);
-      assert.ok(used.length > 0 && used.every((name) => name.startsWith('BricolageGrotesque')), used.join(', '));
+      assert.ok(used.every((name) => name.startsWith('BricolageGrotesque') || name.startsWith('Inter')), used.join(', '));
+      assert.ok(used.some((name) => name.startsWith('BricolageGrotesque')) && used.some((name) => name.startsWith('Inter')), used.join(', '));
       assert.equal((raw.match(/\/FontFile2/g) ?? []).length, used.length, 'every font is embedded');
     });
   }

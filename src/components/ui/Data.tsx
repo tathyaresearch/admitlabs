@@ -11,7 +11,7 @@ export function ScoreHero({ score, change, caption = 'Overall score' }: { score:
     <div className={styles.hero}>
       <p className={styles.heroCaption}>{caption}</p>
       <p className={styles.heroValue}>
-        <span className={styles.heroNumber}>{Math.round(score)}</span>
+        <span className={`${styles.heroNumber} num`}>{Math.round(score)}</span>
         <span className={styles.heroOutOf}>/ 100</span>
       </p>
       <div className={styles.heroMeta}>
@@ -41,7 +41,7 @@ export function PillarScores({ scores }: { scores: readonly PillarScore[] }) {
           <li key={pillar} className={styles.pillar}>
             <div className={styles.pillarTop}>
               <span className={styles.pillarName}>{PILLAR_LABELS[pillar]}</span>
-              <span className={styles.pillarScore}>{value}</span>
+              <span className={`${styles.pillarScore} num`}>{value}</span>
             </div>
             <span className={styles.pillarTrack} aria-hidden="true">
               <span className={styles.pillarFill} style={{ width: `${value}%` }} />
@@ -58,7 +58,7 @@ export function Stat({ label, value, sub }: { label: string; value: ReactNode; s
   return (
     <div className={styles.stat}>
       <p className={styles.statLabel}>{label}</p>
-      <p className={styles.statValue}>{value}</p>
+      <p className={`${styles.statValue} num`}>{value}</p>
       {sub ? <p className={styles.statSub}>{sub}</p> : null}
     </div>
   );

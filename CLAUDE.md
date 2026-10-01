@@ -33,7 +33,7 @@ This machine is **Windows**. The project folder is `D:\Drishti`. All scripts and
 ## Brand rules (never break)
 
 - **Strictly monochrome.** Black #0A0A0C, Graphite #1E1F23, Ivory #F2E8D6, Slate #8A8D94, and greys between. No accent colour. No green, amber or red. No gradients or glow.
-- **Bricolage Grotesque only.** No second font.
+- **Two fonts, two jobs.** Bricolage Grotesque for all headings, text and buttons. Inter only for numbers that stand on their own (scores, points, prices, counts, percentages, numbers in tables), with tabular figures. Numbers and dates inside a sentence stay in Bricolage. No other font.
 - Contrast from size, weight, width, black and ivory surface flips, and inverted blocks.
 - Strong, Okay, Weak, Missing shown with a 3-segment meter plus the word. Never colour.
 - **No em dashes or en dashes** anywhere in UI, pages or PDF.
