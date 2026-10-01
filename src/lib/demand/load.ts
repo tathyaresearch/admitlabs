@@ -89,6 +89,15 @@ export async function loadCityIdeas(viewer: InstitutionViewer): Promise<IdeaRow[
   return demandView(rows, { singleProgram: programs.length === 1, skills: institution.type === 'skilling' }).ideas;
 }
 
+/** How Home's rising trend got here, month by month, in the institution's city. Paid and Client (row level security). */
+export async function loadHighlightHistory(viewer: InstitutionViewer, highlight: Highlight | null): Promise<TopicMonth[]> {
+  if (!highlight || viewer.tier === 'free') return [];
+  const institution = viewer.membership.institution;
+  const program = (await loadPrograms(institution.id)).find((entry) => !entry.archived && entry.programKey && entry.name === highlight.programName);
+  if (!program?.programKey) return [];
+  return loadTopicHistory(regionsFor(institution).city, { programKey: program.programKey, kind: 'rising', text: highlight.text });
+}
+
 /** How the fastest rise got here: its count in each of the last months' pulls. Paid and Client (row level security). */
 export async function loadTopicHistory(region: DemandRegion, topic: Pick<DemandRow, 'programKey' | 'kind' | 'text'>): Promise<TopicMonth[]> {
   return topicHistory(await createClient(), region, topic, DEMAND_RULES.historyMonths);

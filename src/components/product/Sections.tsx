@@ -1,5 +1,6 @@
 // The story of the product page: the hero, the problem, what Drishti does (a bento grid: the three
-// features, the score, the monthly report and public data only), how it works, and the final call.
+// features first and largest, then the score, the monthly report and public data only), how it
+// works, and the final call.
 // Plans, clients and the FAQ are in ./Offer.tsx; the sample report in ./ReportShowcase.tsx.
 
 import type { ReactNode } from 'react';
@@ -9,22 +10,21 @@ import { Icon } from '@/components/ui/Icon';
 import { Highlight } from '@/components/ui/Layout';
 import { Mark, PillarIcon } from '@/components/ui/Marks';
 import { ResultGauge } from '@/components/ui/Results';
-import { SCORING_V1 } from '@/config/scoring.v1';
+import { resultShareText } from '@/domain/scores';
 import { RESULT_LABELS, RESULTS } from '@/domain/types';
 import type { IconRef } from '@/graphics/icons';
 import { PLATFORM_ICONS } from '@/graphics/platforms';
 import { appLink } from '@/lib/urls';
 import { CTA, FEATURES, FEATURES_HEAD, FINAL, HERO, PROBLEM, PROOF_LINE, REPORT_TILE, SCORE, STEPS, TRUST_TILE, type Feature } from '@/product/content';
 import type { Showcase } from '@/product/showcase';
-import { AppWindow, DemandPicture, FixesPicture, LadderPicture, SAMPLE_CAPTION } from './Previews';
+import { AppWindow, AuditPicture, DemandPicture, RivalsPicture, SAMPLE_CAPTION } from './Previews';
 import { ThingsPaper } from './ReportShowcase';
 import papers from './papers.module.css';
 import styles from './product.module.css';
 
-export function Eyebrow({ number, children }: { number?: string; children: string }) {
+export function Eyebrow({ children }: { children: string }) {
   return (
     <p className={styles.eyebrow}>
-      {number ? <span className={`${styles.eyebrowNumber} num`}>{number}</span> : null}
       <span>{children}</span>
     </p>
   );
@@ -84,27 +84,40 @@ export function Problem() {
   );
 }
 
-function Tile({
-  id,
-  eyebrow,
-  number,
-  title,
-  lede,
-  className,
-  children,
-}: {
-  id: string;
-  eyebrow: string;
-  number?: string;
-  title: string;
-  lede?: string;
-  className?: string;
-  children: ReactNode;
-}) {
+/** One of the three features: an ivory tile with its icon, its place among the three, its question and a large picture. */
+function FeatureTile({ feature, className, children }: { feature: Feature; className?: string; children: ReactNode }) {
+  const id = `tile-${feature.key}`;
+  const place = FEATURES.indexOf(feature) + 1;
+  return (
+    <article className={[styles.feature, styles.reveal, className].filter(Boolean).join(' ')} data-theme="light" aria-labelledby={id}>
+      <div className={styles.featureText}>
+        <p className={styles.featureHead}>
+          <span className={styles.featureIcon} aria-hidden="true">
+            <Icon name={feature.key} size={22} />
+          </span>
+          <span className={styles.featureNames}>
+            <span className={styles.featurePlace}>
+              Feature {place} of {FEATURES.length}
+            </span>
+            <span className={styles.featureName}>{feature.name}</span>
+          </span>
+        </p>
+        <h3 id={id} className={styles.featureTitle}>
+          {feature.question}
+        </h3>
+        <p className={styles.featureLede}>{feature.lede}</p>
+      </div>
+      {children}
+    </article>
+  );
+}
+
+/** The score, the report and the rules: quieter tiles after the features. */
+function Tile({ id, eyebrow, title, lede, className, children }: { id: string; eyebrow: string; title: string; lede?: string; className?: string; children: ReactNode }) {
   return (
     <article className={[styles.tile, styles.reveal, className].filter(Boolean).join(' ')} aria-labelledby={id}>
       <div className={styles.tileText}>
-        <Eyebrow number={number}>{eyebrow}</Eyebrow>
+        <Eyebrow>{eyebrow}</Eyebrow>
         <h3 id={id} className={styles.tileTitle}>
           {title}
         </h3>
@@ -121,18 +134,8 @@ function featureOf(key: Feature['key']): Feature {
   return feature;
 }
 
-/** "Strong earns every point of a check", from the scoring config. */
-function shareText(share: number): string {
-  if (share >= 1) return 'Earns every point of the check';
-  if (share <= 0) return 'Earns no points yet';
-  return `Earns ${Math.round(share * 100)}% of the points`;
-}
-
-/** What Drishti does, as one bento grid: the three features with real pictures, then the score, the report and the rules. */
+/** What Drishti does, as one bento grid: the three features first, largest, with real pictures, then the score, the report and the rules. */
 export function Features({ showcase }: { showcase: Showcase }) {
-  const audit = featureOf('audit');
-  const rivals = featureOf('rivals');
-  const demand = featureOf('demand');
   return (
     <section id="features" className={styles.section} data-theme="dark" aria-labelledby="features-title">
       <div className={styles.container}>
@@ -144,48 +147,46 @@ export function Features({ showcase }: { showcase: Showcase }) {
         </div>
 
         <div className={styles.bento}>
-          <Tile id="tile-audit" eyebrow={audit.name} number={audit.number} title={audit.question} lede={audit.lede} className={styles.tileWide}>
-            <FixesPicture showcase={showcase} />
-          </Tile>
+          <FeatureTile feature={featureOf('audit')} className={styles.featureWide}>
+            <AuditPicture showcase={showcase} />
+          </FeatureTile>
 
-          <Tile id="tile-rivals" eyebrow={rivals.name} number={rivals.number} title={rivals.question} lede={rivals.lede}>
-            <LadderPicture showcase={showcase} />
-          </Tile>
+          <FeatureTile feature={featureOf('rivals')}>
+            <RivalsPicture showcase={showcase} />
+          </FeatureTile>
 
-          <Tile id="tile-demand" eyebrow={demand.name} number={demand.number} title={demand.question} lede={demand.lede}>
+          <FeatureTile feature={featureOf('demand')}>
             <DemandPicture showcase={showcase} />
-          </Tile>
+          </FeatureTile>
 
-          <Tile id="tile-score" eyebrow="The score" title={SCORE.title} lede={SCORE.lede} className={styles.tileWide}>
+          <Tile id="tile-score" eyebrow="The score" title={SCORE.title} lede={SCORE.lede} className={styles.tileScore}>
             <ul className={styles.scorePillars}>
               {SCORE.pillars.map((pillar) => (
                 <li key={pillar.pillar} className={styles.scorePillar}>
-                  <p className={styles.scorePillarName}>
-                    <PillarIcon pillar={pillar.pillar} size={20} />
-                    {pillar.name}
-                  </p>
-                  <p className={styles.scorePillarQuestion}>{pillar.question}</p>
-                  <p className={styles.scorePillarText}>{pillar.text}</p>
-                  <p className={styles.scorePillarChecks}>
+                  <PillarIcon pillar={pillar.pillar} />
+                  <span>
+                    <span className={styles.scorePillarName}>{pillar.name}</span> {pillar.question}
+                  </span>
+                  <span className={styles.scorePillarChecks}>
                     <span className="num">{pillar.checks.length}</span> checks
-                  </p>
+                  </span>
                 </li>
               ))}
             </ul>
             <ul className={styles.resultsKey} aria-label="Every check gets one of four results">
               {RESULTS.map((result) => (
                 <li key={result} className={styles.resultsKeyItem}>
-                  <ResultGauge result={result} />
+                  <ResultGauge result={result} size="sm" />
                   <span className={styles.resultsKeyShare}>
                     <span className="visually-hidden">{RESULT_LABELS[result]}: </span>
-                    {shareText(SCORING_V1.resultShares[result])}
+                    {resultShareText(result)}
                   </span>
                 </li>
               ))}
             </ul>
           </Tile>
 
-          <Tile id="tile-report" eyebrow={REPORT_TILE.name} title={REPORT_TILE.title} lede={REPORT_TILE.lede} className={`${styles.tileWideLarge} ${styles.tileReport}`}>
+          <Tile id="tile-report" eyebrow={REPORT_TILE.name} title={REPORT_TILE.title} lede={REPORT_TILE.lede}>
             <a href="#report" className={styles.tileLink}>
               {REPORT_TILE.link}
               <Icon name="arrowDown" size={16} />

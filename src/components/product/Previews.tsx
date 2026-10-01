@@ -3,6 +3,9 @@
 // scoring engine). They can't be focused or clicked, and screen readers get a short summary
 // instead. Every picture says it is sample data.
 
+import { MonthBars } from '@/components/charts/MonthBars';
+import { PillarDots } from '@/components/charts/PillarDots';
+import { ScoreGauge } from '@/components/charts/ScoreGauge';
 import { DemandCard, type DemandHighlightData } from '@/components/home/DemandCard';
 import { HomeSummary } from '@/components/home/HomeSummary';
 import { NextSteps, type NextStep } from '@/components/home/NextSteps';
@@ -11,11 +14,13 @@ import { INSTITUTION_NAV } from '@/components/shell/nav';
 import { Icon } from '@/components/ui/Icon';
 import { KpiNumber } from '@/components/ui/Kpi';
 import { PageHead } from '@/components/ui/Layout';
-import { CheckIcon, PlatformMark } from '@/components/ui/Marks';
-import { ResultGauge } from '@/components/ui/Results';
-import type { ListItem } from '@/audit/view';
+import { CheckIcon, PillarIcon, PlatformMark } from '@/components/ui/Marks';
+import { Delta, ResultGauge, ScoreLabel } from '@/components/ui/Results';
+import { pillarChecks, type ListItem } from '@/audit/view';
 import { countWords } from '@/demand/text';
-import { RESULTS, type CheckResult } from '@/domain/types';
+import { ordinal } from '@/domain/format';
+import { PILLAR_LABELS, PILLARS, RESULTS, type CheckResult } from '@/domain/types';
+import { DEMAND_PLATFORMS, platformFromUrl } from '@/graphics/platforms';
 import type { Showcase } from '@/product/showcase';
 import type { LadderRow } from '@/rivals/compare';
 import home from '@/components/home/home.module.css';
@@ -78,6 +83,8 @@ function SidebarPicture({ name }: { name: string }) {
 export function AppWindow({ showcase }: { showcase: Showcase }) {
   const { audit, institution, home: picture, rivals, demand, report } = showcase;
   const steps: NextStep[] = report.things.map((thing, index) => ({ key: `${thing.source}-${index}`, source: thing.source, title: thing.title, detail: thing.detail, href: null }));
+  const move = rivals.moves[0];
+  const latestMove = move ? { rivalName: rivals.names.get(move.rivalId) ?? '', description: move.description, sourceUrl: move.sourceUrl, detectedAt: move.detectedAt } : null;
   return (
     <figure className={styles.window}>
       <div className={styles.windowFrame} data-theme="dark">
@@ -86,11 +93,11 @@ export function AppWindow({ showcase }: { showcase: Showcase }) {
           <div className={styles.windowPanel}>
             <div className={home.home}>
               <PageHead title="Home" question="How are we doing this month?" titleAs="p" />
-              <HomeSummary view={audit} checkedAt={picture.checkedAt} trend={{ points: picture.trend }} />
+              <HomeSummary view={audit} checkedAt={picture.checkedAt} trend={picture.trend} />
               <NextSteps id="picture-next" title="3 things to do this month" description="In order: the steps that could make the most difference this month." steps={steps} />
               <div className={home.pair}>
-                <RivalsCard ladder={pictureLadder(rivals.rows)} standings={null} verdict={rivals.verdict} rivalsHref={null} />
-                <DemandCard highlight={demandHighlight(showcase)} demandHref={null} place={demand.place} />
+                <RivalsCard ladder={pictureLadder(rivals.rows)} standings={null} verdict={rivals.verdict} rivalsHref={null} latestMove={latestMove} />
+                <DemandCard highlight={demandHighlight(showcase)} demandHref={null} place={demand.place} history={demand.topHistory} />
               </div>
             </div>
           </div>
@@ -115,64 +122,146 @@ function weakest(item: ListItem): CheckResult {
   return item.parts.reduce<CheckResult>((worst, part) => ((RESULT_ORDER.get(part.result) ?? 0) > (RESULT_ORDER.get(worst) ?? 0) ? part.result : worst), 'strong');
 }
 
-/** The Audit tile: the top 3 fixes, each with its result and the points it could add. */
-export function FixesPicture({ showcase }: { showcase: Showcase }) {
-  const fixes = showcase.audit.fixes.slice(0, 3);
+/** The Audit tile: the score with its pillars, the top 3 fixes, and every check at a glance. */
+export function AuditPicture({ showcase }: { showcase: Showcase }) {
+  const { audit } = showcase;
+  const fixes = audit.fixes.slice(0, 3);
+  const pillars = pillarChecks(audit);
+  const checks = pillars.reduce((sum, row) => sum + row.checks.length, 0);
   return (
-    <div className={styles.picture} aria-hidden="true" inert>
-      <p className={styles.pictureHead}>Fix these first</p>
-      <ol className={styles.fixList}>
-        {fixes.map((fix, index) => (
-          <li key={fix.key} className={styles.fixRow}>
-            <span className={`${styles.fixNumber} num`}>{index + 1}</span>
-            <span className={styles.fixName}>
-              <CheckIcon check={fix.key} />
-              {fix.name}
-            </span>
-            <ResultGauge result={weakest(fix)} size="sm" />
-            <span className={styles.fixGain}>
-              <span className="num">+{Math.round(fix.points)}</span> points
-            </span>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-/** The Rivals tile: you and your rivals by overall score. */
-export function LadderPicture({ showcase }: { showcase: Showcase }) {
-  return (
-    <div className={styles.picture} aria-hidden="true" inert>
-      <RivalLadder rows={pictureLadder(showcase.rivals.rows)} />
-    </div>
-  );
-}
-
-/** The Demand tile: the fastest rise in the city this month. */
-export function DemandPicture({ showcase }: { showcase: Showcase }) {
-  const highlight = demandHighlight(showcase);
-  const rising = showcase.demand.view.rising.filter((row) => row.text !== highlight?.text).slice(0, 2);
-  if (!highlight) return null;
-  const rounded = Math.round(highlight.changePct ?? 0);
-  return (
-    <div className={styles.picture} aria-hidden="true" inert>
-      <p className={styles.pictureHead}>Rising fastest in {highlight.region}</p>
-      <KpiNumber icon={<Icon name="arrowUp" size={20} />} value={`${rounded}%`} suffix="up since last month" />
-      <p className={styles.pictureTitle}>{highlight.text}</p>
-      <p className={styles.pictureMeta}>
-        <PlatformMark platform="search_trends" name={false} />
-        {countWords('rising', highlight.count)}
-      </p>
-      {rising.length ? (
-        <ul className={styles.risingList}>
-          {rising.map((row) => (
-            <li key={row.id} className={styles.risingRow}>
-              <span>{row.text}</span>
-              <span className="num">+{Math.round(row.changePct ?? 0)}%</span>
+    <div className={`${styles.picture} ${styles.auditPicture}`} data-theme="dark" aria-hidden="true" inert>
+      <div className={`${styles.pictureCard} ${styles.scoreCard}`}>
+        <p className={styles.pictureHead}>Overall score</p>
+        <div className={styles.scoreGauge}>
+          <ScoreGauge score={audit.scores.overall} />
+        </div>
+        <p className={styles.scoreCardMeta}>
+          <ScoreLabel score={audit.scores.overall} />
+          <Delta change={audit.changes.overall} since="last Audit" size="sm" />
+        </p>
+        <ul className={styles.pillarBars}>
+          {PILLARS.map((pillar) => (
+            <li key={pillar} className={styles.pillarBar}>
+              <PillarIcon pillar={pillar} />
+              <span>{PILLAR_LABELS[pillar]}</span>
+              <span className={styles.pillarTrack}>
+                <span className={styles.pillarFill} style={{ width: `${Math.max(0, Math.min(100, audit.scores[pillar]))}%` }} />
+              </span>
+              <span className={`${styles.pillarValue} num`}>{audit.scores[pillar]}</span>
             </li>
           ))}
         </ul>
+      </div>
+      <div className={styles.pictureCard}>
+        <p className={styles.pictureHead}>
+          <span>Fix these first</span>
+          <span>
+            <span className="num">{audit.fixes.length}</span> to fix
+          </span>
+        </p>
+        <ol className={styles.fixList}>
+          {fixes.map((fix, index) => (
+            <li key={fix.key} className={styles.fixRow}>
+              <span className={`${styles.fixNumber} num`}>{index + 1}</span>
+              <span className={styles.fixName}>
+                <CheckIcon check={fix.key} />
+                {fix.name}
+              </span>
+              <ResultGauge result={weakest(fix)} size="sm" />
+              <span className={styles.fixGain}>
+                <span className="num">+{Math.round(fix.points)}</span> points
+              </span>
+            </li>
+          ))}
+        </ol>
+        <p className={`${styles.pictureHead} ${styles.pictureHeadNext}`}>
+          <span>Every check</span>
+          <span>
+            <span className="num">{checks}</span> checks
+          </span>
+        </p>
+        <ul className={styles.everyCheck}>
+          {pillars.map((row) => (
+            <li key={row.pillar} className={styles.everyCheckPillar}>
+              <PillarIcon pillar={row.pillar} size={14} />
+              <span className={styles.everyCheckGauges}>
+                {row.checks.map((check) => (
+                  <ResultGauge key={check.key} result={check.result} size="sm" hideWord />
+                ))}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/** The Rivals tile: you and your rivals by overall score, then pillar by pillar. */
+export function RivalsPicture({ showcase }: { showcase: Showcase }) {
+  const rows = pictureLadder(showcase.rivals.rows);
+  const you = rows.find((row) => row.you);
+  return (
+    <div className={styles.picture} data-theme="dark" aria-hidden="true" inert>
+      <div className={styles.pictureCard}>
+        <p className={styles.pictureHead}>
+          <span>Your rank by overall score</span>
+          {you?.rank ? (
+            <span>
+              <span className={`${styles.pictureRank} num`}>{ordinal(you.rank)}</span> of {rows.length}
+            </span>
+          ) : null}
+        </p>
+        <RivalLadder rows={rows} />
+      </div>
+      <div className={`${styles.pictureCard} ${styles.pictureGrow}`}>
+        <p className={styles.pictureHead}>Pillar by pillar</p>
+        <PillarDots rows={showcase.rivals.spread} />
+      </div>
+    </div>
+  );
+}
+
+/** The Demand tile: the fastest rise in the city this month, its searches by month and what else is rising, then the question asked most. */
+export function DemandPicture({ showcase }: { showcase: Showcase }) {
+  const highlight = demandHighlight(showcase);
+  const rising = showcase.demand.view.rising.filter((row) => row.text !== highlight?.text).slice(0, 2);
+  const asked = showcase.demand.view.questions[0] ?? null;
+  if (!highlight) return null;
+  const rounded = Math.round(highlight.changePct ?? 0);
+  const askedOn = asked ? ((typeof asked.meta.platform === 'string' ? DEMAND_PLATFORMS[asked.meta.platform] : undefined) ?? platformFromUrl(asked.sourceUrl) ?? 'website') : null;
+  return (
+    <div className={styles.picture} data-theme="dark" aria-hidden="true" inert>
+      <div className={`${styles.pictureCard} ${styles.pictureGrow}`}>
+        <p className={styles.pictureHead}>Rising fastest in {highlight.region}</p>
+        <KpiNumber icon={<Icon name="arrowUp" size={20} />} value={`${rounded}%`} suffix="up since last month" />
+        <p className={styles.pictureTitle}>{highlight.text}</p>
+        <p className={styles.pictureMeta}>
+          <PlatformMark platform="search_trends" name={false} />
+          {countWords('rising', highlight.count)}
+        </p>
+        <MonthBars points={showcase.demand.topHistory} title="Searches by month" valueLabel="Searches" grow />
+        {rising.length ? (
+          <ul className={styles.risingList}>
+            {rising.map((row) => (
+              <li key={row.id} className={styles.risingRow}>
+                <span>{row.text}</span>
+                <span className="num">+{Math.round(row.changePct ?? 0)}%</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+      {asked && askedOn ? (
+        <div className={styles.pictureCard}>
+          <p className={styles.pictureHead}>What students ask</p>
+          <p className={styles.pictureTitle}>{asked.text}</p>
+          <p className={styles.pictureMeta}>
+            <PlatformMark platform={askedOn} name={false} />
+            <span>{asked.programName}</span>
+            <span>{countWords('question', asked.count)}</span>
+          </p>
+        </div>
       ) : null}
     </div>
   );

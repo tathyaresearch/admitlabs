@@ -1,4 +1,4 @@
-import { historyByMonth, overviewView } from '@/audit/view';
+import { overviewView, scoresByMonth } from '@/audit/view';
 import { AuditScreen } from '@/components/audit/AuditScreen';
 import { NoAuditYet } from '@/components/audit/NoAuditYet';
 import { RefreshButton } from '@/components/audit/RefreshButton';
@@ -42,7 +42,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       allLabel={free ? null : 'All programs'}
       scoreCaption="Overall score"
       checkedAt={data.audit.runAt}
-      trend={history ? { points: historyByMonth(history, (runAt) => monthKey(new Date(runAt))) } : null}
+      trend={history ? scoresByMonth(history, (runAt) => monthKey(new Date(runAt))) : null}
       note={auditNote(data, viewer.tier)}
       history={history}
       historyLabel="Overall score by month"

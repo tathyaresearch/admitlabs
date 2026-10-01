@@ -98,7 +98,7 @@ npm run rivals -- --actions --institution eastgate-university
 What students search, ask and worry about (spec section 9), grouped: a topic, a count and a source, never a person. Demand is pulled once per region (city, state, All India) and program, and shared by every institution that needs it.
 
 - **Paid and Client** see their city, state or All India (the switch at the top), for all their programs or one: the fastest rising course or career with its searches month by month, what students worry about most, the season clock, 5 content ideas built on real questions, the top questions, the worries (the usual five plus anything new), what is rising and falling (one list, each change a bar from the middle), and what students say about them and the rivals they track (from each one's state, with a bar of praise against criticism).
-- **Free** sees one rising trend, for its Free program in its city (`demand_highlight`), and one "Paid shows everything students are asking" card with counts (`demand_teaser`). Home shows the same highlight on every plan.
+- **Free** sees one rising trend, for its Free program in its city (`demand_highlight`), and one "Paid shows everything students are asking" card with counts (`demand_teaser`). Home shows the same highlight on every plan; Paid and Client also see its searches by month (`loadHighlightHistory`).
 - **Plan rules, enforced by the database:** Paid and Client read only their own regions and programs. Mentions come only through `demand_mentions`, only about the institution and its tracked rivals.
 - Hindi and Assamese items show in English with a language tag; the original wording stays in the data.
 - Programs added under Other have no shared key, so Demand does not cover them yet.

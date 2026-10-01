@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { historyByMonth, overviewView } from '@/audit/view';
+import { overviewView, scoresByMonth } from '@/audit/view';
 import { fixStep } from '@/components/audit/AuditScreen';
 import { AddedTag } from '@/components/details/Added';
 import { HomeSummary } from '@/components/home/HomeSummary';
@@ -77,7 +77,10 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
 
   // The score's history, from the same kind of Audit as the score itself.
   const trendRows = latest?.kind === 'team' ? institution.teamAudits : latest && latest.kind !== 'rival' ? institution.history : [];
-  const trend = { points: historyByMonth(trendRows.map((row) => ({ runAt: row.runAt, scores: { overall: row.overall } })), (runAt) => monthKey(new Date(runAt))) };
+  const trend = scoresByMonth(
+    trendRows.map((row) => ({ runAt: row.runAt, scores: { overall: row.overall, discovered: row.discovered, trusted: row.trusted, chosen: row.chosen } })),
+    (runAt) => monthKey(new Date(runAt)),
+  );
   const scoreName = !latest ? '' : latest.kind === 'team' ? 'Team Audit score' : latest.kind === 'rival' ? 'Rival Audit score' : 'Their score';
 
   const tabs: TabItem[] = [

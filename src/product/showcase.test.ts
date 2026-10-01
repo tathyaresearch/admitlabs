@@ -37,6 +37,24 @@ describe('the product page previews', () => {
     assert.equal(report.sample, SAMPLE_REPORT_NOTE);
   });
 
+  test('the feature pictures: every rival on each pillar, and the fastest rise month by month', async () => {
+    const { rivals, demand } = await loadShowcase();
+    assert.deepEqual(
+      rivals.spread.map((row) => [row.pillar, row.rank, row.of]),
+      [
+        ['discovered', 1, 4],
+        ['trusted', 2, 4],
+        ['chosen', 2, 4],
+      ],
+    );
+    assert.deepEqual(
+      demand.topHistory.map((point) => point.month),
+      ['2026-04', '2026-05', '2026-06', '2026-07', '2026-08'],
+      'every pull up to the report month, oldest first',
+    );
+    assert.equal(demand.topHistory.at(-1)?.count, demand.view.topTrend?.count, 'the newest month is the one the tile names');
+  });
+
   test('only fictional sample institutions appear', async () => {
     const { institution, rivals } = await loadShowcase();
     const names = new Set(SAMPLE_INSTITUTIONS.map((sample) => sample.name));

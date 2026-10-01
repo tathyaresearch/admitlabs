@@ -153,7 +153,7 @@ export interface TeamInstitution {
   plan: { tier: Tier; startsAt: string; endsAt: string | null; setBy: string | null } | null;
   /** Their own latest Audit once signed up; otherwise the latest team Audit (or rival Audit). */
   audit: StoredAudit | null;
-  history: Array<{ id: string; runAt: string; overall: number }>;
+  history: Array<{ id: string; runAt: string; overall: number; discovered: number; trusted: number; chosen: number }>;
   /** The team Audits, newest first (the latest 6). Private: they see one only through a share link. */
   teamAudits: Array<{ id: string; runAt: string; overall: number; discovered: number; trusted: number; chosen: number; topFix: string | null }>;
   programNames: Map<string, string>;
@@ -217,7 +217,7 @@ export async function loadTeamInstitution(id: string): Promise<TeamInstitution |
     isProspect: Boolean(institution.institution_status?.is_prospect),
     plan: plan ? { tier: plan.tier, startsAt: plan.starts_at, endsAt: plan.ends_at, setBy: plan.set_by ? (emails.get(plan.set_by) ?? null) : null } : null,
     audit: audit ?? teamAudit ?? rivalAudit,
-    history: history.map((row) => ({ id: row.id, runAt: row.runAt, overall: row.scores.overall })),
+    history: history.map((row) => ({ id: row.id, runAt: row.runAt, ...row.scores })),
     teamAudits: (teamAudits.data ?? []).map((row) => {
       const top = row.audit_checks[0]?.check_key;
       return {

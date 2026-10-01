@@ -365,6 +365,29 @@
   }
 }
 
+/* The fastest rise: its words, and its searches by month beside them when the card is wide. */
+.riseCard {
+  container-type: inline-size;
+}
+
+.rise {
+  display: grid;
+  gap: var(--space-5) var(--space-8);
+}
+
+@container (min-width: 30rem) {
+  .rise {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    align-items: end;
+  }
+}
+
+.riseWords {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
 .kpiTitle {
   font: var(--type-section);
   font-size: 1.25rem;

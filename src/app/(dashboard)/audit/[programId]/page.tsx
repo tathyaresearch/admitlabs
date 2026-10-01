@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { historyByMonth, programView } from '@/audit/view';
+import { programView, scoresByMonth } from '@/audit/view';
 import { AuditScreen } from '@/components/audit/AuditScreen';
 import { ProgramTabs } from '@/components/audit/Programs';
 import { UnlockCard } from '@/components/audit/UnlockCard';
@@ -86,7 +86,7 @@ export default async function ProgramAuditPage({ params }: Props) {
       allLabel="All programs"
       scoreCaption={`${program.name} score`}
       checkedAt={data.audit.runAt}
-      trend={{ points: historyByMonth(history, (runAt) => monthKey(new Date(runAt))) }}
+      trend={scoresByMonth(history, (runAt) => monthKey(new Date(runAt)))}
       note={auditNote(data, viewer.tier)}
       history={history}
       historyLabel={`${program.name} score by month`}

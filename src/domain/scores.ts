@@ -3,6 +3,7 @@
 
 import { SCORING_V1 } from '../config/scoring.v1.ts';
 import type { ScoreLabelBand, ScoringConfig } from './scoring-config.ts';
+import type { CheckResult } from './types.ts';
 
 export type ScoreLabel = ScoreLabelBand['label'];
 
@@ -30,4 +31,12 @@ export function nextBandText(score: number, config: Pick<ScoringConfig, 'labels'
   const top = [...config.labels].sort((a, b) => b.min - a.min)[0];
   if (!top) return '';
   return rounded === top.min ? `Right on the ${top.label} line` : `${points(rounded - top.min)} above the ${top.label} line`;
+}
+
+/** What a result earns of a check's points, in words: "Earns 60% of the points". */
+export function resultShareText(result: CheckResult, config: Pick<ScoringConfig, 'resultShares'> = SCORING_V1): string {
+  const share = config.resultShares[result];
+  if (share >= 1) return 'Earns every point of the check';
+  if (share <= 0) return 'Earns no points yet';
+  return `Earns ${Math.round(share * 100)}% of the points`;
 }

@@ -1,7 +1,9 @@
 // Home's demand highlight in one card: the fastest rising course or career in your city this
-// month, how much it rose, and where it was found (every insight shows its source).
+// month, how much it rose, and where it was found (every insight shows its source). On Paid and
+// Client, its searches month by month too.
 
 import Link from 'next/link';
+import { MonthBars, type MonthCount } from '@/components/charts/MonthBars';
 import { Source } from '@/components/demand/Source';
 import { Icon } from '@/components/ui/Icon';
 import { KpiNumber } from '@/components/ui/Kpi';
@@ -20,10 +22,21 @@ export interface DemandHighlightData {
   month: string;
 }
 
-export function DemandCard({ highlight, demandHref, place }: { highlight: DemandHighlightData | null; demandHref: string | null; place: string }) {
+export function DemandCard({
+  highlight,
+  demandHref,
+  place,
+  history = [],
+}: {
+  highlight: DemandHighlightData | null;
+  demandHref: string | null;
+  place: string;
+  /** The trend's searches by month (Paid and Client). */
+  history?: readonly MonthCount[];
+}) {
   const rounded = highlight?.changePct === null || highlight?.changePct === undefined ? null : Math.round(highlight.changePct);
   return (
-    <section className={`${styles.card} ${styles.demandCard}`} aria-labelledby="home-demand-title">
+    <section className={styles.card} aria-labelledby="home-demand-title">
       <div className={styles.cardHead}>
         <h2 id="home-demand-title" className={styles.cardTitle}>
           <Icon name="demand" size={20} className={styles.blockIcon} />
@@ -56,6 +69,7 @@ export function DemandCard({ highlight, demandHref, place }: { highlight: Demand
             <span>{countWords('rising', highlight.count)}</span>
             <Source url={highlight.sourceUrl} platform="trends" />
           </p>
+          <MonthBars points={history} title="Searches by month" valueLabel="Searches" grow />
         </>
       ) : (
         <p className={styles.cardText}>Your first Demand pull is on its way. It shows here once it is ready.</p>

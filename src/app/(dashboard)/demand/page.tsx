@@ -125,26 +125,29 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
           </h2>
           <p className={audit.lead}>{worrySentence(place, view.asksMost) || `What students in ${place} search for, ask and worry about this month.`}</p>
           <div className={styles.kpis}>
-            <KpiCard label={`Rising fastest in ${place}`}>
+            <KpiCard label={`Rising fastest in ${place}`} className={styles.riseCard}>
               {top ? (
-                <>
-                  {rise === null ? (
-                    <p className={styles.kpiTitle}>New this month</p>
-                  ) : (
-                    <KpiNumber
-                      icon={<Icon name={rise < 0 ? 'arrowDown' : 'arrowUp'} size={20} />}
-                      value={`${Math.abs(rise)}%`}
-                      suffix={rise < 0 ? 'down since last month' : 'up since last month'}
-                    />
-                  )}
-                  <p className={styles.kpiTitle}>{top.text}</p>
-                  <p className={styles.trendMeta}>
-                    {!single ? <span>{top.programName}</span> : null}
-                    <span>{countWords('rising', top.count)}</span>
-                    <Source url={top.sourceUrl} platform={top.meta.platform ?? 'trends'} />
-                  </p>
+                // The words and the searches by month side by side, so this card is as tall as the season's.
+                <div className={history.length > 1 ? styles.rise : undefined}>
+                  <div className={styles.riseWords}>
+                    {rise === null ? (
+                      <p className={styles.kpiTitle}>New this month</p>
+                    ) : (
+                      <KpiNumber
+                        icon={<Icon name={rise < 0 ? 'arrowDown' : 'arrowUp'} size={20} />}
+                        value={`${Math.abs(rise)}%`}
+                        suffix={rise < 0 ? 'down since last month' : 'up since last month'}
+                      />
+                    )}
+                    <p className={styles.kpiTitle}>{top.text}</p>
+                    <p className={styles.trendMeta}>
+                      {!single ? <span>{top.programName}</span> : null}
+                      <span>{countWords('rising', top.count)}</span>
+                      <Source url={top.sourceUrl} platform={top.meta.platform ?? 'trends'} />
+                    </p>
+                  </div>
                   <MonthBars points={history} title="Searches by month" valueLabel="Searches" />
-                </>
+                </div>
               ) : (
                 <p className={styles.kpiTitle}>Nothing is rising sharply this month.</p>
               )}

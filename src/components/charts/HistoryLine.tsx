@@ -1,10 +1,13 @@
 'use client';
 
-// Score history, month by month, on a fixed 0 to 100 scale with the band lines marked.
-// Hover or use the arrow keys to read any month. A hidden table carries every value.
+// Score history, month by month, with the band lines marked: on the whole 0 to 100 scale, or
+// (`fit`) on a range fitted to the scores, as the monthly report draws it, so a short chart
+// uses its space. `labelEvery` writes every month's score on its point. Hover or use the arrow
+// keys to read any month. A hidden table carries every value.
 
 import { SCORING_V1 } from '@/config/scoring.v1';
 import { formatMonth, formatMonthShort } from '@/domain/format';
+import { rangeTicks, scoreRange } from '@/graphics/range';
 import { useState, type KeyboardEvent } from 'react';
 import styles from './charts.module.css';
 import { useChartWidth } from './useChartWidth';
@@ -19,7 +22,22 @@ export interface HistoryPoint {
 const BAND_COLUMN = 92;
 const MIN_WIDTH_FOR_BANDS = 480;
 
-export function HistoryLine({ points, label = 'Overall score by month', height: HEIGHT = 240 }: { points: readonly HistoryPoint[]; label?: string; height?: number }) {
+/** A band's name is shown only when this much of the band is on the chart. */
+const MIN_BAND_SHOWN = 8;
+
+export function HistoryLine({
+  points,
+  label = 'Overall score by month',
+  height: HEIGHT = 240,
+  fit = false,
+  labelEvery = false,
+}: {
+  points: readonly HistoryPoint[];
+  label?: string;
+  height?: number;
+  fit?: boolean;
+  labelEvery?: boolean;
+}) {
   const { ref, width } = useChartWidth<HTMLDivElement>();
   const [active, setActive] = useState<number | null>(null);
 
@@ -30,9 +48,20 @@ export function HistoryLine({ points, label = 'Overall score by month', height: 
   const plotWidth = width - MARGIN.left - MARGIN.right;
   const plotHeight = HEIGHT - MARGIN.top - MARGIN.bottom;
   const x = (index: number) => MARGIN.left + (points.length === 1 ? plotWidth / 2 : (index * plotWidth) / (points.length - 1));
-  const y = (score: number) => MARGIN.top + (1 - score / 100) * plotHeight;
+  const [low, high] = fit ? scoreRange(points.map((point) => point.score)) : [0, 100];
+  const y = (score: number) => MARGIN.top + (1 - (Math.max(low, Math.min(high, score)) - low) / (high - low)) * plotHeight;
   const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index).toFixed(1)} ${y(point.score).toFixed(1)}`).join(' ');
   const bands = [...SCORING_V1.labels].sort((a, b) => a.min - b.min);
+  const ticks = rangeTicks(
+    [low, high],
+    bands.map((band) => band.min),
+  );
+  // The part of each band on the chart, named in the middle of it when there is room.
+  const shownBands = bands.flatMap((band) => {
+    const from = Math.max(band.min, low);
+    const to = Math.min(band.max, high);
+    return to - from >= MIN_BAND_SHOWN ? [{ label: band.label, middle: (from + to) / 2 }] : [];
+  });
   const lastIndex = points.length - 1;
   const last = points[lastIndex] as HistoryPoint;
   const shown = active ?? null;
@@ -76,8 +105,8 @@ export function HistoryLine({ points, label = 'Overall score by month', height: 
         onPointerLeave={() => setActive(null)}
         onBlur={() => setActive(null)}
       >
-        {/* Band lines: where Needs work and Strong begin. */}
-        {[0, ...bands.map((band) => band.min).filter((min) => min > 0), 100].map((tick) => (
+        {/* Band lines: where Needs work and Strong begin, and the chart's ends. */}
+        {ticks.map((tick) => (
           <g key={tick}>
             <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(tick)} y2={y(tick)} className={styles.grid} />
             <text x={MARGIN.left - 10} y={y(tick)} className={`${styles.axisText} num`} textAnchor="end" dominantBaseline="middle">
@@ -86,8 +115,8 @@ export function HistoryLine({ points, label = 'Overall score by month', height: 
           </g>
         ))}
         {showBands
-          ? bands.map((band) => (
-              <text key={band.label} x={width - MARGIN.right + 14} y={y((band.min + band.max) / 2)} className={styles.bandText} dominantBaseline="middle">
+          ? shownBands.map((band) => (
+              <text key={band.label} x={width - MARGIN.right + 14} y={y(band.middle)} className={styles.bandText} dominantBaseline="middle">
                 {band.label}
               </text>
             ))
@@ -105,9 +134,20 @@ export function HistoryLine({ points, label = 'Overall score by month', height: 
         {points.map((point, index) => (
           <circle key={point.month} cx={x(index)} cy={y(point.score)} r={index === shown || index === lastIndex ? 5 : 3.5} className={styles.point} />
         ))}
-        <text x={x(lastIndex)} y={y(last.score) - 14} className={`${styles.endLabel} num`} textAnchor="middle">
-          {Math.round(last.score)}
-        </text>
+        {points.map((point, index) =>
+          index === lastIndex || labelEvery ? (
+            <text
+              key={`label-${point.month}`}
+              x={x(index)}
+              y={y(point.score) - 14}
+              className={`${index === lastIndex ? styles.endLabel : styles.pointLabel} num`}
+              textAnchor="middle"
+              aria-hidden="true"
+            >
+              {Math.round(point.score)}
+            </text>
+          ) : null,
+        )}
       </svg>
 
       {shownPoint ? (

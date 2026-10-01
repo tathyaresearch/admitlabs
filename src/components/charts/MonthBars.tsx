@@ -1,6 +1,7 @@
 // Counts by month as small columns from zero: earlier months in grey, the newest in the text
 // colour, with the first and newest counts written on them. CSS only, so it is crisp at any
-// width and needs no script. A hidden table carries every value.
+// width and needs no script. `grow`: in a card that is taller than its words, the bars take the
+// height to spare, so the card has no empty space. A hidden table carries every value.
 
 import { formatCount, formatMonth, formatMonthShort } from '@/domain/format';
 import styles from './charts.module.css';
@@ -11,12 +12,12 @@ export interface MonthCount {
   count: number;
 }
 
-export function MonthBars({ points, title, valueLabel }: { points: readonly MonthCount[]; title: string; valueLabel: string }) {
+export function MonthBars({ points, title, valueLabel, grow = false }: { points: readonly MonthCount[]; title: string; valueLabel: string; grow?: boolean }) {
   if (points.length < 2) return null;
   const top = Math.max(1, ...points.map((point) => point.count));
   const last = points.length - 1;
   return (
-    <figure className={styles.monthBars}>
+    <figure className={grow ? `${styles.monthBars} ${styles.monthBarsGrow}` : styles.monthBars}>
       <figcaption className={styles.monthBarsTitle}>{title}</figcaption>
       <div className={styles.monthBarsPlot} aria-hidden="true">
         {points.map((point, index) => (

@@ -47,7 +47,6 @@ export const FEATURES_HEAD = {
 
 export interface Feature {
   key: 'audit' | 'rivals' | 'demand';
-  number: string;
   name: string;
   question: string;
   lede: string;
@@ -56,21 +55,18 @@ export interface Feature {
 export const FEATURES: readonly Feature[] = [
   {
     key: 'audit',
-    number: '01',
     name: 'Audit',
     question: 'How do we look?',
     lede: `A score out of 100 from ${CHECKS.length} checks: how easily students find you, trust you and choose you. Then what to fix first, ranked by the points it could add.`,
   },
   {
     key: 'rivals',
-    number: '02',
     name: 'Rivals',
     question: 'Who’s ahead of us?',
     lede: `Pick ${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals. See where you lead, where they lead, and what changed.`,
   },
   {
     key: 'demand',
-    number: '03',
     name: 'Demand',
     question: 'What do students want?',
     lede: 'What students in your city search for, ask and worry about, every month.',
@@ -92,10 +88,10 @@ export const TRUST_TILE = {
   points: ['Every result shows what was found, where and when.', 'Learn from rivals, never copy. They never know you track them.', 'Demand is grouped. Never one student.'],
 } as const;
 
-const PILLAR_STORY: Readonly<Record<Pillar, { question: string; text: string }>> = {
-  discovered: { question: 'Can students find you?', text: 'Search, maps, social media and AI answers.' },
-  trusted: { question: 'Do they believe you?', text: 'Proof: placements, reviews, approvals, faculty and real students.' },
-  chosen: { question: 'Is it easy to pick you?', text: 'Fees, program pages, a quick enquiry, clear admission steps, and a website that works on a phone.' },
+const PILLAR_QUESTIONS: Readonly<Record<Pillar, string>> = {
+  discovered: 'Can students find you?',
+  trusted: 'Do they believe you?',
+  chosen: 'Is it easy to pick you?',
 };
 
 export const SCORE = {
@@ -104,7 +100,7 @@ export const SCORE = {
   pillars: PILLARS.map((pillar) => ({
     pillar,
     name: PILLAR_LABELS[pillar],
-    ...PILLAR_STORY[pillar],
+    question: PILLAR_QUESTIONS[pillar],
     checks: checksForPillar(pillar).map((check) => (check.key === 'approvals' ? 'Approvals or skilling recognition' : check.name)),
   })),
 };

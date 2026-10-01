@@ -14,6 +14,7 @@
 /* The answer and the numbers */
 
 .summary {
+  container-type: inline-size;
   display: grid;
   gap: var(--space-5);
 }
@@ -57,33 +58,24 @@
   transform: translateX(2px);
 }
 
-.kpis {
+/* The score row: the gauge beside the score by month. The summary measures itself, so the same
+   parts work on Home, the Audit, the team's pages and the product page's picture. */
+.overview {
   display: grid;
   gap: var(--card-gap);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.scoreCard {
-  grid-column: 1 / -1;
+.scoreBody {
+  display: grid;
+  gap: var(--space-6);
 }
 
-@container (min-width: 52rem) {
-  .kpis {
-    grid-template-columns: minmax(0, 2.4fr) repeat(3, minmax(0, 1fr));
+@container (min-width: 40rem) {
+  .scoreBody {
+    grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-10);
   }
-
-  .scoreCard {
-    grid-column: auto;
-  }
-}
-
-.scoreRow {
-  display: flex;
-  flex: 1;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4);
 }
 
 .scoreMain {
@@ -91,8 +83,6 @@
   justify-items: start;
   gap: var(--space-3);
   min-width: 0;
-  flex: 1 1 13rem;
-  max-width: 16rem;
 }
 
 /* "24 points to Strong": how far the next band is. */
@@ -108,27 +98,84 @@
   gap: var(--space-2) var(--space-3);
 }
 
-/* The trend shrinks before it wraps under the score. */
-.trend {
+.scoreSide {
   display: grid;
-  gap: var(--space-1);
-  flex: 1 1 6rem;
-  min-width: 6rem;
-  max-width: 10rem;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
   margin: 0;
 }
 
-.trend svg {
-  width: 100%;
-  height: auto;
+/* Stacked under the gauge, the side keeps a line above it. */
+@container (max-width: 40rem) {
+  .scoreSide {
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line-raised);
+  }
 }
 
-.trendMonths {
-  display: flex;
-  justify-content: space-between;
-  font: var(--type-caption);
-  font-size: var(--size-micro);
+.sideTitle {
+  font: var(--type-caption-strong);
   color: var(--text-muted);
+}
+
+.sideNote {
+  margin-top: var(--space-2);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* What each result earns (a shared Audit has no history to show). */
+.earns {
+  display: grid;
+  gap: var(--space-3) var(--space-6);
+  margin-top: var(--space-2);
+}
+
+@container (min-width: 40rem) {
+  .earns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.earn {
+  display: grid;
+  gap: var(--space-1);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* The made-up shape under Free's locked preview. */
+.placeholderChart {
+  display: block;
+  width: 100%;
+  height: 14rem;
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.placeholderChart line,
+.placeholderChart polyline {
+  vector-effect: non-scaling-stroke;
+}
+
+.placeholderChart polyline {
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+/* The three pillars: the same parts in every card, so the row is even by its content. */
+.pillars {
+  display: grid;
+  gap: var(--card-gap);
+}
+
+@container (min-width: 52rem) {
+  .pillars {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .pillarLabel {
@@ -137,8 +184,7 @@
   gap: var(--space-2);
 }
 
-/* A pillar card measures itself: on a narrow card (three across a phone) the icon steps aside
-   so the pillar's name stays whole. */
+/* A pillar card measures itself: on a narrow card the icon steps aside so the name stays whole. */
 .pillarCard {
   container-type: inline-size;
 }
@@ -149,10 +195,83 @@
   }
 }
 
-.pillarFoot {
+.pillarMain {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: var(--space-5);
+}
+
+.pillarNumber {
+  display: grid;
+  justify-items: start;
   gap: var(--space-2);
-  margin-top: auto;
+}
+
+.pillarChecks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-raised);
+}
+
+.checkStrip {
+  display: flex;
+  gap: 5px;
+}
+
+.checkStrip li {
+  display: flex;
+}
+
+.strongCount {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.weakest {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 1.5rem;
+  font: var(--type-small);
+}
+
+.weakestLabel {
+  flex: none;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.weakestCheck {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.weakestName {
+  font-weight: var(--weight-heading);
+}
+
+.weakestGo {
+  margin-left: auto;
+  color: var(--text-muted);
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+a.weakestCheck:hover .weakestGo {
+  color: var(--text);
+  transform: translateX(2px);
 }
 
 /* What to do next */
@@ -487,6 +606,46 @@
   color: var(--text-muted);
   text-align: right;
   white-space: nowrap;
+}
+
+/* The newest move by any rival, with where it was found. */
+.latestMove {
+  display: grid;
+  gap: var(--space-1);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-raised);
+}
+
+.latestHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.latestSource {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  min-width: 0;
+  color: var(--text-muted);
+  text-underline-offset: 0.2em;
+}
+
+.latestSource:hover {
+  color: var(--text);
+}
+
+.latestText {
+  font: var(--type-small);
+  text-wrap: pretty;
+}
+
+.latestRival {
+  font-weight: var(--weight-heading);
 }
 
 /* Rivals on Free: names only, grouped */

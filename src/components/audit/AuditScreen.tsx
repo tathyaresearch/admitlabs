@@ -9,7 +9,7 @@ import { Suspense, type ReactNode } from 'react';
 import type { AuditView, ListItem } from '@/audit/view';
 import { addedByYou, type AddedByYou } from '@/domain/details';
 import type { AddedDetails } from '@/lib/details/load';
-import { HomeSummary, type ScoreTrend } from '@/components/home/HomeSummary';
+import { HomeSummary, type MonthScores } from '@/components/home/HomeSummary';
 import { NextSteps, type NextStep } from '@/components/home/NextSteps';
 import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
@@ -43,8 +43,8 @@ interface AuditScreenProps {
   /** "Overall score", or "MBA score" for one program. */
   scoreCaption: string;
   checkedAt: string;
-  /** The score by month for the summary's trend line. Null when the plan has no history. */
-  trend: ScoreTrend | null;
+  /** The scores by month for the summary's charts. Null when the plan has no history. */
+  trend: MonthScores | null;
   /** One quiet line under the score, like "Next free Audit on 10 Dec 2026". */
   note?: string | null;
   /** Every Audit, for the history tab. Null when the plan has no score history. */
@@ -120,7 +120,16 @@ export function AuditScreen(props: AuditScreenProps) {
         {showTabs ? <ProgramTabs entries={props.entries} active={view.programId} allLabel={props.allLabel} /> : null}
       </div>
 
-      <HomeSummary view={view} checkedAt={props.checkedAt} trend={props.trend} note={props.note} scoreLabel={props.scoreCaption} historyLabel={props.historyLabel} />
+      <HomeSummary
+        view={view}
+        checkedAt={props.checkedAt}
+        trend={props.trend}
+        side="locked"
+        note={props.note}
+        checkLinks="?check="
+        scoreLabel={props.scoreCaption}
+        historyLabel={props.historyLabel}
+      />
 
       <NextSteps
         id="fix"

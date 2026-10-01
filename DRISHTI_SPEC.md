@@ -442,7 +442,7 @@ Keep it short enough to read in 5 minutes.
 |---|---|
 | Login | Email, then OTP |
 | Onboarding | The input form from section 6, then program pick for Free |
-| Home | Overall score on its gauge, how far the next band is, 3 pillars, change, top 3 fixes, rival snapshot, 1 demand highlight, 3 things to do |
+| Home | Overall score on its gauge with the score month by month, how far the next band is, 3 pillars (each with its trend, how many of its checks are Strong and its weakest check), change, top 3 fixes, rival snapshot with the latest move, 1 demand highlight with its searches by month, 3 things to do |
 | Audit | Pillars, all checks with results and points earned against possible, what's working, what to fix, score history, program switcher |
 | Program detail | Same as Audit, for one program |
 | Check detail | Side panel: result, what was found, source link, date checked, how to fix, difficulty, details added by you |
@@ -540,7 +540,7 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 1. **Hero**: "See where you stand, who's ahead, and what students want." One button: "Get your free Audit". A large picture of the dashboard's Home in an app window (sample data)
 2. **The problem**: institutions guess what students see and what rivals do
-3. **What Drishti does**: one bento grid. The three features (Audit, Rivals, Demand), each with a real-looking screen preview (sample data); the score (Discovered, Trusted, Chosen, explained simply); the monthly report; and public data only
+3. **What Drishti does**: one bento grid. The three features (Audit, Rivals, Demand) first and largest: ivory tiles, each with its icon, its place ("Feature 1 of 3") and a real-looking screen preview (sample data). Then three quieter tiles: the score (Discovered, Trusted, Chosen, explained simply); the monthly report; and public data only
 4. **How it works**: enter details, Drishti checks everything, see results, get a monthly report
 5. **Sample report**: preview of the monthly PDF
 6. **Plans**: Free and Paid (₹9,999 for 6 months, no auto-renew)

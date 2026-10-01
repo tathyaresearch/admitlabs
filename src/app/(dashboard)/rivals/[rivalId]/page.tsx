@@ -94,14 +94,15 @@ export default async function RivalPage({ params }: { params: Promise<{ rivalId:
                 <KpiNumber value={you.scores.overall} suffix="/100" numericSuffix spoken=" out of 100" />
                 <div className={styles.kpiMeta}>
                   <ScoreLabel score={you.scores.overall} />
+                  {you.changes.overall !== null ? <Delta change={you.changes.overall} since="last Audit" size="sm" /> : null}
                 </div>
               </KpiCard>
             ) : null}
-            <KpiCard label="They lead on">
+            <KpiCard label="They lead on" className={styles.kpiWide}>
               <KpiNumber value={theyLead.length} suffix={theyLead.length === 1 ? 'check' : 'checks'} />
               <KpiNote>You lead on {youLead.length}. Level on the rest.</KpiNote>
             </KpiCard>
-            <KpiCard label="Admission push">
+            <KpiCard label="Admission push" className={styles.kpiWide}>
               <p className={styles.kpiText}>{admissionPushText(push?.detectedAt ?? null)}</p>
               {push?.description ? <KpiNote>{push.description}</KpiNote> : null}
             </KpiCard>

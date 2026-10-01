@@ -13,6 +13,7 @@ import type { ScoringConfig } from '../domain/scoring-config.ts';
 import {
   DIFFICULTIES,
   PILLARS,
+  RESULTS,
   type AuditKind,
   type AuditTrigger,
   type CheckKey,
@@ -361,6 +362,50 @@ export function historyByMonth(
   const byMonth = new Map<string, { runAt: string; scores: Pick<ScoreSet, 'overall'> }>();
   for (const row of [...rows].sort((a, b) => a.runAt.localeCompare(b.runAt))) byMonth.set(monthOf(row.runAt), row);
   return [...byMonth.entries()].map(([month, row]) => ({ month, score: row.scores.overall }));
+}
+
+/** Each month's latest Audit, oldest first, with all four scores: the score and pillar charts. */
+export function scoresByMonth(
+  rows: ReadonlyArray<{ runAt: string; scores: ScoreSet }>,
+  monthOf: (runAt: string) => string,
+): Array<{ month: string; scores: ScoreSet }> {
+  const byMonth = new Map<string, ScoreSet>();
+  for (const row of [...rows].sort((a, b) => a.runAt.localeCompare(b.runAt))) byMonth.set(monthOf(row.runAt), row.scores);
+  return [...byMonth.entries()].map(([month, scores]) => ({ month, scores }));
+}
+
+export interface PillarCheck {
+  key: CheckKey;
+  name: string;
+  /** The weakest result across the programs the check covers. */
+  result: CheckResult;
+}
+
+export interface PillarChecks {
+  pillar: Pillar;
+  /** Every check the Audit ran in this pillar, in check order. */
+  checks: PillarCheck[];
+  /** How many are Strong for every program they cover. */
+  strong: number;
+  /** The worst result, then the one that could add the most points. Null when every check is Strong. */
+  weakest: PillarCheck | null;
+}
+
+const RESULT_RANK = new Map<CheckResult, number>(RESULTS.map((result, index) => [result, index]));
+const worse = (a: CheckResult, b: CheckResult) => ((RESULT_RANK.get(b) ?? 0) > (RESULT_RANK.get(a) ?? 0) ? b : a);
+
+/** Each pillar's checks at a glance: one result per check, how many are Strong, and the weakest. */
+export function pillarChecks(view: Pick<AuditView, 'areas' | 'fixes'>): PillarChecks[] {
+  const gain = new Map(view.fixes.map((item) => [item.key, item.points]));
+  return view.areas.map((area) => {
+    const checks = area.rows.flatMap((row): PillarCheck[] =>
+      row.parts.length ? [{ key: row.key, name: row.name, result: row.parts.reduce<CheckResult>((worst, item) => worse(worst, item.result), 'strong') }] : [],
+    );
+    const [weakest = null] = checks
+      .filter((check) => check.result !== 'strong')
+      .sort((a, b) => (RESULT_RANK.get(b.result) ?? 0) - (RESULT_RANK.get(a.result) ?? 0) || (gain.get(b.key) ?? 0) - (gain.get(a.key) ?? 0));
+    return { pillar: area.pillar, checks, strong: checks.filter((check) => check.result === 'strong').length, weakest };
+  });
 }
 
 /**

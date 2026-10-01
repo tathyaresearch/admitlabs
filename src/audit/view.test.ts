@@ -3,7 +3,21 @@ import { describe, test } from 'node:test';
 import { istDate, monthKey } from '../domain/dates.ts';
 import { itemPoints, rankFixes } from '../domain/scoring/rank.ts';
 import { recordFor, stored } from './testing.ts';
-import { fixAdvice, historyByMonth, monthScore, overviewView, panelLines, pointsEarnedText, pointsFraction, pointsToGainText, programView, rowSummary, type ItemPart } from './view.ts';
+import {
+  fixAdvice,
+  historyByMonth,
+  monthScore,
+  overviewView,
+  panelLines,
+  pillarChecks,
+  pointsEarnedText,
+  pointsFraction,
+  pointsToGainText,
+  programView,
+  rowSummary,
+  scoresByMonth,
+  type ItemPart,
+} from './view.ts';
 
 // The Audit screens' view model, from records built on sample data.
 
@@ -100,7 +114,67 @@ describe('the one-program view', () => {
   });
 });
 
+describe('each pillar at a glance', () => {
+  test('Eastgate: one result per check (its weakest program), how many are Strong, and the weakest', async () => {
+    const { record, names, type } = await recordFor('eastgate-university', '2026-09-15');
+    const pillars = pillarChecks(overviewView(stored(record), { institutionType: type, programNames: names }));
+    assert.deepEqual(
+      pillars.map((pillar) => [pillar.pillar, pillar.checks.length, pillar.strong, pillar.weakest?.name, pillar.weakest?.result]),
+      [
+        ['discovered', 6, 2, 'AI answers', 'missing'],
+        ['trusted', 5, 1, 'Placement proof', 'missing'],
+        ['chosen', 6, 1, 'Admission steps', 'weak'],
+      ],
+    );
+    // Google search is Strong for two programs and Weak for one: the check counts as Weak.
+    assert.equal(pillars[0]?.checks.find((check) => check.key === 'google_search')?.result, 'weak');
+  });
+
+  test('a tie on the result goes to the check that could add the most', async () => {
+    const { record, names, type } = await recordFor('northbank-college', '2026-09-10', ['bba']);
+    const view = overviewView(stored(record, { freeDetails: true }), { institutionType: type, programNames: names });
+    const trusted = pillarChecks(view).find((pillar) => pillar.pillar === 'trusted');
+    // Three Trusted checks are Weak; placement proof could add the most of them.
+    assert.equal(trusted?.checks.filter((check) => check.result === 'weak').length, 3);
+    assert.equal(trusted?.weakest?.key, 'placement_proof');
+    assert.equal(trusted?.strong, 0);
+  });
+
+  test('every check Strong: no weakest', () => {
+    const row = (key: 'google_search' | 'youtube') => ({
+      key,
+      name: key,
+      looksAt: '',
+      pillar: 'discovered' as const,
+      level: 'institution' as const,
+      parts: [{ result: 'strong' as const }] as unknown as ItemPart[],
+      summary: { kind: 'none' as const },
+    });
+    const [discovered] = pillarChecks({ areas: [{ pillar: 'discovered', rows: [row('google_search'), row('youtube')] }], fixes: [] });
+    assert.equal(discovered?.strong, 2);
+    assert.equal(discovered?.weakest, null);
+  });
+});
+
 describe('history and wording', () => {
+  test('all four scores by month: the latest Audit that month', () => {
+    const scores = (overall: number) => ({ overall, discovered: overall + 1, trusted: overall - 1, chosen: overall });
+    assert.deepEqual(
+      scoresByMonth(
+        [
+          { runAt: istDate('2026-09-15', 10).toISOString(), scores: scores(70) },
+          { runAt: istDate('2026-08-15', 10).toISOString(), scores: scores(66) },
+          { runAt: istDate('2026-09-20', 10).toISOString(), scores: scores(73) },
+        ],
+        (runAt) => monthKey(new Date(runAt)),
+      ),
+      [
+        { month: '2026-08', scores: scores(66) },
+        { month: '2026-09', scores: scores(73) },
+      ],
+    );
+  });
+
   test('one point per month: the latest Audit that month', () => {
     const points = historyByMonth(
       [

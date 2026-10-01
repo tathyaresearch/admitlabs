@@ -1,4 +1,4 @@
-import { historyByMonth, overviewView } from '@/audit/view';
+import { overviewView, scoresByMonth } from '@/audit/view';
 import { DemandCard } from '@/components/home/DemandCard';
 import { HomeSummary } from '@/components/home/HomeSummary';
 import { NextSteps, type NextStep } from '@/components/home/NextSteps';
@@ -11,7 +11,7 @@ import { monthKey } from '@/domain/dates';
 import { planReminder } from '@/domain/tiers';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { auditNote, loadAuditPage, nextAuditText } from '@/lib/audit/load';
-import { loadCityIdeas, loadHighlight } from '@/lib/demand/load';
+import { loadCityIdeas, loadHighlight, loadHighlightHistory } from '@/lib/demand/load';
 import { loadActions, loadRivalSnapshot } from '@/lib/rivals/load';
 import { fixThing, threeThings, type Thing } from '@/report/things';
 import styles from '@/components/home/home.module.css';
@@ -45,6 +45,7 @@ export default async function HomePage() {
     full ? loadActions(institution.id) : Promise.resolve([]),
     full ? loadCityIdeas(viewer) : Promise.resolve([]),
   ]);
+  const searches = await loadHighlightHistory(viewer, highlight);
   const reminder = planReminder(viewer.plan, new Date());
   const view = data.audit ? overviewView(data.audit, { institutionType: institution.type, programNames: data.names }) : null;
 
@@ -63,8 +64,8 @@ export default async function HomePage() {
           return { key: fix.key, source: thing.source, title: thing.title, detail: thing.detail, href: `/audit?check=${fix.key}` };
         });
 
-  // Score history is a Paid and Client feature; Free sees the latest Audit only.
-  const trend = full ? { points: historyByMonth(data.history, (runAt) => monthKey(new Date(runAt))) } : null;
+  // Score history is a Paid and Client feature; Free sees the latest Audit only, and a preview of what Paid adds.
+  const trend = full ? scoresByMonth(data.history, (runAt) => monthKey(new Date(runAt))) : null;
   // Only an Audit on the current plan: a Paid plan ending before its next Audit says so in the notice instead.
   const note = auditNote(data, viewer.tier);
 
@@ -88,7 +89,7 @@ export default async function HomePage() {
       </div>
 
       {view && data.audit ? (
-        <HomeSummary view={view} checkedAt={data.audit.runAt} trend={trend} note={note} auditHref="/audit" />
+        <HomeSummary view={view} checkedAt={data.audit.runAt} trend={trend} side="locked" note={note} auditHref="/audit" checkLinks="/audit?check=" />
       ) : (
         <EmptyState
           icon="audit"
@@ -123,8 +124,9 @@ export default async function HomePage() {
           verdict={rivals.verdict}
           rivalsHref="/rivals"
           chooseHref={role === 'owner' ? '/rivals/choose' : null}
+          latestMove={rivals.latestMove}
         />
-        <DemandCard highlight={highlight} demandHref="/demand" place={institution.city} />
+        <DemandCard highlight={highlight} demandHref="/demand" place={institution.city} history={searches} />
       </div>
     </div>
   );
