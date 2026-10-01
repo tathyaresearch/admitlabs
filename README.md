@@ -147,11 +147,23 @@ The AdmitLabs team area at `/team` (spec section 13), for `team@admitlabs.exampl
 
 The limits (90 days, top 3 fixes, 100 rows a run, 50 a page, Paid ending within 30 days) are `TEAM_RULES` in `src/config/team.ts`. The sample data includes a live shared Audit for Cedar Skill Institute; `npm run db:reset` prints its link.
 
+## Product page
+
+`/drishti` (spec section 15) is the landing page, later served at admitlabs.in/drishti. Open http://localhost:3000/drishti; no sign in, and it works with the database stopped.
+
+- **Fixed black and ivory.** The page sets its own sections, so it looks the same whatever the device setting: black, with ivory for the problem, the score and the final call.
+- **Real previews, fictional data.** Each preview is the dashboard's own component, filled with Eastgate University in August 2026, worked out in memory from the sample world with the real scoring engine (`src/sample/world.ts`). Every preview says "Sample institution. Fictional data." The page is prerendered at build and never reads the database.
+- **Buttons.** "Get your free Audit" and "Start with a free Audit" go to `/login`, then onboarding. For now the AdmitLabs team switches Paid on.
+- **Sample report.** `/drishti/sample-report.pdf` is the report the monthly job would make for the same institution and month, marked "Sample report. Fictional data." on the cover and every page. Made once at build.
+- **Words and numbers.** The copy is in `src/product/content.ts`. Every number in it (prices, plan length, reminders, schedules, the 17 checks, 3 to 5 rivals) comes from config, and a test checks it.
+- **Sharing.** `opengraph-image.tsx` draws the link preview (1200 by 630) with the report's Bricolage font files.
+
 ## Local addresses
 
 | What | Address |
 |---|---|
 | App | http://localhost:3000 |
+| Product page | http://localhost:3000/drishti |
 | Design system | http://localhost:3000/design-system |
 | Supabase Studio | http://127.0.0.1:55323 |
 | Mailpit | http://127.0.0.1:55324 |
@@ -191,11 +203,19 @@ src/rivals/      comparisons, verdicts, change rules, the 3 things to do, and th
 src/demand/      regions, the pull schedule, ranking and spikes, the season clock, the page view, and the pulls
 src/report/      the monthly report (its schedule, the 3 things to do, the snapshot, the PDF, the job) and the shared Audit PDF
 src/team/        team tools: the bulk list reader, list filters, plan rules and the shared Audit
-src/sample/      the fictional sample world
+src/product/     the product page: its words (numbers from config) and its preview data
+src/sample/      the fictional sample world, and that world worked out in memory (world.ts, report.ts)
 ```
 
-`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/report`, `src/team` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, and for shared Audit PDFs (`serverExternalPackages` in `next.config.ts`). Never in the browser.
+`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/report`, `src/team`, `src/product` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, for shared Audit PDFs and for the sample report (`serverExternalPackages` in `next.config.ts`). Never in the browser.
 
 ## How scores work
 
 The scoring engine is in `src/domain/scoring`: pure functions, no database. Facts from the providers become Strong, Okay, Weak or Missing (spec 7.5), then pillar, program and overall scores (spec 7.4), rounded to whole numbers with halves rounding up. Every number comes from the active row in `scoring_config` (version 1 is `src/config/scoring.v1.ts`), and each Audit records the version it used.
+
+## Before launch
+
+Must do before any real institution uses Drishti:
+
+1. **Proof of ownership when claiming an institution.** Signing up with a website already on record (a tracked rival or a team prospect) claims that record. Nothing private leaks today, but anyone who enters the website takes over the record. Options to weigh: a code sent to an email on the institution's own domain, or team approval of each claim.
+2. **Privacy policy and terms pages, reviewed by a lawyer.** The product page explains privacy in plain words in its FAQ, but there are no policy or terms pages yet.

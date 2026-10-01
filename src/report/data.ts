@@ -61,6 +61,9 @@ export const REPORT_LIMITS = {
 /** The quiet line on the last page, for Paid only (not Client). */
 export const PAID_CONTACT = { text: 'Want AdmitLabs to do this for you?', email: 'hello@admitlabs.in' } as const;
 
+/** Printed on the cover and every page of the sample report the product page offers. */
+export const SAMPLE_REPORT_NOTE = 'Sample report. Fictional data.';
+
 // Input: what the report job loads -----------------------------------------------------------
 
 export interface ReportInstitution {
@@ -106,6 +109,8 @@ export interface ReportInput {
   lastRivalCheck: string | null;
   /** The institution's city: the latest pull of each program up to the month. */
   demand: { region: DemandRegion; rows: readonly DemandRow[]; pulledAt: string | null };
+  /** The product page's sample report, made from fictional sample data. */
+  sample?: boolean;
 }
 
 // Output: what the PDF prints ------------------------------------------------------------------
@@ -195,6 +200,8 @@ export interface ReportData {
   };
   /** Paid only: "Want AdmitLabs to do this for you? hello@admitlabs.in". */
   contact: { text: string; email: string } | null;
+  /** The sample report only: SAMPLE_REPORT_NOTE, on the cover and every page. */
+  sample: string | null;
 }
 
 // Words -----------------------------------------------------------------------------------------
@@ -467,6 +474,7 @@ export function buildReport(input: ReportInput): ReportData {
     things: threeThings({ institutionType: institution.type, place, fixes, lessons: input.lessons, ideas: demand.ideas }),
     sources: { checkedOn: sameDay, checks: checkSources, notes },
     contact: input.tier === 'paid' ? { ...PAID_CONTACT } : null,
+    sample: input.sample ? SAMPLE_REPORT_NOTE : null,
   });
 }
 

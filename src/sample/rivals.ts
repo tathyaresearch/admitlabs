@@ -92,6 +92,9 @@ export interface SampleAd {
   enteredAt: string;
 }
 
+/** The weekly rival check runs every Monday at 9 am India time, from this Monday on. */
+export const SAMPLE_WEEKLY_CHECKS_FROM = '2026-08-03';
+
 export const SAMPLE_ADS: readonly SampleAd[] = [
   { slug: 'silverline-college', promise: '100% placement support for every BBA student.', enteredAt: '2026-09-05' },
   { slug: 'eastgate-university', promise: 'Scholarships up to 40% for early MBA applicants.', enteredAt: '2026-09-09' },

@@ -25,8 +25,8 @@ export interface PageProps {
 }
 
 /** An ivory page with the footer. */
-export function ContentPage({ data, children }: { data: Pick<ReportData, 'institution' | 'monthLabel'>; children: ReactElement[] }): ReactElement {
-  return h(Page, { size: 'A4', style: styles.page }, ...children, h(Footer, { institution: data.institution.name, month: data.monthLabel }));
+export function ContentPage({ data, children }: { data: Pick<ReportData, 'institution' | 'monthLabel'> & { sample?: string | null }; children: ReactElement[] }): ReactElement {
+  return h(Page, { size: 'A4', style: styles.page }, ...children, h(Footer, { institution: data.institution.name, month: data.monthLabel, note: data.sample ?? null }));
 }
 
 // 1. Cover ------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ export function CoverPage({ data }: PageProps): ReactElement {
       View,
       { style: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' } },
       h(Lockup, { size: 17 }),
-      h(Text, { style: { fontSize: 7.5, fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase', color: COLORS.slate } }, 'Monthly report'),
+      h(Text, { style: { fontSize: 7.5, fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase', color: COLORS.slate } }, data.sample ? 'Sample report' : 'Monthly report'),
     ),
     h(
       View,
@@ -48,6 +48,14 @@ export function CoverPage({ data }: PageProps): ReactElement {
       h(Text, { style: { fontSize: 11, fontWeight: 500, color: COLORS.slate, marginBottom: 12 } }, data.monthLabel),
       h(Text, { style: { fontSize: 36, fontWeight: 600, letterSpacing: -1, lineHeight: 1.08, ...clamp(3) } }, data.institution.name),
       h(Text, { style: { fontSize: 10, color: COLORS.slate, marginTop: 10 } }, `${data.institution.place}  ·  ${data.institution.website}`),
+      // The sample report says so before anything else, in an inverted block.
+      data.sample
+        ? h(
+            View,
+            { style: { flexDirection: 'row', marginTop: 22 } },
+            h(Text, { style: { backgroundColor: COLORS.ivory, color: COLORS.black, fontSize: 10, fontWeight: 600, paddingVertical: 5, paddingHorizontal: 9, borderRadius: 3 } }, data.sample),
+          )
+        : null,
     ),
     h(View, { style: { flexGrow: 1 } }),
     h(

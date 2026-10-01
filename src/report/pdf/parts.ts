@@ -128,12 +128,12 @@ export function ScoreBar({ score, dark = false, height = 3 }: { score: number; d
 }
 
 /** The footer on every page after the cover. */
-export function Footer({ institution, month }: { institution: string; month: string }): ReactElement {
+export function Footer({ institution, month, note = null }: { institution: string; month: string; note?: string | null }): ReactElement {
   return h(Text, {
     style: styles.footer,
     fixed: true,
     render: ({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) =>
-      `Drishti by AdmitLabs  ·  ${institution}  ·  ${month}  ·  Page ${pageNumber} of ${totalPages}`,
+      ['Drishti by AdmitLabs', institution, month, ...(note ? [note] : []), `Page ${pageNumber} of ${totalPages}`].join('  ·  '),
   });
 }
 

@@ -28,6 +28,7 @@ import {
   SAMPLE_SHARES,
   SAMPLE_TODAY,
   SAMPLE_USERS,
+  SAMPLE_WEEKLY_CHECKS_FROM,
   TEAM_EMAIL,
   institutionId,
   programId,
@@ -209,7 +210,7 @@ async function main(): Promise<void> {
   // (with alerts for Paid and Client trackers) and each month's best content.
   const tracked = [...new Set(SAMPLE_RIVALS.map(([, rival]) => rival))];
   let moveCount = 0;
-  for (let day = istDate('2026-08-03', 9); day.getTime() <= istDate(SAMPLE_TODAY, 9).getTime(); day = new Date(day.getTime() + 7 * DAY_MS)) {
+  for (let day = istDate(SAMPLE_WEEKLY_CHECKS_FROM, 9); day.getTime() <= istDate(SAMPLE_TODAY, 9).getTime(); day = new Date(day.getTime() + 7 * DAY_MS)) {
     for (const slug of tracked) moveCount += (await checkRival(db, institutionId(slug), day, { notify: true })).newMoves;
   }
 

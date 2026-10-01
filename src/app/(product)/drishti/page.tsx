@@ -1,36 +1,58 @@
-import type { Metadata } from 'next';
-import { ProductLockup, Wordmark } from '@/components/ui/Brand';
-import { ButtonLink } from '@/components/ui/Button';
-import { Highlight } from '@/components/ui/Layout';
-import { appLink } from '@/lib/urls';
-import styles from './product.module.css';
+import type { Metadata, Viewport } from 'next';
+import { ProductFooter, ProductHeader } from '@/components/product/Chrome';
+import { Faq, ForClients, Plans } from '@/components/product/Offer';
+import { ReportShowcase } from '@/components/product/ReportShowcase';
+import { Features, FinalCall, Hero, Problem, ScoreSection, Steps } from '@/components/product/Sections';
+import { PRODUCT_URL } from '@/lib/urls';
+import { FOOTER } from '@/product/content';
+import { loadShowcase } from '@/product/showcase';
+import styles from '@/components/product/product.module.css';
+
+// The product page (spec section 15). Prerendered once at build: it reads no request data, and
+// its previews come from the sample world in memory, never the database. It sets its own black
+// and ivory sections, so it looks the same whatever the device setting.
+export const dynamic = 'force-static';
+
+const NAME = 'Drishti by AdmitLabs';
 
 export const metadata: Metadata = {
-  title: { absolute: 'Drishti by AdmitLabs' },
-  description: "See where you stand, who's ahead, and what students want. Every month.",
+  title: { absolute: NAME },
+  description: FOOTER.tagline,
+  alternates: { canonical: PRODUCT_URL },
+  openGraph: { type: 'website', url: PRODUCT_URL, siteName: NAME, title: NAME, description: FOOTER.tagline, locale: 'en_IN' },
+  twitter: { card: 'summary_large_image', title: NAME, description: FOOTER.tagline },
 };
 
-// A placeholder so the route and the call to action work. The full product page is Phase 7.
-export default function ProductPage() {
+export const viewport: Viewport = {
+  themeColor: '#0a0a0c',
+  colorScheme: 'dark',
+};
+
+export default async function ProductPage() {
+  const showcase = await loadShowcase();
   return (
-    <main className={`invert ${styles.page}`}>
-      <header className={styles.header}>
-        <Wordmark height={20} />
-        <ButtonLink href={appLink('/login')} variant="secondary" size="sm">
-          Sign in
-        </ButtonLink>
-      </header>
-      <section className={styles.hero}>
-        <ProductLockup size="md" />
-        <h1 className={styles.title}>
-          See where you stand, who&apos;s ahead, and what <Highlight>students want.</Highlight>
-        </h1>
-        <p className={styles.lede}>A monthly view of how your institution looks to students, how your rivals are doing, and what students are asking.</p>
-        <ButtonLink href={appLink('/login')} size="lg" iconAfter="arrowRight">
-          Get your free Audit
-        </ButtonLink>
-        <p className={styles.note}>The full product page arrives in Phase 7.</p>
-      </section>
-    </main>
+    <div id="top" className={styles.page} data-theme="dark">
+      {/* The page behind the page (overscroll, the top of a long scroll) stays black too. */}
+      <style href="drishti-product-page" precedence="default">
+        {'html,body{background:#0a0a0c}html{scroll-behavior:smooth}'}
+      </style>
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
+      <ProductHeader />
+      <main id="main">
+        <Hero showcase={showcase} />
+        <Problem />
+        <Features showcase={showcase} />
+        <ScoreSection />
+        <Steps />
+        <ReportShowcase data={showcase.report} />
+        <Plans />
+        <ForClients />
+        <Faq />
+        <FinalCall />
+      </main>
+      <ProductFooter />
+    </div>
   );
 }
