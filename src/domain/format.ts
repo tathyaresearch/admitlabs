@@ -56,6 +56,12 @@ export function formatMonth(value: string | Date): string {
   return `${MONTHS_LONG[month - 1]} ${year}`;
 }
 
+/** "September" from a 'YYYY-MM' key. */
+export function formatMonthName(key: string): string {
+  const month = Number(key.slice(5, 7));
+  return MONTHS_LONG[month - 1] ?? key;
+}
+
 /** "Sep" from a 'YYYY-MM' key. */
 export function formatMonthShort(key: string): string {
   const month = Number(key.slice(5, 7));

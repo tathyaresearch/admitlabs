@@ -1,11 +1,15 @@
-// Where each surface lives. Today both are this local app. At deployment the product page
-// moves to admitlabs.in/drishti and the dashboard to app.admitlabs.in by changing these two
-// settings only (spec section 4).
+// Where each surface lives, from three settings (spec section 4). One app serves both addresses:
+// the website (admitlabs.in, with the product page at /drishti) and the dashboard
+// (app.admitlabs.in). Locally the website is admitlabs.localhost:3000 and the dashboard
+// localhost:3000. Going live changes these settings only. src/lib/hosts.ts routes by address.
 
-export const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000').replace(/\/$/, '');
-export const PRODUCT_URL = (process.env.NEXT_PUBLIC_PRODUCT_URL ?? 'http://localhost:3000/drishti').replace(/\/$/, '');
+const clean = (url: string) => url.replace(/\/$/, '');
 
-/** A link into the dashboard, for the product page. Relative when both live in the same app. */
+export const SITE_URL = clean(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://admitlabs.localhost:3000');
+export const APP_URL = clean(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000');
+export const PRODUCT_URL = clean(process.env.NEXT_PUBLIC_PRODUCT_URL ?? `${SITE_URL}/drishti`);
+
+/** A link into the dashboard, for the website and the product page. Relative when they share the dashboard's address. */
 export function appLink(path: string): string {
   const sameApp = PRODUCT_URL.startsWith(APP_URL);
   return sameApp ? path : `${APP_URL}${path}`;

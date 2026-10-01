@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { contrastRatio } from './contrast.ts';
 import { istDate } from './dates.ts';
-import { formatCount, formatDate, formatDateLong, formatDateTime, formatInr, formatMonth, formatMonthShort, formatTime, groupIndian, hostAndPath, joinNames, ordinal, plural } from './format.ts';
+import { formatCount, formatDate, formatDateLong, formatDateTime, formatInr, formatMonth, formatMonthName, formatMonthShort, formatTime, groupIndian, hostAndPath, joinNames, ordinal, plural } from './format.ts';
 import { scoreLabel } from './scores.ts';
 
 describe('formatting for India', () => {
@@ -22,6 +22,7 @@ describe('formatting for India', () => {
   test('months', () => {
     assert.equal(formatMonth('2026-09'), 'September 2026');
     assert.equal(formatMonthShort('2026-04'), 'Apr');
+    assert.equal(formatMonthName('2026-04'), 'April');
   });
 
   test('Indian digit grouping and rupees', () => {
