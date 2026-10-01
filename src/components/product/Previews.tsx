@@ -17,6 +17,7 @@ import type { ListItem } from '@/audit/view';
 import { countWords } from '@/demand/text';
 import { RESULTS, type CheckResult } from '@/domain/types';
 import type { Showcase } from '@/product/showcase';
+import type { LadderRow } from '@/rivals/compare';
 import home from '@/components/home/home.module.css';
 import shell from '@/components/shell/AppShell.module.css';
 import styles from './product.module.css';
@@ -29,6 +30,11 @@ function demandHighlight(showcase: Showcase): DemandHighlightData | null {
   const top = showcase.demand.view.topTrend;
   if (!top) return null;
   return { text: top.text, changePct: top.changePct, count: top.count, sourceUrl: top.sourceUrl, programName: top.programName, region: showcase.demand.place, month: top.month };
+}
+
+/** The ladder as the product page shows it: your own change, and no change beside a rival. */
+function pictureLadder(rows: readonly LadderRow[]): LadderRow[] {
+  return rows.map((row) => (row.you ? row : { ...row, change: null }));
 }
 
 /** The sidebar as the dashboard draws it, with Home open. */
@@ -83,7 +89,7 @@ export function AppWindow({ showcase }: { showcase: Showcase }) {
               <HomeSummary view={audit} checkedAt={picture.checkedAt} trend={{ points: picture.trend }} />
               <NextSteps id="picture-next" title="3 things to do this month" description="In order: the steps that could make the most difference this month." steps={steps} />
               <div className={home.pair}>
-                <RivalsCard ladder={rivals.rows} standings={null} verdict={rivals.verdict} rivalsHref={null} />
+                <RivalsCard ladder={pictureLadder(rivals.rows)} standings={null} verdict={rivals.verdict} rivalsHref={null} />
                 <DemandCard highlight={demandHighlight(showcase)} demandHref={null} place={demand.place} />
               </div>
             </div>
@@ -138,7 +144,7 @@ export function FixesPicture({ showcase }: { showcase: Showcase }) {
 export function LadderPicture({ showcase }: { showcase: Showcase }) {
   return (
     <div className={styles.picture} aria-hidden="true" inert>
-      <RivalLadder rows={showcase.rivals.rows} />
+      <RivalLadder rows={pictureLadder(showcase.rivals.rows)} />
     </div>
   );
 }
