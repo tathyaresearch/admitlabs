@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Button } from '@/components/ui/Button';
-import { Card, PageHeader, Section } from '@/components/ui/Layout';
+import { Card, PageHead, Section } from '@/components/ui/Layout';
 import { istParts } from '@/domain/dates';
 import { formatDate, hostAndPath } from '@/domain/format';
 import { requireTeamViewer } from '@/lib/auth/guards';
@@ -16,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: viewer?.teamRole ? 'Manual entry' : 'Page not found' };
 }
 
+// Manual entry: what rivals promise in their ads, added by hand, then the latest entries.
 export default async function RivalAdsPage() {
   await requireTeamViewer();
   const supabase = await createClient();
@@ -34,10 +35,10 @@ export default async function RivalAdsPage() {
 
   return (
     <div className={styles.page}>
-      <PageHeader
-        eyebrow="AdmitLabs team"
+      <PageHead
         title="Manual entry"
-        description="What a provider cannot collect yet, entered by hand. For now that is what rivals promise in their ads. Paid and Client institutions tracking the rival see each one with its link and date."
+        question="What a provider cannot collect yet, entered by hand."
+        caption={['For now, what rivals promise in their ads', 'Paid and Client institutions tracking the rival see each one with its link and date']}
       />
 
       <Section id="add" title="Add a rival ad" description="Only rivals someone tracks are listed.">

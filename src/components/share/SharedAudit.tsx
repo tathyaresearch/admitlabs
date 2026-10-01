@@ -1,14 +1,20 @@
-// The shared Audit page: a prospect's team Audit, opened from a private link with no sign in.
-// Every check with its result, what was found, the source and the date. How to fix for the top 3
-// fixes only (the database sends nothing more); the other fixes say AdmitLabs can fix them.
+// The shared Audit page: a prospect's team Audit, opened from a private link with no sign in. It
+// answers "How does <name> look to students?": the score and pillars, the top 3 fixes with how to
+// make them (the database sends how to fix for these only), the free Audit, then the rest folded:
+// what's working, more to fix (one line says AdmitLabs can fix any of them) and every check with
+// what was found, the source and the date.
 
+import type { ReactNode } from 'react';
 import type { ItemPart, ListItem } from '@/audit/view';
+import { fixStep } from '@/components/audit/AuditScreen';
 import { PartResults } from '@/components/audit/Parts';
-import { SectionHead } from '@/components/audit/AuditHeader';
-import { SummaryBand } from '@/components/audit/SummaryBand';
+import { HomeSummary } from '@/components/home/HomeSummary';
+import { NextSteps, type NextStep } from '@/components/home/NextSteps';
 import { ProductLockup } from '@/components/ui/Brand';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
-import { Difficulty, PointsValue, ResultMeter } from '@/components/ui/Results';
+import { Icon } from '@/components/ui/Icon';
+import { PageHead } from '@/components/ui/Layout';
+import { PointsValue, ResultMeter } from '@/components/ui/Results';
 import { ADMITLABS_EMAIL } from '@/config/team';
 import { formatDate, hostAndPath, plural } from '@/domain/format';
 import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS } from '@/domain/types';
@@ -27,7 +33,7 @@ function mainPart(item: ListItem): ItemPart | undefined {
 function Source({ part }: { part: ItemPart }) {
   const url = part.detail?.sourceUrl;
   return (
-    <p className={styles.source}>
+    <span className={styles.source}>
       {url ? (
         <a href={url} target="_blank" rel="noreferrer">
           {hostAndPath(url)}
@@ -35,180 +41,93 @@ function Source({ part }: { part: ItemPart }) {
         </a>
       ) : null}
       <span>Checked {formatDate(part.checkedAt)}</span>
-    </p>
+    </span>
   );
 }
 
-function TopFix({ item }: { item: ListItem }) {
+/** One of the top 3 fixes: what was found, how to fix it and where it was found. */
+function topStep(item: ListItem): NextStep {
   const part = mainPart(item);
-  return (
-    <li className={styles.card}>
-      <span className={styles.cardTop}>
-        <span className={`${styles.number} num`}>{item.rank}</span>
-        {item.difficulty ? <Difficulty value={item.difficulty} /> : null}
-      </span>
-      <span className={styles.cardTitle}>{item.name}</span>
-      <PartResults parts={item.parts} showNames={item.parts.length > 1} />
-      {part?.detail?.finding ? (
-        <p className={styles.text}>
-          <span className={styles.label}>Found </span>
-          {part.detail.finding}
-        </p>
-      ) : null}
-      {part?.detail?.howToFix ? (
-        <p className={styles.text}>
-          <span className={styles.label}>How to fix </span>
-          {part.detail.howToFix}
-        </p>
-      ) : null}
-      {part ? <Source part={part} /> : null}
-      <p className={styles.gain}>
-        <PointsValue kind="gain" points={item.points} />
-      </p>
-    </li>
-  );
-}
-
-function MoreFix({ item }: { item: ListItem }) {
-  const part = mainPart(item);
-  return (
-    <div className={styles.row}>
-      <div className={styles.rowHead}>
-        <span className={styles.rowName}>
-          <span>
-            <span className="num">{item.rank}.</span> {item.name}
+  return {
+    ...fixStep(item, null),
+    detail: part?.detail?.finding ?? '',
+    extra: part ? (
+      <>
+        {part.detail?.howToFix ? (
+          <span className={styles.howTo}>
+            <span className={styles.label}>How to fix </span>
+            {part.detail.howToFix}
           </span>
-          <PartResults parts={item.parts} showNames={item.parts.length > 1} />
+        ) : null}
+        <Source part={part} />
+      </>
+    ) : null,
+  };
+}
+
+/** A section folded away, opened by its title. */
+function Fold({ id, title, meta, children }: { id: string; title: string; meta: string; children: ReactNode }) {
+  return (
+    <details className={styles.fold} aria-labelledby={`${id}-title`}>
+      <summary className={styles.foldSummary}>
+        <span className={styles.foldText}>
+          <span id={`${id}-title`} className={styles.foldTitle}>
+            {title}
+          </span>
+          <span className={styles.foldMeta}>{meta}</span>
         </span>
-        <span className={styles.muted}>
-          <PointsValue kind="gain" points={item.points} />
-        </span>
-      </div>
-      {part?.detail?.finding ? <p className={styles.text}>{part.detail.finding}</p> : null}
-      <p className={styles.canFix}>{ADMITLABS_CAN_FIX}</p>
-    </div>
+        <Icon name="chevronDown" size={18} className={styles.foldIcon} />
+      </summary>
+      <div className={styles.foldBody}>{children}</div>
+    </details>
   );
 }
 
 export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfHref: string }) {
   const { view, topFixes, moreFixes, working } = sharedView(shared);
   const topKeys = new Set(topFixes.map((item) => item.key));
-  const fixKeys = new Set(view.fixes.map((item) => item.key));
   const { institution } = shared;
 
   return (
     <div className={styles.page}>
-      <header className={`invert ${styles.hero}`}>
-        <div className={styles.heroInner}>
-          <div className={styles.heroTop}>
-            <ProductLockup size="sm" />
-            <p className={styles.heroLabel}>Audit, shared by AdmitLabs</p>
-          </div>
-          <div className={styles.heroBody}>
-            <h1 className={styles.heroTitle}>{institution.name}</h1>
-            <p className={styles.heroCaption}>
-              <span>
-                {INSTITUTION_TYPE_LABELS[institution.type]} in {institution.city}, {institution.state}
-              </span>
-              <a href={institution.website} target="_blank" rel="noreferrer">
-                {hostAndPath(institution.website)}
-                <span className="visually-hidden"> (opens in a new tab)</span>
-              </a>
-              <span>Checked {formatDate(shared.audit.runAt)}</span>
-            </p>
-          </div>
+      <header className={styles.top}>
+        <div className={styles.topInner}>
+          <ProductLockup size="sm" />
+          <p className={styles.topLabel}>Audit, shared by AdmitLabs</p>
         </div>
       </header>
 
       <main className={styles.main}>
-        <SummaryBand view={view} caption="Overall score" showChange={false} />
+        <PageHead
+          title={institution.name}
+          question={`How does ${institution.name} look to students?`}
+          caption={[
+            `${INSTITUTION_TYPE_LABELS[institution.type]} in ${institution.city}, ${institution.state}`,
+            <a key="site" href={institution.website} target="_blank" rel="noreferrer">
+              {hostAndPath(institution.website)}
+              <span className="visually-hidden"> (opens in a new tab)</span>
+            </a>,
+            `Checked ${formatDate(shared.audit.runAt)}`,
+          ]}
+        />
+
+        <HomeSummary view={view} checkedAt={shared.audit.runAt} showChange={false} />
 
         {topFixes.length ? (
-          <section className={styles.section} aria-labelledby="fix-first-title">
-            <SectionHead id="fix-first-title" title="What to fix first" help="The three changes that could add the most to the score, with how to make them." />
-            <ol className={styles.cards}>
-              {topFixes.map((item) => (
-                <TopFix key={item.rank} item={item} />
-              ))}
-            </ol>
-          </section>
+          <NextSteps
+            id="fix-first"
+            title="What to fix first"
+            description="The three changes that could add the most to the score, with how to make them."
+            steps={topFixes.map(topStep)}
+          />
         ) : null}
-
-        {moreFixes.length ? (
-          <section className={styles.section} aria-labelledby="more-title">
-            <SectionHead id="more-title" title="More to fix" help={`${plural(moreFixes.length, 'more thing', 'more things')} to fix, with what was found for each.`} />
-            <div className={styles.rows}>
-              {moreFixes.map((item) => (
-                <MoreFix key={item.rank} item={item} />
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {working.length ? (
-          <section className={styles.section} aria-labelledby="working-title">
-            <SectionHead id="working-title" title="What's working" help="The things doing the most for the score." />
-            <div className={styles.rows}>
-              {working.map((item) => {
-                const part = item.parts.find((entry) => entry.detail);
-                return (
-                  <div key={item.rank} className={styles.row}>
-                    <div className={styles.rowHead}>
-                      <span className={styles.rowName}>
-                        {item.name}
-                        <ResultMeter result={item.strength ?? 'okay'} size="sm" />
-                      </span>
-                      <span className={styles.muted}>
-                        <PointsValue kind="earned" points={item.points} />
-                      </span>
-                    </div>
-                    {part?.detail?.finding ? <p className={styles.text}>{part.detail.finding}</p> : null}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        ) : null}
-
-        <section className={styles.section} aria-labelledby="checked-title">
-          <SectionHead id="checked-title" title="Everything we checked" help="Every check, with what was found, where and when. Public pages only." />
-          {view.areas.map((area) => (
-            <div key={area.pillar} className={styles.pillar}>
-              <h3 className={styles.pillarTitle}>{PILLAR_LABELS[area.pillar]}</h3>
-              <div className={styles.rows}>
-                {area.rows
-                  .filter((row) => row.parts.length)
-                  .map((row) => (
-                    <div key={row.key} className={styles.row}>
-                      <div className={styles.rowHead}>
-                        <span className={styles.rowName}>{row.name}</span>
-                        {topKeys.has(row.key) ? <span className={styles.canFix}>In the top 3 fixes</span> : fixKeys.has(row.key) ? <span className={styles.canFix}>{ADMITLABS_CAN_FIX}</span> : null}
-                      </div>
-                      {row.parts.map((part) => (
-                        <div key={part.checkId} className={styles.part}>
-                          <span className={styles.partResult}>
-                            {part.programName ? <span className={styles.partProgram}>{part.programName}</span> : null}
-                            <ResultMeter result={part.result} size="sm" />
-                          </span>
-                          <span>
-                            {part.detail?.finding ? <span className={styles.text}>{part.detail.finding}</span> : null}
-                            <Source part={part} />
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-              </div>
-            </div>
-          ))}
-        </section>
 
         <section className={`invert ${styles.closing}`} aria-labelledby="closing-title">
-          <div>
+          <div className={styles.closingText}>
             <h2 id="closing-title" className={styles.closingTitle}>
               Want AdmitLabs to fix this for you?
             </h2>
-            <p className={styles.closingText}>
+            <p>
               Write to <a href={`mailto:${ADMITLABS_EMAIL}`}>{ADMITLABS_EMAIL}</a>. Or see where you stand every month, with your own free Audit.
             </p>
           </div>
@@ -221,6 +140,91 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
             </AnchorButton>
           </div>
         </section>
+
+        <div className={styles.folds}>
+          {working.length ? (
+            <Fold id="working" title="What's working" meta="The things doing the most for the score.">
+              <div className={styles.rows}>
+                {working.map((item) => {
+                  const part = item.parts.find((entry) => entry.detail);
+                  return (
+                    <div key={item.rank} className={styles.row}>
+                      <div className={styles.rowHead}>
+                        <span className={styles.rowName}>
+                          {item.name}
+                          <ResultMeter result={item.strength ?? 'okay'} size="sm" />
+                        </span>
+                        <span className={styles.rowValue}>
+                          <PointsValue kind="earned" points={item.points} />
+                        </span>
+                      </div>
+                      {part?.detail?.finding ? <p className={styles.text}>{part.detail.finding}</p> : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </Fold>
+          ) : null}
+
+          {moreFixes.length ? (
+            <Fold id="more" title="More to fix" meta={`${plural(moreFixes.length, 'more thing', 'more things')} to fix, with what was found for each.`}>
+              <p className={styles.canFix}>{ADMITLABS_CAN_FIX}</p>
+              <div className={styles.rows}>
+                {moreFixes.map((item) => {
+                  const part = mainPart(item);
+                  return (
+                    <div key={item.rank} className={styles.row}>
+                      <div className={styles.rowHead}>
+                        <span className={styles.rowName}>
+                          <span>
+                            <span className="num">{item.rank}</span> {item.name}
+                          </span>
+                          <PartResults parts={item.parts} showNames={item.parts.length > 1} />
+                        </span>
+                        <span className={styles.rowValue}>
+                          <PointsValue kind="gain" points={item.points} />
+                        </span>
+                      </div>
+                      {part?.detail?.finding ? <p className={styles.text}>{part.detail.finding}</p> : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </Fold>
+          ) : null}
+
+          <Fold id="checked" title="Everything we checked" meta="Every check, with what was found, where and when. Public pages only.">
+            {view.areas.map((area) => (
+              <div key={area.pillar} className={styles.pillar}>
+                <h3 className={styles.pillarTitle}>{PILLAR_LABELS[area.pillar]}</h3>
+                <div className={styles.rows}>
+                  {area.rows
+                    .filter((row) => row.parts.length)
+                    .map((row) => (
+                      <div key={row.key} className={styles.row}>
+                        <div className={styles.rowHead}>
+                          <span className={styles.rowName}>{row.name}</span>
+                          {topKeys.has(row.key) ? <span className={styles.rowNote}>In the top 3 fixes</span> : null}
+                        </div>
+                        {row.parts.map((part) => (
+                          <div key={part.checkId} className={styles.part}>
+                            <span className={styles.partResult}>
+                              {part.programName ? <span className={styles.partProgram}>{part.programName}</span> : null}
+                              <ResultMeter result={part.result} size="sm" />
+                            </span>
+                            <span className={styles.partText}>
+                              {part.detail?.finding ? <span className={styles.text}>{part.detail.finding}</span> : null}
+                              <Source part={part} />
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ))}
+          </Fold>
+        </div>
       </main>
 
       <footer className={styles.foot}>

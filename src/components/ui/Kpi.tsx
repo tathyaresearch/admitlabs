@@ -46,6 +46,11 @@ export function KpiNumber({
   );
 }
 
+/** A word in a number card's place, like a plan ("Paid") or a date. Bricolage, at the number's size. */
+export function KpiWord({ children }: { children: ReactNode }) {
+  return <p className={styles.word}>{children}</p>;
+}
+
 /** A thin bar for a score out of 100. Decoration: the number beside it says the same. */
 export function KpiBar({ value }: { value: number }) {
   return (

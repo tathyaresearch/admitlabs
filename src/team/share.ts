@@ -167,4 +167,5 @@ export function explainedInFull(item: Pick<ListItem, 'rank'>): boolean {
   return item.rank <= TEAM_RULES.sharedFixesInFull;
 }
 
-export const ADMITLABS_CAN_FIX = 'AdmitLabs can fix this.';
+/** Said once, above the fixes after the top 3, on the shared page and in its PDF. */
+export const ADMITLABS_CAN_FIX = 'AdmitLabs can fix any of these.';

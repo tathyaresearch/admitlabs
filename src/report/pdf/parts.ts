@@ -1,6 +1,6 @@
 // Small building blocks for the report pages, written with createElement (Node runs this file
 // as plain TypeScript, without a JSX step). Results are always a 3-segment meter plus the word,
-// never colour; Strong sits in an inverted block, as on the dashboard.
+// never colour, in one style for every result, as on the dashboard.
 
 import { createElement as h, type ReactElement, type ReactNode } from 'react';
 import { Text, View, type Styles } from '@react-pdf/renderer';
@@ -20,10 +20,7 @@ const FILLED: Readonly<Record<CheckResult, number>> = { strong: 3, okay: 2, weak
 
 /** The 3-segment meter plus the word. `dark` for use on black. */
 export function Meter({ result, dark = false, size = 'md' }: { result: CheckResult; dark?: boolean; size?: 'sm' | 'md' }): ReactElement {
-  const inverted = result === 'strong';
-  // Strong flips the block: black on ivory pages, ivory on black.
-  const ink = inverted ? (dark ? COLORS.black : COLORS.ivory) : dark ? COLORS.ivory : COLORS.black;
-  const block = inverted ? (dark ? COLORS.ivory : COLORS.black) : undefined;
+  const ink = dark ? COLORS.ivory : COLORS.black;
   const segment = size === 'sm' ? { width: 6.5, height: 3.8 } : { width: 8, height: 4.6 };
   const filled = FILLED[result];
   return h(
@@ -35,9 +32,6 @@ export function Meter({ result, dark = false, size = 'md' }: { result: CheckResu
         alignSelf: 'flex-start',
         gap: 4,
         paddingVertical: 2.2,
-        paddingHorizontal: inverted ? 4.5 : 0,
-        borderRadius: 2,
-        backgroundColor: block,
       },
     },
     h(

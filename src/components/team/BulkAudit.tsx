@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { useState, useTransition, type ReactNode } from 'react';
 import { checkListAction, runRowAction, startRunAction, type BulkCheck, type BulkResult } from '@/app/team/bulk/actions';
 import { Button, ButtonLink } from '@/components/ui/Button';
-import { Tag } from '@/components/ui/Data';
 import { TextAreaField } from '@/components/ui/Form';
 import { plural } from '@/domain/format';
 import { SAMPLE_BULK_LIST } from '@/sample/bulk';
@@ -17,12 +16,12 @@ const STATUS_WORDS = { ready: 'Ready', fix: 'Needs fixing', skip: 'Skipped' } as
 
 function Step({ number, title, done, children }: { number: number; title: string; done: boolean; children: ReactNode }) {
   return (
-    <section className={styles.facts} aria-labelledby={`step-${number}`}>
+    <section className={styles.step} aria-labelledby={`step-${number}`}>
       <div className={styles.stepHead}>
         <span className={`${styles.stepNumber} num`} data-done={done ? 'true' : 'false'}>
           {number}
         </span>
-        <h2 id={`step-${number}`} className={styles.itemTitle}>
+        <h2 id={`step-${number}`} className={styles.stepTitle}>
           {title}
         </h2>
       </div>
@@ -150,7 +149,9 @@ export function BulkAudit({ maxRows }: { maxRows: number }) {
                       ) : null}
                       {row.note ? <span className={styles.problems}>{row.note}</span> : null}
                     </span>
-                    <Tag variant={row.status === 'ready' ? 'solid' : row.status === 'fix' ? 'outline' : 'quiet'}>{STATUS_WORDS[row.status]}</Tag>
+                    <span className={styles.checkStatus} data-status={row.status}>
+                      {STATUS_WORDS[row.status]}
+                    </span>
                   </div>
                 ))}
               </div>

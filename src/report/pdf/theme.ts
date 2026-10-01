@@ -18,6 +18,8 @@ export const COLORS = {
   line: '#E2D9CA',
   lineMedium: '#CBC4B7',
   track: '#E5DCCE',
+  /** A panel on ivory: one step darker, with no border, as cards are on the dashboard. */
+  panel: '#ECE3D2',
   /** Rules on black. */
   lineDark: '#303237',
   /** Longer text on black (grey 300). */

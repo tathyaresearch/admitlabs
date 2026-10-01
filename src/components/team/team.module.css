@@ -27,12 +27,12 @@
   font-weight: var(--weight-heading);
 }
 
-/* Counts across the top of a page. */
+/* Counts across the top: number cards that also filter the list. */
 
 .counts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: var(--card-gap);
 }
 
 @media (min-width: 48rem) {
@@ -43,34 +43,57 @@
 
 .count {
   display: grid;
-  gap: var(--space-1);
-  padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--line-raised);
-  border-radius: var(--radius-lg);
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--card-padding-sm);
   background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
   color: var(--text);
   text-decoration: none;
-  transition: border-color var(--duration-fast) var(--ease-out);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+@media (min-width: 48rem) {
+  .count {
+    padding: var(--space-5) var(--card-padding);
+  }
 }
 
 a.count:hover {
-  border-color: var(--line-strong);
+  background: var(--surface-nested);
+}
+
+.count[aria-current='true'] {
+  box-shadow: inset 0 0 0 1.5px var(--text);
 }
 
 .countValue {
-  font: var(--type-metric);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: var(--tracking-section);
+  font: var(--type-num-kpi);
+  letter-spacing: var(--tracking-num);
 }
 
 .countLabel {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.countAction {
   font: var(--type-caption);
   color: var(--text-muted);
 }
 
-/* Filters: one row on a wide screen, stacked on a phone. */
+/* Filters: search and three filters in one row, the rest folded under "More filters". */
 
-/* Phones: search and Find across the row, the six filters two by two. */
+.filterForm {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* Phones: search across the row, then the filters and Find two by two. */
 .filters {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -78,25 +101,17 @@ a.count:hover {
   align-items: end;
 }
 
-.filters > :first-child,
-.filters > .filterActions {
+.filters > :first-child {
   grid-column: 1 / -1;
 }
 
 @media (min-width: 48rem) {
   .filters {
-    grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)) auto;
   }
 
-  .filters > :first-child,
-  .filters > .filterActions {
+  .filters > :first-child {
     grid-column: auto;
-  }
-}
-
-@media (min-width: 80rem) {
-  .filters {
-    grid-template-columns: minmax(0, 1.6fr) repeat(6, minmax(0, 1fr)) auto;
   }
 }
 
@@ -104,6 +119,73 @@ a.count:hover {
   display: flex;
   gap: var(--space-2);
   align-items: center;
+}
+
+.moreFilters {
+  display: grid;
+}
+
+.moreSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  min-height: var(--control-height);
+  font: var(--type-label);
+  color: var(--text-muted);
+  cursor: pointer;
+  list-style: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.moreSummary::-webkit-details-marker {
+  display: none;
+}
+
+.moreSummary:hover {
+  color: var(--text);
+}
+
+.moreCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--text);
+  color: var(--surface);
+  font: var(--type-num-caption);
+}
+
+.moreIcon {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.moreFilters[open] .moreIcon {
+  transform: rotate(180deg);
+}
+
+.moreFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+}
+
+.moreFields > :first-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 48rem) {
+  .moreFields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 48rem;
+  }
+
+  .moreFields > :first-child {
+    grid-column: auto;
+  }
 }
 
 .resultLine {
@@ -137,10 +219,18 @@ a.count:hover {
   font-weight: var(--weight-heading);
 }
 
-/* Rows of institutions. */
+/* Rows of institutions, in one card. */
 
 .list {
   display: grid;
+  padding: var(--space-2);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+.listHead {
+  display: none;
 }
 
 .listRow {
@@ -149,26 +239,48 @@ a.count:hover {
   align-items: center;
   gap: var(--space-2) var(--space-5);
   min-height: 3.5rem;
-  padding: var(--space-3) var(--space-3);
-  margin: 0 calc(var(--space-3) * -1);
-  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
   color: var(--text);
   text-decoration: none;
   transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .listRow:hover {
-  background: var(--surface-hover);
+  background: var(--surface-nested);
 }
 
 .listRow + .listRow {
-  box-shadow: 0 -1px 0 var(--line);
+  box-shadow: 0 -1px 0 var(--line-raised);
+}
+
+.listRow:hover + .listRow,
+.listRow + .listRow:hover {
+  box-shadow: none;
 }
 
 @media (min-width: 60rem) {
+  .listHead,
   .listRow {
-    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.9fr) 5.5rem minmax(0, 0.9fr) 1rem;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.9fr) 6.5rem minmax(0, 0.9fr) 1rem;
   }
+
+  .listHead {
+    display: grid;
+    gap: var(--space-2) var(--space-5);
+    padding: var(--space-2) var(--space-4) var(--space-1);
+    font: var(--type-caption-strong);
+    color: var(--text-muted);
+  }
+}
+
+/* Earlier bulk runs: a name, a count and the way in, on every width. */
+.listRow.runRow {
+  grid-template-columns: minmax(0, 1fr) auto 1rem;
+}
+
+.listHeadScore {
+  text-align: right;
 }
 
 .rowName {
@@ -197,6 +309,10 @@ a.count:hover {
   }
 }
 
+.rowStatus {
+  color: var(--text);
+}
+
 .rowScore {
   display: flex;
   align-items: baseline;
@@ -208,10 +324,10 @@ a.count:hover {
 }
 
 .rowScoreNumber {
-  font: var(--type-score-small);
+  font: var(--type-num-kpi);
   font-size: 1.25rem;
+  letter-spacing: var(--tracking-num);
   color: var(--text);
-  font-variant-numeric: tabular-nums;
 }
 
 .chevron {
@@ -227,63 +343,53 @@ a.count:hover {
   color: var(--text-muted);
 }
 
-/* Institution page. */
+/* Institution page: the plan (or sharing) beside who tracks them, then tabs. */
 
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-}
-
-.headerActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  justify-content: flex-end;
-}
-
-.split {
+.planRow {
   display: grid;
-  gap: var(--space-10);
+  gap: var(--card-gap);
 }
 
-@media (min-width: 64rem) {
-  .split {
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-    align-items: start;
+@media (min-width: 60rem) {
+  .planRow {
+    grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
   }
 }
 
-.stack {
-  display: grid;
-  gap: var(--space-10);
-  align-content: start;
-}
-
-.panel {
+.planBody {
   display: grid;
   gap: var(--space-4);
-  padding: var(--space-6);
-  border: 1px solid var(--line-raised);
-  border-radius: var(--radius-lg);
-  background: var(--surface-raised);
+}
+
+@media (min-width: 48rem) {
+  .planBody {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--space-8);
+  }
+}
+
+.planNow {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.planActions {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+}
+
+.planText {
+  max-width: 36rem;
+  font: var(--type-small);
+  color: var(--text-muted);
 }
 
 .facts {
   display: grid;
   gap: var(--space-2);
   font: var(--type-small);
-}
-
-.fact {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.factLabel {
-  color: var(--text-muted);
 }
 
 .inlineForm {
@@ -293,7 +399,8 @@ a.count:hover {
   gap: var(--space-3);
 }
 
-.inlineForm > :first-child {
+/* A field beside its button takes the room; a button on its own keeps its size. */
+.inlineForm > :first-child:not(:only-child) {
   flex: 1 1 12rem;
 }
 
@@ -301,7 +408,6 @@ a.count:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  justify-content: space-between;
   gap: var(--space-3);
 }
 
@@ -320,10 +426,28 @@ a.count:hover {
   color: var(--text-muted);
 }
 
-/* Notes, links, people and runs: quiet rows. */
+/* A tab's content: a quiet note, then the rows. */
+
+.tabStack {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.noteCard {
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+/* Audits, programs, people, notes and links: rows in one card. */
 
 .rows {
   display: grid;
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
 .item {
@@ -333,7 +457,7 @@ a.count:hover {
 }
 
 .item + .item {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line-raised);
 }
 
 .itemHead {
@@ -347,6 +471,28 @@ a.count:hover {
 .itemTitle {
   font: var(--type-strong);
   overflow-wrap: anywhere;
+}
+
+.itemQuiet {
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+
+.itemRole {
+  font: var(--type-caption-strong);
+}
+
+.itemScore {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font: var(--type-num);
+  font-weight: var(--weight-heading);
+}
+
+.itemScoreLabel {
+  font: var(--type-caption);
+  color: var(--text-muted);
 }
 
 .itemMeta {
@@ -383,17 +529,93 @@ a.count:hover {
   color: var(--text-muted);
 }
 
-/* Bulk Audit. */
+/* Team users: the team beside adding someone and the roles, each in one card. */
+
+.split {
+  display: grid;
+  gap: var(--card-gap);
+}
+
+@media (min-width: 64rem) {
+  .split {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.stack {
+  display: grid;
+  gap: var(--card-gap);
+  align-content: start;
+}
+
+.panel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+@media (min-width: 48rem) {
+  .panel {
+    padding: var(--card-padding);
+  }
+}
+
+.panelTitle {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+}
+
+.panelHelp {
+  margin-top: calc(var(--space-3) * -1);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* Bulk Audit: each step in one card. */
 
 .steps {
   display: grid;
-  gap: var(--space-8);
+  gap: var(--card-gap);
+}
+
+.step {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+@media (min-width: 48rem) {
+  .step {
+    padding: var(--card-padding);
+  }
+}
+
+/* Rows inside a card or panel sit on it, without a card of their own. */
+.step .rows,
+.step .results,
+.panel .rows {
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
 }
 
 .stepHead {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-3);
+}
+
+.stepTitle {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
 }
 
 .stepNumber {
@@ -404,8 +626,8 @@ a.count:hover {
   flex: none;
   border-radius: var(--radius-full);
   background: var(--text);
-  color: var(--surface);
-  font: var(--type-caption-strong);
+  color: var(--surface-raised);
+  font: var(--type-num-caption);
 }
 
 .stepNumber[data-done='false'] {
@@ -466,7 +688,7 @@ a.count:hover {
 }
 
 .checkRow + .checkRow {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line-raised);
 }
 
 .checkPosition {
@@ -479,6 +701,11 @@ a.count:hover {
 .checkStatus {
   font: var(--type-caption-strong);
   white-space: nowrap;
+}
+
+.checkStatus[data-status='skip'] {
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
 }
 
 .problems {
@@ -509,6 +736,10 @@ a.count:hover {
 
 .results {
   display: grid;
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
 .resultRow {
@@ -520,7 +751,7 @@ a.count:hover {
 }
 
 .resultRow + .resultRow {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line-raised);
 }
 
 @media (min-width: 60rem) {
@@ -540,6 +771,10 @@ a.count:hover {
 .pillarsMini strong {
   color: var(--text);
   font-weight: var(--weight-heading);
+}
+
+.pillarsMini {
+  font-variant-numeric: tabular-nums;
 }
 
 .topFix {

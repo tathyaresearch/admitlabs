@@ -10,7 +10,7 @@ import { limitFor } from '@/config/entitlements';
 import { monthKey } from '@/domain/dates';
 import { planReminder } from '@/domain/tiers';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
-import { loadAuditPage, nextAuditText } from '@/lib/audit/load';
+import { auditNote, loadAuditPage, nextAuditText } from '@/lib/audit/load';
 import { loadCityIdeas, loadHighlight } from '@/lib/demand/load';
 import { loadActions, loadRivalSnapshot } from '@/lib/rivals/load';
 import { fixThing, threeThings, type Thing } from '@/report/things';
@@ -66,7 +66,7 @@ export default async function HomePage() {
   // Score history is a Paid and Client feature; Free sees the latest Audit only.
   const trend = full ? { points: historyByMonth(data.history, (runAt) => monthKey(new Date(runAt))) } : null;
   // Only an Audit on the current plan: a Paid plan ending before its next Audit says so in the notice instead.
-  const note = data.nextAudit && data.nextAudit.tier === viewer.tier ? `${nextAuditText(data)}.` : null;
+  const note = auditNote(data, viewer.tier);
 
   return (
     <div className={styles.home}>

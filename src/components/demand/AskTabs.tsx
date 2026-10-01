@@ -4,7 +4,7 @@
 
 import { Folded } from '@/components/audit/Lists';
 import { Change } from '@/components/ui/Results';
-import { Tabs } from '@/components/ui/Tabs';
+import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { DEMAND_RULES } from '@/config/demand';
 import { countWords, LANGUAGE_TAGS } from '@/demand/text';
 import type { DemandRow, DemandView, WorryRow } from '@/demand/view';
@@ -85,7 +85,8 @@ function TrendItems({ items, showProgram }: { items: readonly DemandRow[]; showP
   );
 }
 
-export function AskTabs({ view, showProgram }: { view: DemandView; showProgram: boolean }) {
+/** Questions, worries and trends, one tab each. `more` adds tabs after them (the mentions). */
+export function AskTabs({ view, showProgram, more = [] }: { view: DemandView; showProgram: boolean; more?: readonly TabItem[] }) {
   const shown = DEMAND_RULES.topQuestions;
   const rising = view.rising.slice(0, DEMAND_RULES.trendsShown);
   const falling = view.falling.slice(0, DEMAND_RULES.trendsShown);
@@ -95,7 +96,8 @@ export function AskTabs({ view, showProgram }: { view: DemandView; showProgram: 
       items={[
         {
           id: 'questions',
-          label: `Top questions (${Math.min(shown, view.questions.length)})`,
+          label: 'Top questions',
+          count: view.questions.length,
           content: view.questions.length ? (
             <Folded
               total={view.questions.length}
@@ -109,12 +111,14 @@ export function AskTabs({ view, showProgram }: { view: DemandView; showProgram: 
         },
         {
           id: 'worries',
-          label: `Worries (${view.worries.length})`,
+          label: 'Worries',
+          count: view.worries.length,
           content: view.worries.length ? <WorryItems items={view.worries} showProgram={showProgram} /> : <p className={styles.note}>No worries found this month.</p>,
         },
         {
           id: 'trends',
-          label: `Rising and falling (${rising.length + falling.length})`,
+          label: 'Rising and falling',
+          count: rising.length + falling.length,
           content: (
             <div className={styles.trendColumns}>
               <div>
@@ -128,6 +132,7 @@ export function AskTabs({ view, showProgram }: { view: DemandView; showProgram: 
             </div>
           ),
         },
+        ...more,
       ]}
     />
   );

@@ -132,7 +132,8 @@ export function ActivityTabs({
       items={[
         {
           id: 'moves',
-          label: `Moves (${moves.length})`,
+          label: 'Moves',
+          count: moves.length,
           content: (
             <>
               <p className={styles.tabNote}>{movesNote}</p>
@@ -142,7 +143,8 @@ export function ActivityTabs({
         },
         {
           id: 'content',
-          label: `Best content (${posts.length})`,
+          label: 'Best content',
+          count: posts.length,
           content: (
             <>
               <p className={styles.tabNote}>{postsNote}</p>
@@ -152,7 +154,8 @@ export function ActivityTabs({
         },
         {
           id: 'ads',
-          label: `Ads (${activity.ads.length})`,
+          label: 'Ads',
+          count: activity.ads.length,
           content: (
             <>
               <p className={styles.tabNote}>What they promise in their ads, entered by the AdmitLabs team.</p>

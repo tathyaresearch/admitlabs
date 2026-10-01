@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { istDate } from '../domain/dates.ts';
 import type { PlanRecord } from '../domain/tiers.ts';
-import { paidEndText, paidStartFrom, paidStartRange, planActions, planText } from './plans.ts';
+import { paidEndText, paidStartFrom, paidStartRange, planActions, planDetail, planText } from './plans.ts';
 
 const NOW = istDate('2026-09-30', 12);
 const plan = (tier: PlanRecord['tier'], starts: string, ends: string | null): PlanRecord => ({ tier, startsAt: istDate(starts, 10), endsAt: ends ? istDate(ends, 10) : null });
@@ -28,6 +28,15 @@ describe('what an Admin can do with a plan', () => {
     assert.equal(planText(plan('paid', '2026-03-01', '2026-09-01'), NOW), 'Paid plan ended on 1 Sep 2026');
     assert.equal(planText(plan('client', '2026-03-01', '2026-09-01'), NOW), 'Client service ended on 1 Sep 2026');
     assert.equal(planText(plan('free', '2026-06-10', null), NOW), 'Free');
+  });
+
+  test('the line under the plan, without repeating its name', () => {
+    assert.equal(planDetail(plan('paid', '2026-04-15', '2026-10-15'), NOW), 'Ends 15 Oct 2026');
+    assert.equal(planDetail(plan('client', '2026-03-02', null), NOW), 'Since 2 Mar 2026');
+    assert.equal(planDetail(plan('paid', '2026-03-01', '2026-09-01'), NOW), 'Paid plan ended on 1 Sep 2026');
+    assert.equal(planDetail(plan('client', '2026-03-01', '2026-09-01'), NOW), 'Client service ended on 1 Sep 2026');
+    assert.equal(planDetail(plan('free', '2026-06-10', null), NOW), 'Since 10 Jun 2026');
+    assert.equal(planDetail(null, NOW), null);
   });
 });
 

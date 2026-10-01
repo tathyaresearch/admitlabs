@@ -1,20 +1,54 @@
 /*
-  Reports, in the Audit page's style: the latest report in one band (the month in large type,
-  when it was made, one download button, and what is inside), then earlier reports as quiet
-  rows. Space does the separating; lines are kept for rows.
+  Reports: the latest report in one card (the month and its score, one download button, then
+  what is inside), and earlier reports as rows in one card. The card responds to the space it
+  has (container queries).
 */
 
 .latest {
+  container-type: inline-size;
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-6);
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+@media (min-width: 48rem) {
+  .latest {
+    padding: var(--space-8);
+  }
+}
+
+.label {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.latestTop {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@container (min-width: 36rem) {
+  .latestTop {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--space-10);
+  }
+}
+
+.latestMain {
+  display: grid;
+  gap: var(--space-3);
   align-content: start;
 }
 
 .month {
-  font: var(--type-score-medium);
-  font-size: clamp(2.25rem, 1.9rem + 1.4vw, 3rem);
-  letter-spacing: var(--tracking-score);
-  line-height: 0.95;
+  font: var(--type-title);
+  font-size: clamp(2rem, 1.6rem + 2cqi, 2.75rem);
+  letter-spacing: var(--tracking-title);
+  line-height: 1;
 }
 
 .facts {
@@ -30,29 +64,37 @@
   margin-top: var(--space-2);
 }
 
+/* The score in this report: the number in Inter, the change under it. */
+
+.latestScore {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  min-width: 12rem;
+  padding: var(--space-5);
+  background: var(--surface-nested);
+  border-radius: var(--radius-md);
+}
+
 /* What's inside: the report's pages, in order. */
 
 .inside {
   display: grid;
   gap: var(--space-3);
-  align-content: start;
-}
-
-.insideTitle {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--line-raised);
 }
 
 .insideList {
   display: grid;
-  gap: 0;
-  counter-reset: page;
+  column-gap: var(--space-8);
 }
 
-@media (min-width: 40rem) {
+@container (min-width: 36rem) {
   .insideList {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--space-6);
+    grid-auto-flow: column;
+    grid-template-rows: repeat(4, auto);
   }
 }
 
@@ -61,7 +103,6 @@
   align-items: baseline;
   gap: var(--space-3);
   padding: var(--space-2) 0;
-  border-top: 1px solid var(--line);
   font: var(--type-small);
 }
 
@@ -69,27 +110,30 @@
   flex: none;
   width: 1.25rem;
   font: var(--type-caption-strong);
-  font-variant-numeric: tabular-nums;
   color: var(--text-muted);
 }
 
-/* Earlier reports: one quiet row each. */
+/* Earlier reports: one row each, in one card. */
 
 .rows {
   display: grid;
+  padding: var(--space-2);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
 .row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: var(--space-2) var(--space-5);
-  min-height: 3.25rem;
-  padding: var(--space-2) 0;
+  gap: var(--space-2) var(--space-6);
+  min-height: 3.5rem;
+  padding: var(--space-2) var(--space-4);
 }
 
 .row + .row {
-  border-top: 1px solid var(--line);
+  box-shadow: 0 -1px 0 var(--line-raised);
 }
 
 .rowMonth {
@@ -99,25 +143,44 @@
 }
 
 .rowFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-3);
   font: var(--type-caption);
   color: var(--text-muted);
 }
 
-/* 3 things to do this month (Home, Paid and Client). */
+.rowScore {
+  display: inline-flex;
+  align-items: baseline;
+  font: var(--type-num);
+  font-weight: var(--weight-heading);
+}
 
-.thingSource {
-  font: var(--type-caption-strong);
+.rowOutOf {
+  font: var(--type-caption);
   color: var(--text-muted);
 }
 
-.thingDetail {
-  /* A clamp only holds when the grid row does not stretch the box. */
-  align-self: start;
-  display: -webkit-box;
-  overflow: hidden;
-  font: var(--type-small);
-  color: var(--text-muted);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+@media (max-width: 30rem) {
+  .row {
+    padding: var(--space-3);
+    gap: var(--space-2) var(--space-3);
+  }
+}
+
+/* Free: the unlock button, and the sample report beside it. */
+
+.unlockActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+}
+
+@media (min-width: 60rem) {
+  .unlockActions {
+    flex-direction: column;
+    align-items: flex-end;
+  }
 }

@@ -38,7 +38,21 @@ export function NoteForm({ action }: { action: Action }) {
   );
 }
 
-export function ActionButton({ action, label, icon, variant = 'primary', confirm }: { action: Action; label: string; icon?: 'refresh' | 'plus' | 'download' | 'external'; variant?: 'primary' | 'secondary' | 'quiet'; confirm?: string }) {
+export function ActionButton({
+  action,
+  label,
+  icon,
+  variant = 'primary',
+  size = 'sm',
+  confirm,
+}: {
+  action: Action;
+  label: string;
+  icon?: 'refresh' | 'plus' | 'download' | 'external';
+  variant?: 'primary' | 'secondary' | 'quiet';
+  size?: 'sm' | 'md';
+  confirm?: string;
+}) {
   const [state, submit, pending] = useActionState(action, IDLE);
   const [asking, setAsking] = useState(false);
   if (confirm && asking) {
@@ -46,7 +60,7 @@ export function ActionButton({ action, label, icon, variant = 'primary', confirm
       <div className={styles.facts}>
         <p className={styles.formNote}>{confirm}</p>
         <form action={submit} className={styles.inlineForm} onSubmit={() => setAsking(false)}>
-          <Button type="submit" size="sm" loading={pending}>
+          <Button type="submit" size={size} loading={pending}>
             Yes, {label.charAt(0).toLowerCase()}
             {label.slice(1)}
           </Button>
@@ -65,7 +79,7 @@ export function ActionButton({ action, label, icon, variant = 'primary', confirm
           setAsking(true);
         }
       }}>
-        <Button type="submit" size="sm" variant={variant} icon={icon} loading={pending}>
+        <Button type="submit" size={size} variant={variant} icon={icon} loading={pending}>
           {label}
         </Button>
       </form>

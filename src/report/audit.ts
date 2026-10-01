@@ -1,14 +1,14 @@
 // A prospect's shared Audit as a PDF (spec section 13, Phase 6 decisions): the same content as
 // the shared page, in the report's design. Every check with its result, what was found, the
-// source and the date; how to fix only for the top 3 fixes, and "AdmitLabs can fix this" for the
-// rest. Built from what shared_audit() returned, so it never holds more than the link does. Pure.
+// source and the date; how to fix only for the top 3 fixes, and one line saying AdmitLabs can fix
+// the rest. Built from what shared_audit() returned, so it never holds more than the link does. Pure.
 
 import { auditVerdict } from '../audit/verdict.ts';
 import { ADMITLABS_EMAIL } from '../config/team.ts';
 import { formatDate, hostAndPath } from '../domain/format.ts';
 import { scoreLabel, type ScoreLabel } from '../domain/scores.ts';
 import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS, PILLARS, type CheckResult, type Pillar } from '../domain/types.ts';
-import { ADMITLABS_CAN_FIX, sharedView, type SharedAudit } from '../team/share.ts';
+import { sharedView, type SharedAudit } from '../team/share.ts';
 import { fixOf, programRows, REPORT_LIMITS, typeset, workingRow, type ReportData, type ReportFix } from './data.ts';
 
 export interface AuditCheckPart {
@@ -21,7 +21,7 @@ export interface AuditCheckPart {
 
 export interface AuditCheck {
   name: string;
-  /** "In your top 3 fixes", "AdmitLabs can fix this.", or nothing for what is working. */
+  /** "In your top 3 fixes." for those three, otherwise nothing. */
   note: string | null;
   parts: AuditCheckPart[];
 }
@@ -37,7 +37,7 @@ export interface AuditPdfData {
   pillars: Array<{ pillar: Pillar; name: string; score: number; label: ScoreLabel }>;
   working: ReportData['working'];
   topFixes: ReportFix[];
-  /** Explained no further than the problem: AdmitLabs can fix these. */
+  /** Explained no further than the problem: one line above them says AdmitLabs can fix them. */
   moreFixes: ReportFix[];
   programs: ReportData['programs'];
   morePrograms: number;
@@ -50,7 +50,6 @@ export const TOP_FIX_NOTE = 'In your top 3 fixes.';
 export function buildAuditPdf(shared: SharedAudit, options: { madeAt: Date; freeAuditUrl: string }): AuditPdfData {
   const { view, topFixes, moreFixes, working } = sharedView(shared);
   const type = shared.institution.type;
-  const fixRanks = new Map(view.fixes.map((item) => [item.key, item.rank]));
   const topKeys = new Set(topFixes.map((item) => item.key));
   const checkedOn = formatDate(shared.audit.runAt);
 
@@ -78,7 +77,7 @@ export function buildAuditPdf(shared: SharedAudit, options: { madeAt: Date; free
         .filter((row) => row.parts.length)
         .map((row) => ({
           name: row.name,
-          note: topKeys.has(row.key) ? TOP_FIX_NOTE : fixRanks.has(row.key) ? ADMITLABS_CAN_FIX : null,
+          note: topKeys.has(row.key) ? TOP_FIX_NOTE : null,
           parts: row.parts.map((part) => ({
             program: part.programName,
             result: part.result,

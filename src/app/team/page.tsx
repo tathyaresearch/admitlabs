@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { AuditHeader } from '@/components/audit/AuditHeader';
 import { InstitutionFilters, InstitutionRows, Pages, ResultLine } from '@/components/team/InstitutionList';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/Feedback';
+import { PageHead } from '@/components/ui/Layout';
 import { TEAM_RULES } from '@/config/team';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
@@ -18,12 +18,16 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: viewer?.teamRole ? 'Institutions' : 'Page not found' };
 }
 
+// The team's home answers "Who needs attention?": four counts that also filter the list, then the
+// list itself with search and filters.
 export default async function TeamHomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireTeamViewer();
   const filters = parseFilters(await searchParams);
   const now = new Date();
   const [{ rows, total }, counts, places] = await Promise.all([loadInstitutionList(filters, now), loadListCounts(now), loadPlaces()]);
 
+  // A count is "on" when the list shows exactly what it counts.
+  const current = filtersQuery({ ...filters, sort: 'name', page: 1 });
   const shortcuts = [
     { label: 'Signed up', value: counts.signedUp, href: filtersQuery({ ...NO_FILTERS, status: 'signed_up' }) },
     { label: 'Clients', value: counts.clients, href: filtersQuery({ ...NO_FILTERS, tier: 'client' }) },
@@ -33,25 +37,29 @@ export default async function TeamHomePage({ searchParams }: { searchParams: Pro
 
   return (
     <div className={audit.page}>
-      <div className={audit.top}>
-        <AuditHeader
-          title="Institutions"
-          caption={['Everyone in Drishti: signed up, prospects and rival records', 'Prospects and notes are team only']}
-          actions={
-            <ButtonLink href="/team/bulk" icon="plus">
-              Bulk Audit
-            </ButtonLink>
-          }
-        />
-        <div className={styles.counts}>
-          {shortcuts.map((item) => (
-            <Link key={item.label} href={`/team${item.href}`} className={styles.count}>
-              <span className={`${styles.countValue} num`}>{item.value}</span>
+      <PageHead
+        title="Institutions"
+        question="Who needs attention?"
+        caption={['Everyone in Drishti: signed up, prospects and rival records', 'Prospects and notes are team only']}
+        actions={
+          <ButtonLink href="/team/bulk" icon="plus">
+            Bulk Audit
+          </ButtonLink>
+        }
+      />
+
+      <nav className={styles.counts} aria-label="Show only">
+        {shortcuts.map((item) => {
+          const on = current === item.href;
+          return (
+            <Link key={item.label} href={on ? '/team' : `/team${item.href}`} className={styles.count} aria-current={on ? 'true' : undefined}>
               <span className={styles.countLabel}>{item.label}</span>
+              <span className={`${styles.countValue} num`}>{item.value}</span>
+              <span className={styles.countAction}>{on ? 'Show all' : 'Show these'}</span>
             </Link>
-          ))}
-        </div>
-      </div>
+          );
+        })}
+      </nav>
 
       <section className={audit.section} aria-label="Institutions">
         <InstitutionFilters filters={filters} cities={places.cities} states={places.states} />

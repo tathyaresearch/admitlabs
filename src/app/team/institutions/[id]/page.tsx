@@ -1,24 +1,28 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { overviewView } from '@/audit/view';
-import { PointsValue } from '@/components/ui/Results';
-import { AuditHeader, SectionHead } from '@/components/audit/AuditHeader';
-import { SummaryBand } from '@/components/audit/SummaryBand';
+import type { ReactNode } from 'react';
+import { historyByMonth, overviewView } from '@/audit/view';
+import { fixStep } from '@/components/audit/AuditScreen';
+import { HomeSummary } from '@/components/home/HomeSummary';
+import { NextSteps } from '@/components/home/NextSteps';
 import { ActionButton, CopyLink, NoteForm, PaidStartForm } from '@/components/team/InstitutionPanels';
 import { AnchorButton, Button } from '@/components/ui/Button';
-import { Tag } from '@/components/ui/Data';
 import { EmptyState } from '@/components/ui/Feedback';
+import { KpiCard, KpiNote, KpiNumber, KpiWord } from '@/components/ui/Kpi';
+import { PageHead } from '@/components/ui/Layout';
+import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { TEAM_RULES } from '@/config/team';
-import { formatDate, formatDateTime, hostAndPath, plural } from '@/domain/format';
+import { monthKey } from '@/domain/dates';
+import { formatDate, formatDateTime, hostAndPath } from '@/domain/format';
 import { scoreLabel } from '@/domain/scores';
 import { effectiveTier, type PlanRecord } from '@/domain/tiers';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
-import { loadTeamInstitution, type LinkRow } from '@/lib/team/load';
+import { loadTeamInstitution, type LinkRow, type TeamInstitution } from '@/lib/team/load';
 import { APP_URL } from '@/lib/urls';
 import { TEAM_STATUS_LABELS, type TeamStatus } from '@/team/filters';
-import { planActions, planText } from '@/team/plans';
+import { planActions, planDetail } from '@/team/plans';
 import { linkState, linkStateText, sharePath } from '@/team/share';
 import { viewAsAction } from '../../view-as-actions';
 import {
@@ -35,6 +39,8 @@ import audit from '@/components/audit/audit.module.css';
 import styles from '@/components/team/team.module.css';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Their own Audits listed under Audits, newest first. */
+const OWN_AUDITS_SHOWN = 6;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const viewer = await getViewer();
@@ -44,6 +50,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return { title: institution?.name ?? 'Institution' };
 }
 
+// One institution answers "Where do they stand, and what's their plan?": the score and pillars,
+// the plan (or, before they sign up, sharing the Audit), what to fix first, then the rest in tabs.
 export default async function TeamInstitutionPage({ params }: { params: Promise<{ id: string }> }) {
   const viewer = await requireTeamViewer();
   const { id } = await params;
@@ -62,305 +70,293 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
   const view = latest ? overviewView(latest, { institutionType: institution.type, programNames: institution.programNames }) : null;
   const teamAudit = latest?.kind === 'team' ? latest : null;
   const actions = isAdmin ? planActions(plan, institution.claimed, now) : [];
-  const scoreCaption = !latest
-    ? ''
-    : latest.kind === 'team'
-      ? `Team Audit, ${formatDate(latest.runAt)}`
-      : latest.kind === 'rival'
-        ? `Rival Audit, ${formatDate(latest.runAt)}`
-        : `Their Audit, ${formatDate(latest.runAt)}`;
+
+  // The score's history, from the same kind of Audit as the score itself.
+  const trendRows = latest?.kind === 'team' ? institution.teamAudits : latest && latest.kind !== 'rival' ? institution.history : [];
+  const trend = { points: historyByMonth(trendRows.map((row) => ({ runAt: row.runAt, scores: { overall: row.overall } })), (runAt) => monthKey(new Date(runAt))) };
+  const scoreName = !latest ? '' : latest.kind === 'team' ? 'Team Audit score' : latest.kind === 'rival' ? 'Rival Audit score' : 'Their score';
+
+  const tabs: TabItem[] = [
+    { id: 'audits', label: 'Audits', count: institution.teamAudits.length + Math.min(institution.history.length, OWN_AUDITS_SHOWN), content: <AuditsTab institution={institution} /> },
+    { id: 'programs', label: 'Programs', count: institution.programs.length, content: <ProgramsTab institution={institution} /> },
+    ...(institution.claimed
+      ? [{ id: 'people', label: 'People', count: institution.people.length + institution.invites.length, content: <PeopleTab institution={institution} /> }]
+      : []),
+    {
+      id: 'notes',
+      label: 'Notes',
+      count: institution.notes.length,
+      content: (
+        <div className={styles.tabStack}>
+          <p className={styles.formNote}>Team only. Never shown to the institution.</p>
+          <div className={styles.noteCard}>
+            <NoteForm action={addNoteAction.bind(null, institution.id)} />
+          </div>
+          {institution.notes.length ? (
+            <div className={styles.rows}>
+              {institution.notes.map((note) => (
+                <div key={note.id} className={styles.item}>
+                  <p className={styles.itemBody}>{note.body}</p>
+                  <p className={styles.itemMeta}>
+                    <span>{note.author}</span>
+                    <span>{formatDate(note.createdAt)}</span>
+                  </p>
+                  {note.authorId === viewer.userId || isAdmin ? (
+                    <form action={removeNoteAction.bind(null, institution.id, note.id)} className={styles.itemActions}>
+                      <Button type="submit" size="sm" variant="quiet">
+                        Remove
+                      </Button>
+                    </form>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      id: 'links',
+      label: 'Share links',
+      count: institution.links.length,
+      content: (
+        <div className={styles.tabStack}>
+          <p className={styles.formNote}>
+            {institution.claimed
+              ? 'Links made before they signed up. Each one works until it expires or you stop it.'
+              : `Each link opens the team Audit for ${TEAM_RULES.shareLinkDays} days, until it expires or you stop it.`}
+          </p>
+          {institution.links.length ? <ShareLinks institutionId={institution.id} links={institution.links} now={now} /> : <p className={styles.empty}>No links yet.</p>}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className={audit.page}>
-      <div className={audit.top}>
-        <AuditHeader
-          title={institution.name}
-          caption={[
-            `${INSTITUTION_TYPE_LABELS[institution.type]} in ${institution.city}, ${institution.state}`,
-            <a key="site" href={institution.website} target="_blank" rel="noreferrer">
-              {hostAndPath(institution.website)}
-              <span className="visually-hidden"> (opens in a new tab)</span>
-            </a>,
-            TEAM_STATUS_LABELS[status],
-            ...(tier ? [planText(plan, now)] : []),
-          ]}
-          actions={
-            <div className={styles.headerActions}>
-              {institution.claimed ? (
-                <form action={viewAsAction.bind(null, institution.id)}>
-                  <Button type="submit" variant="secondary" iconAfter="arrowRight">
-                    Open their dashboard
-                  </Button>
-                </form>
-              ) : null}
-              <ActionButton
-                action={auditNowAction.bind(null, institution.id)}
-                label={tier === 'client' ? 'Refresh their Audit' : 'Run a team Audit'}
-                icon="refresh"
-              />
-            </div>
-          }
-        />
-        {view && latest ? (
-          <SummaryBand view={view} caption={scoreCaption} />
-        ) : (
-          <EmptyState icon="audit" title="No Audit yet" headingLevel={2}>
-            {institution.claimed ? 'Their first Audit runs when they pick a program.' : 'Run a team Audit to see where they stand. It stays private until you share it.'}
-          </EmptyState>
-        )}
-      </div>
+      <PageHead
+        back={{ href: '/team', label: 'Institutions' }}
+        title={institution.name}
+        question="Where do they stand, and what's their plan?"
+        caption={[
+          `${INSTITUTION_TYPE_LABELS[institution.type]} in ${institution.city}, ${institution.state}`,
+          <a key="site" href={institution.website} target="_blank" rel="noreferrer">
+            {hostAndPath(institution.website)}
+            <span className="visually-hidden"> (opens in a new tab)</span>
+          </a>,
+          institution.claimedAt ? `Signed up ${formatDate(institution.claimedAt)}` : `${TEAM_STATUS_LABELS[status]}, added ${formatDate(institution.createdAt)}`,
+        ]}
+        actions={
+          <>
+            {institution.claimed ? (
+              <form action={viewAsAction.bind(null, institution.id)}>
+                <Button type="submit" variant="secondary" iconAfter="arrowRight">
+                  Open their dashboard
+                </Button>
+              </form>
+            ) : null}
+            <ActionButton action={auditNowAction.bind(null, institution.id)} label={tier === 'client' ? 'Refresh their Audit' : 'Run a team Audit'} icon="refresh" size="md" />
+          </>
+        }
+      />
 
-      <div className={styles.split}>
-        <div className={styles.stack}>
-          {view && !institution.claimed ? (
-            <section className={audit.section} aria-labelledby="fixes-title">
-              <SectionHead
-                id="fixes-title"
-                title="What to fix first"
-                help={`${plural(view.fixes.length, 'thing', 'things')} to fix. A shared Audit explains the top ${TEAM_RULES.sharedFixesInFull} and says AdmitLabs can fix the rest.`}
-              />
-              <div className={styles.rows}>
-                {view.fixes.slice(0, 5).map((item) => {
-                  const detail = item.parts.find((part) => part.detail)?.detail;
-                  return (
-                    <div key={item.rank} className={styles.item}>
-                      <div className={styles.itemHead}>
-                        <span className={styles.itemTitle}>
-                          <span className="num">{item.rank}.</span> {item.name}
-                        </span>
-                        <span className={styles.itemMeta}>
-                          <PointsValue kind="gain" points={item.points} />
-                        </span>
-                      </div>
-                      {detail?.finding ? <p className={styles.itemBody}>{detail.finding}</p> : null}
-                    </div>
-                  );
-                })}
+      {view && latest ? (
+        <HomeSummary view={view} checkedAt={latest.runAt} trend={trend} scoreLabel={scoreName} historyLabel={`${scoreName} by month`} verdict={false} />
+      ) : (
+        <EmptyState icon="audit" title="No Audit yet" headingLevel={2}>
+          {institution.claimed ? 'Their first Audit runs when they pick a program.' : 'Run a team Audit to see where they stand. It stays private until you share it.'}
+        </EmptyState>
+      )}
+
+      <section className={styles.planRow} aria-label={institution.claimed ? 'Plan' : 'Share this Audit'}>
+        {institution.claimed ? (
+          <KpiCard label="Plan" aside={institution.plan?.setBy ? `Set by ${institution.plan.setBy}` : undefined} className={styles.planCard}>
+            <div className={styles.planBody}>
+              <div className={styles.planNow}>
+                <KpiWord>{tier ? TIER_LABELS[tier] : 'Free'}</KpiWord>
+                {planDetail(plan, now) ? <KpiNote>{planDetail(plan, now)}</KpiNote> : null}
               </div>
-            </section>
-          ) : null}
-
-          {institution.claimed && institution.teamAudits.length ? (
-            <section className={audit.section} aria-labelledby="team-audits-title">
-              <SectionHead id="team-audits-title" title="Private team Audits" help="Only the team sees these. Their own Audits follow their plan." />
-              <div className={styles.rows}>
-                {institution.teamAudits.map((row) => (
-                  <div key={row.id} className={styles.item}>
-                    <div className={styles.itemHead}>
-                      <span className={styles.itemTitle}>{formatDateTime(row.runAt)}</span>
-                      <span className={styles.itemMeta}>
-                        <span className="num">{row.overall}</span>, {scoreLabel(row.overall)}
-                      </span>
-                    </div>
-                    <p className={styles.itemMeta}>
-                      <span>
-                        Discovered <span className="num">{row.discovered}</span>, Trusted <span className="num">{row.trusted}</span>, Chosen{' '}
-                        <span className="num">{row.chosen}</span>
-                      </span>
-                      {row.topFix ? <span>Top fix: {row.topFix}</span> : null}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {institution.claimed && institution.history.length ? (
-            <section className={audit.section} aria-labelledby="history-title">
-              <SectionHead id="history-title" title="Their Audits" help="Newest first. Their dashboard shows what their plan includes." />
-              <div className={styles.rows}>
-                {[...institution.history]
-                  .reverse()
-                  .slice(0, 6)
-                  .map((row) => (
-                    <div key={row.id} className={styles.item}>
-                      <div className={styles.itemHead}>
-                        <span className={styles.itemTitle}>{formatDateTime(row.runAt)}</span>
-                        <span className={styles.itemMeta}>
-                          <span className="num">{row.overall}</span>, {scoreLabel(row.overall)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </section>
-          ) : null}
-
-          <section className={audit.section} aria-labelledby="programs-title">
-            <SectionHead id="programs-title" title="Programs" help={latest ? 'With their score in the latest Audit.' : 'Audited in the next Audit.'} />
-            <div className={styles.rows}>
-              {institution.programs.map((program) => {
-                const score = latest?.programs.find((entry) => entry.programId === program.id);
-                return (
-                  <div key={program.id} className={styles.item}>
-                    <div className={styles.itemHead}>
-                      <span className={styles.itemTitle}>
-                        {program.name} {program.archived ? <Tag variant="quiet">Removed</Tag> : null}
-                      </span>
-                      <span className={styles.itemMeta}>
-                        {score ? (
-                          <>
-                            <span className="num">{score.scores.overall}</span>, {scoreLabel(score.scores.overall)}
-                          </>
-                        ) : (
-                          'Not in this Audit'
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        </div>
-
-        <div className={styles.stack}>
-          {institution.claimed ? (
-            <section className={styles.panel} aria-labelledby="plan-title">
-              <SectionHead id="plan-title" title="Plan" help={isAdmin ? 'Only an Admin changes plans.' : 'An Admin changes plans.'} />
-              <div className={styles.facts}>
-                <p className={styles.fact}>
-                  <span className={styles.factLabel}>Now</span>
-                  <span>{tier ? TIER_LABELS[tier] : 'Free'}</span>
-                </p>
-                {planText(plan, now) !== (tier ? TIER_LABELS[tier] : 'Free') ? (
-                  <p className={styles.fact}>
-                    <span className={styles.factLabel}>Plan</span>
-                    <span>{planText(plan, now)}</span>
-                  </p>
-                ) : null}
-                {institution.plan?.setBy ? (
-                  <p className={styles.fact}>
-                    <span className={styles.factLabel}>Set by</span>
-                    <span>{institution.plan.setBy}</span>
-                  </p>
-                ) : null}
-              </div>
-              {actions.includes('start_paid') ? <PaidStartForm action={startPaidAction.bind(null, institution.id)} now={now.toISOString()} /> : null}
-              {actions.includes('make_client') ? (
-                <ActionButton
-                  action={makeClientAction.bind(null, institution.id)}
-                  label="Make them a Client"
-                  variant="secondary"
-                  confirm="They get everything Paid has, while the AdmitLabs service is active. Their first Client Audit runs now."
-                />
-              ) : null}
-              {actions.includes('end_plan') ? (
-                <ActionButton
-                  action={endPlanAction.bind(null, institution.id)}
-                  label="End the plan now"
-                  variant="quiet"
-                  confirm="They move to Free today. They keep their last Audit score and their past reports."
-                />
-              ) : null}
-            </section>
-          ) : (
-            <section className={styles.panel} aria-labelledby="share-title">
-              <SectionHead
-                id="share-title"
-                title="Share this Audit"
-                help={`A private link to the team Audit, for ${TEAM_RULES.shareLinkDays} days. How to fix is shown for the top ${TEAM_RULES.sharedFixesInFull} fixes only.`}
-              />
-              {teamAudit ? (
-                <div className={styles.shareActions}>
-                  {/* A new or stopped link shows in the list below, so the button starts fresh each time the links change. */}
-                  <ActionButton
-                    key={institution.links.map((link) => `${link.token}:${link.stoppedAt ?? ''}`).join(' ') || 'none'}
-                    action={shareAuditAction.bind(null, institution.id, teamAudit.id)}
-                    label="Create a link"
-                    icon="plus"
-                  />
-                  <AnchorButton href={`/team/institutions/${institution.id}/pdf`} size="sm" variant="secondary" icon="download">
-                    Download PDF
-                  </AnchorButton>
+              {isAdmin ? (
+                <div className={styles.planActions}>
+                  {actions.includes('start_paid') ? <PaidStartForm action={startPaidAction.bind(null, institution.id)} now={now.toISOString()} /> : null}
+                  {actions.includes('make_client') ? (
+                    <ActionButton
+                      action={makeClientAction.bind(null, institution.id)}
+                      label="Make them a Client"
+                      variant="secondary"
+                      confirm="They get everything Paid has, while the AdmitLabs service is active. Their first Client Audit runs now."
+                    />
+                  ) : null}
+                  {actions.includes('end_plan') ? (
+                    <ActionButton
+                      action={endPlanAction.bind(null, institution.id)}
+                      label="End the plan now"
+                      variant="quiet"
+                      confirm="They move to Free today. They keep their last Audit score and their past reports."
+                    />
+                  ) : null}
                 </div>
               ) : (
-                <p className={styles.empty}>Run a team Audit first. Only a team Audit can be shared.</p>
+                <p className={styles.formNote}>An Admin changes plans.</p>
               )}
-              <ShareLinks institutionId={institution.id} links={institution.links} now={now} />
-            </section>
-          )}
-
-          {institution.claimed && institution.links.length ? (
-            <section className={styles.panel} aria-labelledby="links-title">
-              <SectionHead id="links-title" title="Shared before they signed up" help="Each link works until it expires or you stop it." />
-              <ShareLinks institutionId={institution.id} links={institution.links} now={now} />
-            </section>
-          ) : null}
-
-          <section className={styles.panel} aria-labelledby="notes-title">
-            <SectionHead id="notes-title" title="Private notes" help="Team only. Never shown to the institution." />
-            <NoteForm action={addNoteAction.bind(null, institution.id)} />
-            {institution.notes.length ? (
-              <div className={styles.rows}>
-                {institution.notes.map((note) => (
-                  <div key={note.id} className={styles.item}>
-                    <p className={styles.itemBody}>{note.body}</p>
-                    <p className={styles.itemMeta}>
-                      <span>{note.author}</span>
-                      <span>{formatDate(note.createdAt)}</span>
-                    </p>
-                    {note.authorId === viewer.userId || isAdmin ? (
-                      <form action={removeNoteAction.bind(null, institution.id, note.id)} className={styles.itemActions}>
-                        <Button type="submit" size="sm" variant="quiet">
-                          Remove
-                        </Button>
-                      </form>
-                    ) : null}
-                  </div>
-                ))}
+            </div>
+          </KpiCard>
+        ) : (
+          <KpiCard label="Share this Audit" className={styles.planCard}>
+            <p className={styles.planText}>
+              A private link to the team Audit, for {TEAM_RULES.shareLinkDays} days. It shows how to fix the top {TEAM_RULES.sharedFixesInFull} fixes.
+            </p>
+            {teamAudit ? (
+              <div className={styles.shareActions}>
+                {/* A new or stopped link shows under Share links, so the button starts fresh each time the links change. */}
+                <ActionButton
+                  key={institution.links.map((link) => `${link.token}:${link.stoppedAt ?? ''}`).join(' ') || 'none'}
+                  action={shareAuditAction.bind(null, institution.id, teamAudit.id)}
+                  label="Create a link"
+                  icon="plus"
+                />
+                <AnchorButton href={`/team/institutions/${institution.id}/pdf`} size="sm" variant="secondary" icon="download">
+                  Download PDF
+                </AnchorButton>
               </div>
             ) : (
-              <p className={styles.empty}>No notes yet.</p>
+              <p className={styles.formNote}>Run a team Audit first. Only a team Audit can be shared.</p>
             )}
-          </section>
+          </KpiCard>
+        )}
+        <KpiCard label="Tracked as a rival by">
+          <KpiNumber value={institution.trackedBy} suffix={institution.trackedBy === 1 ? 'institution' : 'institutions'} />
+          <KpiNote>Institutions never see who tracks them.</KpiNote>
+        </KpiCard>
+      </section>
 
-          {institution.claimed ? (
-            <section className={styles.panel} aria-labelledby="people-title">
-              <SectionHead id="people-title" title="People" help="The owner adds members in Settings." />
-              <div className={styles.rows}>
-                {institution.people.map((person) => (
-                  <div key={person.email} className={styles.item}>
-                    <div className={styles.itemHead}>
-                      <span className={styles.itemTitle}>{person.email}</span>
-                      <Tag variant={person.role === 'owner' ? 'solid' : 'outline'}>{MEMBERSHIP_ROLE_LABELS[person.role]}</Tag>
-                    </div>
-                    <p className={styles.itemMeta}>Joined {formatDate(person.joinedAt)}</p>
-                  </div>
-                ))}
-                {institution.invites.map((email) => (
-                  <div key={email} className={styles.item}>
-                    <div className={styles.itemHead}>
-                      <span className={styles.itemTitle}>{email}</span>
-                      <Tag variant="quiet">Invited</Tag>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
+      {view && !institution.claimed ? (
+        <NextSteps
+          id="fixes"
+          title="What to fix first"
+          description={`The biggest gains first. A shared Audit explains the top ${TEAM_RULES.sharedFixesInFull} and says AdmitLabs can fix the rest.`}
+          steps={view.fixes.slice(0, 5).map((item) => fixStep(item, null))}
+          empty={<p className={audit.quietNote}>Every check is Strong.</p>}
+        />
+      ) : null}
 
-          <section className={styles.panel} aria-labelledby="record-title">
-            <SectionHead id="record-title" title="About this record" help="Team only." />
-            <div className={styles.facts}>
-              <p className={styles.fact}>
-                <span className={styles.factLabel}>Added</span>
-                <span>{formatDate(institution.createdAt)}</span>
-              </p>
-              {institution.claimedAt ? (
-                <p className={styles.fact}>
-                  <span className={styles.factLabel}>Signed up</span>
-                  <span>{formatDate(institution.claimedAt)}</span>
+      <section className={audit.section} aria-labelledby="record-title">
+        <h2 id="record-title" className="visually-hidden">
+          Audits, programs, people, notes and share links
+        </h2>
+        <Tabs label={`About ${institution.name}`} items={tabs} />
+      </section>
+    </div>
+  );
+}
+
+function AuditRow({ when, overall, children }: { when: string; overall: number; children?: ReactNode }) {
+  return (
+    <div className={styles.item}>
+      <div className={styles.itemHead}>
+        <span className={styles.itemTitle}>{formatDateTime(when)}</span>
+        <span className={styles.itemScore}>
+          <span className="num">{overall}</span>
+          <span className={styles.itemScoreLabel}>{scoreLabel(overall)}</span>
+        </span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** Private team Audits, then their own Audits, newest first. */
+function AuditsTab({ institution }: { institution: TeamInstitution }) {
+  const own = [...institution.history].reverse().slice(0, OWN_AUDITS_SHOWN);
+  if (!institution.teamAudits.length && !own.length) return <p className={styles.empty}>No Audits yet.</p>;
+  return (
+    <div className={styles.tabStack}>
+      {institution.teamAudits.length ? (
+        <>
+          <p className={styles.formNote}>{institution.claimed ? 'Private team Audits. Only the team sees these.' : 'Team Audits, newest first. Private until shared.'}</p>
+          <div className={styles.rows}>
+            {institution.teamAudits.map((row) => (
+              <AuditRow key={row.id} when={row.runAt} overall={row.overall}>
+                <p className={styles.itemMeta}>
+                  <span>
+                    Discovered <span className="num">{row.discovered}</span>, Trusted <span className="num">{row.trusted}</span>, Chosen{' '}
+                    <span className="num">{row.chosen}</span>
+                  </span>
+                  {row.topFix ? <span>Top fix: {row.topFix}</span> : null}
                 </p>
-              ) : null}
-              <p className={styles.fact}>
-                <span className={styles.factLabel}>Tracked as a rival by</span>
-                <span>{plural(institution.trackedBy, 'institution', 'institutions')}</span>
-              </p>
+              </AuditRow>
+            ))}
+          </div>
+        </>
+      ) : null}
+      {own.length ? (
+        <>
+          <p className={styles.formNote}>Their own Audits, newest first. Their dashboard shows what their plan includes.</p>
+          <div className={styles.rows}>
+            {own.map((row) => (
+              <AuditRow key={row.id} when={row.runAt} overall={row.overall} />
+            ))}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function ProgramsTab({ institution }: { institution: TeamInstitution }) {
+  const latest = institution.audit;
+  return (
+    <div className={styles.tabStack}>
+      <p className={styles.formNote}>{latest ? 'With their score in the latest Audit.' : 'Audited in the next Audit.'}</p>
+      <div className={styles.rows}>
+        {institution.programs.map((program) => {
+          const score = latest?.programs.find((entry) => entry.programId === program.id);
+          return (
+            <div key={program.id} className={styles.item}>
+              <div className={styles.itemHead}>
+                <span className={styles.itemTitle}>
+                  {program.name}
+                  {program.archived ? <span className={styles.itemQuiet}> (removed)</span> : null}
+                </span>
+                {score ? (
+                  <span className={styles.itemScore}>
+                    <span className="num">{score.scores.overall}</span>
+                    <span className={styles.itemScoreLabel}>{scoreLabel(score.scores.overall)}</span>
+                  </span>
+                ) : (
+                  <span className={styles.itemMeta}>Not in this Audit</span>
+                )}
+              </div>
             </div>
-            <p className={styles.formNote}>Institutions never see who tracks them.</p>
-          </section>
-        </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PeopleTab({ institution }: { institution: TeamInstitution }) {
+  return (
+    <div className={styles.tabStack}>
+      <p className={styles.formNote}>The owner adds members in Settings.</p>
+      <div className={styles.rows}>
+        {institution.people.map((person) => (
+          <div key={person.email} className={styles.item}>
+            <div className={styles.itemHead}>
+              <span className={styles.itemTitle}>{person.email}</span>
+              <span className={styles.itemMeta}>{MEMBERSHIP_ROLE_LABELS[person.role]}</span>
+            </div>
+            <p className={styles.itemMeta}>Joined {formatDate(person.joinedAt)}</p>
+          </div>
+        ))}
+        {institution.invites.map((email) => (
+          <div key={email} className={styles.item}>
+            <div className={styles.itemHead}>
+              <span className={styles.itemTitle}>{email}</span>
+              <span className={styles.itemMeta}>Invited</span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -368,7 +364,6 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
 
 /** The links made to this institution's team Audits, newest first. A live link can be copied or stopped. */
 function ShareLinks({ institutionId, links, now }: { institutionId: string; links: readonly LinkRow[]; now: Date }) {
-  if (!links.length) return null;
   return (
     <div className={styles.rows}>
       {links.map((link) => {

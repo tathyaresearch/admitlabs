@@ -4,7 +4,7 @@
 export const TEAM_RULES = {
   /** A share link works this many days, unless the team stops it sooner. */
   shareLinkDays: 90,
-  /** A shared Audit explains this many fixes in full; the rest say "AdmitLabs can fix this". */
+  /** A shared Audit explains this many fixes in full; one line above the rest says AdmitLabs can fix them. */
   sharedFixesInFull: 3,
   /** Institutions in one bulk Audit. */
   bulkMaxRows: 100,

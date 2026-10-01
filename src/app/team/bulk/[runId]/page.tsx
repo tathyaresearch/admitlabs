@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { AuditHeader } from '@/components/audit/AuditHeader';
 import { ButtonLink } from '@/components/ui/Button';
+import { PageHead } from '@/components/ui/Layout';
 import { formatDate, formatTime, plural } from '@/domain/format';
 import { scoreLabel } from '@/domain/scores';
 import { requireTeamViewer } from '@/lib/auth/guards';
@@ -27,8 +27,10 @@ export default async function BulkRunPage({ params }: { params: Promise<{ runId:
 
   return (
     <div className={audit.page}>
-      <AuditHeader
+      <PageHead
+        back={{ href: '/team/bulk', label: 'Bulk Audit' }}
         title={`Bulk Audit of ${formatDate(run.createdAt)}`}
+        question="What each institution scored."
         caption={[`Started ${formatTime(run.createdAt)}`, `By ${run.createdBy}`, plural(run.audited, 'Audit', 'Audits'), ...(run.failed ? [`${run.failed} not run`] : [])]}
         actions={
           <ButtonLink href="/team/bulk" variant="secondary" icon="plus">

@@ -1,12 +1,14 @@
 import { redirect } from 'next/navigation';
-import { AuditHeader, SectionHead } from '@/components/audit/AuditHeader';
+import { SectionHead } from '@/components/audit/AuditHeader';
+import { NextSteps } from '@/components/home/NextSteps';
+import { RivalsCard } from '@/components/home/RivalsCard';
 import { ActivityTabs } from '@/components/rivals/Activity';
-import { HeadToHeadLegend, HeadToHeadTable } from '@/components/rivals/HeadToHeadTable';
+import { lessonSteps } from '@/components/rivals/Lessons';
 import { RivalUnlockCard } from '@/components/rivals/RivalUnlockCard';
-import { FreeStandBand, PaidStandBand } from '@/components/rivals/StandBand';
-import { ThingsToDo } from '@/components/rivals/ThingsToDo';
+import { StandTable } from '@/components/rivals/StandTable';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
+import { PageHead } from '@/components/ui/Layout';
 import { RIVAL_RULES } from '@/config/rivals';
 import { formatDate, plural } from '@/domain/format';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
@@ -16,6 +18,10 @@ import audit from '@/components/audit/audit.module.css';
 
 export const metadata = { title: 'Rivals' };
 
+const QUESTION = "Who's ahead of us?";
+
+// Rivals answers "Who's ahead of us?": the answer and where you stand, what to learn from them,
+// then what they are doing.
 export default async function RivalsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
@@ -25,9 +31,12 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
   if (data.rivals.length === 0) {
     if (owner) redirect('/rivals/choose');
     return (
-      <EmptyState icon="rivals" title="No rivals picked yet">
-        The owner of your account picks 3 to 5 rivals to track. They show here once picked.
-      </EmptyState>
+      <div className={audit.page}>
+        <PageHead title="Rivals" question={QUESTION} />
+        <EmptyState icon="rivals" title="No rivals picked yet">
+          The owner of your account picks 3 to 5 rivals to track. They show here once picked.
+        </EmptyState>
+      </div>
     );
   }
 
@@ -60,17 +69,19 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
     return (
       <div className={audit.page}>
         <div className={audit.top}>
-          <AuditHeader
+          <PageHead
             title="Rivals"
+            question={QUESTION}
             caption={[plural(data.rivals.length, 'rival', 'rivals'), 'Checked on the 1st of each month', 'Free keeps the rivals you picked']}
           />
           {notice}
-          <FreeStandBand
-            rivals={standings.map((rival) => ({ id: rival.id, name: rival.name, city: rival.city, standing: rival.standing }))}
-            verdict={freeRivalsVerdict(standings)}
-            youName={institution.name}
-          />
         </div>
+        <RivalsCard
+          ladder={null}
+          standings={standings.map((rival) => ({ id: rival.id, name: rival.name, standing: rival.standing }))}
+          verdict={freeRivalsVerdict(standings)}
+          rivalsHref={null}
+        />
         <RivalUnlockCard {...data.free.teaser} />
       </div>
     );
@@ -89,31 +100,31 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
   return (
     <div className={audit.page}>
       <div className={audit.top}>
-        <AuditHeader title="Rivals" caption={caption} actions={changeAction} />
+        <PageHead title="Rivals" question={QUESTION} caption={caption} actions={changeAction} />
         {notice}
-        {full.you ? (
-          <PaidStandBand rows={full.ladder} verdict={rivalsVerdict(full.you.scores, scored)} youName={institution.name} />
-        ) : (
-          <Notice icon="info" title="Your first Audit is on its way.">
-            Where you stand shows once your own Audit is ready.
-          </Notice>
-        )}
       </div>
 
-      <section className={audit.section} aria-labelledby="todo-title">
-        <SectionHead id="todo-title" title="3 things to do" help="Learned from your rivals this month. Take the idea, never copy." />
-        {full.actions.length ? (
-          <ThingsToDo items={full.actions} rivalNames={names} />
-        ) : (
-          <p className={audit.quietNote}>Your 3 things to do arrive with your next Audit.</p>
-        )}
-      </section>
+      {full.you ? (
+        <section className={audit.summary} aria-labelledby="stand-title">
+          <h2 id="stand-title" className="visually-hidden">
+            Where you stand
+          </h2>
+          <p className={audit.lead}>{rivalsVerdict(full.you.scores, scored)}</p>
+          <StandTable ladder={full.ladder} rows={full.rows} you={full.you.scores} />
+        </section>
+      ) : (
+        <Notice icon="info" title="Your first Audit is on its way.">
+          Where you stand shows once your own Audit is ready.
+        </Notice>
+      )}
 
-      <section className={audit.section} aria-labelledby="h2h-title">
-        <SectionHead id="h2h-title" title="Head to head" help="Your scores next to each rival's. Open a rival to see where each of you leads." />
-        <HeadToHeadTable you={{ name: institution.name, scores: full.you?.scores ?? null }} rows={full.rows} institutionType={institution.type} />
-        <HeadToHeadLegend />
-      </section>
+      <NextSteps
+        id="learn"
+        title="What to learn from your rivals"
+        description="Learned from your rivals this month. Take the idea, never copy."
+        steps={lessonSteps(full.actions, names, institution.type)}
+        empty={<p className={audit.quietNote}>What to learn from your rivals arrives with your next Audit.</p>}
+      />
 
       <section className={audit.section} aria-labelledby="activity-title">
         <SectionHead id="activity-title" title="What they're doing" help="Their moves, best content and ads. Every item links to where it was found." />

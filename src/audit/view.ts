@@ -296,6 +296,57 @@ export function programView(audit: StoredAudit, programId: string, options: View
   };
 }
 
+/** One line of a check's results in its panel. */
+export interface PanelLine {
+  key: string;
+  /** The programs on this line; empty for a check on the whole institution. */
+  programs: string[];
+  result: CheckResult;
+  points: number;
+  maxPoints: number;
+  /** The result at the last Audit, when it has moved since. */
+  previousResult: CheckResult | null;
+}
+
+/**
+ * A check's results, one line per program. Programs that are Strong with the same points (and
+ * were Strong before) share one line, after the rest.
+ */
+export function panelLines(parts: readonly ItemPart[]): PanelLine[] {
+  const steady = parts.filter((part) => part.programName && part.result === 'strong' && (part.previousResult === null || part.previousResult === 'strong'));
+  const first = steady[0];
+  const shared = first && steady.length > 1 && steady.every((part) => part.points === first.points && part.maxPoints === first.maxPoints) ? steady : [];
+  const lines: PanelLine[] = parts
+    .filter((part) => !shared.includes(part))
+    .map((part) => ({
+      key: part.checkId,
+      programs: part.programName ? [part.programName] : [],
+      result: part.result,
+      points: part.points,
+      maxPoints: part.maxPoints,
+      previousResult: part.previousResult !== null && part.previousResult !== part.result ? part.previousResult : null,
+    }));
+  if (first && shared.length) {
+    lines.push({ key: 'strong', programs: shared.map((part) => part.programName as string), result: 'strong', points: first.points, maxPoints: first.maxPoints, previousResult: null });
+  }
+  return lines;
+}
+
+/** How to fix a check: said once when every program needs the same, otherwise per program. The hardest difficulty counts. */
+export function fixAdvice(parts: readonly ItemPart[]): Array<{ programs: string[]; text: string; difficulty: Difficulty | null }> {
+  const byText = new Map<string, { programs: string[]; difficulty: Difficulty | null }>();
+  for (const part of parts) {
+    const text = part.detail?.howToFix;
+    if (!text) continue;
+    const entry = byText.get(text) ?? { programs: [], difficulty: null };
+    if (part.programName) entry.programs.push(part.programName);
+    const difficulty = part.detail?.difficulty ?? null;
+    if (difficulty && (!entry.difficulty || DIFFICULTIES.indexOf(difficulty) > DIFFICULTIES.indexOf(entry.difficulty))) entry.difficulty = difficulty;
+    byText.set(text, entry);
+  }
+  return [...byText.entries()].map(([text, entry]) => ({ text, programs: byText.size > 1 ? entry.programs : [], difficulty: entry.difficulty }));
+}
+
 export interface HistoryRow {
   id: string;
   runAt: string;
@@ -303,10 +354,28 @@ export interface HistoryRow {
 }
 
 /** One point per month for the chart: the latest Audit in each month (India time). */
-export function historyByMonth(rows: readonly HistoryRow[], monthOf: (runAt: string) => string): Array<{ month: string; score: number }> {
-  const byMonth = new Map<string, HistoryRow>();
+export function historyByMonth(
+  rows: ReadonlyArray<{ runAt: string; scores: Pick<ScoreSet, 'overall'> }>,
+  monthOf: (runAt: string) => string,
+): Array<{ month: string; score: number }> {
+  const byMonth = new Map<string, { runAt: string; scores: Pick<ScoreSet, 'overall'> }>();
   for (const row of [...rows].sort((a, b) => a.runAt.localeCompare(b.runAt))) byMonth.set(monthOf(row.runAt), row);
   return [...byMonth.entries()].map(([month, row]) => ({ month, score: row.scores.overall }));
+}
+
+/**
+ * The score a monthly report shows (the latest Audit up to the end of its month) and the change
+ * since the month before it that had an Audit. Null when there is no Audit up to that month.
+ */
+export function monthScore(
+  points: ReadonlyArray<{ month: string; score: number }>,
+  month: string,
+): { score: number; change: number | null; since: string | null } | null {
+  const upTo = points.filter((point) => point.month <= month);
+  const current = upTo.at(-1);
+  if (!current) return null;
+  const before = upTo.at(-2);
+  return { score: current.score, change: before ? current.score - before.score : null, since: before?.month ?? null };
 }
 
 /** "Could add up to 7 points". Whole numbers, and never "0 points". */

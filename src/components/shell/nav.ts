@@ -45,7 +45,10 @@ export const TEAM_NAV: readonly NavSection[] = [
   },
 ];
 
-/** The four destinations on the phone bottom bar. Everything else sits under More. */
+/** The most pages the phone bottom bar holds on its own. With more, it shows MOBILE_PRIMARY and More. */
+export const MOBILE_BAR_MAX = 5;
+
+/** The four destinations on the phone bottom bar of a dashboard. Everything else sits under More. */
 export const MOBILE_PRIMARY: readonly string[] = ['/', '/audit', '/rivals', '/demand'];
 
 export function isActive(pathname: string, href: string): boolean {

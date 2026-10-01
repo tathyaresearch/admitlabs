@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { AuditHeader, SectionHead } from '@/components/audit/AuditHeader';
+import { SectionHead } from '@/components/audit/AuditHeader';
 import { BulkAudit } from '@/components/team/BulkAudit';
 import { Icon } from '@/components/ui/Icon';
+import { PageHead } from '@/components/ui/Layout';
 import { TEAM_RULES } from '@/config/team';
 import { formatDateTime, plural } from '@/domain/format';
 import { requireTeamViewer } from '@/lib/auth/guards';
@@ -21,9 +22,11 @@ export default async function BulkAuditPage() {
   const runs = await loadBulkRuns();
   return (
     <div className={audit.page}>
-      <AuditHeader
+      <PageHead
+        back={{ href: '/team', label: 'Institutions' }}
         title="Bulk Audit"
-        caption={[`Up to ${TEAM_RULES.bulkMaxRows} institutions at a time`, 'Each is added as a prospect', 'Team Audits stay private until shared']}
+        question={`Audit up to ${TEAM_RULES.bulkMaxRows} institutions at once.`}
+        caption={['Each is added as a prospect', 'Team Audits stay private until shared']}
       />
       <BulkAudit maxRows={TEAM_RULES.bulkMaxRows} />
       <section className={audit.section} aria-labelledby="runs-title">
@@ -31,7 +34,7 @@ export default async function BulkAuditPage() {
         {runs.length ? (
           <div className={styles.list}>
             {runs.map((run) => (
-              <Link key={run.id} href={`/team/bulk/${run.id}`} className={styles.listRow}>
+              <Link key={run.id} href={`/team/bulk/${run.id}`} className={`${styles.listRow} ${styles.runRow}`}>
                 <span className={styles.rowName}>
                   {formatDateTime(run.createdAt)}
                   <span className={styles.rowSub}>By {run.createdBy}</span>

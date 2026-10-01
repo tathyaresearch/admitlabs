@@ -28,6 +28,19 @@ export function planText(plan: PlanRecord | null, now: Date): string {
   return 'Free';
 }
 
+/**
+ * The line under the plan's name, without repeating it: "Ends 15 Oct 2026", "Since 2 Mar 2026",
+ * "Paid plan ended on 1 Sep 2026".
+ */
+export function planDetail(plan: PlanRecord | null, now: Date): string | null {
+  if (!plan) return null;
+  const tier = effectiveTier(plan, now);
+  if (tier === 'paid' && plan.endsAt) return `Ends ${formatDate(plan.endsAt)}`;
+  if (tier !== 'free') return `Since ${formatDate(plan.startsAt)}`;
+  const ended = planText(plan, now);
+  return ended === 'Free' ? `Since ${formatDate(plan.startsAt)}` : ended;
+}
+
 const pad = (value: number) => String(value).padStart(2, '0');
 
 /** 'YYYY-MM-DD' for a moment, in India. */

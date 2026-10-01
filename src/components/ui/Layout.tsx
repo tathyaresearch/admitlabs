@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ElementType, HTMLAttributes, ReactNode } from 'react';
+import { Icon } from './Icon';
 import styles from './Layout.module.css';
 
 /**
@@ -11,21 +12,42 @@ export function PageHead({
   question,
   caption,
   actions,
+  back,
   titleAs: Title = 'h1',
 }: {
   title: ReactNode;
   question: ReactNode;
-  caption?: ReactNode;
+  /** The way back to the list this page was opened from, above the title: "< Rivals". */
+  back?: { href: string; label: string };
+  /** One quiet line under the question. A list shows as items with space between them. */
+  caption?: ReactNode | readonly ReactNode[];
   actions?: ReactNode;
   /** 'p' in a picture of a page (the product page), so the real page keeps its one h1. */
   titleAs?: 'h1' | 'p';
 }) {
+  const items = Array.isArray(caption) ? caption.filter(Boolean) : null;
   return (
     <header className={styles.pageHead}>
       <div className={styles.pageHeadText}>
+        {back ? (
+          <Link href={back.href} className={styles.back}>
+            <Icon name="chevronLeft" size={14} />
+            {back.label}
+          </Link>
+        ) : null}
         <Title className={styles.pageHeadTitle}>{title}</Title>
         <p className={styles.pageHeadQuestion}>{question}</p>
-        {caption ? <p className={styles.pageHeadCaption}>{caption}</p> : null}
+        {items ? (
+          items.length ? (
+            <p className={`${styles.pageHeadCaption} ${styles.pageHeadItems}`}>
+              {items.map((item, index) => (
+                <span key={index}>{item}</span>
+              ))}
+            </p>
+          ) : null
+        ) : caption ? (
+          <p className={styles.pageHeadCaption}>{caption as ReactNode}</p>
+        ) : null}
       </div>
       {actions ? <div className={styles.pageActions}>{actions}</div> : null}
     </header>

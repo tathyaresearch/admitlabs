@@ -1,33 +1,48 @@
-.page {
-  display: grid;
-  gap: var(--page-gap);
-}
+/* Plan: the plan and its dates in number cards, Free's one offer, then one compare table. */
 
-.page > header {
-  margin-bottom: 0;
-}
-
-.top {
+.kpis {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  gap: var(--card-gap);
 }
 
 @media (min-width: 48rem) {
-  .top {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-.cardTitle {
-  font: var(--type-card);
-  letter-spacing: var(--tracking-section);
-  margin-bottom: var(--space-4);
-}
+/* Free: what Paid adds, in one inverted card. */
 
 .offer {
   display: grid;
-  align-content: start;
+  gap: var(--space-5);
+}
+
+@media (min-width: 60rem) {
+  .offer {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+    grid-template-areas:
+      'price points'
+      'note note';
+    align-items: start;
+    column-gap: var(--space-10);
+  }
+
+  .offerPrice {
+    grid-area: price;
+  }
+
+  .offerPoints {
+    grid-area: points;
+  }
+
+  .offerNote {
+    grid-area: note;
+  }
+}
+
+.offerPrice {
+  display: grid;
   gap: var(--space-1);
 }
 
@@ -36,10 +51,11 @@
   color: var(--text-muted);
 }
 
-.offerPrice {
-  font: var(--type-title);
-  letter-spacing: var(--tracking-title);
-  margin-top: var(--space-2);
+.offerAmount {
+  margin-top: var(--space-1);
+  font: var(--type-num-hero);
+  font-size: clamp(2rem, 1.7rem + 1vw, 2.5rem);
+  letter-spacing: var(--tracking-num);
 }
 
 .offerLength {
@@ -49,70 +65,30 @@
 
 .offerPoints {
   display: grid;
-  gap: var(--space-2);
-  margin: var(--space-5) 0;
+  gap: var(--space-3);
+  font: var(--type-body);
 }
 
-.offerPoints li,
-.unlocks li {
+.offerPoints li {
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
 }
 
-.offerPoints svg,
-.unlocks svg {
+.offerPoints svg {
   flex: none;
   margin-top: 3px;
   color: var(--text-muted);
 }
 
 .offerNote {
-  font: var(--type-caption);
-  color: var(--text-muted);
   padding-top: var(--space-4);
-  border-top: 1px solid var(--line);
-}
-
-.unlocks {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.unlocks li > span {
-  display: grid;
-}
-
-.unlockGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: var(--space-3);
-}
-
-.unlockCard {
-  display: grid;
-  gap: 2px;
-  align-content: start;
-  padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--line-raised);
-  border-radius: var(--radius-md);
-  background: var(--surface-raised);
-}
-
-.unlockGroup {
+  border-top: 1px solid var(--line-raised);
   font: var(--type-caption);
   color: var(--text-muted);
-  margin-bottom: var(--space-1);
 }
 
-.unlockLabel {
-  font: var(--type-strong);
-}
-
-.unlockValue {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
+/* The compare table. */
 
 .tableCard {
   overflow: hidden;
@@ -153,7 +129,7 @@
 }
 
 .compare td[data-current='true'] {
-  background: var(--surface-sunken);
+  background: var(--surface-nested);
   font-weight: var(--weight-medium);
 }
 

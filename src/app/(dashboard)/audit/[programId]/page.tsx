@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { programView } from '@/audit/view';
-import { AuditHeader } from '@/components/audit/AuditHeader';
+import { historyByMonth, programView } from '@/audit/view';
 import { AuditScreen } from '@/components/audit/AuditScreen';
 import { ProgramTabs } from '@/components/audit/Programs';
 import { UnlockCard } from '@/components/audit/UnlockCard';
 import { EmptyState } from '@/components/ui/Feedback';
+import { PageHead } from '@/components/ui/Layout';
+import { monthKey } from '@/domain/dates';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
-import { auditCaption, loadAuditPage, loadProgramHistory, loadPrograms, nextAuditText, programEntries } from '@/lib/audit/load';
+import { auditNote, loadAuditPage, loadProgramHistory, loadPrograms, nextAuditText, programEntries } from '@/lib/audit/load';
 import styles from '@/components/audit/audit.module.css';
 
 interface Props {
@@ -29,10 +30,9 @@ export default async function ProgramAuditPage({ params }: Props) {
   if (!data.audit) redirect('/audit');
 
   const entries = programEntries(data, viewer.tier, viewer.plan?.freeProgramId ?? null);
-  const caption = auditCaption(data, viewer);
   const top = (allLabel: string | null) => (
     <div className={styles.top}>
-      <AuditHeader title={program.name} caption={caption} />
+      <PageHead title="Audit" question="How do we look to students?" />
       <ProgramTabs entries={entries} active={programId} allLabel={allLabel} />
     </div>
   );
@@ -75,16 +75,19 @@ export default async function ProgramAuditPage({ params }: Props) {
     );
   }
 
+  const history = await loadProgramHistory(programId);
   return (
     <AuditScreen
       view={view}
       tier={viewer.tier}
-      title={program.name}
-      caption={caption}
+      caption={viewer.tier === 'client' ? ['Your AdmitLabs team can refresh it at any time'] : undefined}
       entries={entries}
       allLabel="All programs"
       scoreCaption={`${program.name} score`}
-      history={await loadProgramHistory(programId)}
+      checkedAt={data.audit.runAt}
+      trend={{ points: historyByMonth(history, (runAt) => monthKey(new Date(runAt))) }}
+      note={auditNote(data, viewer.tier)}
+      history={history}
       historyLabel={`${program.name} score by month`}
     />
   );

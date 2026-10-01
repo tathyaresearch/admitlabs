@@ -1,5 +1,5 @@
 // How results and scores are shown without colour (spec section 14):
-// a 3-segment meter plus the word, Strong in an inverted block, labels always in words.
+// a 3-segment meter plus the word, in one style for every result, labels always in words.
 
 import { scoreLabel, type ScoreLabel as ScoreLabelName } from '@/domain/scores';
 import { DIFFICULTY_LABELS, RESULT_LABELS, type CheckResult, type Difficulty as DifficultyValue } from '@/domain/types';
@@ -11,13 +11,13 @@ const FILLED: Readonly<Record<CheckResult, number>> = { strong: 3, okay: 2, weak
 interface ResultMeterProps {
   result: CheckResult;
   size?: 'sm' | 'md' | 'lg';
-  /** Put Strong results in an inverted block. On by default. */
+  /** Put Strong results in an inverted block. Off by default, so a list reads the same for every result. */
   invertStrong?: boolean;
   /** Hide the word only when the word is already shown right next to it. */
   hideWord?: boolean;
 }
 
-export function ResultMeter({ result, size = 'md', invertStrong = true, hideWord = false }: ResultMeterProps) {
+export function ResultMeter({ result, size = 'md', invertStrong = false, hideWord = false }: ResultMeterProps) {
   const filled = FILLED[result];
   const inverted = invertStrong && result === 'strong';
   return (

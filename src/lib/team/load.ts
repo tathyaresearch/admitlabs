@@ -154,7 +154,7 @@ export interface TeamInstitution {
   /** Their own latest Audit once signed up; otherwise the latest team Audit (or rival Audit). */
   audit: StoredAudit | null;
   history: Array<{ id: string; runAt: string; overall: number }>;
-  /** Once signed up: the private team Audits, newest first. They never see these. */
+  /** The team Audits, newest first (the latest 6). Private: they see one only through a share link. */
   teamAudits: Array<{ id: string; runAt: string; overall: number; discovered: number; trusted: number; chosen: number; topFix: string | null }>;
   programNames: Map<string, string>;
   programs: Array<{ id: string; name: string; archived: boolean }>;
@@ -181,16 +181,14 @@ export async function loadTeamInstitution(id: string): Promise<TeamInstitution |
     claimed ? Promise.resolve(null) : latestStoredAudit(supabase, id, undefined, ['team']),
     claimed ? Promise.resolve(null) : latestStoredAudit(supabase, id, undefined, ['rival']),
     claimed ? ownHistory(supabase, id) : Promise.resolve([]),
-    claimed
-      ? supabase
-          .from('audits')
-          .select('id, run_at, overall, discovered, trusted, chosen, audit_checks(check_key, fix_rank)')
-          .eq('institution_id', id)
-          .eq('kind', 'team')
-          .eq('audit_checks.fix_rank', 1)
-          .order('run_at', { ascending: false })
-          .limit(6)
-      : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from('audits')
+      .select('id, run_at, overall, discovered, trusted, chosen, audit_checks(check_key, fix_rank)')
+      .eq('institution_id', id)
+      .eq('kind', 'team')
+      .eq('audit_checks.fix_rank', 1)
+      .order('run_at', { ascending: false })
+      .limit(6),
     claimed ? supabase.rpc('institution_people', { p_institution: id }) : Promise.resolve({ data: [], error: null }),
     supabase.from('invites').select('email').eq('institution_id', id).is('accepted_at', null).order('created_at'),
     supabase.from('notes').select('id, body, created_at, author_id').eq('institution_id', id).order('created_at', { ascending: false }),

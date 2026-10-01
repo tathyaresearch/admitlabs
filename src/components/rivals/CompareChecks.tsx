@@ -6,11 +6,17 @@ import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { ResultMeter } from '@/components/ui/Results';
 import { checkName } from '@/domain/checks';
-import { PILLAR_LABELS, PILLARS, type InstitutionType } from '@/domain/types';
+import { PILLAR_LABELS, PILLARS, RESULT_LABELS, type InstitutionType } from '@/domain/types';
 import type { CheckComparison, SideSummary } from '@/rivals/compare';
 import { LEAD_WORDS } from '@/rivals/text';
 import audit from '@/components/audit/audit.module.css';
 import styles from './rivals.module.css';
+
+/** A side's result in words: "Strong", "Varies by program", "Not checked". */
+export function sideText(side: SideSummary): string {
+  if (side.kind === 'single') return RESULT_LABELS[side.result];
+  return side.kind === 'varies' ? 'Varies by program' : 'Not checked';
+}
 
 export function Side({ side, label }: { side: SideSummary; label: string }) {
   return (
@@ -30,6 +36,7 @@ export function CompareChecks({ comparisons, institutionType, rivalName }: { com
     <div className={audit.groups}>
       {PILLARS.map((pillar) => {
         const rows = comparisons.filter((item) => item.pillar === pillar);
+        if (rows.length === 0) return null;
         const theyLead = rows.filter((item) => item.lead === 'them').length;
         const youLead = rows.filter((item) => item.lead === 'you').length;
         return (

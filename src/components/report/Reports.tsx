@@ -1,16 +1,20 @@
-// The Reports page parts: the latest report as a band with one download button and what is
-// inside, earlier reports as rows, and Free's one unlock card. Downloads are plain links: the
-// server checks who is asking and hands over a short-lived link to the file.
+// The Reports page parts: the latest report in one card (the month, its score and change, one
+// download button and what is inside), earlier reports as rows in one card, and Free's one unlock
+// card. Downloads are plain links: the server checks who is asking and hands over a short-lived
+// link to the file.
 
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { Counted } from '@/components/ui/Results';
+import { KpiNumber } from '@/components/ui/Kpi';
+import { Counted, Delta } from '@/components/ui/Results';
 import { formatDate, formatMonth } from '@/domain/format';
 import { reportFacts, type ReportRow } from '@/lib/reports/load';
 import audit from '@/components/audit/audit.module.css';
 import styles from './report.module.css';
 
 const href = (report: ReportRow) => `/reports/${report.month}`;
+/** The public sample PDF, served by app/(product)/drishti/sample-report.pdf. */
+const SAMPLE_REPORT_HREF = '/drishti/sample-report.pdf';
 
 /** The report's pages, in the order of spec section 12. */
 export function reportContents(place: string): string[] {
@@ -26,28 +30,53 @@ export function reportContents(place: string): string[] {
   ];
 }
 
-export function LatestReport({ report, place }: { report: ReportRow; place: string }) {
+export interface ReportScore {
+  score: number;
+  change: number | null;
+  /** 'YYYY-MM' of the month the change is measured from. */
+  since: string | null;
+}
+
+function Facts({ report }: { report: ReportRow }) {
   return (
-    <section className={audit.band} aria-labelledby="latest-title">
-      <div className={styles.latest}>
-        <h2 id="latest-title" className={audit.scoreCaption}>
-          Latest report
-        </h2>
-        <p className={styles.month}>{formatMonth(report.month)}</p>
-        <p className={styles.facts}>
-          <span>Made {formatDate(report.madeAt)}</span>
-          {reportFacts(report).map((fact) => (
-            <span key={fact}>
-              <Counted text={fact} />
-            </span>
-          ))}
-        </p>
-        <AnchorButton href={href(report)} icon="download" className={styles.download}>
-          Download PDF
-        </AnchorButton>
+    <>
+      <span>Made {formatDate(report.madeAt)}</span>
+      {reportFacts(report).map((fact) => (
+        <span key={fact}>
+          <Counted text={fact} />
+        </span>
+      ))}
+    </>
+  );
+}
+
+/** The latest report: the month and its score, the one download button, then what is inside. */
+export function LatestReport({ report, place, score }: { report: ReportRow; place: string; score: ReportScore | null }) {
+  return (
+    <section className={styles.latest} aria-labelledby="latest-title">
+      <div className={styles.latestTop}>
+        <div className={styles.latestMain}>
+          <h2 id="latest-title" className={styles.label}>
+            Latest report
+          </h2>
+          <p className={styles.month}>{formatMonth(report.month)}</p>
+          <p className={styles.facts}>
+            <Facts report={report} />
+          </p>
+          <AnchorButton href={href(report)} icon="download" className={styles.download}>
+            Download PDF
+          </AnchorButton>
+        </div>
+        {score ? (
+          <div className={styles.latestScore}>
+            <p className={styles.label}>Score in this report</p>
+            <KpiNumber value={score.score} suffix="/100" numericSuffix spoken=" out of 100" />
+            {score.change !== null && score.since ? <Delta change={score.change} since={formatMonth(score.since)} size="sm" /> : null}
+          </div>
+        ) : null}
       </div>
       <div className={styles.inside}>
-        <h3 className={styles.insideTitle}>What&apos;s inside</h3>
+        <h3 className={styles.label}>What&apos;s inside</h3>
         <ol className={styles.insideList}>
           {reportContents(place).map((item, index) => (
             <li key={item} className={styles.insideItem}>
@@ -61,33 +90,40 @@ export function LatestReport({ report, place }: { report: ReportRow; place: stri
   );
 }
 
-export function EarlierReports({ reports }: { reports: readonly ReportRow[] }) {
+/** Earlier reports, newest first: one row each, in one card. */
+export function EarlierReports({ reports, scores }: { reports: readonly ReportRow[]; scores: ReadonlyMap<string, ReportScore> }) {
   return (
-    <div className={styles.rows}>
-      {reports.map((report) => (
-        <div key={report.month} className={styles.row}>
-          <p className={styles.rowMonth}>
-            {formatMonth(report.month)}
-            <span className={styles.rowFacts}>
-              Made {formatDate(report.madeAt)}
-              {reportFacts(report).map((fact) => (
-                <span key={fact}>
-                  {'  ·  '}
-                  <Counted text={fact} />
-                </span>
-              ))}
-            </span>
-          </p>
-          <AnchorButton href={href(report)} variant="secondary" size="sm" icon="download">
-            <span className="visually-hidden">{formatMonth(report.month)} </span>PDF
-          </AnchorButton>
-        </div>
-      ))}
-    </div>
+    <ul className={styles.rows}>
+      {reports.map((report) => {
+        const score = scores.get(report.month);
+        return (
+          <li key={report.month} className={styles.row}>
+            <p className={styles.rowMonth}>
+              {formatMonth(report.month)}
+              <span className={styles.rowFacts}>
+                <Facts report={report} />
+              </span>
+            </p>
+            {score ? (
+              <p className={styles.rowScore}>
+                <span className="num">{score.score}</span>
+                <span className={`${styles.rowOutOf} num`}>/100</span>
+                <span className="visually-hidden"> out of 100</span>
+              </p>
+            ) : (
+              <span />
+            )}
+            <AnchorButton href={href(report)} variant="secondary" size="sm" icon="download">
+              <span className="visually-hidden">{formatMonth(report.month)} </span>PDF
+            </AnchorButton>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
-/** Free: what the monthly report holds, with the one "Unlock with Paid" action on the page. */
+/** Free: what the monthly report holds, with the one "Unlock with Paid" action and the sample. */
 export function ReportsUnlockCard({ place }: { place: string }) {
   const items = [
     'One PDF on the 1st of every month, for the month just ended',
@@ -112,9 +148,15 @@ export function ReportsUnlockCard({ place }: { place: string }) {
           ))}
         </ul>
       </div>
-      <ButtonLink href="/plan" iconAfter="arrowRight">
-        Unlock with Paid
-      </ButtonLink>
+      <div className={styles.unlockActions}>
+        <ButtonLink href="/plan" iconAfter="arrowRight">
+          Unlock with Paid
+        </ButtonLink>
+        <a href={SAMPLE_REPORT_HREF} className={audit.headLink} download>
+          <Icon name="download" size={16} />
+          See a sample report
+        </a>
+      </div>
     </section>
   );
 }

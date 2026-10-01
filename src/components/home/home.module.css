@@ -232,6 +232,13 @@
   text-wrap: pretty;
 }
 
+.stepExtra {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 46rem;
+  margin-top: var(--space-2);
+}
+
 .stepGo {
   grid-column: 2;
   display: inline-flex;
@@ -253,6 +260,49 @@
 
 .stepLink:hover .stepGo {
   color: var(--text);
+}
+
+/* Optional parts, for the same list on other pages: an action beside the heading, and a value
+   (like "+4 points") above the link. */
+.blockHeadRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-6);
+}
+
+.blockAction {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.stepEnd {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+@container (min-width: 40rem) {
+  .stepEnd {
+    grid-column: auto;
+    flex-direction: column;
+    align-items: flex-end;
+    align-self: center;
+  }
+}
+
+.stepAside {
+  font: var(--type-small);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.stepAside :global(.num) {
+  color: var(--text);
+  font-weight: var(--weight-heading);
 }
 
 /* Rivals and demand, side by side */

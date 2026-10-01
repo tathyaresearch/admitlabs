@@ -3,7 +3,7 @@ import { describe, test } from 'node:test';
 import { istDate, monthKey } from '../domain/dates.ts';
 import { itemPoints, rankFixes } from '../domain/scoring/rank.ts';
 import { recordFor, stored } from './testing.ts';
-import { historyByMonth, overviewView, pointsEarnedText, pointsFraction, pointsToGainText, programView, rowSummary } from './view.ts';
+import { fixAdvice, historyByMonth, monthScore, overviewView, panelLines, pointsEarnedText, pointsFraction, pointsToGainText, programView, rowSummary, type ItemPart } from './view.ts';
 
 // The Audit screens' view model, from records built on sample data.
 
@@ -104,9 +104,9 @@ describe('history and wording', () => {
   test('one point per month: the latest Audit that month', () => {
     const points = historyByMonth(
       [
-        { id: 'a', runAt: istDate('2026-09-15', 10).toISOString(), scores: { overall: 70, discovered: 0, trusted: 0, chosen: 0 } },
-        { id: 'b', runAt: istDate('2026-08-15', 10).toISOString(), scores: { overall: 66, discovered: 0, trusted: 0, chosen: 0 } },
-        { id: 'c', runAt: istDate('2026-09-20', 10).toISOString(), scores: { overall: 73, discovered: 0, trusted: 0, chosen: 0 } },
+        { runAt: istDate('2026-09-15', 10).toISOString(), scores: { overall: 70 } },
+        { runAt: istDate('2026-08-15', 10).toISOString(), scores: { overall: 66 } },
+        { runAt: istDate('2026-09-20', 10).toISOString(), scores: { overall: 73 } },
       ],
       (runAt) => monthKey(new Date(runAt)),
     );
@@ -114,6 +114,20 @@ describe('history and wording', () => {
       { month: '2026-08', score: 66 },
       { month: '2026-09', score: 73 },
     ]);
+  });
+
+  test('a report month shows the latest score up to that month and the change since the month before', () => {
+    const points = [
+      { month: '2026-06', score: 58 },
+      { month: '2026-08', score: 61 },
+      { month: '2026-09', score: 64 },
+    ];
+    assert.deepEqual(monthScore(points, '2026-09'), { score: 64, change: 3, since: '2026-08' });
+    // No Audit in July: the July report shows June's score, with nothing before it to compare.
+    assert.deepEqual(monthScore(points, '2026-07'), { score: 58, change: null, since: null });
+    assert.deepEqual(monthScore(points, '2026-08'), { score: 61, change: 3, since: '2026-06' });
+    assert.equal(monthScore(points, '2026-05'), null);
+    assert.equal(monthScore([], '2026-09'), null);
   });
 
   test('points wording: whole numbers on screen, halves round up', () => {
@@ -125,5 +139,65 @@ describe('history and wording', () => {
     assert.equal(pointsFraction(7.5, 25), '8/25');
     assert.equal(pointsFraction(4.5, 15), '5/15');
     assert.equal(pointsFraction(15.83, 25), '16/25');
+  });
+});
+
+describe('the check panel', () => {
+  const part = (programName: string | null, result: ItemPart['result'], points: number, extra: Partial<ItemPart> = {}): ItemPart => ({
+    checkId: `${programName ?? 'all'}-${result}`,
+    programId: programName,
+    programName,
+    result,
+    previousResult: null,
+    points,
+    maxPoints: 30,
+    checkedAt: '2026-09-01T04:30:00Z',
+    detail: null,
+    ...extra,
+  });
+
+  test('one line per program; Strong programs share one line, after the rest', () => {
+    const lines = panelLines([part('BBA', 'strong', 30), part('MBA', 'weak', 9), part('BCA', 'strong', 30)]);
+    assert.deepEqual(
+      lines.map((line) => [line.programs, line.result, line.points]),
+      [
+        [['MBA'], 'weak', 9],
+        [['BBA', 'BCA'], 'strong', 30],
+      ],
+    );
+  });
+
+  test('a Strong program that moved keeps its own line, with what it was', () => {
+    const lines = panelLines([part('BBA', 'strong', 30, { previousResult: 'okay' }), part('BCA', 'strong', 30)]);
+    assert.deepEqual(
+      lines.map((line) => [line.programs, line.previousResult]),
+      [
+        [['BBA'], 'okay'],
+        [['BCA'], null],
+      ],
+    );
+  });
+
+  test('a check on the whole institution is one line with no program', () => {
+    assert.deepEqual(panelLines([part(null, 'okay', 15)]).map((line) => [line.programs, line.result]), [[[], 'okay']]);
+  });
+
+  test('how to fix is said once when every program needs the same', () => {
+    const detail = (howToFix: string | null, difficulty: 'easy' | 'medium' | 'hard' | null) => ({ finding: 'Found', whyItMatters: null, howToFix, difficulty, sourceUrl: 'https://example.edu' });
+    assert.deepEqual(fixAdvice([part('BBA', 'weak', 9, { detail: detail('Add the fees.', 'easy') }), part('MBA', 'weak', 9, { detail: detail('Add the fees.', 'medium') })]), [
+      { text: 'Add the fees.', programs: [], difficulty: 'medium' },
+    ]);
+    assert.deepEqual(
+      fixAdvice([
+        part('BBA', 'weak', 9, { detail: detail('Add the BBA fees.', 'easy') }),
+        part('MBA', 'okay', 20, { detail: detail('Add the MBA placements.', 'hard') }),
+        part('BCA', 'strong', 30, { detail: detail(null, null) }),
+      ]),
+      [
+        { text: 'Add the BBA fees.', programs: ['BBA'], difficulty: 'easy' },
+        { text: 'Add the MBA placements.', programs: ['MBA'], difficulty: 'hard' },
+      ],
+    );
+    assert.deepEqual(fixAdvice([part('BBA', 'strong', 30)]), []);
   });
 });

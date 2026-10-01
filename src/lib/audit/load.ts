@@ -80,13 +80,12 @@ export function nextAuditText(data: AuditPageData): string {
   return `${data.nextAudit.tier === 'free' ? 'Next free Audit' : 'Next Audit'} on ${formatDate(data.nextAudit.on)}`;
 }
 
-/** The one small caption under the Audit title: when it was checked, when it runs next, the plan. */
-export function auditCaption(data: AuditPageData, viewer: Pick<Viewer, 'tier' | 'plan'>): string[] {
-  const caption = data.audit ? [`Checked ${formatDate(data.audit.runAt)}`] : [];
-  caption.push(nextAuditText(data));
-  if (viewer.tier === 'paid' && viewer.plan?.endsAt) caption.push(`Paid until ${formatDate(viewer.plan.endsAt)}`);
-  if (viewer.tier === 'client') caption.push('Your AdmitLabs team can refresh it at any time');
-  return caption;
+/**
+ * The quiet line under the score: the next Audit, but only when it runs on the plan you are on.
+ * A Paid plan that ends before its next Audit says so in the plan notice instead.
+ */
+export function auditNote(data: AuditPageData, tier: Tier): string | null {
+  return data.nextAudit && data.nextAudit.tier === tier ? `${nextAuditText(data)}.` : null;
 }
 
 export async function loadAuditPage(viewer: Viewer & { membership: NonNullable<Viewer['membership']> }): Promise<AuditPageData> {

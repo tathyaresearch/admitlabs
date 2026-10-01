@@ -1,12 +1,13 @@
-import { overviewView } from '@/audit/view';
+import { historyByMonth, overviewView } from '@/audit/view';
 import { AuditScreen } from '@/components/audit/AuditScreen';
 import { NoAuditYet } from '@/components/audit/NoAuditYet';
 import { RefreshButton } from '@/components/audit/RefreshButton';
 import { Notice } from '@/components/ui/Feedback';
 import { canSee } from '@/config/entitlements';
+import { monthKey } from '@/domain/dates';
 import { formatDate } from '@/domain/format';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
-import { auditCaption, loadAuditPage, programEntries } from '@/lib/audit/load';
+import { auditNote, loadAuditPage, programEntries } from '@/lib/audit/load';
 
 export const metadata = { title: 'Audit' };
 
@@ -21,13 +22,13 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
 
   const view = overviewView(data.audit, { institutionType: institution.type, programNames: data.names });
   const free = viewer.tier === 'free';
+  const history = canSee('audit_score_history', viewer.tier) ? data.history : null;
 
   return (
     <AuditScreen
       view={view}
       tier={viewer.tier}
-      title="Audit"
-      caption={auditCaption(data, viewer)}
+      caption={viewer.tier === 'client' ? ['Your AdmitLabs team can refresh it at any time'] : undefined}
       actions={data.refresh ? <RefreshButton left={data.refresh.left} resetsOn={formatDate(data.refresh.resetsOn)} /> : undefined}
       notice={
         params.welcome === '1' ? (
@@ -39,7 +40,10 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       entries={programEntries(data, viewer.tier, viewer.plan?.freeProgramId ?? null)}
       allLabel={free ? null : 'All programs'}
       scoreCaption="Overall score"
-      history={canSee('audit_score_history', viewer.tier) ? data.history : null}
+      checkedAt={data.audit.runAt}
+      trend={history ? { points: historyByMonth(history, (runAt) => monthKey(new Date(runAt))) } : null}
+      note={auditNote(data, viewer.tier)}
+      history={history}
       historyLabel="Overall score by month"
     />
   );

@@ -24,6 +24,10 @@ export function HomeSummary({
   trend,
   note,
   auditHref,
+  scoreLabel = 'Overall score',
+  showChange = true,
+  historyLabel = 'Overall score by month',
+  verdict = true,
 }: {
   view: AuditView;
   checkedAt: string;
@@ -33,9 +37,16 @@ export function HomeSummary({
   note?: string | null;
   /** Where "Open Audit" goes. Left out in the product page's picture of Home. */
   auditHref?: string | null;
+  /** "MBA score" on a program's Audit. */
+  scoreLabel?: string;
+  /** Off for an Audit seen on its own (a shared Audit): no change since the last one. */
+  showChange?: boolean;
+  historyLabel?: string;
+  /** Off where the sentence, written to the institution, would be read by someone else (the team). */
+  verdict?: boolean;
 }) {
   // Same rules as the Audit page: no change on a first Audit, or when the programs changed.
-  const quiet = view.firstAudit || view.programsChanged;
+  const quiet = view.firstAudit || view.programsChanged || !showChange;
   const points = trend?.points ?? [];
   const first = points[0];
   const last = points[points.length - 1];
@@ -44,28 +55,30 @@ export function HomeSummary({
       <h2 id="summary-title" className="visually-hidden">
         This month at a glance
       </h2>
-      <div className={styles.answer}>
-        <p className={styles.verdict}>{auditVerdict(view.scores)}</p>
-        {auditHref ? (
-          <Link href={auditHref} className={styles.headLink}>
-            Open Audit
-            <Icon name="arrowRight" size={16} />
-          </Link>
-        ) : null}
-      </div>
+      {verdict || auditHref ? (
+        <div className={styles.answer}>
+          {verdict ? <p className={styles.verdict}>{auditVerdict(view.scores)}</p> : null}
+          {auditHref ? (
+            <Link href={auditHref} className={styles.headLink}>
+              Open Audit
+              <Icon name="arrowRight" size={16} />
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
       <div className={styles.kpis}>
-        <KpiCard className={styles.scoreCard} label="Overall score" aside={`Checked ${formatDate(checkedAt)}`}>
+        <KpiCard className={styles.scoreCard} label={scoreLabel} aside={`Checked ${formatDate(checkedAt)}`}>
           <div className={styles.scoreRow}>
             <div className={styles.scoreMain}>
               <KpiNumber size="hero" value={view.scores.overall} suffix="/100" numericSuffix spoken=" out of 100" />
               <div className={styles.scoreMeta}>
                 <ScoreLabel label={view.label} />
-                {view.programsChanged ? null : <Delta change={view.firstAudit ? null : view.changes.overall} size="sm" />}
+                {view.programsChanged || !showChange ? null : <Delta change={view.firstAudit ? null : view.changes.overall} size="sm" />}
               </div>
             </div>
             {first && last && points.length > 1 ? (
               <figure className={styles.trend}>
-                <Sparkline values={points.map((point) => point.score)} label="Overall score by month" width={160} height={56} />
+                <Sparkline values={points.map((point) => point.score)} label={historyLabel} width={160} height={56} />
                 <figcaption className={styles.trendMonths} aria-hidden="true">
                   <span>{formatMonthShort(first.month)}</span>
                   <span>{formatMonthShort(last.month)}</span>

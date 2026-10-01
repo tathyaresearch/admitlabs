@@ -1,22 +1,33 @@
 /*
-  The Audit screen. Read in ten seconds: how we're doing (the summary band), what to fix
-  first (three cards), then what's working, every check and the history. Space does the
-  separating; lines are kept for rows only.
+  The dashboard's pages, in one order: the title and the question, the summary (the key number
+  and one sentence), what to do next, then the details in tabs. Shared by Audit, Rivals, Demand,
+  Reports, the team area and the shared Audit. Space and surfaces do the separating; lines are
+  kept for rows only.
 */
 
 .page {
+  container-type: inline-size;
   display: grid;
-  gap: var(--space-14);
+  gap: var(--page-gap);
 }
 
 .section {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--section-gap);
 }
 
 .sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-6);
+}
+
+.sectionText {
   display: grid;
   gap: var(--space-1);
+  min-width: 0;
 }
 
 .sectionTitle {
@@ -25,37 +36,30 @@
 }
 
 .sectionHelp {
-  font: var(--type-small);
+  font: var(--type-body);
   color: var(--text-muted);
 }
 
-/* Header: the title, one small caption, and the refresh on the right. */
-
-.header {
+.sectionAction {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4) var(--space-6);
-}
-
-.headerText {
-  display: grid;
   gap: var(--space-2);
-  min-width: 0;
 }
 
-.title {
-  font: var(--type-title);
-  letter-spacing: var(--tracking-title);
-}
-
-.caption {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
-  font: var(--type-small);
+/* "Open Rivals", "See all 13 fixes": the one quiet link style for going further. */
+.headLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-strong);
+  font-size: var(--size-small);
   color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.headLink:hover {
+  color: var(--text);
 }
 
 .actions {
@@ -155,8 +159,8 @@ a.tab:hover {
   gap: var(--space-8);
   padding: var(--space-6);
   background: var(--surface-raised);
-  border: 1px solid var(--line-raised);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
 @media (min-width: 48rem) {
@@ -234,7 +238,7 @@ a.tab:hover {
   gap: var(--space-2);
   min-width: 0;
   padding: var(--space-4) var(--space-4) var(--space-5);
-  background: var(--surface-sunken);
+  background: var(--surface-nested);
   border-radius: var(--radius-md);
 }
 
@@ -402,8 +406,13 @@ a.tab:hover {
 
 /* Quiet rows: the rest of the fixes, and what's working. */
 
+/* A list of rows sits in one card. */
 .rows {
   display: grid;
+  padding: var(--space-2);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
 .row {
@@ -412,20 +421,24 @@ a.tab:hover {
   align-items: center;
   gap: var(--space-2) var(--space-5);
   min-height: 3rem;
-  padding: var(--space-2) var(--space-3);
-  margin: 0 calc(var(--space-3) * -1);
-  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
   color: var(--text);
   text-decoration: none;
   transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .row:hover {
-  background: var(--surface-hover);
+  background: var(--surface-nested);
 }
 
 .row + .row {
-  box-shadow: 0 -1px 0 var(--line);
+  box-shadow: 0 -1px 0 var(--line-raised);
+}
+
+.row:hover + .row,
+.row + .row:hover {
+  box-shadow: none;
 }
 
 .rowName {
@@ -479,12 +492,6 @@ a.tab:hover {
     grid-area: chevron;
   }
 
-  /* Outside a card, rows line up with the text edge on a phone. */
-  .rows > .row {
-    margin: 0;
-    padding-left: 0;
-    padding-right: 0;
-  }
 }
 
 /* "See all" and "Show every Audit": the rest, folded away. */
@@ -539,8 +546,8 @@ a.tab:hover {
 
 .group {
   background: var(--surface-raised);
-  border: 1px solid var(--line-raised);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
 .groupSummary {
@@ -609,8 +616,9 @@ a.tab:hover {
   display: grid;
   gap: var(--space-5);
   padding: var(--space-6);
-  border: 1px solid var(--line-medium);
-  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
 @media (min-width: 60rem) {
@@ -672,6 +680,39 @@ a.tab:hover {
 .panelLabel {
   font: var(--type-caption-strong);
   color: var(--text-muted);
+}
+
+.panelLines {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.panelLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-nested);
+  border-radius: var(--radius-md);
+}
+
+.panelLineName {
+  flex: 1 1 100%;
+  font: var(--type-strong);
+}
+
+.panelAdvice,
+.panelFound {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.panelAdvice + .panelAdvice,
+.panelFound + .panelFound {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-raised);
 }
 
 .panelPart {
@@ -749,4 +790,43 @@ a.tab:hover {
   height: 0.625rem;
   border-radius: 2px;
   background: var(--line-medium);
+}
+
+/* Fix these first, as a list: the pillar and results above the name, points and effort on the right. */
+
+.fixKicker {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+}
+
+.fixAside {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.fixDifficulty {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* A tab's content: the list, then any quiet note under it. */
+.tabStack {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* The summary on every page: the answer in one sentence, then the numbers behind it. */
+.summary {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.lead {
+  max-width: 44rem;
+  font: var(--weight-heading) clamp(1.25rem, 1rem + 1.1cqi, 1.5rem) / 1.3 var(--font-sans);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
 }

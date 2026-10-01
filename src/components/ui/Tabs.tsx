@@ -8,6 +8,8 @@ import styles from './Tabs.module.css';
 export interface TabItem {
   id: string;
   label: string;
+  /** A count after the label, in Inter: "To fix 13". */
+  count?: number;
   content: ReactNode;
 }
 
@@ -52,6 +54,7 @@ export function Tabs({ label, items, defaultTab }: { label: string; items: reado
               onClick={() => setActive(item.id)}
             >
               {item.label}
+              {item.count !== undefined ? <span className={`${styles.count} num`}>{item.count}</span> : null}
             </button>
           );
         })}

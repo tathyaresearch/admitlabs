@@ -26,6 +26,17 @@ export function istDayNumber(date: Date): number {
   return Math.floor((date.getTime() + IST_OFFSET_MS) / DAY_MS);
 }
 
+export type RecentGroup = 'week' | 'month' | 'earlier';
+
+/** Where a past moment falls, India time: this week (from Monday), this month (from the 1st), or earlier. */
+export function recentGroup(at: Date, now: Date): RecentGroup {
+  const today = istDayNumber(now);
+  // Day 0 (1 Jan 1970) was a Thursday, so Monday is 0 here.
+  const sinceMonday = (((today - 4) % 7) + 7) % 7;
+  if (istDayNumber(at) >= today - sinceMonday) return 'week';
+  return monthKey(at) === monthKey(now) ? 'month' : 'earlier';
+}
+
 /** Whole calendar days from `from` to `to`, counted in India. Negative when `to` is earlier. */
 export function daysBetween(from: Date, to: Date): number {
   return istDayNumber(to) - istDayNumber(from);

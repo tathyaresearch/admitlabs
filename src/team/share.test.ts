@@ -48,7 +48,7 @@ describe('the shared Audit', () => {
     assert.equal(shared.audit.scores.overall, audit.scores.overall);
   });
 
-  test('how to fix for the top 3 fixes only; the rest say AdmitLabs can fix it', async () => {
+  test('how to fix for the top 3 fixes only, the rest without it', async () => {
     const { record, names } = await recordFor('riverbend-college', '2026-09-18');
     const shared = parseSharedLink(payload(stored(record), names));
     if (shared?.status !== 'live') throw new Error('expected a live link');

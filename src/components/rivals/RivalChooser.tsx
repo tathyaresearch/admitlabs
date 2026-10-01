@@ -88,7 +88,7 @@ export function RivalChooser({ institution, current, suggestions, programs, save
         <SectionHead
           id="picked-title"
           title="Your rivals"
-          help={`${count} of ${RIVAL_RULES.max} picked. ${short > 0 ? `Pick ${short} more to save.` : 'Pick 3 to 5, then save.'}`}
+          help={`${count} of ${RIVAL_RULES.max} picked.${short > 0 ? ` Pick ${short} more to save.` : ''}`}
         />
         {picked.length ? (
           <ul className={styles.picked}>

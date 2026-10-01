@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import { AuditHeader, SectionHead } from '@/components/audit/AuditHeader';
 import { ActionButton } from '@/components/team/InstitutionPanels';
 import { TeamUserForm } from '@/components/team/TeamUserForm';
-import { Tag } from '@/components/ui/Data';
+import { PageHead } from '@/components/ui/Layout';
 import { formatDate, plural } from '@/domain/format';
 import { TEAM_ROLE_LABELS } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
@@ -18,6 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: viewer?.teamRole ? 'Team users' : 'Page not found' };
 }
 
+// Team users: everyone on the AdmitLabs team, adding someone, and what each role can do.
 export default async function TeamUsersPage() {
   const viewer = await requireTeamViewer();
   const isAdmin = viewer.teamRole === 'admin';
@@ -28,13 +28,16 @@ export default async function TeamUsersPage() {
 
   return (
     <div className={audit.page}>
-      <AuditHeader
+      <PageHead
         title="Team users"
+        question="Who can open the team area, and what each role can do."
         caption={[plural(members.length, 'person', 'people') + ' on the team', plural(admins, 'Admin', 'Admins'), isAdmin ? 'You are an Admin' : 'An Admin adds and removes people']}
       />
       <div className={styles.split}>
         <section className={styles.panel} aria-labelledby="team-title">
-          <SectionHead id="team-title" title="The team" help="Everyone who can open the team area." />
+          <h2 id="team-title" className={styles.panelTitle}>
+            The team
+          </h2>
           <div className={styles.rows}>
             {members.map((person) => {
               const self = person.userId === viewer.userId;
@@ -43,9 +46,9 @@ export default async function TeamUsersPage() {
                 <div key={person.email} className={styles.item}>
                   <div className={styles.itemHead}>
                     <span className={styles.itemTitle}>{person.email}</span>
-                    <span className={styles.tags}>
-                      {self ? <Tag variant="quiet">You</Tag> : null}
-                      <Tag variant={person.role === 'admin' ? 'solid' : 'outline'}>{TEAM_ROLE_LABELS[person.role]}</Tag>
+                    <span className={styles.itemRole}>
+                      {TEAM_ROLE_LABELS[person.role]}
+                      {self ? <span className={styles.itemQuiet}>, you</span> : null}
                     </span>
                   </div>
                   <p className={styles.itemMeta}>On the team since {formatDate(person.since)}</p>
@@ -86,9 +89,9 @@ export default async function TeamUsersPage() {
               <div key={person.email} className={styles.item}>
                 <div className={styles.itemHead}>
                   <span className={styles.itemTitle}>{person.email}</span>
-                  <span className={styles.tags}>
-                    <Tag variant="quiet">Not signed in yet</Tag>
-                    <Tag variant={person.role === 'admin' ? 'solid' : 'outline'}>{TEAM_ROLE_LABELS[person.role]}</Tag>
+                  <span className={styles.itemRole}>
+                    {TEAM_ROLE_LABELS[person.role]}
+                    <span className={styles.itemQuiet}>, not signed in yet</span>
                   </span>
                 </div>
                 <p className={styles.itemMeta}>Added {formatDate(person.since)}. Joins at first sign in.</p>
@@ -105,12 +108,18 @@ export default async function TeamUsersPage() {
         <div className={styles.stack}>
           {isAdmin ? (
             <section className={styles.panel} aria-labelledby="add-title">
-              <SectionHead id="add-title" title="Add someone" help="Someone who has signed in before joins at once. Anyone else joins when they first sign in with this email." />
+              <h2 id="add-title" className={styles.panelTitle}>
+                Add someone
+              </h2>
+              <p className={styles.panelHelp}>Someone who has signed in before joins at once. Anyone else joins when they first sign in with this email.</p>
               <TeamUserForm action={addTeamUserAction} />
             </section>
           ) : null}
           <section className={styles.panel} aria-labelledby="roles-title">
-            <SectionHead id="roles-title" title="What each role can do" help="Set here by an Admin." />
+            <h2 id="roles-title" className={styles.panelTitle}>
+              What each role can do
+            </h2>
+            <p className={styles.panelHelp}>Set here by an Admin.</p>
             <div className={styles.rows}>
               <div className={styles.item}>
                 <span className={styles.itemTitle}>Team</span>

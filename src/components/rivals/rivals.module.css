@@ -1,237 +1,10 @@
 /*
-  The Rivals screens, in the Audit page's style: where you stand in one band, the 3 things to
-  do, one head to head table (where each side leads opens inside it), and their activity in
-  three tabs. Space does the separating; lines are kept for rows only.
+  The Rivals screens, in the dashboard's page order: where you stand (your rank and one table),
+  what to learn from your rivals, then their activity in tabs; one rival's page; and picking
+  rivals. Space and surfaces do the separating; lines are kept for rows only.
 */
 
-/* Where you stand: the ladder of overall scores, you in an inverted row. */
-
-.standBlock {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.rankLine {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  line-height: 0.85;
-}
-
-.rankNumber {
-  font: var(--weight-heading) var(--size-score) / 0.9 var(--font-numeric);
-  letter-spacing: var(--tracking-num-hero);
-}
-
-.rankSuffix {
-  font: var(--type-section);
-  font-size: 1.75rem;
-  letter-spacing: -0.02em;
-  align-self: flex-start;
-  margin-top: 0.35em;
-  margin-left: calc(var(--space-3) * -1 + 6px);
-}
-
-.rankOf {
-  font: var(--type-lead);
-  color: var(--text-muted);
-}
-
-.ladder {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.ladderRow {
-  display: grid;
-  grid-template-columns: 1.75rem minmax(0, 1.2fr) minmax(0, 1fr) 2.25rem 4.75rem;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 3.25rem;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-}
-
-.ladderYou {
-  border-radius: var(--radius-md);
-}
-
-.ladderRank {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.ladderName {
-  display: grid;
-  gap: 1px;
-  min-width: 0;
-  font: var(--type-strong);
-}
-
-.ladderNameText {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ladderSub {
-  overflow: hidden;
-  font: var(--type-caption);
-  color: var(--text-muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ladderTrack {
-  display: block;
-  height: 4px;
-  background: var(--chart-track);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.ladderFill {
-  display: block;
-  height: 100%;
-  background: var(--text);
-}
-
-.ladderScore {
-  font: var(--type-score-small);
-  font-size: 1.25rem;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.ladderChange {
-  font: var(--type-caption);
-  color: var(--text-muted);
-  white-space: nowrap;
-  text-align: right;
-}
-
-@media (max-width: 40rem) {
-  .ladderRow {
-    grid-template-columns: 1.5rem minmax(0, 1fr) 2.25rem;
-    gap: var(--space-1) var(--space-3);
-  }
-
-  .ladderTrack {
-    grid-column: 2 / 4;
-    grid-row: 2;
-  }
-
-  .ladderChange {
-    display: none;
-  }
-}
-
-/* Free: ahead or behind, in words. No numbers anywhere. */
-
-.standingRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  min-height: 3.25rem;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-}
-
-.standing {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 0.35em;
-  font: var(--type-caption-strong);
-  white-space: nowrap;
-}
-
-.standing[data-standing='unscored'],
-.standing[data-standing='level'] {
-  color: var(--text-muted);
-}
-
-/* 3 things to do: numbered cards, like "Fix these first". */
-
-.thingSource {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.thingDetail {
-  /* A clamp only holds when the grid row does not stretch the box. */
-  align-self: start;
-  display: -webkit-box;
-  overflow: hidden;
-  font: var(--type-small);
-  color: var(--text-muted);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-}
-
-/* Head to head: one table. Each rival opens to show where each side leads. */
-
-.table {
-  display: grid;
-  background: var(--surface-raised);
-  border: 1px solid var(--line-raised);
-  border-radius: var(--radius-lg);
-}
-
-.tableRow {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) repeat(4, 5.5rem) 1.25rem;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 3.75rem;
-  padding: var(--space-3) var(--space-5);
-}
-
-.tableHead {
-  min-height: 2.75rem;
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.tableHead > span:not(:first-child) {
-  text-align: center;
-}
-
-.tableYou {
-  margin: 0 var(--space-2);
-  padding-left: var(--space-3);
-  padding-right: var(--space-3);
-  border-radius: var(--radius-md);
-}
-
-.rival {
-  border-top: 1px solid var(--line-raised);
-}
-
-.tableYou + .rival {
-  margin-top: var(--space-2);
-}
-
-.rival > summary {
-  cursor: pointer;
-  list-style: none;
-}
-
-.rival > summary::-webkit-details-marker {
-  display: none;
-}
-
-.rival > summary:hover {
-  background: var(--surface-hover);
-}
-
-.rival:last-child > summary {
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-}
+/* An institution in a table: its name, with its type and city under it. */
 
 .who {
   display: grid;
@@ -254,163 +27,11 @@
   white-space: nowrap;
 }
 
-.cell {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-}
-
-.cellLabel {
-  display: none;
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-.score {
-  display: inline-grid;
-  place-items: center;
-  min-width: 2.75rem;
-  padding: 0.3em 0.5em;
-  border-radius: var(--radius-sm);
-  font: var(--type-strong);
-  font-weight: var(--weight-heading);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Where a rival leads you: the cell is an inverted block. */
-.score[data-lead='them'] {
-  background: var(--surface-inverse);
-  color: var(--text-inverse);
-}
-
-.expandIcon {
-  color: var(--text-muted);
-  transition: transform var(--duration-fast) var(--ease-out);
-}
-
-.rival[open] .expandIcon {
-  transform: rotate(180deg);
-}
-
-.leads {
-  display: grid;
-  gap: var(--space-5);
-  padding: var(--space-2) var(--space-5) var(--space-5);
-}
-
-@media (min-width: 48rem) {
-  .leads {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-8);
-  }
-}
-
-.leadList {
-  display: grid;
-  align-content: start;
-  gap: var(--space-2);
-}
-
-.leadTitle {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.leadItem {
-  display: grid;
-  gap: 1px;
-  padding: var(--space-2) 0;
-  border-top: 1px solid var(--line);
-}
-
-.leadName {
-  font: var(--type-strong);
-}
-
-.leadSub {
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
+/* Nothing to show yet, inside a tab. */
 
 .leadNone {
   font: var(--type-small);
   color: var(--text-muted);
-}
-
-.leadsFoot {
-  grid-column: 1 / -1;
-}
-
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-.legendChip {
-  display: inline-grid;
-  place-items: center;
-  min-width: 1.75rem;
-  padding: 0.15em 0.4em;
-  border-radius: var(--radius-xs);
-  background: var(--surface-inverse);
-  color: var(--text-inverse);
-  font: var(--type-caption-strong);
-}
-
-@media (max-width: 48rem) {
-  .tableHead {
-    display: none;
-  }
-
-  /* Name on the first line; the four scores under it, each with its label. */
-  .tableRow {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 1.25rem;
-    grid-template-areas:
-      'who who who who icon'
-      'overall discovered trusted chosen icon';
-    row-gap: var(--space-2);
-    padding: var(--space-4);
-  }
-
-  .tableRow > :nth-child(1) {
-    grid-area: who;
-  }
-
-  .tableRow > :nth-child(2) {
-    grid-area: overall;
-  }
-
-  .tableRow > :nth-child(3) {
-    grid-area: discovered;
-  }
-
-  .tableRow > :nth-child(4) {
-    grid-area: trusted;
-  }
-
-  .tableRow > :nth-child(5) {
-    grid-area: chosen;
-  }
-
-  .tableRow > :nth-child(6) {
-    grid-area: icon;
-  }
-
-  .tableYou {
-    margin: var(--space-2) var(--space-2) 0;
-  }
-
-  .cellLabel {
-    display: block;
-  }
-
-  .leads {
-    padding: var(--space-1) var(--space-4) var(--space-4);
-  }
 }
 
 /* Their activity, in three tabs. */
@@ -575,58 +196,8 @@
   color: var(--text-muted);
 }
 
-/* One rival's page: two facts under the verdict, and every check side by side. */
-
-.back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-  width: fit-content;
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-  text-decoration: none;
-}
-
-.back:hover {
-  color: var(--text);
-}
-
-.facts {
-  display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--line-raised);
-}
-
-@media (min-width: 40rem) {
-  .facts {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.fact {
-  display: grid;
-  gap: 2px;
-}
-
-.factLabel {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.factValue {
-  display: grid;
-  gap: 2px;
-  font: var(--type-small);
-}
-
-.factSub {
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-/* A row of its own (not the Audit's .row), so its five columns are never overridden. */
+/* One rival's page: every check side by side, in a row of its own (not the Audit's .row), so
+   its five columns are never overridden. */
 .compareRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 8.5rem 8.5rem 5.5rem 1rem;
@@ -726,12 +297,16 @@
 
 .chooser {
   display: grid;
-  gap: var(--space-10);
+  gap: var(--page-gap);
 }
 
+/* The rivals picked, as rows in one card. */
 .picked {
   display: grid;
-  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
 .pickedRow {
@@ -741,9 +316,11 @@
   gap: var(--space-4);
   min-height: 3.5rem;
   padding: var(--space-2) var(--space-4);
-  background: var(--surface-raised);
-  border: 1px solid var(--line-raised);
   border-radius: var(--radius-md);
+}
+
+.pickedRow + .pickedRow {
+  box-shadow: 0 -1px 0 var(--line-raised);
 }
 
 .suggestions {
@@ -764,18 +341,13 @@
   gap: var(--space-2) var(--space-4);
   padding: var(--space-4) var(--space-5);
   background: var(--surface-raised);
-  border: 1px solid var(--line-raised);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .suggestion[data-picked='true'] {
-  border-color: var(--line-strong);
-}
-
-.count {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
+  background: var(--surface-nested);
 }
 
 .addPanel {
@@ -837,19 +409,233 @@
   font-weight: var(--weight-medium);
 }
 
-/* Home: the rival snapshot. */
+/* Where you stand: your rank, then one table of you and your rivals (Rivals page). */
 
-.snapshot {
+.standCard {
+  container-type: inline-size;
   display: grid;
   gap: var(--space-4);
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
-.snapshotFoot {
+@media (min-width: 48rem) {
+  .standCard {
+    padding: var(--space-5) var(--card-padding);
+  }
+}
+
+.standHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.standLabel {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.standScroll {
+  overflow-x: auto;
+}
+
+.standTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.standTable th,
+.standTable td {
+  padding: var(--space-3) var(--space-3);
+  text-align: left;
+  vertical-align: middle;
+  font: var(--type-body);
+}
+
+.standTable thead th {
+  padding-top: 0;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.standTable tbody tr + tr > * {
+  border-top: 1px solid var(--line-raised);
+}
+
+.standTable .standYou > * {
+  background: var(--surface-nested);
+  border-top-color: transparent;
+}
+
+.standTable .standYou + tr > * {
+  border-top-color: transparent;
+}
+
+.standTable .standYou > :first-child {
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.standTable .standYou > :last-child {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.standTable .colRank {
+  width: 2rem;
+  color: var(--text-muted);
+}
+
+.standTable .colOverall {
+  width: 32%;
+}
+
+.standTable .colPillar,
+.standTable .colChange {
+  width: 6.5rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.standTable td.colChange {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.standTable .standName {
+  font: var(--type-strong);
+}
+
+.standLink {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.standLink:hover {
+  text-decoration: underline;
+}
+
+.standSub {
+  display: block;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.standQuiet {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.overallCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.overallBar {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--chart-track);
+  overflow: hidden;
+}
+
+.overallBar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--text-muted);
+}
+
+.standYou .overallBar > span {
+  background: var(--text);
+}
+
+.overallCell :global(.num) {
+  min-width: 2ch;
+  font-weight: var(--weight-heading);
+  text-align: right;
+}
+
+/* Narrower: the pillars go (each rival's page has them), then the bars. */
+@container (max-width: 44rem) {
+  .standTable .colPillar {
+    display: none;
+  }
+
+  .standTable .colOverall {
+    width: auto;
+  }
+}
+
+@container (max-width: 26rem) {
+  .overallBar {
+    display: none;
+  }
+
+  .standTable th,
+  .standTable td {
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+  }
+}
+
+/* One rival: the number cards, then pillar by pillar. */
+
+.rivalKpis {
+  display: grid;
+  gap: var(--card-gap);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@container (min-width: 52rem) {
+  .rivalKpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.kpiMeta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: auto;
+}
+
+.factQuiet {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.pillarCard {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+@media (min-width: 48rem) {
+  .pillarCard {
+    padding: var(--space-5) var(--card-padding);
+  }
+}
+
+.pillarCardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
   justify-content: space-between;
   gap: var(--space-2) var(--space-4);
-  font: var(--type-small);
-  color: var(--text-muted);
+}
+
+/* A number card that holds words, like when a rival's admission push started. */
+.kpiText {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
 }

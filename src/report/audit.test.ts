@@ -24,7 +24,7 @@ function fonts(raw: string): string[] {
 
 describe('what goes into the shared Audit PDF', () => {
   for (const [slug, type] of SAMPLES) {
-    test(`how to fix for the top 3 fixes only; the rest say AdmitLabs can fix it (${type})`, async () => {
+    test(`how to fix for the top 3 fixes only, the rest without it (${type})`, async () => {
       const data = buildAuditPdf(await sampleShared(slug), OPTIONS);
       assert.deepEqual(
         data.topFixes.map((fix) => fix.rank),
@@ -48,7 +48,9 @@ describe('what goes into the shared Audit PDF', () => {
       assert.ok(parts.every((part) => part.result && part.finding && part.source && part.checkedOn === '18 Sep 2026'));
       const notes = data.checks.flatMap((area) => area.checks.map((check) => check.note));
       assert.equal(notes.filter((note) => note === TOP_FIX_NOTE).length, 3);
-      assert.equal(notes.filter((note) => note === ADMITLABS_CAN_FIX).length, data.moreFixes.length);
+      // AdmitLabs can fix the rest is said once, above them, never on each check.
+      assert.equal(notes.filter((note) => note !== null && note !== TOP_FIX_NOTE).length, 0);
+      assert.equal(ADMITLABS_CAN_FIX, 'AdmitLabs can fix any of these.');
     });
   }
 

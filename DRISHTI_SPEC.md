@@ -317,7 +317,7 @@ Answers: **"Who's ahead of us, and what are they doing?"** Public information on
 2. **Where you lead, where they lead.**
 3. **Their best content** and what to learn from it.
 4. **Moves this month.**
-5. **3 things to do.**
+5. **What to learn from your rivals.**
 
 ### 8.5 Rules
 
@@ -493,7 +493,7 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 **Showing Strong, Okay, Weak, Missing without colour**
 
 - A 3-segment meter: Strong = 3 filled, Okay = 2 filled, Weak = 1 filled, Missing = empty outline with dashed border.
-- Strong results can sit in an inverted block (ivory on black, or black on ivory).
+- One meter style for every result, on screen and in the PDF, so a list reads evenly.
 - The word is always shown next to the meter. Never rely on the meter alone.
 
 **Copy rules**

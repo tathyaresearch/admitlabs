@@ -54,6 +54,11 @@
   letter-spacing: var(--tracking-num-hero);
 }
 
+.word {
+  font: var(--weight-heading) var(--size-num-kpi) / 1.1 var(--font-sans);
+  letter-spacing: var(--tracking-title);
+}
+
 .suffix {
   font: var(--type-num);
   color: var(--text-muted);

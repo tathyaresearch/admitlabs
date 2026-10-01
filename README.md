@@ -75,7 +75,7 @@ npm run audit -- --institution riverbend-college --kind team
 Each institution tracks 3 to 5 rivals (spec section 8). Owners pick them at `/rivals/choose`: suggestions (same type, shared programs, same city first, then same state; never a team prospect), their current rivals, or one they add by hand (name, type, city, website, Instagram, and which of their own programs the rival also offers). A rival added by hand becomes an unclaimed institution record; if its website is already on record, that record is used as it is.
 
 - **Plan rules, enforced by the database** (`save_rivals`): Free picks once and keeps them. Paid changes once each calendar month, India time. Client changes any time. The first setup never counts as a change, and saving the same list again is not a change.
-- **Free** sees ahead or behind for each rival, in words, with no scores (`rival_standings`), and one "Paid shows the full comparison" card with counts. **Paid and Client** see where they stand, the 3 things to do, head to head by pillar (each rival opens to show where each side leads), moves, best content and ads, and each rival's own page with all 17 checks side by side.
+- **Free** sees ahead or behind for each rival, in words, with no scores (`rival_standings`), and one "Paid shows the full comparison" card with counts. **Paid and Client** see their rank and one table of overall and pillar scores with the change, what to learn from their rivals, and moves, best content and ads in tabs. Each rival's own page shows both scores, what to learn from that rival, and the checks side by side: where they lead, where you lead, and all 17.
 - **Rival scores** come only from Drishti's own monthly rival Audit, never from a rival's own account, even when the rival is on Drishti too.
 - **Rivals never know**: nothing tells an institution who tracks it, and it never sees rival Audits of itself. The database tests check this.
 
@@ -88,8 +88,8 @@ npm run rivals -- --check --institution silverline-college
 npm run rivals -- --actions --institution eastgate-university
 ```
 
-- `--due` runs everything due that day: a rival Audit for every tracked rival without one since the 1st of the month; the weekly check (moves and best content) for every rival not checked this week, with an alert to each Paid and Client institution tracking it for every new move; and the Rivals 3 things to do for every Paid and Client institution without this month's list.
-- `--check` runs one weekly check now. `--actions` rebuilds one institution's 3 things to do (they also follow each Paid or Client Audit).
+- `--due` runs everything due that day: a rival Audit for every tracked rival without one since the 1st of the month; the weekly check (moves and best content) for every rival not checked this week, with an alert to each Paid and Client institution tracking it for every new move; and what to learn from rivals for every Paid and Client institution without this month's list.
+- `--check` runs one weekly check now. `--actions` rebuilds one institution's list of what to learn from its rivals (it also follows each Paid or Client Audit).
 - Rival ads are entered by the team under Manual entry, at `/team/ads`.
 
 ## Demand
@@ -118,7 +118,7 @@ npm run demand -- --first --institution <slug>
 One PDF a month (spec section 12), readable in 5 minutes: 7 pages, never more than 8. A black cover, then ivory pages in the dashboard's style, set in Bricolage Grotesque with numbers in Inter (both embedded from `src/report/fonts`, with their licences): your score and what's working, what to fix (the top 5 in detail, the rest ranked), program by program, you and your rivals with the month's key moves, what students in your city want, the 3 things to do this month, and the sources and dates checked. On Paid only, the last page ends with one quiet line: "Want AdmitLabs to do this for you? hello@admitlabs.in".
 
 - **Who gets one:** Paid and Client, made on the 1st for the month just ended, from what was known at the end of that month. Making a month again replaces it. After a Paid plan ends, past reports stay downloadable; no new ones are made.
-- **Where it lives:** a private storage bucket (`reports`). `/reports` lists them; a download asks for a link that works for one minute, as the signed-in person, so the database checks membership every time. Free sees one "Paid gets a monthly report" card.
+- **Where it lives:** a private storage bucket (`reports`). `/reports` lists them; a download asks for a link that works for one minute, as the signed-in person, so the database checks membership every time. Free sees one "Paid gets a monthly report" card, with a link to the sample report.
 - **3 things to do this month:** the biggest Audit fix, the top Rivals lesson on another check, and the top content idea from Demand (`src/report/things.ts`). The same list shows on Home for Paid and Client.
 - **The page cap:** every list has a limit and every long sentence a line limit. A report that would still pass 8 pages is made again in its compact form (3 fixes in detail instead of 5).
 - A new report adds "Your September report is ready." to Notifications.
@@ -137,13 +137,14 @@ npm run report -- --institution eastgate-university --month 2026-08 --preview --
 
 The AdmitLabs team area at `/team` (spec section 13), for `team@admitlabs.example` and `admin@admitlabs.example`. To everyone else it does not exist.
 
-- **Institutions** (`/team`): everyone in Drishti, 50 a page. Search by name or website; filter by type, city, state, status (signed up, prospect, rival record), plan and score; sort by name, score or last check. The counts at the top open the matching list.
+- **Institutions** (`/team`): everyone in Drishti, 50 a page. Search by name or website; filter by status (signed up, prospect, rival record), plan and score, with type, state and city under More filters; sort by name, score or last check. The four counts at the top filter the list; the one that is on turns it off again.
 - **Bulk Audit** (`/team/bulk`): paste a list or choose a CSV file, up to 100 rows a run. One institution per line: `name, website, city, type, programs, instagram`, with programs separated by semicolons and Instagram optional. A header row can put the columns in any order and add a `state` column. Every row is checked first: Ready, Needs fixing, or skipped because the institution has signed up. A website already on record reuses that record. Each ready row becomes a prospect with a private team Audit, with a progress bar and the results. Past runs stay under Earlier runs. "Try a sample list" loads 5 fictional institutions.
-- **Institution page** (`/team/institutions/<id>`): the latest score, what to fix first, every Audit, programs, private notes (team only), people and the record. **Audit now** runs a private team Audit; for a Client it runs their own Audit, which they see. **Open their dashboard** shows a signed-up institution's dashboard exactly as they see it, read only, under a bar that says so.
+- **Institution page** (`/team/institutions/<id>`): the latest score and pillars; the plan, with an Admin's plan controls (or, before they sign up, sharing the Audit); what to fix first for a prospect; then Audits, Programs, People, Notes (team only) and Share links in tabs. **Run a team Audit** runs a private team Audit; for a Client, **Refresh their Audit** runs their own Audit, which they see. **Open their dashboard** shows a signed-up institution's dashboard exactly as they see it, read only, under a bar that says so.
 - **Plans** (Admin only, on the institution page): start Paid from the day of payment (today, or up to 6 months back; always 6 months), make them a Client, or end the plan now. The first Audit of a new plan runs straight away. The database refuses these for anyone but an Admin (`set_plan`, `end_plan`).
-- **Sharing** (prospects and rival records only): **Create a link** makes a private link to the latest team Audit. It works for 90 days unless the team stops it sooner. It opens without signing in, at `/share/<token>`, and is never indexed: the score, every check with its result, what was found, the source and the date, how to fix for the top 3 fixes only, and "AdmitLabs can fix this" for the rest. It ends with "Want AdmitLabs to fix this for you? hello@admitlabs.in" and "Get your free Audit". **Download PDF** gives the same content as a PDF, on the team page and on the shared page. An expired or stopped link says so and offers the free Audit. A link keeps working after the prospect signs up; their team Audits and notes stay invisible to them.
+- **Sharing** (prospects and rival records only): **Create a link** makes a private link to the latest team Audit. It works for 90 days unless the team stops it sooner. It opens without signing in, at `/share/<token>`, and is never indexed: the score and pillars, the top 3 fixes with how to fix them, then "Want AdmitLabs to fix this for you? hello@admitlabs.in" and "Get your free Audit". Below, folded: what's working, the rest of the fixes under one line saying "AdmitLabs can fix any of these.", and every check with its result, what was found, the source and the date. How to fix is sent for the top 3 fixes only. **Download PDF** gives the same content as a PDF, on the team page and on the shared page. An expired or stopped link says so and offers the free Audit. A link keeps working after the prospect signs up; their team Audits and notes stay invisible to them.
 - **Manual entry** (`/team/ads`): rival ads, entered by hand until a provider can collect them.
 - **Team users** (`/team/users`): an Admin adds someone by email as Team or Admin (someone who has signed in before joins at once, anyone else at first sign in), changes roles and removes people. There is always at least one Admin.
+- **On a phone**, the four team pages sit in the bottom bar.
 
 The limits (90 days, top 3 fixes, 100 rows a run, 50 a page, Paid ending within 30 days) are `TEAM_RULES` in `src/config/team.ts`. The sample data includes a live shared Audit for Cedar Skill Institute; `npm run db:reset` prints its link.
 
@@ -184,7 +185,7 @@ The limits (90 days, top 3 fixes, 100 rows a run, 50 a page, Paid ending within 
 | `npm run db:types` | Regenerates `src/lib/supabase/database.types.ts` |
 | `npm run audit -- ...` | Runs Audits by hand (see above) |
 | `npm run tier -- ...` | Switches a local institution's tier (see above) |
-| `npm run rivals -- ...` | Runs rival Audits, weekly checks and 3 things to do by hand (see above) |
+| `npm run rivals -- ...` | Runs rival Audits, weekly checks and what to learn from rivals by hand (see above) |
 | `npm run demand -- ...` | Runs the monthly Demand pulls by hand (see above) |
 | `npm run report -- ...` | Makes monthly reports by hand (see above) |
 
@@ -199,7 +200,7 @@ src/domain/      pure logic: the scoring engine (domain/scoring), checks, schedu
 src/config/      every adjustable value: scoring, plans, entitlements, schedules, providers, cities, programs
 src/providers/   the provider interface, mock providers, and real provider slots
 src/audit/       one Audit end to end (collect, score, save) and what the Audit screens show
-src/rivals/      comparisons, verdicts, change rules, the 3 things to do, and the rival jobs
+src/rivals/      comparisons, verdicts, change rules, what to learn from rivals, and the rival jobs
 src/demand/      regions, the pull schedule, ranking and spikes, the season clock, the page view, and the pulls
 src/report/      the monthly report (its schedule, the 3 things to do, the snapshot, the PDF, the job) and the shared Audit PDF
 src/team/        team tools: the bulk list reader, list filters, plan rules and the shared Audit

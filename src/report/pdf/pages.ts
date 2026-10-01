@@ -179,7 +179,7 @@ export function SummaryPage({ data }: PageProps): ReactElement {
         ...summary.pillars.map((pillar) =>
           h(
             View,
-            { key: pillar.pillar, style: { width: THIRD, padding: 12, borderWidth: 0.75, borderColor: COLORS.lineMedium, borderRadius: 3 } },
+            { key: pillar.pillar, style: { width: THIRD, padding: 12, backgroundColor: COLORS.panel, borderRadius: 4 } },
             h(Text, { style: { fontSize: 9, fontWeight: 600 } }, pillar.name),
             h(View, { style: { marginTop: 8, marginBottom: 8 } }, h(BigNumber, { value: pillar.score, size: 26 })),
             h(ScoreBar, { score: pillar.score }),
@@ -335,7 +335,7 @@ const PROGRAM_CARDS = 6;
 function ProgramCard({ program }: { program: ReportData['programs'][number] }): ReactElement {
   return h(
     Keep,
-    { style: { width: HALF, padding: 14, borderWidth: 0.75, borderColor: COLORS.lineMedium, borderRadius: 3 } },
+    { style: { width: HALF, padding: 14, backgroundColor: COLORS.panel, borderRadius: 4 } },
     h(Text, { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: -0.1, ...clamp(1) } }, program.name),
     h(
       View,
@@ -471,7 +471,7 @@ export function RivalsPage({ data }: PageProps): ReactElement {
           ...RIVAL_COLUMNS.map((column) => h(Text, { key: column.key, style: { ...cell(column.key), fontSize: 7.5, fontWeight: 500, color: COLORS.muted } }, column.label)),
         ),
         ...rivals.rows.map((row, index) => {
-          const ink = row.you ? COLORS.ivory : COLORS.black;
+          const ink = COLORS.black;
           const number = (value: number | null | undefined) => (value === null || value === undefined ? '' : String(value));
           return h(
             View,
@@ -483,9 +483,9 @@ export function RivalsPage({ data }: PageProps): ReactElement {
                 alignItems: 'center',
                 paddingVertical: 8,
                 paddingHorizontal: 8,
-                backgroundColor: row.you ? COLORS.black : undefined,
+                backgroundColor: row.you ? COLORS.panel : undefined,
                 borderBottomWidth: 0.75,
-                borderBottomColor: row.you ? COLORS.black : COLORS.line,
+                borderBottomColor: COLORS.line,
                 color: ink,
               },
             },
@@ -494,13 +494,13 @@ export function RivalsPage({ data }: PageProps): ReactElement {
               Text,
               { style: { ...cell('name'), fontSize: 9.5, fontWeight: row.you ? 600 : 500, color: ink, ...clamp(1) } },
               row.name,
-              row.you ? h(Text, { style: { fontSize: 7.5, fontWeight: 400, color: COLORS.slate } }, '   You') : null,
+              row.you ? h(Text, { style: { fontSize: 7.5, fontWeight: 400, color: COLORS.muted } }, '   You') : null,
             ),
             h(Text, { style: { ...NUM, ...cell('overall'), fontSize: 10, fontWeight: 600, color: ink } }, number(row.overall)),
             h(Text, { style: { ...NUM, ...cell('discovered'), fontSize: 9, color: ink } }, number(row.pillars?.discovered)),
             h(Text, { style: { ...NUM, ...cell('trusted'), fontSize: 9, color: ink } }, number(row.pillars?.trusted)),
             h(Text, { style: { ...NUM, ...cell('chosen'), fontSize: 9, color: ink } }, number(row.pillars?.chosen)),
-            h(ValueText, { text: row.overall === null ? 'Not scored yet' : (row.change ?? ''), style: { ...cell('change'), fontSize: 8, color: row.you ? COLORS.slate : COLORS.muted } }),
+            h(ValueText, { text: row.overall === null ? 'Not scored yet' : (row.change ?? ''), style: { ...cell('change'), fontSize: 8, color: COLORS.muted } }),
           );
         }),
       ),
@@ -557,7 +557,7 @@ export function DemandPage({ data, compact = false }: PageProps): ReactElement {
         ...demand.rising.map((trend, index) =>
           h(
             View,
-            { key: index, style: { width: THIRD, padding: 12, borderWidth: 0.75, borderColor: COLORS.lineMedium, borderRadius: 3 } },
+            { key: index, style: { width: THIRD, padding: 12, backgroundColor: COLORS.panel, borderRadius: 4 } },
             // A change is a number in Inter ("↑ 47%"); a new trend says so in words.
             arrowValue(trend.change) ? h(BigNumber, { value: arrowValue(trend.change) ?? '', size: 20 }) : h(Text, { style: { fontSize: 20, fontWeight: 600, lineHeight: 1 } }, trend.change || 'New'),
             h(Text, { style: { fontSize: 9.5, fontWeight: 600, marginTop: 8, lineHeight: 1.3, ...clamp(3) } }, trend.text),

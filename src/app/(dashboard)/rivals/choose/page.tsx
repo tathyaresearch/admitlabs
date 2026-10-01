@@ -1,8 +1,7 @@
 import Link from 'next/link';
-import { AuditHeader } from '@/components/audit/AuditHeader';
 import { RivalChooser } from '@/components/rivals/RivalChooser';
 import { Notice } from '@/components/ui/Feedback';
-import { Icon } from '@/components/ui/Icon';
+import { PageHead } from '@/components/ui/Layout';
 import { RIVAL_RULES } from '@/config/rivals';
 import { formatDate, formatMonth } from '@/domain/format';
 import { refreshResetsOn } from '@/domain/schedule';
@@ -13,7 +12,6 @@ import { loadChangeState, loadRivalList, loadSuggestions } from '@/lib/rivals/lo
 import { canChangeRivals, type RivalChangeState } from '@/rivals/rules';
 import { suggestionReason } from '@/rivals/text';
 import audit from '@/components/audit/audit.module.css';
-import styles from '@/components/rivals/rivals.module.css';
 
 export const metadata = { title: 'Choose rivals' };
 
@@ -33,13 +31,6 @@ export default async function ChooseRivalsPage() {
   const [rivals, suggestions, programs] = await Promise.all([loadRivalList(institution.id), loadSuggestions(institution.id), loadPrograms(institution.id)]);
   const change = await loadChangeState(institution.id, viewer.tier, rivals.length > 0);
   const now = new Date();
-
-  const back = rivals.length ? (
-    <Link href="/rivals" className={styles.back}>
-      <Icon name="chevronLeft" size={14} />
-      Rivals
-    </Link>
-  ) : null;
 
   let body;
   if (role !== 'owner') {
@@ -78,13 +69,12 @@ export default async function ChooseRivalsPage() {
 
   return (
     <div className={audit.page}>
-      <div className={audit.top}>
-        {back}
-        <AuditHeader
-          title={rivals.length ? 'Change your rivals' : 'Choose your rivals'}
-          caption={[`Pick ${RIVAL_RULES.min} to ${RIVAL_RULES.max} institutions to track`, 'Public information only. Rivals never know who tracks them.']}
-        />
-      </div>
+      <PageHead
+        back={rivals.length ? { href: '/rivals', label: 'Rivals' } : undefined}
+        title={rivals.length ? 'Change your rivals' : 'Choose your rivals'}
+        question="Who should Drishti track for you?"
+        caption={[`${RIVAL_RULES.min} to ${RIVAL_RULES.max} institutions`, 'Public information only. Rivals never know who tracks them.']}
+      />
       {body}
     </div>
   );

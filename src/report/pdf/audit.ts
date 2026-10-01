@@ -1,6 +1,7 @@
 // The shared Audit as a PDF, in the report's design: a black cover, then ivory pages with the
-// score and what's working, what to fix (the top 3 in full, the rest with "AdmitLabs can fix
-// this"), program by program, and every check with what was found, the source and the date.
+// score and what's working, what to fix (the top 3 in full, then the rest under one line saying
+// AdmitLabs can fix them), program by program, and every check with what was found, the source and
+// the date.
 
 import { createElement as h, type ReactElement } from 'react';
 import { Document, Link, Page, Text, View, renderToBuffer } from '@react-pdf/renderer';
@@ -72,7 +73,7 @@ function AuditSummaryPage({ data }: { data: AuditPdfData }): ReactElement {
         ...data.pillars.map((pillar) =>
           h(
             View,
-            { key: pillar.pillar, style: { width: THIRD, padding: 12, borderWidth: 0.75, borderColor: COLORS.lineMedium, borderRadius: 3 } },
+            { key: pillar.pillar, style: { width: THIRD, padding: 12, backgroundColor: COLORS.panel, borderRadius: 4 } },
             h(Text, { style: { fontSize: 9, fontWeight: 600 } }, pillar.name),
             h(View, { style: { marginTop: 8, marginBottom: 8 } }, h(BigNumber, { value: pillar.score, size: 26 })),
             h(ScoreBar, { score: pillar.score }),
@@ -104,7 +105,7 @@ function AuditSummaryPage({ data }: { data: AuditPdfData }): ReactElement {
   });
 }
 
-/** A fix beyond the top 3: the problem, and that AdmitLabs can fix it. */
+/** A fix beyond the top 3: the problem, and what it could add. */
 function MoreFix({ fix, first }: { fix: ReportFix; first: boolean }): ReactElement {
   const single = fix.results.length === 1 && fix.results[0]?.program === null ? fix.results[0] : null;
   return h(
@@ -140,7 +141,6 @@ function MoreFix({ fix, first }: { fix: ReportFix; first: boolean }): ReactEleme
           )
         : null,
       fix.finding ? h(Text, { style: { ...styles.small, color: COLORS.muted, marginTop: 4, ...clamp(2) } }, h(Text, { style: { fontWeight: 600, color: COLORS.black } }, 'Found  '), fix.finding) : null,
-      h(Text, { style: { ...styles.small, fontWeight: 600, marginTop: 2 } }, ADMITLABS_CAN_FIX),
     ),
   );
 }
@@ -158,7 +158,7 @@ function AuditFixesPage({ data }: { data: AuditPdfData }): ReactElement {
             h(
               View,
               { key: 'more', style: { marginTop: 14 } },
-              h(SectionTitle, { title: 'More to fix', lead: 'What was found for each. AdmitLabs can fix these for you.' }),
+              h(SectionTitle, { title: 'More to fix', lead: `What was found for each. ${ADMITLABS_CAN_FIX}` }),
               ...data.moreFixes.map((fix, index) => h(MoreFix, { key: fix.rank, fix, first: index === 0 })),
             ),
           ]
