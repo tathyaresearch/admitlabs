@@ -2,6 +2,8 @@
 // review count), never a Strong or Weak result. Providers produce these; the scoring engine
 // turns them into results. Kept in the domain so the engine depends on nothing else.
 
+import type { AiAssistant } from './types.ts';
+
 export interface GoogleSearchValue {
   query: string;
   /** Position in Google results, or null when not in the top `resultsChecked`. */
@@ -36,6 +38,8 @@ export interface AiAnswersValue {
   assistantsAsked: number;
   assistantsNaming: number;
   knownWhenAskedByName: boolean;
+  /** Each assistant asked, and whether it named the institution. The score uses the counts above. */
+  assistants?: Array<{ assistant: AiAssistant; named: boolean }>;
 }
 
 export interface OtherSocialsValue {

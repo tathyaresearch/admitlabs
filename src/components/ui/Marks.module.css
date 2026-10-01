@@ -1,0 +1,31 @@
+/* Marks: a line icon of Drishti's own, or a brand's one-colour logo, sized like an icon. */
+
+.mark {
+  flex: none;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.instagram {
+  fill: currentColor;
+}
+
+.x {
+  fill: var(--brand-x);
+}
+
+.youtube {
+  fill: var(--brand-youtube);
+}
+
+.youtubePlay {
+  fill: var(--brand-youtube-play);
+}
+
+/* A platform's mark and its name, together. */
+.platform {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  white-space: nowrap;
+}

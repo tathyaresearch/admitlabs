@@ -7,9 +7,12 @@ import { BrandMark } from '@/components/ui/Brand';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Highlight } from '@/components/ui/Layout';
-import { ResultMeter } from '@/components/ui/Results';
+import { Mark, PillarIcon } from '@/components/ui/Marks';
+import { ResultGauge } from '@/components/ui/Results';
 import { SCORING_V1 } from '@/config/scoring.v1';
 import { RESULT_LABELS, RESULTS } from '@/domain/types';
+import type { IconRef } from '@/graphics/icons';
+import { PLATFORM_ICONS } from '@/graphics/platforms';
 import { appLink } from '@/lib/urls';
 import { CTA, FEATURES, FEATURES_HEAD, FINAL, HERO, PROBLEM, PROOF_LINE, REPORT_TILE, SCORE, STEPS, TRUST_TILE, type Feature } from '@/product/content';
 import type { Showcase } from '@/product/showcase';
@@ -157,7 +160,10 @@ export function Features({ showcase }: { showcase: Showcase }) {
             <ul className={styles.scorePillars}>
               {SCORE.pillars.map((pillar) => (
                 <li key={pillar.pillar} className={styles.scorePillar}>
-                  <p className={styles.scorePillarName}>{pillar.name}</p>
+                  <p className={styles.scorePillarName}>
+                    <PillarIcon pillar={pillar.pillar} size={20} />
+                    {pillar.name}
+                  </p>
                   <p className={styles.scorePillarQuestion}>{pillar.question}</p>
                   <p className={styles.scorePillarText}>{pillar.text}</p>
                   <p className={styles.scorePillarChecks}>
@@ -169,7 +175,7 @@ export function Features({ showcase }: { showcase: Showcase }) {
             <ul className={styles.resultsKey} aria-label="Every check gets one of four results">
               {RESULTS.map((result) => (
                 <li key={result} className={styles.resultsKeyItem}>
-                  <ResultMeter result={result} invertStrong={false} />
+                  <ResultGauge result={result} />
                   <span className={styles.resultsKeyShare}>
                     <span className="visually-hidden">{RESULT_LABELS[result]}: </span>
                     {shareText(SCORING_V1.resultShares[result])}
@@ -206,6 +212,16 @@ export function Features({ showcase }: { showcase: Showcase }) {
   );
 }
 
+/** What "Drishti checks everything" names, as marks: Google, your website, social media, reviews and AI answers. */
+const CHECKED_MARKS: ReadonlyArray<{ key: string; icon: IconRef }> = [
+  { key: 'google', icon: PLATFORM_ICONS.google },
+  { key: 'website', icon: PLATFORM_ICONS.website },
+  { key: 'instagram', icon: PLATFORM_ICONS.instagram },
+  { key: 'youtube', icon: PLATFORM_ICONS.youtube },
+  { key: 'reviews', icon: { kind: 'line', name: 'star' } },
+  { key: 'ai', icon: PLATFORM_ICONS.ai_assistants },
+];
+
 export function Steps() {
   return (
     <section id="how" className={styles.section} data-theme="light" aria-labelledby="how-title">
@@ -224,6 +240,15 @@ export function Steps() {
               </span>
               <h3 className={styles.stepTitle}>{step.title}</h3>
               <p className={styles.stepText}>{step.text}</p>
+              {index === 1 ? (
+                <ul className={styles.stepMarks} aria-hidden="true">
+                  {CHECKED_MARKS.map((mark) => (
+                    <li key={mark.key}>
+                      <Mark icon={mark.icon} size={20} />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </li>
           ))}
         </ol>

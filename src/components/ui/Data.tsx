@@ -3,6 +3,8 @@ import { PILLAR_LABELS, PILLARS, type Pillar } from '@/domain/types';
 import type { ReactNode } from 'react';
 import styles from './Data.module.css';
 import { Icon } from './Icon';
+import { Mark } from './Marks';
+import { PLATFORM_ICONS, platformFromUrl } from '@/graphics/platforms';
 import { Delta, ScoreLabel } from './Results';
 
 /** The one big number a view leads with. Exactly one per view. */
@@ -70,6 +72,7 @@ export function SourceLine({ url, checkedAt, label = 'Source' }: { url: string; 
     <p className={styles.source}>
       <span className={styles.sourceLabel}>{label}</span>
       <a href={url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
+        <Mark icon={PLATFORM_ICONS[platformFromUrl(url) ?? 'website']} size={14} />
         {hostAndPath(url)}
         <Icon name="external" size={14} />
         <span className="visually-hidden"> (opens in a new tab)</span>

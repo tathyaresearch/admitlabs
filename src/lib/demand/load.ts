@@ -4,7 +4,8 @@
 // mentions of themselves and their rivals. Nothing here widens what the database returns.
 
 import { cache } from 'react';
-import { latestDemandRows } from '@/demand/read';
+import { DEMAND_RULES } from '@/config/demand';
+import { latestDemandRows, topicHistory, type TopicMonth } from '@/demand/read';
 import { demandView, type DemandRow, type IdeaRow } from '@/demand/view';
 import { regionsFor, type DemandRegion } from '@/demand/regions';
 import type { DemandScope, Sentiment } from '@/domain/types';
@@ -86,6 +87,11 @@ export async function loadCityIdeas(viewer: InstitutionViewer): Promise<IdeaRow[
   );
   const { rows } = await loadRows(regionsFor(institution).city, programs);
   return demandView(rows, { singleProgram: programs.length === 1, skills: institution.type === 'skilling' }).ideas;
+}
+
+/** How the fastest rise got here: its count in each of the last months' pulls. Paid and Client (row level security). */
+export async function loadTopicHistory(region: DemandRegion, topic: Pick<DemandRow, 'programKey' | 'kind' | 'text'>): Promise<TopicMonth[]> {
+  return topicHistory(await createClient(), region, topic, DEMAND_RULES.historyMonths);
 }
 
 async function loadMentions(institutionId: string): Promise<MentionRow[]> {

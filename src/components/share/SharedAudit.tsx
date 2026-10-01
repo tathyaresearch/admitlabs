@@ -14,10 +14,12 @@ import { ProductLockup } from '@/components/ui/Brand';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
-import { PointsValue, ResultMeter } from '@/components/ui/Results';
+import { CheckIcon, Mark, PillarIcon } from '@/components/ui/Marks';
+import { PointsValue, ResultGauge } from '@/components/ui/Results';
 import { ADMITLABS_EMAIL } from '@/config/team';
 import { formatDate, hostAndPath, plural } from '@/domain/format';
 import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS } from '@/domain/types';
+import { PLATFORM_ICONS, platformFromUrl } from '@/graphics/platforms';
 import { ADMITLABS_CAN_FIX, sharedView, type SharedAudit } from '@/team/share';
 import styles from './share.module.css';
 
@@ -35,7 +37,8 @@ function Source({ part }: { part: ItemPart }) {
   return (
     <span className={styles.source}>
       {url ? (
-        <a href={url} target="_blank" rel="noreferrer">
+        <a href={url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
+          <Mark icon={PLATFORM_ICONS[platformFromUrl(url) ?? 'website']} size={13} />
           {hostAndPath(url)}
           <span className="visually-hidden"> (opens in a new tab)</span>
         </a>
@@ -116,6 +119,7 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
         {topFixes.length ? (
           <NextSteps
             id="fix-first"
+            icon="wrench"
             title="What to fix first"
             description="The three changes that could add the most to the score, with how to make them."
             steps={topFixes.map(topStep)}
@@ -151,8 +155,9 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
                     <div key={item.rank} className={styles.row}>
                       <div className={styles.rowHead}>
                         <span className={styles.rowName}>
+                          <CheckIcon check={item.key} size={16} />
                           {item.name}
-                          <ResultMeter result={item.strength ?? 'okay'} size="sm" />
+                          <ResultGauge result={item.strength ?? 'okay'} size="sm" />
                         </span>
                         <span className={styles.rowValue}>
                           <PointsValue kind="earned" points={item.points} />
@@ -176,6 +181,7 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
                     <div key={item.rank} className={styles.row}>
                       <div className={styles.rowHead}>
                         <span className={styles.rowName}>
+                          <CheckIcon check={item.key} size={16} />
                           <span>
                             <span className="num">{item.rank}</span> {item.name}
                           </span>
@@ -196,21 +202,27 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
           <Fold id="checked" title="Everything we checked" meta="Every check, with what was found, where and when. Public pages only.">
             {view.areas.map((area) => (
               <div key={area.pillar} className={styles.pillar}>
-                <h3 className={styles.pillarTitle}>{PILLAR_LABELS[area.pillar]}</h3>
+                <h3 className={styles.pillarTitle}>
+                  <PillarIcon pillar={area.pillar} size={16} />
+                  {PILLAR_LABELS[area.pillar]}
+                </h3>
                 <div className={styles.rows}>
                   {area.rows
                     .filter((row) => row.parts.length)
                     .map((row) => (
                       <div key={row.key} className={styles.row}>
                         <div className={styles.rowHead}>
-                          <span className={styles.rowName}>{row.name}</span>
+                          <span className={styles.rowName}>
+                            <CheckIcon check={row.key} size={16} />
+                            {row.name}
+                          </span>
                           {topKeys.has(row.key) ? <span className={styles.rowNote}>In the top 3 fixes</span> : null}
                         </div>
                         {row.parts.map((part) => (
                           <div key={part.checkId} className={styles.part}>
                             <span className={styles.partResult}>
                               {part.programName ? <span className={styles.partProgram}>{part.programName}</span> : null}
-                              <ResultMeter result={part.result} size="sm" />
+                              <ResultGauge result={part.result} size="sm" />
                             </span>
                             <span className={styles.partText}>
                               {part.detail?.finding ? <span className={styles.text}>{part.detail.finding}</span> : null}

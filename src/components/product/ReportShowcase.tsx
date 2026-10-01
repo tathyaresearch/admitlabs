@@ -3,6 +3,8 @@
 // The drawn pages are decoration for sighted readers; the text beside them says what they show.
 
 import { AnchorButton } from '@/components/ui/Button';
+import { bandStarts } from '@/domain/scores';
+import { SCORE_GAUGE, scoreGauge } from '@/graphics/gauge';
 import type { ReportData } from '@/report/data';
 import { THING_SOURCE_LABELS } from '@/report/things';
 import { REPORT } from '@/product/content';
@@ -52,16 +54,33 @@ function Cover({ data }: { data: ReportData }) {
   );
 }
 
+/** The summary page's gauge, as the PDF draws it: the score on a half circle, the number inside. */
+function Gauge({ score }: { score: number }) {
+  const shape = scoreGauge(score, bandStarts());
+  return (
+    <span className={papers.gauge}>
+      <svg viewBox={`0 0 ${SCORE_GAUGE.width} ${SCORE_GAUGE.height}`}>
+        <path d={shape.track} className={papers.gaugeTrack} strokeWidth={SCORE_GAUGE.stroke} />
+        {shape.value ? <path d={shape.value} className={papers.gaugeValue} strokeWidth={SCORE_GAUGE.stroke} /> : null}
+        {shape.notches.map((notch) => (
+          <line key={`${notch.x1}-${notch.y1}`} {...notch} className={papers.gaugeNotch} />
+        ))}
+      </svg>
+      <span className={papers.gaugeNumber}>
+        <span className={`${papers.gaugeValueText} num`}>{score}</span>
+        <span className={`${papers.scoreOut} num`}>/100</span>
+      </span>
+    </span>
+  );
+}
+
 function Summary({ data }: { data: ReportData }) {
   return (
     <div className={`${papers.page} ${papers.summary}`} data-theme="light">
       <div className={papers.sheet}>
         <p className={papers.over}>Score summary</p>
         <p className={papers.title}>Your score in {data.monthLabel.split(' ')[0]}</p>
-        <p className={papers.score}>
-          <span className={`${papers.scoreNumber} num`}>{data.summary.overall}</span>
-          <span className={papers.scoreOut}>/ 100</span>
-        </p>
+        <Gauge score={data.summary.overall} />
         <div className={papers.bars}>
           {data.summary.pillars.map((pillar) => (
             <div key={pillar.pillar} className={papers.bar}>

@@ -7,15 +7,18 @@
 
 import { Suspense, type ReactNode } from 'react';
 import type { AuditView, ListItem } from '@/audit/view';
+import { addedByYou, type AddedByYou } from '@/domain/details';
+import type { AddedDetails } from '@/lib/details/load';
 import { HomeSummary, type ScoreTrend } from '@/components/home/HomeSummary';
 import { NextSteps, type NextStep } from '@/components/home/NextSteps';
 import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
+import { CheckIcon } from '@/components/ui/Marks';
 import { PointsValue } from '@/components/ui/Results';
 import { Tabs } from '@/components/ui/Tabs';
 import { limitFor } from '@/config/entitlements';
 import { plural } from '@/domain/format';
-import { DIFFICULTY_LABELS, PILLAR_LABELS, type Tier } from '@/domain/types';
+import { DIFFICULTY_LABELS, PILLAR_LABELS, type InstitutionType, type Tier } from '@/domain/types';
 import { SectionHead } from './AuditHeader';
 import { CheckPanel } from './CheckPanel';
 import { ChecksTable } from './ChecksTable';
@@ -47,6 +50,27 @@ interface AuditScreenProps {
   /** Every Audit, for the history tab. Null when the plan has no score history. */
   history: readonly HistoryEntry[] | null;
   historyLabel: string;
+  /** What the institution added in Settings, shown as added by you on the checks it relates to. */
+  details?: AddedDetails | null;
+  institutionType: InstitutionType;
+}
+
+/** What was added that relates to each part of each check, by the part's check id. */
+function addedByPart(view: AuditView, details: AddedDetails | null | undefined, institutionType: InstitutionType): Record<string, AddedByYou> {
+  if (!details) return {};
+  const byPart: Record<string, AddedByYou> = {};
+  for (const row of view.areas.flatMap((area) => area.rows)) {
+    for (const part of row.parts) {
+      const added = addedByYou(row.key, {
+        institution: details.institution,
+        program: part.programId ? (details.programs.get(part.programId) ?? null) : null,
+        programName: part.programName,
+        institutionType,
+      });
+      if (added) byPart[part.checkId] = added;
+    }
+  }
+  return byPart;
 }
 
 /**
@@ -63,6 +87,7 @@ export function fixStep(item: ListItem, href: string | null = `?check=${item.key
         <PartResults parts={item.parts} showNames={item.parts.length > 1} />
       </span>
     ),
+    icon: <CheckIcon check={item.key} size={16} />,
     title: item.name,
     detail: finding,
     aside: (
@@ -99,6 +124,7 @@ export function AuditScreen(props: AuditScreenProps) {
 
       <NextSteps
         id="fix"
+        icon="wrench"
         title="Fix these first"
         description="The changes that could add the most to your score. Open one to see how."
         steps={fixes.slice(0, TOP_FIXES).map((item) => fixStep(item))}
@@ -116,7 +142,7 @@ export function AuditScreen(props: AuditScreenProps) {
       {tier === 'free' ? <UnlockCard moreFixes={hiddenFixes} moreStrengths={hiddenStrengths} lockedPrograms={lockedPrograms} /> : null}
 
       <section id="details" className={styles.section} aria-labelledby="details-title">
-        <SectionHead id="details-title" title="The full Audit" help="Every fix, what's working and every check. Open one to see what was found, the source and how to fix it." />
+        <SectionHead id="details-title" icon="audit" title="The full Audit" help="Every fix, what's working and every check. Open one to see what was found, the source and how to fix it." />
         <Tabs
           label="The full Audit"
           items={[
@@ -153,7 +179,7 @@ export function AuditScreen(props: AuditScreenProps) {
       </section>
 
       <Suspense fallback={null}>
-        <CheckPanel rows={view.areas.flatMap((area) => area.rows)} />
+        <CheckPanel rows={view.areas.flatMap((area) => area.rows)} added={addedByPart(view, props.details, props.institutionType)} />
       </Suspense>
     </div>
   );

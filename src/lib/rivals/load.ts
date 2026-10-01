@@ -4,14 +4,18 @@
 // returns.
 
 import { cache } from 'react';
+import { historyByMonth } from '@/audit/view';
 import { RIVAL_RULES } from '@/config/rivals';
+import { monthKey } from '@/domain/dates';
 import type { ContentPlatform, InstitutionType, RivalMoveKind, CheckKey } from '@/domain/types';
+import { loadHistory } from '@/lib/audit/load';
 import type { InstitutionViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
 import { compareChecks, ladder, type CheckComparison, type LadderRow, type Standing } from '@/rivals/compare';
-import { checkScores, latestOwnAudit, latestRivalAudits, programInfo, type AuditScores } from '@/rivals/read';
+import { checkScores, latestOwnAudit, latestRivalAudits, programInfo, rivalAuditHistory, type AuditScores } from '@/rivals/read';
 import { rivalChangeState, type RivalChangeState } from '@/rivals/rules';
 import { reviewTrend, type ReviewTrend } from '@/rivals/timing';
+import { pillarSpread, scoreTrend, type PillarSpread, type ScoreTrend } from '@/rivals/trend';
 import { freeRivalsVerdict, rivalsVerdict } from '@/rivals/verdict';
 
 const DAY_MS = 86_400_000;
@@ -87,6 +91,10 @@ export interface FullRivals {
   you: AuditScores | null;
   rows: RivalScores[];
   ladder: LadderRow[];
+  /** Each pillar with you and every scored rival on it. */
+  spread: PillarSpread[];
+  /** The overall score by month, you and each rival. */
+  trend: ScoreTrend;
   actions: ActionRow[];
   activity: Activity;
 }
@@ -241,6 +249,20 @@ async function loadScores(institutionId: string, rivals: readonly RivalInfo[]): 
   };
 }
 
+/** Your overall score and each rival's, month by month. Rival scores come from rival Audits only. */
+async function loadTrend(institutionId: string, institutionName: string, rivals: readonly RivalInfo[]): Promise<ScoreTrend> {
+  const supabase = await createClient();
+  const [own, theirs] = await Promise.all([loadHistory(institutionId), rivalAuditHistory(supabase, rivals.map((rival) => rival.id))]);
+  const byMonth = (rows: Parameters<typeof historyByMonth>[0]) => historyByMonth(rows, (runAt) => monthKey(new Date(runAt)));
+  return scoreTrend(
+    [
+      { id: institutionId, name: institutionName, you: true, points: byMonth(own) },
+      ...rivals.map((rival) => ({ id: rival.id, name: rival.name, you: false, points: byMonth(theirs.get(rival.id) ?? []) })),
+    ],
+    RIVAL_RULES.trendMonths,
+  );
+}
+
 export async function loadRivalsPage(viewer: InstitutionViewer): Promise<RivalsPage> {
   const institution = viewer.membership.institution;
   const rivals = await loadRivalList(institution.id);
@@ -269,13 +291,14 @@ export async function loadRivalsPage(viewer: InstitutionViewer): Promise<RivalsP
     };
   }
 
-  const [scores, actions, activity] = await Promise.all([
+  const [scores, actions, activity, trend] = await Promise.all([
     loadScores(institution.id, rivals),
     loadActions(institution.id),
     loadActivity(
       rivals.map((rival) => rival.id),
       { postsPerRival: RIVAL_RULES.postsPerMonth },
     ),
+    loadTrend(institution.id, institution.name, rivals),
   ]);
   const lastScored = scores.rows.reduce<string | null>((latest, row) => (row.audit && (!latest || row.audit.runAt > latest) ? row.audit.runAt : latest), null);
   return {
@@ -290,6 +313,11 @@ export async function loadRivalsPage(viewer: InstitutionViewer): Promise<RivalsP
         { id: institution.id, name: institution.name, overall: scores.you?.scores.overall ?? null, change: scores.you?.changes.overall ?? null },
         scores.rows.map((row) => ({ id: row.rival.id, name: row.rival.name, overall: row.audit?.scores.overall ?? null, change: row.audit?.changes.overall ?? null })),
       ),
+      spread: pillarSpread(
+        { id: institution.id, name: institution.name, scores: scores.you?.scores ?? null },
+        scores.rows.map((row) => ({ id: row.rival.id, name: row.rival.name, scores: row.audit?.scores ?? null })),
+      ),
+      trend,
       actions,
       activity,
     },
@@ -390,6 +418,8 @@ export interface RivalDetail {
   /** Every move on record for this rival, newest first (the admission push can be older than 30 days). */
   allMoves: MoveRow[];
   reviews: ReviewTrend;
+  /** Your overall score and theirs, month by month. */
+  trend: ScoreTrend;
 }
 
 /** One rival's full view. Null when the viewer does not track it. Paid and Client only. */
@@ -398,11 +428,13 @@ export async function loadRivalDetail(viewer: InstitutionViewer, rivalId: string
   const rival = rivals.find((candidate) => candidate.id === rivalId);
   if (!rival) return null;
   const supabase = await createClient();
-  const [scores, activity, moves, reviews] = await Promise.all([
-    loadScores(viewer.membership.institution.id, [rival]),
+  const institution = viewer.membership.institution;
+  const [scores, activity, moves, reviews, trend] = await Promise.all([
+    loadScores(institution.id, [rival]),
     loadActivity([rival.id]),
     supabase.from('rival_moves').select('id, rival_institution_id, kind, description, source_url, detected_at').eq('rival_institution_id', rival.id).order('detected_at', { ascending: false }),
     supabase.rpc('rival_review_trend', { p_rival: rival.id }),
+    loadTrend(institution.id, institution.name, [rival]),
   ]);
   if (moves.error) throw new Error(`Could not load moves: ${moves.error.message}`);
   if (reviews.error) throw new Error(`Could not load the review trend: ${reviews.error.message}`);
@@ -428,5 +460,6 @@ export async function loadRivalDetail(viewer: InstitutionViewer, rivalId: string
         return { checkedAt: point.checked_at, rating: rating === null ? null : Number(rating), reviewCount: point.review_count ?? 0 };
       }),
     ),
+    trend,
   };
 }

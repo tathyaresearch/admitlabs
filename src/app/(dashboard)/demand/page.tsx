@@ -1,4 +1,5 @@
 import { SectionHead } from '@/components/audit/AuditHeader';
+import { MonthBars } from '@/components/charts/MonthBars';
 import { AskTabs } from '@/components/demand/AskTabs';
 import { DemandUnlockCard } from '@/components/demand/DemandUnlockCard';
 import { MentionsTable } from '@/components/demand/MentionsTable';
@@ -20,7 +21,7 @@ import { demandView, type IdeaRow } from '@/demand/view';
 import { formatDate, formatMonth, joinNames } from '@/domain/format';
 import { INSTITUTION_TYPE_LABELS } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
-import { loadDemandPage } from '@/lib/demand/load';
+import { loadDemandPage, loadTopicHistory } from '@/lib/demand/load';
 import { loadRivalList } from '@/lib/rivals/load';
 import audit from '@/components/audit/audit.module.css';
 import styles from '@/components/demand/demand.module.css';
@@ -101,6 +102,7 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
   const ideas = view.ideas.slice(0, DEMAND_RULES.contentIdeas);
   const top = view.topTrend;
   const rise = top?.changePct === null || top?.changePct === undefined ? null : Math.round(top.changePct);
+  const history = top ? await loadTopicHistory(data.region, top) : [];
 
   const caption = [
     view.month ? `${regionLabel(data.region)}, ${formatMonth(view.month)}` : regionLabel(data.region),
@@ -141,6 +143,7 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
                     <span>{countWords('rising', top.count)}</span>
                     <Source url={top.sourceUrl} platform={top.meta.platform ?? 'trends'} />
                   </p>
+                  <MonthBars points={history} title="Searches by month" valueLabel="Searches" />
                 </>
               ) : (
                 <p className={styles.kpiTitle}>Nothing is rising sharply this month.</p>
@@ -159,6 +162,7 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
         <div className={styles.moreIdeas}>
           <NextSteps
             id="ideas"
+            icon="demand"
             title="Content ideas"
             description={`Each one is built on a real student question from ${place}, with where it was asked.`}
             steps={ideas.slice(0, IDEAS_SHOWN).map((idea) => ideaStep(idea, !single))}
@@ -183,7 +187,7 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
 
       {rows.length ? (
         <section className={audit.section} aria-labelledby="ask-title">
-          <SectionHead id="ask-title" title="What students ask" help={`Grouped from public questions, posts and searches in ${place}. Never a person.`} />
+          <SectionHead id="ask-title" icon="forum" title="What students ask" help={`Grouped from public questions, posts and searches in ${place}. Never a person.`} />
           <AskTabs
             view={view}
             showProgram={!single}

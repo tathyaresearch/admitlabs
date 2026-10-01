@@ -23,6 +23,7 @@ import { regionPlace, type DemandRegion } from '../demand/regions.ts';
 import { changeWords, countWords, LANGUAGE_TAGS, PLATFORM_LABELS, sourcesCaption } from '../demand/text.ts';
 import { demandView, type DemandRow } from '../demand/view.ts';
 import { CHECKS, checkName } from '../domain/checks.ts';
+import { addedByYou, durationText, feesText, type AddedByYou, type InstitutionDetails, type ProgramDetails } from '../domain/details.ts';
 import { monthKey } from '../domain/dates.ts';
 import { formatDate, formatMonth, formatMonthShort, hostAndPath, joinNames } from '../domain/format.ts';
 import { scoreLabel, type ScoreLabel } from '../domain/scores.ts';
@@ -33,12 +34,14 @@ import {
   PILLAR_LABELS,
   PILLARS,
   TIER_LABELS,
+  type CheckKey,
   type CheckResult,
   type InstitutionType,
   type Pillar,
   type RivalMoveKind,
   type Tier,
 } from '../domain/types.ts';
+import { platformFromUrl, type Platform } from '../graphics/platforms.ts';
 import { ladder } from '../rivals/compare.ts';
 import { MOVE_KIND_LABELS } from '../rivals/text.ts';
 import { rivalsVerdict } from '../rivals/verdict.ts';
@@ -111,6 +114,8 @@ export interface ReportInput {
   demand: { region: DemandRegion; rows: readonly DemandRow[]; pulledAt: string | null };
   /** The product page's sample report, made from fictional sample data. */
   sample?: boolean;
+  /** What the institution added about itself in Settings. Shown as added by them, never scored. */
+  added?: { institution: InstitutionDetails; programs: ReadonlyMap<string, ProgramDetails> };
 }
 
 // Output: what the PDF prints ------------------------------------------------------------------
@@ -123,15 +128,20 @@ export interface PartResult {
 /** A fix as one short row: the rest of the list, or any fix in a compact report. */
 export interface ReportFixRow {
   rank: number;
+  /** For the check's icon. */
+  key: CheckKey;
   name: string;
   /** Short enough for one line: "BBA and MBA", or "5 programs". */
   programs: string | null;
   gain: string;
+  /** What it could add, exactly, for the bar beside the words. */
+  points: number;
   difficulty: string | null;
 }
 
 export interface ReportFix {
   rank: number;
+  key: CheckKey;
   name: string;
   /** The same fix as one short row. */
   row: ReportFixRow;
@@ -141,7 +151,10 @@ export interface ReportFix {
   finding: string | null;
   howToFix: string | null;
   gain: string;
+  points: number;
   difficulty: string | null;
+  /** What the institution added that relates to this fix, with advice only where how to fix shows. */
+  added: AddedByYou | null;
 }
 
 export interface ReportData {
@@ -162,7 +175,7 @@ export interface ReportData {
     history: Array<{ month: string; label: string; score: number }>;
     note: string | null;
   };
-  working: Array<{ rank: number; name: string; programs: string | null; result: CheckResult; worth: string; finding: string | null }>;
+  working: Array<{ rank: number; key: CheckKey; name: string; programs: string | null; result: CheckResult; worth: string; finding: string | null }>;
   fixes: ReportFix[];
   /** The rest of the ranked list. */
   moreFixes: ReportFixRow[];
@@ -174,6 +187,8 @@ export interface ReportData {
     pillars: Record<Pillar, number>;
     topFix: string | null;
     topFixGain: string | null;
+    /** "2 years, ₹2,40,000 a year, 120 seats", added by the institution. */
+    added: string | null;
   }>;
   /** Programs left off the by program page (over the limit). */
   morePrograms: number;
@@ -185,8 +200,9 @@ export interface ReportData {
   } | null;
   demand: {
     place: string;
-    rising: Array<{ text: string; change: string; count: string; program: string }>;
-    questions: Array<{ text: string; count: string; program: string; language: string | null }>;
+    /** `changePct` and `asked` are the numbers behind the words, for the bars. */
+    rising: Array<{ text: string; change: string; changePct: number | null; count: string; program: string }>;
+    questions: Array<{ text: string; count: string; asked: number; program: string; language: string | null }>;
     ideas: Array<{ text: string; program: string; basedOn: string | null }>;
     pulledOn: string | null;
     caption: string;
@@ -195,7 +211,8 @@ export interface ReportData {
   sources: {
     /** The day every check was checked, when they share one. */
     checkedOn: string | null;
-    checks: Array<{ name: string; pillar: string; checkedOn: string; links: string[] }>;
+    /** `platform`: where the first link points, for its mark. */
+    checks: Array<{ key: CheckKey; name: string; pillar: string; checkedOn: string; links: string[]; platform: Platform | null }>;
     notes: Array<{ label: string; text: string }>;
   };
   /** Paid only: "Want AdmitLabs to do this for you? hello@admitlabs.in". */
@@ -269,9 +286,11 @@ export function compactLinks(urls: readonly string[]): string[] {
 function fixRow(item: ListItem): ReportFixRow {
   return {
     rank: item.rank,
+    key: item.key,
     name: item.name,
     programs: shortPrograms(item),
     gain: pointsToGainText(item.points).replace('Could add up to', 'Up to').replace('Could add less than', 'Less than'),
+    points: item.points,
     difficulty: item.difficulty ? DIFFICULTY_LABELS[item.difficulty] : null,
   };
 }
@@ -280,6 +299,7 @@ function fixRow(item: ListItem): ReportFixRow {
 export function workingRow(item: ListItem): ReportData['working'][number] {
   return {
     rank: item.rank,
+    key: item.key,
     name: item.name,
     programs: programsOf(item),
     result: item.strength ?? 'okay',
@@ -289,7 +309,18 @@ export function workingRow(item: ListItem): ReportData['working'][number] {
 }
 
 /** Each program in name order, with its score and the one fix that would help it most. */
-export function programRows(audit: StoredAudit, options: { institutionType: InstitutionType; programNames: ReadonlyMap<string, string> }): ReportData['programs'] {
+/** A program's basics as the institution added them, in one line. */
+function programAdded(details: ProgramDetails | undefined): string | null {
+  if (!details) return null;
+  const parts = [durationText(details), feesText(details), details.seats !== null ? `${details.seats} seats` : null].filter((part): part is string => Boolean(part));
+  return parts.length ? parts.join(', ') : null;
+}
+
+export function programRows(
+  audit: StoredAudit,
+  options: { institutionType: InstitutionType; programNames: ReadonlyMap<string, string> },
+  added?: ReportInput['added'],
+): ReportData['programs'] {
   return [...audit.programs]
     .map((program) => ({ program, name: options.programNames.get(program.programId) ?? 'Program' }))
     .sort((a, b) => a.name.localeCompare(b.name))
@@ -304,15 +335,20 @@ export function programRows(audit: StoredAudit, options: { institutionType: Inst
         pillars: { discovered: program.scores.discovered, trusted: program.scores.trusted, chosen: program.scores.chosen },
         topFix: top ? checkName(top.key, options.institutionType) : null,
         topFixGain: top ? pointsToGainText(top.points) : null,
+        added: programAdded(added?.programs.get(program.programId)),
       };
     });
 }
 
-export function fixOf(item: ListItem): ReportFix {
+/** What was added that relates to a fix's main part, if anything. */
+type AddedFor = (item: ListItem, part: ListItem['parts'][number]) => AddedByYou | null;
+
+export function fixOf(item: ListItem, addedFor?: AddedFor): ReportFix {
   const most = [...item.parts].sort((a, b) => share(a) - share(b))[0];
   const tooMany = item.parts.length > REPORT_LIMITS.partsShown;
   return {
     rank: item.rank,
+    key: item.key,
     name: item.name,
     row: fixRow(item),
     results: tooMany ? [] : item.parts.map((part) => ({ program: part.programName, result: part.result })),
@@ -320,7 +356,9 @@ export function fixOf(item: ListItem): ReportFix {
     finding: most?.detail?.finding ?? null,
     howToFix: most?.detail?.howToFix ?? null,
     gain: pointsToGainText(item.points),
+    points: item.points,
     difficulty: item.difficulty ? `${DIFFICULTY_LABELS[item.difficulty]} to fix` : null,
+    added: addedFor && most ? addedFor(item, most) : null,
   };
 }
 
@@ -341,6 +379,16 @@ export function buildReport(input: ReportInput): ReportData {
     .map((point) => ({ month: point.month, label: formatMonthShort(point.month), score: point.score }));
 
   const fixes = view.fixes;
+  const added = input.added;
+  const addedFor: AddedFor | undefined = added
+    ? (item, part) =>
+        addedByYou(item.key, {
+          institution: added.institution,
+          program: part.programId ? (added.programs.get(part.programId) ?? null) : null,
+          programName: part.programName,
+          institutionType: institution.type,
+        })
+    : undefined;
   const place = regionPlace(input.demand.region);
   const demand = demandView(input.demand.rows, {
     singleProgram: new Set(input.demand.rows.map((row) => row.programKey)).size <= 1,
@@ -375,12 +423,15 @@ export function buildReport(input: ReportInput): ReportData {
     const parts = audit.checks.filter((stored) => stored.key === check.key);
     if (!parts.length) return [];
     const checkedAt = parts.map((part) => part.checkedAt).sort().pop() as string;
+    const urls = parts.flatMap((part) => (part.detail?.sourceUrl ? [part.detail.sourceUrl] : []));
     return [
       {
+        key: check.key,
         name: checkName(check.key, institution.type),
         pillar: PILLAR_LABELS[check.pillar],
         checkedOn: formatDate(checkedAt),
-        links: compactLinks(parts.flatMap((part) => (part.detail?.sourceUrl ? [part.detail.sourceUrl] : []))),
+        links: compactLinks(urls),
+        platform: urls.length ? platformFromUrl([...urls].sort()[0] as string) : null,
       },
     ];
   });
@@ -434,9 +485,9 @@ export function buildReport(input: ReportInput): ReportData {
       note: view.programsChanged ? 'Your programs changed since the last Audit, so each program shows its own change.' : null,
     },
     working: view.working.slice(0, REPORT_LIMITS.working).map(workingRow),
-    fixes: fixes.slice(0, REPORT_LIMITS.fixesInDetail).map(fixOf),
+    fixes: fixes.slice(0, REPORT_LIMITS.fixesInDetail).map((item) => fixOf(item, addedFor)),
     moreFixes: fixes.slice(REPORT_LIMITS.fixesInDetail).map(fixRow),
-    programs: programRows(audit, options),
+    programs: programRows(audit, options, input.added),
     morePrograms: Math.max(0, audit.programs.length - REPORT_LIMITS.programs),
     rivals: input.rivals.length
       ? {
@@ -457,12 +508,14 @@ export function buildReport(input: ReportInput): ReportData {
           rising: demand.rising.slice(0, REPORT_LIMITS.rising).map((row) => ({
             text: row.text,
             change: changeWords(row.changePct),
+            changePct: row.changePct,
             count: countWords('rising', row.count),
             program: row.programName,
           })),
           questions: demand.questions.slice(0, REPORT_LIMITS.questions).map((row) => ({
             text: row.text,
             count: countWords('question', row.count),
+            asked: row.count,
             program: row.programName,
             language: LANGUAGE_TAGS[row.language],
           })),

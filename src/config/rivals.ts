@@ -19,4 +19,6 @@ export const RIVAL_RULES = {
   postsOnOverview: 6,
   /** How far back an admission push still counts as this season's. */
   admissionPushDays: 240,
+  /** Months on the overall score by month chart. */
+  trendMonths: 6,
 } as const;

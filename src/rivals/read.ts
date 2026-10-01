@@ -71,6 +71,16 @@ export async function latestRivalAudits(db: Db, rivalIds: readonly string[], bef
   return latest;
 }
 
+/** Every rival Audit of these rivals (never their own Audits), oldest first, by rival. */
+export async function rivalAuditHistory(db: Db, rivalIds: readonly string[]): Promise<Map<string, AuditScores[]>> {
+  const history = new Map<string, AuditScores[]>(rivalIds.map((id) => [id, []]));
+  if (rivalIds.length === 0) return history;
+  const { data, error } = await db.from('audits').select(AUDIT_COLUMNS).in('institution_id', [...rivalIds]).eq('kind', 'rival').order('run_at');
+  if (error) throw new RivalReadError(`Could not read rival score history: ${error.message}`);
+  for (const row of data ?? []) history.get(row.institution_id)?.push(toScores(row));
+  return history;
+}
+
 /** An institution's latest own Audit (Free, Paid or Client), up to `before` when given. */
 export async function latestOwnAudit(db: Db, institutionId: string, before?: Date): Promise<AuditScores | null> {
   let query = db.from('audits').select(AUDIT_COLUMNS).eq('institution_id', institutionId).in('kind', ['free', 'paid', 'client']);

@@ -108,6 +108,7 @@ export default async function HomePage() {
       {view ? (
         <NextSteps
           id="next"
+          icon="wrench"
           title={full ? '3 things to do this month' : 'Fix these first'}
           description={full ? 'In order: the steps that could make the most difference this month.' : 'The changes that could add the most to your score.'}
           steps={steps}

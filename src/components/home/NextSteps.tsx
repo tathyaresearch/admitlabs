@@ -15,6 +15,8 @@ export interface NextStep {
   source?: ThingSource;
   /** The small line above the title, like a pillar and its result. */
   kicker?: ReactNode;
+  /** An icon before the title, like the check's own. */
+  icon?: ReactNode;
   title: string;
   detail: string;
   /** A value on the right, like "+4 points". */
@@ -56,6 +58,7 @@ export function NextSteps({
   empty,
   action,
   start = 1,
+  icon,
 }: {
   id: string;
   title: string;
@@ -66,10 +69,13 @@ export function NextSteps({
   action?: ReactNode;
   /** The first number, when the list carries on from another one. */
   start?: number;
+  /** An icon before the list's title. */
+  icon?: IconName;
 }) {
   const head = (
     <div className={styles.blockHead}>
       <h2 id={`${id}-title`} className={styles.blockTitle}>
+        {icon ? <Icon name={icon} size={20} className={styles.blockIcon} /> : null}
         {title}
       </h2>
       <p className={styles.blockText}>{description}</p>
@@ -106,7 +112,10 @@ export function NextSteps({
                 </span>
                 <span className={styles.stepBody}>
                   <Kicker step={step} index={index} />
-                  <span className={styles.stepTitle}>{step.title}</span>
+                  <span className={styles.stepTitle}>
+                    {step.icon ? <span className={styles.stepIcon}>{step.icon}</span> : null}
+                    {step.title}
+                  </span>
                   {step.detail ? <span className={styles.stepDetail}>{step.detail}</span> : null}
                   {step.extra ? <span className={styles.stepExtra}>{step.extra}</span> : null}
                 </span>

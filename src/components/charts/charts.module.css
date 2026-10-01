@@ -1,50 +1,63 @@
 /* Chart marks: thin, monochrome, with the data as the only loud thing. */
 
-.dial {
+/* The score gauge: a half circle filled to the score, the number inside it in Inter. */
+.gauge {
   position: relative;
+  width: 100%;
+  max-width: var(--gauge-max, 15rem);
   margin: 0;
-  max-width: 100%;
 }
 
-.dial svg {
+.gauge svg {
+  display: block;
   width: 100%;
   height: auto;
+  overflow: visible;
 }
 
-.dialTrack {
+.gaugeTrack {
   fill: none;
   stroke: var(--chart-track);
-  stroke-width: 6;
 }
 
-.dialValue {
+.gaugeValue {
   fill: none;
   stroke: var(--text);
-  stroke-width: 6;
 }
 
-.dialTick {
+.gaugeNotch {
   stroke: var(--text-muted);
   stroke-width: 1.5;
 }
 
-/* Centred on the arc's middle (the circle's centre sits at 58% of the drawing's height). */
-.dialCenter {
+.gaugeEnd {
+  font-family: var(--font-numeric);
+  font-size: 10px;
+  fill: var(--text-muted);
+  text-anchor: middle;
+}
+
+/* The number sits in the bowl of the half circle. */
+.gaugeNumber {
   position: absolute;
-  inset: 18% 0 0 0;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 0.4rem;
+  left: 0;
+  right: 0;
+  bottom: 4%;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.15em;
+  line-height: 1;
 }
 
-.dialNumber {
-  font: var(--type-score-medium);
-  letter-spacing: var(--tracking-score);
+.gaugeValueText {
+  font: var(--type-num-hero);
+  font-size: clamp(2.5rem, 2.1rem + 1.6cqi, 3.25rem);
+  letter-spacing: var(--tracking-num-hero);
 }
 
-.dialCaption {
-  font: var(--type-caption-strong);
+.gaugeOf {
+  font: var(--type-num);
   color: var(--text-muted);
 }
 
@@ -163,26 +176,25 @@
   width: 100%;
 }
 
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-5);
-  font: var(--type-caption-strong);
-}
-
-.legend li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
 .youFill {
   fill: var(--text);
 }
 
-.hatchLine {
-  stroke: var(--text);
-  stroke-width: 2;
+/* The rival's bar: solid grey, named beside it, so no key is needed. */
+.rivalFill {
+  fill: var(--line-strong);
+}
+
+.seriesName {
+  fill: var(--text);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-heading);
+}
+
+.seriesNameMuted {
+  fill: var(--text-muted);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-medium);
 }
 
 .barTrack {
@@ -214,4 +226,318 @@
 
 .h2hRow[data-active='true'] .hitArea {
   fill: var(--surface-hover);
+}
+
+/* A key for charts with two kinds of mark: you filled, rivals open. */
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.keyItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.keyYou,
+.keyRival {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.keyYou {
+  background: var(--text);
+}
+
+.keyRival {
+  border: 1.5px solid var(--text-muted);
+}
+
+/* Pillar by pillar: one line per pillar from 0 to 100, your place on the right. */
+.dots {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.dots .key {
+  margin-bottom: var(--space-3);
+}
+
+.dotsRow,
+.dotsScaleRow {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr) 5.5rem;
+  grid-template-areas: 'label plot rank';
+  align-items: center;
+  column-gap: var(--space-5);
+}
+
+.dotsRow {
+  position: relative;
+  margin: 0 calc(var(--space-3) * -1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  touch-action: manipulation;
+}
+
+.dotsRow[data-active='true'] {
+  background: var(--surface-hover);
+}
+
+.dotsLabel {
+  grid-area: label;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font: var(--type-label);
+  color: var(--text);
+}
+
+.dotsPlot,
+.dotsScale {
+  grid-area: plot;
+  min-width: 0;
+}
+
+.dotsPlot svg,
+.dotsScale svg {
+  display: block;
+  overflow: visible;
+}
+
+.dotsRank {
+  grid-area: rank;
+  justify-self: end;
+  font: var(--type-small);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.dotsRank :global(.num) {
+  font: var(--type-num);
+  font-weight: var(--weight-heading);
+  color: var(--text);
+}
+
+.dotsTrack {
+  stroke: var(--line-medium);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.dotsBand {
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+
+.youDot {
+  fill: var(--text);
+  stroke: var(--chart-surface, var(--surface-raised));
+  stroke-width: 2;
+}
+
+.rivalDot {
+  fill: var(--chart-surface, var(--surface-raised));
+  stroke: var(--text-muted);
+  stroke-width: 1.75;
+}
+
+.dotValue {
+  fill: var(--text);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-heading);
+}
+
+.dotsTooltip {
+  left: 50%;
+  top: 0;
+}
+
+.tooltipYou {
+  font-weight: var(--weight-heading);
+}
+
+@media (max-width: 40rem) {
+  .dotsRow,
+  .dotsScaleRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'label rank'
+      'plot plot';
+    row-gap: var(--space-1);
+  }
+}
+
+/* Overall score by month: you in the text colour, rivals in grey, named at the end. */
+.trendLine {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.trendYou .trendLine {
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+.trendRival .trendLine {
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+
+.trendPoint {
+  stroke: var(--chart-surface, var(--surface-raised));
+  stroke-width: 1.5;
+}
+
+.trendYou .trendPoint {
+  fill: var(--text);
+}
+
+.trendRival .trendPoint {
+  fill: var(--line-strong);
+}
+
+.trendRival[data-focus='true'] .trendLine {
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+.trendRival[data-focus='true'] .trendPoint {
+  fill: var(--text);
+}
+
+.trendHit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+}
+
+.trendYou[data-dim='true'],
+.trendRival[data-dim='true'],
+.trendLabel[data-dim='true'],
+.trendLabelYou[data-dim='true'] {
+  opacity: 0.25;
+}
+
+.trendLabel,
+.trendLabelYou {
+  font-size: var(--size-caption);
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.trendLabel text {
+  fill: var(--text-muted);
+  font-weight: var(--weight-medium);
+}
+
+.trendLabelYou text {
+  fill: var(--text);
+  font-weight: var(--weight-heading);
+}
+
+.trendLabelValue {
+  font-weight: var(--weight-heading);
+}
+
+.trendLeader {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.trendTooltip[data-side='right'] {
+  transform: translateX(12px);
+}
+
+.trendTooltip[data-side='left'] {
+  transform: translateX(calc(-100% - 12px));
+}
+
+/* Counts by month: small columns from zero, the newest in the text colour. */
+.monthBars {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.monthBarsTitle {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.monthBarsPlot {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.monthBarsColumn {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* The count sits just above its bar. */
+.monthBarsValue {
+  flex: none;
+  margin-bottom: 2px;
+  font: var(--type-num-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.monthBarsColumn[data-last='true'] .monthBarsValue {
+  color: var(--text);
+  font-weight: var(--weight-heading);
+}
+
+/* Each track reaches into the gaps beside it, so the baseline runs unbroken. The space above
+   the bars leaves room for the count over the tallest one. */
+.monthBarsTrack {
+  box-sizing: content-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: calc(100% + var(--space-2));
+  height: 4rem;
+  padding-top: 1.25rem;
+  border-bottom: 1px solid var(--line-medium);
+}
+
+.monthBarsFill {
+  display: block;
+  flex: none;
+  width: min(2.25rem, calc(100% - var(--space-2)));
+  background: var(--line-strong);
+  border-radius: 3px 3px 0 0;
+}
+
+.monthBarsColumn[data-last='true'] .monthBarsFill {
+  background: var(--text);
+}
+
+.monthBarsMonth {
+  font: var(--type-caption);
+  font-size: var(--size-micro);
+  color: var(--text-muted);
+}
+
+.monthBarsColumn[data-last='true'] .monthBarsMonth {
+  color: var(--text);
+  font-weight: var(--weight-heading);
 }

@@ -4,7 +4,8 @@
 import Link from 'next/link';
 import { pointsFraction, type AreaRow, type AuditView } from '@/audit/view';
 import { Icon } from '@/components/ui/Icon';
-import { ResultMeter } from '@/components/ui/Results';
+import { CheckIcon, PillarIcon } from '@/components/ui/Marks';
+import { ResultGauge } from '@/components/ui/Results';
 import { PILLAR_LABELS, RESULT_LABELS } from '@/domain/types';
 import { changedParts } from './Parts';
 import styles from './audit.module.css';
@@ -19,17 +20,27 @@ function CheckRow({ row }: { row: AreaRow }) {
   return (
     <Link href={`?check=${row.key}`} scroll={false} className={styles.row} aria-label={`${row.name}: ${resultWords}${spoken}. Open the detail.`}>
       <span className={styles.rowName}>
-        {row.name}
+        <span className={styles.rowTitle}>
+          <CheckIcon check={row.key} size={16} />
+          {row.name}
+        </span>
         {moved?.previousResult ? <span className={styles.rowSub}>Was {RESULT_LABELS[moved.previousResult]}</span> : null}
       </span>
       <span>
         {summary.kind === 'single' ? (
-          <ResultMeter result={summary.result} size="sm" />
+          <ResultGauge result={summary.result} size="sm" />
         ) : (
           <span className={styles.varies}>{summary.kind === 'varies' ? 'Varies by program' : 'Not in this Audit'}</span>
         )}
       </span>
-      <span className={`${styles.rowMeta} num`}>{points}</span>
+      <span className={styles.pointsCell}>
+        {summary.kind === 'none' ? null : (
+          <span className={styles.pointsBar} aria-hidden="true">
+            <span style={{ width: `${summary.maxPoints ? Math.min(100, (summary.points / summary.maxPoints) * 100) : 0}%` }} />
+          </span>
+        )}
+        <span className={`${styles.rowMeta} num`}>{points}</span>
+      </span>
       <Icon name="chevronRight" size={16} className={styles.chevron} />
     </Link>
   );
@@ -43,7 +54,10 @@ export function ChecksTable({ view }: { view: AuditView }) {
         return (
           <details key={area.pillar} className={styles.group} open>
             <summary className={styles.groupSummary}>
-              <span className={styles.groupTitle}>{PILLAR_LABELS[area.pillar]}</span>
+              <span className={styles.groupTitle}>
+                <PillarIcon pillar={area.pillar} size={18} />
+                {PILLAR_LABELS[area.pillar]}
+              </span>
               <span className={styles.groupMeta}>
                 <span>
                   <span className="num">{area.rows.length}</span> checks

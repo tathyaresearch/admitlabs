@@ -44,8 +44,18 @@ describe('the sample world, without a database', () => {
         ['Silverline College', 'rival', 74],
       ],
     );
-    const before = await sampleRivals('eastgate-university', '2026-07-31');
-    assert.ok(before.every((rival) => rival.audit === null), 'no rival Audits before 1 August');
+    // Rival Audits start once someone tracks the rival: Silverline on 1 April, the others on 15 April.
+    const april = await sampleRivals('eastgate-university', '2026-04-14');
+    assert.deepEqual(
+      april.map((rival) => [rival.name, rival.audit?.record.run_at.slice(0, 10) ?? null]),
+      [
+        ['Highfield University', null],
+        ['Northbank College', null],
+        ['Silverline College', '2026-04-01'],
+      ],
+    );
+    const march = await sampleRivals('eastgate-university', '2026-03-31');
+    assert.ok(march.every((rival) => rival.audit === null), 'no rival Audits before April');
   });
 
   test('moves in a window, newest first, each linking to the page it was found on', () => {

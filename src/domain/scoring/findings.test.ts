@@ -145,4 +145,25 @@ describe('what Drishti found', () => {
     assert.equal(describeFinding('program_page', EXAMPLES.program_page[1] as never, skilling), 'Digital Marketing has its own page, about 240 words.');
     assert.equal(describeFinding('other_socials', EXAMPLES.other_socials[0] as never, college), 'Facebook: last post 3 days ago. LinkedIn: last post 1 day ago.');
   });
+
+  test('AI answers names each assistant asked and what it said', () => {
+    const facts = (named: ReadonlyArray<'chatgpt' | 'gemini' | 'perplexity'>, knownWhenAskedByName = true) => ({
+      question: 'best BBA in Guwahati',
+      assistantsAsked: 3,
+      assistantsNaming: named.length,
+      knownWhenAskedByName,
+      assistants: (['chatgpt', 'gemini', 'perplexity'] as const).map((assistant) => ({ assistant, named: named.includes(assistant) })),
+    });
+    assert.equal(describeFinding('ai_answers', facts(['chatgpt', 'gemini', 'perplexity']), college), 'Named by ChatGPT, Gemini and Perplexity when asked “best BBA in Guwahati”.');
+    assert.equal(describeFinding('ai_answers', facts(['chatgpt', 'perplexity']), college), 'Named by ChatGPT and Perplexity when asked “best BBA in Guwahati”. Not by Gemini.');
+    assert.equal(describeFinding('ai_answers', facts(['gemini']), college), 'Named by Gemini when asked “best BBA in Guwahati”. Not by ChatGPT or Perplexity.');
+    assert.equal(
+      describeFinding('ai_answers', facts([]), college),
+      'Not named by ChatGPT, Gemini or Perplexity when asked “best BBA in Guwahati”. They know you when asked by name.',
+    );
+    assert.equal(
+      describeFinding('ai_answers', facts([], false), college),
+      'Not named by ChatGPT, Gemini or Perplexity when asked “best BBA in Guwahati”, and not known when asked by name.',
+    );
+  });
 });

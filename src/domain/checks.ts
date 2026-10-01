@@ -34,7 +34,7 @@ export const CHECKS: readonly CheckDefinition[] = [
   { key: 'instagram_activity', pillar: 'discovered', level: 'institution', name: 'Instagram', looksAt: 'Instagram posting and reels' },
   { key: 'google_profile', pillar: 'discovered', level: 'institution', name: 'Google profile', looksAt: 'Google profile exists, number of reviews' },
   { key: 'youtube', pillar: 'discovered', level: 'institution', name: 'YouTube', looksAt: 'YouTube activity' },
-  { key: 'ai_answers', pillar: 'discovered', level: 'program', name: 'AI answers', looksAt: 'Named when a student asks AI assistants "best [program] in [city]"' },
+  { key: 'ai_answers', pillar: 'discovered', level: 'program', name: 'AI answers', looksAt: 'Named when a student asks ChatGPT, Gemini and Perplexity "best [program] in [city]"' },
   { key: 'other_socials', pillar: 'discovered', level: 'institution', name: 'Other socials', looksAt: 'Facebook, LinkedIn activity' },
   { key: 'placement_proof', pillar: 'trusted', level: 'program', name: 'Placement proof', looksAt: 'Placement or results proof' },
   { key: 'review_rating', pillar: 'trusted', level: 'institution', name: 'Review rating', looksAt: 'Google review rating and replies' },

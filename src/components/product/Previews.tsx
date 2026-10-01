@@ -8,11 +8,11 @@ import { HomeSummary } from '@/components/home/HomeSummary';
 import { NextSteps, type NextStep } from '@/components/home/NextSteps';
 import { RivalLadder, RivalsCard } from '@/components/home/RivalsCard';
 import { INSTITUTION_NAV } from '@/components/shell/nav';
-import { initialsOf } from '@/components/shell/AppShell';
 import { Icon } from '@/components/ui/Icon';
 import { KpiNumber } from '@/components/ui/Kpi';
 import { PageHead } from '@/components/ui/Layout';
-import { ResultMeter } from '@/components/ui/Results';
+import { CheckIcon, PlatformMark } from '@/components/ui/Marks';
+import { ResultGauge } from '@/components/ui/Results';
 import type { ListItem } from '@/audit/view';
 import { countWords } from '@/demand/text';
 import { RESULTS, type CheckResult } from '@/domain/types';
@@ -36,7 +36,6 @@ function SidebarPicture({ name }: { name: string }) {
   return (
     <div className={styles.windowSidebar}>
       <div className={shell.context}>
-        <span className={`${shell.mark} ${shell['mark-md']}`}>{initialsOf(name)}</span>
         <span className={shell.contextText}>
           <span className={shell.contextTitle}>{name}</span>
           <span className={shell.contextDetail}>Paid plan</span>
@@ -57,7 +56,9 @@ function SidebarPicture({ name }: { name: string }) {
         ))}
       </div>
       <div className={shell.accountSide}>
-        <span className={shell.avatar}>OW</span>
+        <span className={shell.avatar}>
+          <Icon name="user" size={18} />
+        </span>
         <span className={shell.accountText}>
           <span className={shell.accountEmail}>{SAMPLE_EMAIL}</span>
           <span className={shell.accountRole}>Owner</span>
@@ -118,8 +119,11 @@ export function FixesPicture({ showcase }: { showcase: Showcase }) {
         {fixes.map((fix, index) => (
           <li key={fix.key} className={styles.fixRow}>
             <span className={`${styles.fixNumber} num`}>{index + 1}</span>
-            <span className={styles.fixName}>{fix.name}</span>
-            <ResultMeter result={weakest(fix)} size="sm" invertStrong={false} />
+            <span className={styles.fixName}>
+              <CheckIcon check={fix.key} />
+              {fix.name}
+            </span>
+            <ResultGauge result={weakest(fix)} size="sm" />
             <span className={styles.fixGain}>
               <span className="num">+{Math.round(fix.points)}</span> points
             </span>
@@ -150,7 +154,10 @@ export function DemandPicture({ showcase }: { showcase: Showcase }) {
       <p className={styles.pictureHead}>Rising fastest in {highlight.region}</p>
       <KpiNumber icon={<Icon name="arrowUp" size={20} />} value={`${rounded}%`} suffix="up since last month" />
       <p className={styles.pictureTitle}>{highlight.text}</p>
-      <p className={styles.pictureMeta}>{countWords('rising', highlight.count)}</p>
+      <p className={styles.pictureMeta}>
+        <PlatformMark platform="search_trends" name={false} />
+        {countWords('rising', highlight.count)}
+      </p>
       {rising.length ? (
         <ul className={styles.risingList}>
           {rising.map((row) => (

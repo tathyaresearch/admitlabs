@@ -3,11 +3,12 @@
 // card. Downloads are plain links: the server checks who is asking and hands over a short-lived
 // link to the file.
 
+import { Sparkline } from '@/components/charts/Sparkline';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { KpiNumber } from '@/components/ui/Kpi';
 import { Counted, Delta } from '@/components/ui/Results';
-import { formatDate, formatMonth } from '@/domain/format';
+import { formatDate, formatMonth, formatMonthShort } from '@/domain/format';
 import { reportFacts, type ReportRow } from '@/lib/reports/load';
 import audit from '@/components/audit/audit.module.css';
 import styles from './report.module.css';
@@ -50,8 +51,23 @@ function Facts({ report }: { report: ReportRow }) {
   );
 }
 
-/** The latest report: the month and its score, the one download button, then what is inside. */
-export function LatestReport({ report, place, score }: { report: ReportRow; place: string; score: ReportScore | null }) {
+/**
+ * The latest report: the month and its score with the months before it as a small line, the one
+ * download button, then what is inside.
+ */
+export function LatestReport({
+  report,
+  place,
+  score,
+  trend = [],
+}: {
+  report: ReportRow;
+  place: string;
+  score: ReportScore | null;
+  trend?: ReadonlyArray<{ month: string; score: number }>;
+}) {
+  const first = trend[0];
+  const last = trend.at(-1);
   return (
     <section className={styles.latest} aria-labelledby="latest-title">
       <div className={styles.latestTop}>
@@ -72,6 +88,15 @@ export function LatestReport({ report, place, score }: { report: ReportRow; plac
             <p className={styles.label}>Score in this report</p>
             <KpiNumber value={score.score} suffix="/100" numericSuffix spoken=" out of 100" />
             {score.change !== null && score.since ? <Delta change={score.change} since={formatMonth(score.since)} size="sm" /> : null}
+            {first && last && trend.length > 1 ? (
+              <figure className={styles.trend}>
+                <Sparkline values={trend.map((point) => point.score)} label={`Overall score by month, ${formatMonth(first.month)} to ${formatMonth(last.month)}`} width={176} height={48} />
+                <figcaption className={styles.trendMonths} aria-hidden="true">
+                  <span>{formatMonthShort(first.month)}</span>
+                  <span>{formatMonthShort(last.month)}</span>
+                </figcaption>
+              </figure>
+            ) : null}
           </div>
         ) : null}
       </div>

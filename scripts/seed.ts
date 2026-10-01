@@ -11,6 +11,7 @@ import { neededNow, pullDemand, watchList } from '../src/demand/jobs.ts';
 import { pullDayOf } from '../src/demand/schedule.ts';
 import { istDate } from '../src/domain/dates.ts';
 import { formatDate } from '../src/domain/format.ts';
+import { institutionDetailsToRow, programDetailsToRow } from '../src/domain/details.ts';
 import { paidPlanEndsAt } from '../src/domain/tiers.ts';
 import { TIER_LABELS } from '../src/domain/types.ts';
 import type { Database, Json } from '../src/lib/supabase/database.types.ts';
@@ -21,8 +22,10 @@ import {
   ADMIN_EMAIL,
   DEMAND_MONTHS,
   SAMPLE_ADS,
+  SAMPLE_INSTITUTION_DETAILS,
   SAMPLE_INSTITUTIONS,
   SAMPLE_NOTES,
+  SAMPLE_PROGRAM_DETAILS,
   SAMPLE_RIVALS,
   SAMPLE_RUNS,
   SAMPLE_SHARES,
@@ -126,6 +129,24 @@ async function main(): Promise<void> {
         created_at: at(sample.createdAt),
       })),
     ),
+  );
+  // What some institutions added about themselves in Settings ("Added by you"). Never scored.
+  await insert(
+    'institution_details',
+    Object.entries(SAMPLE_INSTITUTION_DETAILS).map(([slug, details]) => ({
+      institution_id: institutionId(slug),
+      ...institutionDetailsToRow(details),
+      updated_by: userId(sampleInstitution(slug).owner),
+    })),
+  );
+  await insert(
+    'program_details',
+    SAMPLE_PROGRAM_DETAILS.map(({ slug, programKey, details }) => ({
+      program_id: programId(slug, programKey),
+      institution_id: institutionId(slug),
+      ...programDetailsToRow(details),
+      updated_by: userId(sampleInstitution(slug).owner),
+    })),
   );
   await insert(
     'memberships',

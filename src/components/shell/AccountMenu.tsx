@@ -7,11 +7,6 @@ import { signOut } from '@/lib/auth/actions';
 import { ThemeMenuItem } from './ThemeToggle';
 import styles from './AppShell.module.css';
 
-function initials(email: string): string {
-  const name = email.split('@')[0] ?? '';
-  return (name.replace(/[^a-z]/gi, '').slice(0, 2) || 'D').toUpperCase();
-}
-
 export function AccountMenu({
   variant,
   email,
@@ -29,7 +24,7 @@ export function AccountMenu({
       {variant === 'side' ? (
         <button type="button" className={styles.accountSide} popoverTarget={id} aria-label={`Account: ${email}`}>
           <span className={styles.avatar} aria-hidden="true">
-            {initials(email)}
+            <Icon name="user" size={18} />
           </span>
           <span className={styles.accountText}>
             <span className={styles.accountEmail}>{email}</span>
@@ -40,7 +35,7 @@ export function AccountMenu({
       ) : (
         <button type="button" className={styles.accountButton} popoverTarget={id} aria-label={`Account: ${email}`}>
           <span className={styles.avatar} aria-hidden="true">
-            {initials(email)}
+            <Icon name="user" size={18} />
           </span>
         </button>
       )}

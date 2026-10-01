@@ -3,22 +3,25 @@ import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { historyByMonth, overviewView } from '@/audit/view';
 import { fixStep } from '@/components/audit/AuditScreen';
+import { AddedTag } from '@/components/details/Added';
 import { HomeSummary } from '@/components/home/HomeSummary';
 import { NextSteps } from '@/components/home/NextSteps';
 import { ActionButton, CopyLink, NoteForm, PaidStartForm } from '@/components/team/InstitutionPanels';
 import { AnchorButton, Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/Feedback';
 import { KpiCard, KpiNote, KpiNumber, KpiWord } from '@/components/ui/Kpi';
-import { PageHead } from '@/components/ui/Layout';
+import { FactList, PageHead } from '@/components/ui/Layout';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { TEAM_RULES } from '@/config/team';
 import { monthKey } from '@/domain/dates';
+import { EMPTY_PROGRAM_DETAILS as EMPTY_PROGRAM, institutionDetailLines, programDetailLines } from '@/domain/details';
 import { formatDate, formatDateTime, hostAndPath } from '@/domain/format';
 import { scoreLabel } from '@/domain/scores';
 import { effectiveTier, type PlanRecord } from '@/domain/tiers';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
+import { loadAddedDetails, type AddedDetails } from '@/lib/details/load';
 import { loadTeamInstitution, type LinkRow, type TeamInstitution } from '@/lib/team/load';
 import { APP_URL } from '@/lib/urls';
 import { TEAM_STATUS_LABELS, type TeamStatus } from '@/team/filters';
@@ -58,6 +61,7 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
   if (!UUID.test(id)) notFound();
   const institution = await loadTeamInstitution(id);
   if (!institution) notFound();
+  const added = institution.claimed ? await loadAddedDetails(institution.id) : null;
 
   const now = new Date();
   const plan: PlanRecord | null = institution.plan
@@ -80,7 +84,10 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
     { id: 'audits', label: 'Audits', count: institution.teamAudits.length + Math.min(institution.history.length, OWN_AUDITS_SHOWN), content: <AuditsTab institution={institution} /> },
     { id: 'programs', label: 'Programs', count: institution.programs.length, content: <ProgramsTab institution={institution} /> },
     ...(institution.claimed
-      ? [{ id: 'people', label: 'People', count: institution.people.length + institution.invites.length, content: <PeopleTab institution={institution} /> }]
+      ? [
+          { id: 'people', label: 'People', count: institution.people.length + institution.invites.length, content: <PeopleTab institution={institution} /> },
+          ...(added ? [{ id: 'about', label: 'About', content: <AboutTab institution={institution} added={added} /> }] : []),
+        ]
       : []),
     {
       id: 'notes',
@@ -233,6 +240,7 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
       {view && !institution.claimed ? (
         <NextSteps
           id="fixes"
+          icon="wrench"
           title="What to fix first"
           description={`The biggest gains first. A shared Audit explains the top ${TEAM_RULES.sharedFixesInFull} and says AdmitLabs can fix the rest.`}
           steps={view.fixes.slice(0, 5).map((item) => fixStep(item, null))}
@@ -358,6 +366,40 @@ function PeopleTab({ institution }: { institution: TeamInstitution }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** What the institution added about itself and its programs in Settings. Never part of the score. */
+function AboutTab({ institution, added }: { institution: TeamInstitution; added: AddedDetails }) {
+  const lines = institutionDetailLines(added.institution, institution.type);
+  const programs = institution.programs
+    .filter((program) => !program.archived)
+    .map((program) => ({ program, lines: programDetailLines(added.programs.get(program.id) ?? { ...EMPTY_PROGRAM }) }))
+    .filter((entry) => entry.lines.length);
+  return (
+    <div className={styles.tabStack}>
+      <div className={styles.aboutNote}>
+        <AddedTag label="Added by them" />
+        <p className={styles.formNote}>From their Settings. Shown to them as added by you. Never part of the score.</p>
+      </div>
+      {lines.length || programs.length ? (
+        <>
+          {lines.length ? (
+            <div className={styles.rows}>
+              <FactList items={lines} />
+            </div>
+          ) : null}
+          {programs.map(({ program, lines: programLines }) => (
+            <div key={program.id} className={styles.rows}>
+              <p className={styles.itemTitle}>{program.name}</p>
+              <FactList items={programLines} />
+            </div>
+          ))}
+        </>
+      ) : (
+        <p className={styles.empty}>Nothing added yet.</p>
+      )}
     </div>
   );
 }

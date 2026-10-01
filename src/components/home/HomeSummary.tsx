@@ -1,15 +1,18 @@
 // Home's summary: the answer to "How are we doing this month?" in one sentence, then the numbers
-// behind it. The overall score (with its trend where the plan includes history) and the three
-// pillars, each in the same number card.
+// behind it. The overall score as a half-circle gauge, with how far the next band is and its trend
+// where the plan includes history, and the three pillars, each in the same number card.
 
 import Link from 'next/link';
 import { auditVerdict } from '@/audit/verdict';
 import type { AuditView } from '@/audit/view';
+import { ScoreGauge } from '@/components/charts/ScoreGauge';
 import { Sparkline } from '@/components/charts/Sparkline';
 import { Icon } from '@/components/ui/Icon';
 import { KpiBar, KpiCard, KpiNote, KpiNumber } from '@/components/ui/Kpi';
+import { PillarIcon } from '@/components/ui/Marks';
 import { Change, Delta, ScoreLabel } from '@/components/ui/Results';
 import { formatDate, formatMonthShort } from '@/domain/format';
+import { nextBandText } from '@/domain/scores';
 import { PILLAR_LABELS, PILLARS } from '@/domain/types';
 import styles from './home.module.css';
 
@@ -70,11 +73,12 @@ export function HomeSummary({
         <KpiCard className={styles.scoreCard} label={scoreLabel} aside={`Checked ${formatDate(checkedAt)}`}>
           <div className={styles.scoreRow}>
             <div className={styles.scoreMain}>
-              <KpiNumber size="hero" value={view.scores.overall} suffix="/100" numericSuffix spoken=" out of 100" />
+              <ScoreGauge score={view.scores.overall} label={scoreLabel} />
               <div className={styles.scoreMeta}>
                 <ScoreLabel label={view.label} />
                 {view.programsChanged || !showChange ? null : <Delta change={view.firstAudit ? null : view.changes.overall} size="sm" />}
               </div>
+              <p className={styles.nextBand}>{nextBandText(view.scores.overall)}</p>
             </div>
             {first && last && points.length > 1 ? (
               <figure className={styles.trend}>
@@ -92,7 +96,16 @@ export function HomeSummary({
           const score = view.scores[pillar];
           const change = quiet ? null : view.changes[pillar];
           return (
-            <KpiCard key={pillar} label={PILLAR_LABELS[pillar]}>
+            <KpiCard
+              key={pillar}
+              className={styles.pillarCard}
+              label={
+                <span className={styles.pillarLabel}>
+                  <PillarIcon pillar={pillar} size={14} />
+                  {PILLAR_LABELS[pillar]}
+                </span>
+              }
+            >
               <KpiNumber value={score} spoken=" out of 100" />
               <div className={styles.pillarFoot}>
                 <KpiBar value={score} />

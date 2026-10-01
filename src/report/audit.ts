@@ -7,7 +7,8 @@ import { auditVerdict } from '../audit/verdict.ts';
 import { ADMITLABS_EMAIL } from '../config/team.ts';
 import { formatDate, hostAndPath } from '../domain/format.ts';
 import { scoreLabel, type ScoreLabel } from '../domain/scores.ts';
-import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS, PILLARS, type CheckResult, type Pillar } from '../domain/types.ts';
+import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS, PILLARS, type CheckKey, type CheckResult, type Pillar } from '../domain/types.ts';
+import { platformFromUrl, type Platform } from '../graphics/platforms.ts';
 import { sharedView, type SharedAudit } from '../team/share.ts';
 import { fixOf, programRows, REPORT_LIMITS, typeset, workingRow, type ReportData, type ReportFix } from './data.ts';
 
@@ -16,10 +17,13 @@ export interface AuditCheckPart {
   result: CheckResult;
   finding: string | null;
   source: string | null;
+  /** Where the source points, for its mark. */
+  platform: Platform | null;
   checkedOn: string;
 }
 
 export interface AuditCheck {
+  key: CheckKey;
   name: string;
   /** "In your top 3 fixes." for those three, otherwise nothing. */
   note: string | null;
@@ -66,7 +70,7 @@ export function buildAuditPdf(shared: SharedAudit, options: { madeAt: Date; free
     cover: { score: shared.audit.scores.overall, label: view.label, verdict: auditVerdict(shared.audit.scores) },
     pillars: PILLARS.map((pillar) => ({ pillar, name: PILLAR_LABELS[pillar], score: shared.audit.scores[pillar], label: scoreLabel(shared.audit.scores[pillar]) })),
     working: working.map(workingRow),
-    topFixes: topFixes.map(fixOf),
+    topFixes: topFixes.map((item) => fixOf(item)),
     moreFixes: moreFixes.map((item) => ({ ...fixOf(item), howToFix: null, difficulty: null })),
     programs: programRows(shared.audit, { institutionType: type, programNames: shared.programNames }),
     morePrograms: Math.max(0, shared.audit.programs.length - REPORT_LIMITS.programs),
@@ -76,6 +80,7 @@ export function buildAuditPdf(shared: SharedAudit, options: { madeAt: Date; free
       checks: area.rows
         .filter((row) => row.parts.length)
         .map((row) => ({
+          key: row.key,
           name: row.name,
           note: topKeys.has(row.key) ? TOP_FIX_NOTE : null,
           parts: row.parts.map((part) => ({
@@ -83,6 +88,7 @@ export function buildAuditPdf(shared: SharedAudit, options: { madeAt: Date; free
             result: part.result,
             finding: part.detail?.finding ?? null,
             source: part.detail?.sourceUrl ? hostAndPath(part.detail.sourceUrl) : null,
+            platform: part.detail?.sourceUrl ? platformFromUrl(part.detail.sourceUrl) : null,
             checkedOn: formatDate(part.checkedAt),
           })),
         })),

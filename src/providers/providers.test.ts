@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { SCORING_V1 } from '../config/scoring.v1.ts';
 import { istDate } from '../domain/dates.ts';
-import { CHECK_KEYS, RESULTS } from '../domain/types.ts';
+import { AI_ASSISTANTS, CHECK_KEYS, RESULTS } from '../domain/types.ts';
 import { sampleInstitution, toInstitutionRef, toProgramRefs } from '../sample/index.ts';
 import { collect } from './collect.ts';
-import { googleSearchFacts, pageSpeedFacts, reviewCountOverTime } from './mock/facts.ts';
+import { aiAnswersFacts, googleSearchFacts, pageSpeedFacts, reviewCountOverTime } from './mock/facts.ts';
 import { rngFor } from './mock/random.ts';
 import { getAnalysisProvider, getProvider } from './registry.ts';
 import { ProviderNotConnectedError, type AnySignal, type InstitutionRef } from './types.ts';
@@ -152,6 +152,22 @@ describe('facts land inside the band of the intended result', () => {
   });
 });
 
+describe('AI answers', () => {
+  test('names each assistant asked, as many as the count the score uses', () => {
+    assert.equal(AI_ASSISTANTS.length, SCORING_V1.thresholds.ai_answers.assistantsAsked);
+    for (const result of RESULTS) {
+      for (let seed = 0; seed < 20; seed += 1) {
+        const facts = aiAnswersFacts(result, rngFor('ai', seed), 'best BBA in Guwahati');
+        assert.deepEqual(
+          facts.assistants?.map((entry) => entry.assistant),
+          [...AI_ASSISTANTS],
+        );
+        assert.equal(facts.assistants?.filter((entry) => entry.named).length, facts.assistantsNaming, result);
+      }
+    }
+  });
+});
+
 describe('mock demand', () => {
   test('a shared pull has every kind of grouped item', async () => {
     const signals = await collect({ kind: 'region', scope: 'city', region: 'Guwahati', programKey: 'bba' }, asOf);
@@ -197,5 +213,18 @@ describe('mock demand', () => {
       assert.ok(question, idea.text);
       assert.equal(idea.sourceUrl, question.sourceUrl);
     }
+  });
+});
+
+describe('Demand history', () => {
+  test('a rising trend builds up month by month into September; August is unchanged', async () => {
+    const target = { kind: 'region', scope: 'city', region: 'Guwahati', programKey: 'bba' } as const;
+    const counts: number[] = [];
+    for (const month of ['2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09']) {
+      const signals = await collect(target, istDate(`${month}-28`, 9));
+      const rising = signals.flatMap((signal) => (signal.key === 'demand_item' && signal.value.kind === 'rising' ? [signal.value] : []));
+      counts.push(rising[0]?.count ?? 0);
+    }
+    for (let index = 1; index < counts.length; index += 1) assert.ok((counts[index] as number) > (counts[index - 1] as number), `month ${index} grows: ${counts.join(', ')}`);
   });
 });

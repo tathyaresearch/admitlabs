@@ -7,65 +7,41 @@
   white-space: nowrap;
 }
 
-/* Strong sits in an inverted block. Swapping the current colours keeps it right inside inverted blocks too. */
-.invertedResult {
-  padding: 0.34em 0.55em;
-  border-radius: var(--radius-xs);
-  background: var(--text);
-  color: var(--surface);
+/* The small half-circle gauge: three segments in the text colour on a grey track. */
+.gauge {
+  flex: none;
+  width: var(--gauge-width);
+  height: auto;
+  overflow: visible;
 }
 
-.meter {
-  display: inline-flex;
-  gap: var(--meter-gap);
+.segment-on {
+  stroke: currentColor;
 }
 
-.segment {
-  display: block;
-  width: var(--meter-width);
-  height: var(--meter-height);
-  border-radius: 1px;
-  border: 1px solid currentColor;
+.segment-off {
+  stroke: var(--line-medium);
 }
 
-.segment[data-state='on'] {
-  background: currentColor;
-}
-
-.segment[data-state='off'] {
-  background: transparent;
-  opacity: 0.55;
-}
-
-/* Missing: an empty outline with a dashed border. */
-.segment[data-state='missing'] {
-  background: transparent;
-  border-style: dashed;
+/* Missing: an empty, dashed arc. */
+.segment-missing {
+  stroke: var(--text-muted);
+  stroke-dasharray: 3 2;
 }
 
 .sm {
-  --meter-width: 0.5rem;
-  --meter-height: 0.3125rem;
-  --meter-gap: 2px;
+  --gauge-width: 1.5rem;
   font-size: var(--size-caption);
 }
 
 .md {
-  --meter-width: 0.6875rem;
-  --meter-height: 0.375rem;
-  --meter-gap: 3px;
+  --gauge-width: 1.75rem;
   font-size: var(--size-small);
 }
 
 .lg {
-  --meter-width: 1rem;
-  --meter-height: 0.5625rem;
-  --meter-gap: 4px;
+  --gauge-width: 2.125rem;
   font-size: var(--size-body);
-}
-
-.lg .segment {
-  border-width: 1.5px;
 }
 
 .scoreLabel {

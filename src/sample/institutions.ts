@@ -260,6 +260,11 @@ const monthly = (days: readonly string[]): SampleRun[] => days.map((day) => ({ d
 /** Drishti's own monthly rival Audit, on the 1st, for an institution others track. */
 const rivalRuns = (days: readonly string[]): SampleRun[] => days.map((day) => ({ day, kind: 'rival', trigger: 'scheduled' }));
 
+/** Rival Audits from April 2026: tracked since March, so on the 1st of every month. */
+const RIVAL_SINCE_MARCH = ['2026-04-01', '2026-05-01', '2026-06-01', '2026-07-01', '2026-08-01', '2026-09-01'];
+/** Rival Audits for a record first tracked on 15 April (by Eastgate): that day, then on the 1st. */
+const RIVAL_SINCE_15_APRIL = ['2026-04-15', '2026-05-01', '2026-06-01', '2026-07-01', '2026-08-01', '2026-09-01'];
+
 const byDay = (runs: readonly SampleRun[]): SampleRun[] => [...runs].sort((a, b) => a.day.localeCompare(b.day));
 
 /** Every Audit run in the sample, in date order per institution. Rival scores come from rival runs only. */
@@ -267,7 +272,7 @@ export const SAMPLE_RUNS: Readonly<Record<string, readonly SampleRun[]>> = {
   // Paid from 15 Apr: monthly on the 15th. The extra refresh is left unused, so it can be tried.
   'eastgate-university': byDay([
     ...monthly(['2026-04-15', '2026-05-15', '2026-06-15', '2026-07-15', '2026-08-15', '2026-09-15']),
-    ...rivalRuns(['2026-08-01', '2026-09-01']),
+    ...rivalRuns(RIVAL_SINCE_MARCH),
   ]),
   // Client from 2 Mar: monthly on the 2nd (history kept from April).
   'brightpath-skills': byDay([
@@ -278,12 +283,12 @@ export const SAMPLE_RUNS: Readonly<Record<string, readonly SampleRun[]>> = {
   'northbank-college': byDay([
     { day: '2026-06-10', kind: 'own', trigger: 'signup' },
     { day: '2026-09-10', kind: 'own', trigger: 'scheduled' },
-    ...rivalRuns(['2026-08-01', '2026-09-01']),
+    ...rivalRuns(RIVAL_SINCE_15_APRIL),
   ]),
   // Free from 22 Jul (next free Audit 22 Oct). Tracked by three institutions, without knowing.
-  'silverline-college': byDay([{ day: '2026-07-22', kind: 'own', trigger: 'signup' }, ...rivalRuns(['2026-08-01', '2026-09-01'])]),
-  'highfield-university': rivalRuns(['2026-08-01', '2026-09-01']),
-  'loomcraft-skills': rivalRuns(['2026-08-01', '2026-09-01']),
+  'silverline-college': byDay([{ day: '2026-07-22', kind: 'own', trigger: 'signup' }, ...rivalRuns(RIVAL_SINCE_MARCH)]),
+  'highfield-university': rivalRuns(RIVAL_SINCE_15_APRIL),
+  'loomcraft-skills': rivalRuns(RIVAL_SINCE_MARCH),
   'riverbend-college': [{ day: '2026-09-18', kind: 'team', trigger: 'manual' }],
   'cedar-skill-institute': [{ day: '2026-09-18', kind: 'team', trigger: 'manual' }],
 };

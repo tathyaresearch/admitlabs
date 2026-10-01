@@ -35,7 +35,7 @@ function heaviest(data: ReportData): ReportData {
       finding: long('Admission information for B.Sc Data Analytics is general, with no clear steps.', 2),
       howToFix: long('Turn general admission information into numbered steps, with the documents needed and the dates.', 2),
     })),
-    moreFixes: Array.from({ length: 12 }, (_, index) => ({ rank: index + 6, name: 'Students in content', programs: '5 programs', gain: 'Up to 2 points', difficulty: 'Medium' })),
+    moreFixes: Array.from({ length: 12 }, (_, index) => ({ rank: index + 6, key: 'students_in_content', name: 'Students in content', programs: '5 programs', gain: 'Up to 2 points', points: 2, difficulty: 'Medium' })),
     programs: Array.from({ length: REPORT_LIMITS.programs }, (_, index) => ({ ...program, name: `Hotel Management and Catering Technology with Culinary Arts ${index + 1}` })),
     morePrograms: 10,
     rivals: {

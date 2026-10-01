@@ -180,6 +180,9 @@ describe('sample profiles', () => {
 
   test('own runs follow the plan schedule; rival and team runs only where they belong', () => {
     const tracked = new Set(SAMPLE_RIVALS.map(([, rival]) => rival));
+    // The first day anyone tracked each rival: no rival Audit before it.
+    const since = new Map<string, string>();
+    for (const [, rival, , addedOn] of SAMPLE_RIVALS) if (!since.has(rival) || addedOn < (since.get(rival) as string)) since.set(rival, addedOn);
     for (const institution of SAMPLE_INSTITUTIONS) {
       const runs = SAMPLE_RUNS[institution.slug] ?? [];
       assert.deepEqual(
@@ -197,6 +200,7 @@ describe('sample profiles', () => {
           if (run.trigger === 'signup') assert.equal(run.day, institution.claimedAt, `${institution.slug} signup Audit on the signup day`);
         }
         if (run.kind === 'rival') assert.ok(tracked.has(institution.slug), `${institution.slug} rival runs need someone tracking it`);
+        if (run.kind === 'rival') assert.ok(run.day >= (since.get(institution.slug) as string), `${institution.slug} rival run on ${run.day} comes after tracking began`);
         if (run.kind === 'team') assert.ok(institution.isProspect, `${institution.slug} team runs are for prospects`);
       }
     }

@@ -7,8 +7,9 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { SourceLine } from '@/components/ui/Data';
 import { Icon } from '@/components/ui/Icon';
+import { CheckIcon } from '@/components/ui/Marks';
 import { SidePanel } from '@/components/ui/Overlay';
-import { ResultMeter } from '@/components/ui/Results';
+import { ResultGauge } from '@/components/ui/Results';
 import { checkLooksAt, checkName } from '@/domain/checks';
 import { PILLAR_LABELS, type InstitutionType } from '@/domain/types';
 import type { CheckComparison } from '@/rivals/compare';
@@ -34,7 +35,16 @@ export function RivalCheckPanel({ comparisons, rivalName, institutionType }: { c
     <SidePanel
       open={item !== null}
       onClose={close}
-      title={item ? checkName(item.key, institutionType) : ''}
+      title={
+        item ? (
+          <span className={audit.panelTitle}>
+            <CheckIcon check={item.key} size={20} />
+            {checkName(item.key, institutionType)}
+          </span>
+        ) : (
+          ''
+        )
+      }
       description={item ? `${PILLAR_LABELS[item.pillar]}. ${checkLooksAt(item.key, institutionType)}. ${LEAD_WORDS[item.lead]}.` : undefined}
     >
       {item ? (
@@ -47,7 +57,7 @@ export function RivalCheckPanel({ comparisons, rivalName, institutionType }: { c
               <div key={part.checkId} className={audit.panelPart}>
                 <div className={audit.panelPartHead}>
                   {part.programName ? <p className={audit.panelProgram}>{part.programName}</p> : null}
-                  <ResultMeter result={part.result} size="lg" />
+                  <ResultGauge result={part.result} size="lg" />
                 </div>
                 {part.finding ? (
                   <div className={audit.panelBlock}>
@@ -70,7 +80,7 @@ export function RivalCheckPanel({ comparisons, rivalName, institutionType }: { c
                   {item.yourParts.map((part) => (
                     <span key={part.checkId} className={audit.partResult}>
                       {part.programName ? <span className={audit.partName}>{part.programName}</span> : null}
-                      <ResultMeter result={part.result} size="sm" />
+                      <ResultGauge result={part.result} size="sm" />
                     </span>
                   ))}
                 </div>

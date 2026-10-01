@@ -338,7 +338,7 @@ export const DEMAND_REGIONS: ReadonlyArray<{ scope: DemandScope; region: string 
 ];
 
 /** August lets September's rising, falling and spikes compare with something. */
-export const DEMAND_MONTHS = ['2026-08', '2026-09'] as const;
+export const DEMAND_MONTHS = ['2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09'] as const;
 
 /** How much bigger each scope's counts are than Guwahati's. */
 export const DEMAND_SCOPE_FACTOR: Readonly<Record<DemandScope, number>> = { city: 1, state: 3.4, india: 42 };

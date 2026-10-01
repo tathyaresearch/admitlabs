@@ -15,9 +15,11 @@ import audit from '@/components/audit/audit.module.css';
 export const metadata = { title: 'Reports' };
 
 const QUESTION = 'Our monthly report.';
+/** Months on the small score line beside the latest report. */
+const TREND_MONTHS = 6;
 
-// Reports answers "Our monthly report.": the latest report with its score and the one download
-// button, then earlier reports.
+// Reports answers "Our monthly report.": the latest report with its score and how it got there,
+// the one download button, then earlier reports.
 export default async function ReportsPage() {
   const viewer = await requireInstitutionViewer();
   const { institution } = viewer.membership;
@@ -76,11 +78,16 @@ export default async function ReportsPage() {
         ) : null}
       </div>
 
-      <LatestReport report={latest} place={institution.city} score={scores.get(latest.month) ?? null} />
+      <LatestReport
+        report={latest}
+        place={institution.city}
+        score={scores.get(latest.month) ?? null}
+        trend={points.filter((point) => point.month <= latest.month).slice(-TREND_MONTHS)}
+      />
 
       {earlier.length ? (
         <section className={audit.section} aria-labelledby="earlier-title">
-          <SectionHead id="earlier-title" title="Earlier reports" help="Each one is a snapshot of its month, as it was then." />
+          <SectionHead id="earlier-title" icon="reports" title="Earlier reports" help="Each one is a snapshot of its month, as it was then." />
           <EarlierReports reports={earlier} scores={scores} />
         </section>
       ) : null}

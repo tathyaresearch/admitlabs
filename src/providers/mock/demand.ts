@@ -62,10 +62,21 @@ function monthsAfterLatest(month: string): number {
   return (year - latestYear) * 12 + (value - latestValue);
 }
 
+/** Before September the change is smaller the further back it is: half in August, a third in July, and so on. */
+function changeBefore(trend: TrendFixture, after: number): number {
+  return Math.round(trend.changePct / (1 - after));
+}
+
 /** This month's change and count growth for a trend. */
 function trendThisMonth(trend: TrendFixture, kind: 'rising' | 'falling', programKey: string, month: string): { changePct: number; growth: number } {
   const after = monthsAfterLatest(month);
-  if (after < 0) return { changePct: Math.round(trend.changePct / 2), growth: 1 };
+  if (after < 0) {
+    // August holds the fixture's base count; each month before it is smaller by that month's change,
+    // so a trend builds up month by month into September.
+    let growth = 1;
+    for (let back = -1; back > after; back -= 1) growth /= 1 + changeBefore(trend, back) / 100;
+    return { changePct: changeBefore(trend, after), growth };
+  }
   if (after === 0) return { changePct: trend.changePct, growth: 1 + trend.changePct / 100 };
   // After a big month, trends cool; now and then one spikes again (40% or more).
   const rng = rngFor('drift', programKey, trend.text, month);

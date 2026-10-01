@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { SectionHead } from '@/components/audit/AuditHeader';
 import { HeadToHead } from '@/components/charts/HeadToHead';
+import { TrendLines } from '@/components/charts/TrendLines';
 import { NextSteps, type NextStep } from '@/components/home/NextSteps';
 import { ActivityTabs } from '@/components/rivals/Activity';
 import { CompareChecks, sideText } from '@/components/rivals/CompareChecks';
@@ -108,17 +109,33 @@ export default async function RivalPage({ params }: { params: Promise<{ rivalId:
           {you ? (
             <div className={styles.pillarCard}>
               <div className={styles.pillarCardHead}>
-                <p className={styles.standLabel}>Pillar by pillar</p>
+                <p className={styles.standLabel}>How you compare</p>
                 <p className={styles.factQuiet}>Google reviews: {reviewTrendText(detail.reviews)}</p>
               </div>
-              <HeadToHead
-                rivalName={rival.name}
-                youName="You"
-                rows={[
-                  { label: 'Overall', you: you.scores.overall, rival: theirs.scores.overall },
-                  { label: PILLAR_LABELS.discovered, you: you.scores.discovered, rival: theirs.scores.discovered },
-                  { label: PILLAR_LABELS.trusted, you: you.scores.trusted, rival: theirs.scores.trusted },
-                  { label: PILLAR_LABELS.chosen, you: you.scores.chosen, rival: theirs.scores.chosen },
+              <Tabs
+                label="How you compare"
+                items={[
+                  {
+                    id: 'pillars',
+                    label: 'Pillar by pillar',
+                    content: (
+                      <HeadToHead
+                        rivalName={rival.name}
+                        youName="You"
+                        rows={[
+                          { label: 'Overall', you: you.scores.overall, rival: theirs.scores.overall },
+                          { label: PILLAR_LABELS.discovered, you: you.scores.discovered, rival: theirs.scores.discovered },
+                          { label: PILLAR_LABELS.trusted, you: you.scores.trusted, rival: theirs.scores.trusted },
+                          { label: PILLAR_LABELS.chosen, you: you.scores.chosen, rival: theirs.scores.chosen },
+                        ]}
+                      />
+                    ),
+                  },
+                  {
+                    id: 'months',
+                    label: 'Month by month',
+                    content: <TrendLines trend={detail.trend} label={`Overall score by month, you and ${rival.name}`} height={220} />,
+                  },
                 ]}
               />
             </div>
@@ -133,6 +150,7 @@ export default async function RivalPage({ params }: { params: Promise<{ rivalId:
       {theirs && you ? (
         <NextSteps
           id="learn"
+          icon="rivals"
           title={`What to learn from ${rival.name}`}
           description={fromThem.length ? 'Learned from them this month. Take the idea, never copy.' : 'Where they lead you, biggest first. Open one to see what was found for each of you.'}
           steps={fromThem.length ? fromThem : leadSteps}

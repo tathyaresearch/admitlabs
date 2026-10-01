@@ -6,6 +6,7 @@ import type { SampleInstitution } from './institutions.ts';
 
 export * from './bulk.ts';
 export * from './demand.ts';
+export * from './details.ts';
 export * from './ids.ts';
 export * from './institutions.ts';
 export * from './profiles.ts';

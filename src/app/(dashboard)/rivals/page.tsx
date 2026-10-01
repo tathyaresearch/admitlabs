@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import { SectionHead } from '@/components/audit/AuditHeader';
+import { PillarDots } from '@/components/charts/PillarDots';
+import { TrendLines } from '@/components/charts/TrendLines';
 import { NextSteps } from '@/components/home/NextSteps';
 import { RivalsCard } from '@/components/home/RivalsCard';
 import { ActivityTabs } from '@/components/rivals/Activity';
@@ -9,19 +11,21 @@ import { StandTable } from '@/components/rivals/StandTable';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
+import { Tabs } from '@/components/ui/Tabs';
 import { RIVAL_RULES } from '@/config/rivals';
 import { formatDate, plural } from '@/domain/format';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { loadRivalsPage } from '@/lib/rivals/load';
 import { freeRivalsVerdict, rivalsVerdict } from '@/rivals/verdict';
 import audit from '@/components/audit/audit.module.css';
+import styles from '@/components/rivals/rivals.module.css';
 
 export const metadata = { title: 'Rivals' };
 
 const QUESTION = "Who's ahead of us?";
 
-// Rivals answers "Who's ahead of us?": the answer and where you stand, what to learn from them,
-// then what they are doing.
+// Rivals answers "Who's ahead of us?": the answer and where you stand, how you compare pillar by
+// pillar and month by month, what to learn from them, then what they are doing.
 export default async function RivalsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
@@ -118,8 +122,28 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
         </Notice>
       )}
 
+      {full.you ? (
+        <section className={audit.section} aria-labelledby="compare-title">
+          <SectionHead
+            id="compare-title"
+            title="How you compare"
+            help={`Each pillar from 0 to 100, and the overall score over the last ${RIVAL_RULES.trendMonths} months. Rival scores come from Drishti's check on the 1st of each month.`}
+          />
+          <div className={styles.pillarCard}>
+            <Tabs
+              label="How you compare"
+              items={[
+                { id: 'pillars', label: 'Pillar by pillar', content: <PillarDots rows={full.spread} /> },
+                { id: 'months', label: 'Month by month', content: <TrendLines trend={full.trend} label="Overall score by month, you and your rivals" /> },
+              ]}
+            />
+          </div>
+        </section>
+      ) : null}
+
       <NextSteps
         id="learn"
+        icon="rivals"
         title="What to learn from your rivals"
         description="Learned from your rivals this month. Take the idea, never copy."
         steps={lessonSteps(full.actions, names, institution.type)}

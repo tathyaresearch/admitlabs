@@ -549,6 +549,81 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_details: {
+        Row: {
+          admissions_email: string | null
+          admissions_phone: string | null
+          aicte_approved: boolean | null
+          campus_address: string | null
+          difference: string | null
+          founded_year: number | null
+          hostel: string | null
+          institution_id: string
+          naac_grade: string | null
+          nirf_rank: number | null
+          nirf_year: number | null
+          other_approvals: string | null
+          scholarships: string | null
+          skilling_recognition: string[] | null
+          ugc_recognised: boolean | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          admissions_email?: string | null
+          admissions_phone?: string | null
+          aicte_approved?: boolean | null
+          campus_address?: string | null
+          difference?: string | null
+          founded_year?: number | null
+          hostel?: string | null
+          institution_id: string
+          naac_grade?: string | null
+          nirf_rank?: number | null
+          nirf_year?: number | null
+          other_approvals?: string | null
+          scholarships?: string | null
+          skilling_recognition?: string[] | null
+          ugc_recognised?: boolean | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          admissions_email?: string | null
+          admissions_phone?: string | null
+          aicte_approved?: boolean | null
+          campus_address?: string | null
+          difference?: string | null
+          founded_year?: number | null
+          hostel?: string | null
+          institution_id?: string
+          naac_grade?: string | null
+          nirf_rank?: number | null
+          nirf_year?: number | null
+          other_approvals?: string | null
+          scholarships?: string | null
+          skilling_recognition?: string[] | null
+          ugc_recognised?: boolean | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_details_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_details_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_status: {
         Row: {
           claimed: boolean
@@ -852,6 +927,94 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "team_institutions"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      program_details: {
+        Row: {
+          applications_close: string | null
+          applications_open: string | null
+          average_package: number | null
+          duration_unit: string | null
+          duration_value: number | null
+          eligibility: string | null
+          fees_amount: number | null
+          fees_period: string | null
+          highest_package: number | null
+          institution_id: string
+          page_url: string | null
+          placed_percent: number | null
+          placement_year: number | null
+          program_id: string
+          seats: number | null
+          specialisations: string[] | null
+          top_recruiters: string[] | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          applications_close?: string | null
+          applications_open?: string | null
+          average_package?: number | null
+          duration_unit?: string | null
+          duration_value?: number | null
+          eligibility?: string | null
+          fees_amount?: number | null
+          fees_period?: string | null
+          highest_package?: number | null
+          institution_id: string
+          page_url?: string | null
+          placed_percent?: number | null
+          placement_year?: number | null
+          program_id: string
+          seats?: number | null
+          specialisations?: string[] | null
+          top_recruiters?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          applications_close?: string | null
+          applications_open?: string | null
+          average_package?: number | null
+          duration_unit?: string | null
+          duration_value?: number | null
+          eligibility?: string | null
+          fees_amount?: number | null
+          fees_period?: string | null
+          highest_package?: number | null
+          institution_id?: string
+          page_url?: string | null
+          placed_percent?: number | null
+          placement_year?: number | null
+          program_id?: string
+          seats?: number | null
+          specialisations?: string[] | null
+          top_recruiters?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_details_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_details_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_details_program_id_institution_id_fkey"
+            columns: ["program_id", "institution_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id", "institution_id"]
           },
         ]
       }

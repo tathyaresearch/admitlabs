@@ -94,3 +94,92 @@
   display: grid;
   gap: var(--space-4);
 }
+
+/* "Added by you": the tag beside its one line of explanation. */
+.tabNoteRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+/* A form's groups of fields, each with a quiet title. */
+.group {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.group + .group {
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line-raised);
+}
+
+.groupTitle {
+  padding: 0;
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+}
+
+.choiceList {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* A number and its unit side by side. */
+.inline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 9rem;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+/* Details for each program: one folded card per program. */
+.programDetailsHead {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+.programDetailsTitle {
+  font: var(--type-section);
+  letter-spacing: var(--tracking-section);
+}
+
+.programDetails {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.programDetail {
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+.programSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.5rem;
+  padding: var(--space-3) var(--card-padding-sm);
+  cursor: pointer;
+}
+
+.programName {
+  display: grid;
+  gap: 2px;
+  font: var(--type-strong);
+}
+
+.programMeta {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.programBody {
+  padding: 0 var(--card-padding-sm) var(--card-padding-sm);
+}

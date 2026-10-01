@@ -75,9 +75,10 @@ npm run audit -- --institution riverbend-college --kind team
 Each institution tracks 3 to 5 rivals (spec section 8). Owners pick them at `/rivals/choose`: suggestions (same type, shared programs, same city first, then same state; never a team prospect), their current rivals, or one they add by hand (name, type, city, website, Instagram, and which of their own programs the rival also offers). A rival added by hand becomes an unclaimed institution record; if its website is already on record, that record is used as it is.
 
 - **Plan rules, enforced by the database** (`save_rivals`): Free picks once and keeps them. Paid changes once each calendar month, India time. Client changes any time. The first setup never counts as a change, and saving the same list again is not a change.
-- **Free** sees ahead or behind for each rival, in words, with no scores (`rival_standings`), and one "Paid shows the full comparison" card with counts. **Paid and Client** see their rank and one table of overall and pillar scores with the change, what to learn from their rivals, and moves, best content and ads in tabs. Each rival's own page shows both scores, what to learn from that rival, and the checks side by side: where they lead, where you lead, and all 17.
+- **Free** sees ahead or behind for each rival, in words, with no scores (`rival_standings`), and one "Paid shows the full comparison" card with counts. **Paid and Client** see their rank and one table of overall and pillar scores with the change; how they compare, pillar by pillar (each pillar from 0 to 100 with every rival on it) and month by month (the overall score of each over the last 6 months); what to learn from their rivals; and moves, best content and ads in tabs. Each rival's own page shows both scores, the two side by side pillar by pillar and month by month, what to learn from that rival, and the checks side by side: where they lead, where you lead, and all 17.
 - **Rival scores** come only from Drishti's own monthly rival Audit, never from a rival's own account, even when the rival is on Drishti too.
 - **Rivals never know**: nothing tells an institution who tracks it, and it never sees rival Audits of itself. The database tests check this.
+- The sample has rival Audits from April to September 2026, from the day each record was first tracked.
 
 Rival work runs on a schedule, with mock providers, through one script:
 
@@ -96,11 +97,12 @@ npm run rivals -- --actions --institution eastgate-university
 
 What students search, ask and worry about (spec section 9), grouped: a topic, a count and a source, never a person. Demand is pulled once per region (city, state, All India) and program, and shared by every institution that needs it.
 
-- **Paid and Client** see their city, state or All India (the switch at the top), for all their programs or one: the fastest rising course or career, what students worry about most, the season clock, 5 content ideas built on real questions, the top questions, the worries (the usual five plus anything new), what is rising and falling, and what students say about them and the rivals they track (from each one's state).
+- **Paid and Client** see their city, state or All India (the switch at the top), for all their programs or one: the fastest rising course or career with its searches month by month, what students worry about most, the season clock, 5 content ideas built on real questions, the top questions, the worries (the usual five plus anything new), what is rising and falling (one list, each change a bar from the middle), and what students say about them and the rivals they track (from each one's state, with a bar of praise against criticism).
 - **Free** sees one rising trend, for its Free program in its city (`demand_highlight`), and one "Paid shows everything students are asking" card with counts (`demand_teaser`). Home shows the same highlight on every plan.
 - **Plan rules, enforced by the database:** Paid and Client read only their own regions and programs. Mentions come only through `demand_mentions`, only about the institution and its tracked rivals.
 - Hindi and Assamese items show in English with a language tag; the original wording stays in the data.
 - Programs added under Other have no shared key, so Demand does not cover them yet.
+- The sample has Demand pulls from April to September 2026.
 
 Pulls run monthly on the 28th, with mock providers, through one script:
 
@@ -120,7 +122,8 @@ One PDF a month (spec section 12), readable in 5 minutes: 7 pages, never more th
 - **Who gets one:** Paid and Client, made on the 1st for the month just ended, from what was known at the end of that month. Making a month again replaces it. After a Paid plan ends, past reports stay downloadable; no new ones are made.
 - **Where it lives:** a private storage bucket (`reports`). `/reports` lists them; a download asks for a link that works for one minute, as the signed-in person, so the database checks membership every time. Free sees one "Paid gets a monthly report" card, with a link to the sample report.
 - **3 things to do this month:** the biggest Audit fix, the top Rivals lesson on another check, and the top content idea from Demand (`src/report/things.ts`). The same list shows on Home for Paid and Client.
-- **The page cap:** every list has a limit and every long sentence a line limit. A report that would still pass 8 pages is made again in its compact form (3 fixes in detail instead of 5).
+- **The page cap:** every list has a limit and every long sentence a line limit. A report that would still pass 8 pages is made again in its compact form (3 fixes in detail instead of 5, and no pillar chart on the rivals page).
+- **Charts and icons, as on the dashboard:** the overall score on its gauge, each result on the small gauge, check and pillar icons, a bar for what each fix could add, each pillar against every rival, bars for how fast trends rise and how often questions are asked, and each source's platform mark.
 - A new report adds "Your September report is ready." to Notifications.
 
 ```
@@ -132,6 +135,20 @@ npm run report -- --institution eastgate-university --month 2026-08 --preview --
 
 - `--due` makes every report due that day. `--institution` makes (or makes again) one month's report; `--out` also saves a copy, and `--preview` only renders it (nothing stored or recorded).
 - The sample data includes the August 2026 report for Eastgate University (Paid) and Brightpath Skills Academy (Client), made on 1 September.
+
+## Details added by you
+
+Settings has an About tab, and each program has its details under Programs. Every plan has them. All optional and short: approvals and recognition, campus and contact, and what makes the institution different; and for each program its duration, fees, seats, eligibility, specialisations, placements, application dates and page.
+
+- **The owner edits them.** Members and the AdmitLabs team read them; rivals never see them (row level security on `institution_details` and `program_details`, with database tests).
+- **Labelled "Added by you"** wherever they show: beside the check they relate to on the Audit, in the advice on how to fix it, and in the monthly report.
+- **Never part of the score.** The scoring engine, the Audit and the providers never read them, and a test checks that no file there mentions them.
+
+## Icons and logos
+
+- **Line icons** are drawn for Drishti on a 24px grid (`src/graphics/icons.ts`): one for each of the 17 checks, the 3 pillars and the main sections. The PDFs draw the same paths.
+- **Logos:** only Instagram, X and YouTube show their real one-colour logo, from Simple Icons 16.33.0 (CC0), unchanged, in the colours each brand allows. The files, their source and licence are in `src/graphics/brands` (see `SOURCES.md`). Every other platform shows a neutral line icon and its name. No brand's terms have been accepted.
+- **Gauges:** the small gauge for each result and the large gauge for the overall score share their geometry (`src/graphics/gauge.ts`) between the screens and the PDFs.
 
 ## Team tools
 
@@ -204,11 +221,12 @@ src/rivals/      comparisons, verdicts, change rules, what to learn from rivals,
 src/demand/      regions, the pull schedule, ranking and spikes, the season clock, the page view, and the pulls
 src/report/      the monthly report (its schedule, the 3 things to do, the snapshot, the PDF, the job) and the shared Audit PDF
 src/team/        team tools: the bulk list reader, list filters, plan rules and the shared Audit
+src/graphics/    the gauges, line icons, brand logos (with their sources) and platform marks, shared by the screens and the PDFs
 src/product/     the product page: its words (numbers from config) and its preview data
 src/sample/      the fictional sample world, and that world worked out in memory (world.ts, report.ts)
 ```
 
-`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/report`, `src/team`, `src/product` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, for shared Audit PDFs and for the sample report (`serverExternalPackages` in `next.config.ts`). Never in the browser.
+`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/report`, `src/team`, `src/graphics`, `src/product` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, for shared Audit PDFs and for the sample report (`serverExternalPackages` in `next.config.ts`). Never in the browser.
 
 ## How scores work
 

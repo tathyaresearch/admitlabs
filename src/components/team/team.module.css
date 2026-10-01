@@ -798,3 +798,11 @@ a.count:hover {
   gap: var(--space-2);
   justify-content: flex-end;
 }
+
+/* The institution's own details: the label beside its one line. */
+.aboutNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}

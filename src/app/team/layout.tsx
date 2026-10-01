@@ -12,7 +12,7 @@ export default async function TeamLayout({ children }: { children: ReactNode }) 
       homeHref="/team"
       email={viewer.email}
       roleLabel={`AdmitLabs ${TEAM_ROLE_LABELS[viewer.teamRole].toLowerCase()}`}
-      context={{ title: 'AdmitLabs team', detail: `Signed in as ${TEAM_ROLE_LABELS[viewer.teamRole]}`, mark: { kind: 'brand' } }}
+      context={{ title: 'AdmitLabs team', detail: `Signed in as ${TEAM_ROLE_LABELS[viewer.teamRole]}`, brandMark: true }}
       showNotifications={false}
     >
       {children}

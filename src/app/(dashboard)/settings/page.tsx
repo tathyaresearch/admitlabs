@@ -1,12 +1,16 @@
+import { AddedTag } from '@/components/details/Added';
 import { Button } from '@/components/ui/Button';
 import { Card, FactList, PageHead } from '@/components/ui/Layout';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
+import { institutionDetailLines, isEmptyProgram, programDetailLines, EMPTY_PROGRAM_DETAILS } from '@/domain/details';
 import { formatDate } from '@/domain/format';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { loadAuditPage, nextAuditText } from '@/lib/audit/load';
+import { loadAddedDetails } from '@/lib/details/load';
 import { createClient } from '@/lib/supabase/server';
 import { removeMemberAction, revokeInviteAction } from './actions';
+import { InstitutionDetailsForm, ProgramDetailsForm } from './DetailsForms';
 import { DetailsForm, FreeProgramForm, InviteForm, ProgramsForm } from './SettingsForms';
 import styles from './settings.module.css';
 
@@ -19,11 +23,12 @@ export default async function SettingsPage() {
   const owner = role === 'owner';
   const supabase = await createClient();
 
-  const [details, audit, peopleRows, invites] = await Promise.all([
+  const [details, audit, peopleRows, invites, added] = await Promise.all([
     supabase.from('institutions').select('name, type, city, state, website, instagram, youtube, other_links').eq('id', institution.id).single(),
     loadAuditPage(viewer),
     supabase.rpc('institution_people', { p_institution: institution.id }),
     supabase.from('invites').select('id, email, created_at').eq('institution_id', institution.id).is('accepted_at', null).order('created_at'),
+    loadAddedDetails(institution.id),
   ]);
   const row = details.data;
   const links = (row?.other_links ?? {}) as { facebook?: string; linkedin?: string };
@@ -73,6 +78,27 @@ export default async function SettingsPage() {
       ),
     },
     {
+      id: 'about',
+      label: 'About',
+      content: (
+        <div className={styles.tab}>
+          <div className={styles.tabNoteRow}>
+            <AddedTag />
+            <p className={styles.tabNote}>Drishti shows this next to what it finds, and uses it in how to fix and your report. It never changes your score.</p>
+          </div>
+          <Card padding="md">
+            {owner ? (
+              <InstitutionDetailsForm initial={added.institution} institutionType={institution.type} />
+            ) : institutionDetailLines(added.institution, institution.type).length ? (
+              <FactList items={institutionDetailLines(added.institution, institution.type)} />
+            ) : (
+              <p className={styles.plainText}>Nothing added yet. The owner adds these.</p>
+            )}
+          </Card>
+        </div>
+      ),
+    },
+    {
       id: 'programs',
       label: 'Programs',
       count: programs.length,
@@ -90,6 +116,38 @@ export default async function SettingsPage() {
               </ul>
             )}
           </Card>
+          <div className={styles.programDetailsHead}>
+            <h2 className={styles.programDetailsTitle}>Details for each program</h2>
+            <div className={styles.tabNoteRow}>
+              <AddedTag />
+              <p className={styles.tabNote}>Fees, seats, placements and dates. Shown as added by you. Never part of your score.</p>
+            </div>
+          </div>
+          <div className={styles.programDetails}>
+            {programs.map((program) => {
+              const programAdded = added.programs.get(program.id) ?? EMPTY_PROGRAM_DETAILS;
+              const lines = programDetailLines(programAdded);
+              return (
+                <details key={program.id} className={styles.programDetail}>
+                  <summary className={styles.programSummary}>
+                    <span className={styles.programName}>
+                      {program.name}
+                      <span className={styles.programMeta}>{isEmptyProgram(programAdded) ? 'Nothing added yet' : lines.map((line) => line.label).join(', ')}</span>
+                    </span>
+                  </summary>
+                  <div className={styles.programBody}>
+                    {owner ? (
+                      <ProgramDetailsForm programId={program.id} programName={program.name} initial={programAdded} />
+                    ) : lines.length ? (
+                      <FactList items={lines} />
+                    ) : (
+                      <p className={styles.plainText}>Nothing added yet. The owner adds these.</p>
+                    )}
+                  </div>
+                </details>
+              );
+            })}
+          </div>
         </div>
       ),
     },

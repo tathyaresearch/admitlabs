@@ -73,6 +73,7 @@ export function RivalsCard({
     <section className={`${styles.card} ${styles.rivalsCard}`} aria-labelledby="home-rivals-title">
       <div className={styles.cardHead}>
         <h2 id="home-rivals-title" className={styles.cardTitle}>
+          <Icon name="rivals" size={20} className={styles.blockIcon} />
           Your rivals
         </h2>
         {rivalsHref && hasRivals ? (

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
 import { TIERS } from '../domain/types.ts';
-import { accessRank, canSee, ENTITLEMENT_KEYS, ENTITLEMENTS, entitlement, isPlaceholder, limitFor, paidUnlocks } from './entitlements.ts';
+import { accessRank, canSee, ENTITLEMENT_KEYS, ENTITLEMENTS, entitlement, isPlaceholder, limitFor, paidUnlocks, PLAN_PAGE_GROUPS } from './entitlements.ts';
 
 describe('entitlements (spec section 10)', () => {
   test('one row per key, each with all three tiers', () => {
@@ -83,5 +83,17 @@ describe('entitlements (spec section 10)', () => {
       assert.equal(hasDashes(row.label), false, row.label);
       for (const tier of TIERS) assert.equal(hasDashes(row.cells[tier].text), false, `${row.key} ${tier}`);
     }
+  });
+});
+
+describe('the Plan page comparison', () => {
+  test('every row appears once, under Audit, Rivals, Demand, Reports and the AdmitLabs service', () => {
+    assert.deepEqual(
+      PLAN_PAGE_GROUPS.map((group) => group.title),
+      ['Audit', 'Rivals', 'Demand', 'Reports', 'AdmitLabs service'],
+    );
+    const keys = PLAN_PAGE_GROUPS.flatMap((group) => group.keys);
+    assert.equal(keys.length, ENTITLEMENT_KEYS.length);
+    assert.deepEqual([...keys].sort(), [...ENTITLEMENT_KEYS].sort());
   });
 });

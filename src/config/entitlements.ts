@@ -159,3 +159,16 @@ export function accessRank(access: Access): number {
 export function paidUnlocks(): EntitlementRow[] {
   return ENTITLEMENTS.filter((row) => accessRank(row.cells.paid.access) > accessRank(row.cells.free.access));
 }
+
+/**
+ * The Plan page's comparison, grouped as a reader looks for it: Audit, Rivals, Demand, Reports
+ * (the monthly report and alerts), then the AdmitLabs service. Every row appears once (a test
+ * checks it). The product page keeps the groups above.
+ */
+export const PLAN_PAGE_GROUPS: ReadonlyArray<{ title: string; keys: readonly EntitlementKey[] }> = [
+  { title: 'Audit', keys: ['audit_scores', 'audit_area_by_area', 'audit_whats_working', 'audit_what_to_fix', 'audit_programs', 'audit_score_history'] },
+  { title: 'Rivals', keys: ['rivals_suggested', 'rivals_ahead_or_behind', 'rivals_full_comparison', 'rivals_change'] },
+  { title: 'Demand', keys: ['demand_rising_trend', 'demand_everything_else', 'demand_mentions'] },
+  { title: 'Reports', keys: ['monthly_report', 'alerts'] },
+  { title: 'AdmitLabs service', keys: ['team_acts_on_it'] },
+];

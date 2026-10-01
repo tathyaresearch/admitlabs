@@ -10,8 +10,11 @@ import { HeadToHead } from '@/components/charts/HeadToHead';
 import { CityPicker } from '@/components/institution/CityPicker';
 import { ProgramPicker } from '@/components/institution/ProgramPicker';
 import { HistoryLine } from '@/components/charts/HistoryLine';
-import { ScoreDial } from '@/components/charts/ScoreDial';
+import { MonthBars } from '@/components/charts/MonthBars';
+import { PillarDots } from '@/components/charts/PillarDots';
+import { ScoreGauge } from '@/components/charts/ScoreGauge';
 import { Sparkline } from '@/components/charts/Sparkline';
+import { TrendLines } from '@/components/charts/TrendLines';
 import { ThemeToggle } from '@/components/shell/ThemeToggle';
 import { BrandMark, ProductLockup, Wordmark } from '@/components/ui/Brand';
 import { Button, ButtonLink, IconButton } from '@/components/ui/Button';
@@ -23,10 +26,11 @@ import { Checkbox, RadioGroup, SelectField, TextAreaField, TextField } from '@/c
 import { Icon, ICON_NAMES } from '@/components/ui/Icon';
 import { Card, Eyebrow, FactList, Highlight, PageHeader, Section } from '@/components/ui/Layout';
 import { LockedPanel } from '@/components/ui/LockedPanel';
-import { Delta, Difficulty, ResultMeter, ScoreLabel } from '@/components/ui/Results';
+import { Delta, Difficulty, ResultGauge, ScoreLabel } from '@/components/ui/Results';
 import { contrastRatio } from '@/domain/contrast';
 import { RESULTS } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
+import { pillarSpread, scoreTrend, type ScoreLine } from '@/rivals/trend';
 import { OverlayDemo, SegmentedDemo, TabsDemo } from './Demos';
 import styles from './design-system.module.css';
 
@@ -104,7 +108,7 @@ const SAMPLE_ROWS: SampleRow[] = [
 const SAMPLE_COLUMNS: Column<SampleRow>[] = [
   { key: 'check', header: 'Check', render: (row) => row.check },
   { key: 'pillar', header: 'Pillar', render: (row) => row.pillar },
-  { key: 'result', header: 'Result', render: (row) => <ResultMeter result={row.result} size="sm" /> },
+  { key: 'result', header: 'Result', render: (row) => <ResultGauge result={row.result} size="sm" /> },
   { key: 'points', header: 'Points', align: 'end', numeric: true, render: (row) => row.points },
 ];
 
@@ -264,6 +268,32 @@ const HISTORY = [
   { month: '2026-09', score: 73 },
 ];
 
+const MONTHS = HISTORY.map((point) => point.month);
+const line = (id: string, you: boolean, scores: readonly number[]): ScoreLine => ({
+  id,
+  name: id,
+  you,
+  points: scores.map((score, index) => ({ month: MONTHS[index] as string, score })),
+});
+
+const RIVAL_TREND = scoreTrend(
+  [
+    line('Eastgate University', true, [59, 61, 69, 72, 73, 73]),
+    line('Silverline College', false, [74, 74, 74, 74, 74, 74]),
+    line('Highfield University', false, [52, 52, 52, 52, 52, 51]),
+    line('Northbank College', false, [41, 41, 41, 45, 45, 46]),
+  ],
+  6,
+);
+
+const PILLAR_SPREAD = pillarSpread({ id: 'you', name: 'Eastgate University', scores: { overall: 73, discovered: 79, trusted: 69, chosen: 70 } }, [
+  { id: 'silverline', name: 'Silverline College', scores: { overall: 74, discovered: 73, trusted: 72, chosen: 76 } },
+  { id: 'highfield', name: 'Highfield University', scores: { overall: 51, discovered: 44, trusted: 66, chosen: 43 } },
+  { id: 'northbank', name: 'Northbank College', scores: { overall: 46, discovered: 47, trusted: 47, chosen: 44 } },
+]);
+
+const SEARCHES = [199, 217, 243, 282, 350, 515].map((count, index) => ({ month: MONTHS[index] as string, count }));
+
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className={styles.specimen}>
@@ -279,7 +309,7 @@ function ThemePreview() {
       <ScoreHero score={73} change={1} />
       <div className={styles.row}>
         {RESULTS.map((result) => (
-          <ResultMeter key={result} result={result} />
+          <ResultGauge key={result} result={result} />
         ))}
       </div>
       <div className={styles.row}>
@@ -619,13 +649,13 @@ export default async function DesignSystemPage() {
                   <div key={size} className={styles.resultsRow}>
                     <span className={styles.caption}>{size}</span>
                     {RESULTS.map((result) => (
-                      <ResultMeter key={result} result={result} size={size} />
+                      <ResultGauge key={result} result={result} size={size} />
                     ))}
                   </div>
                 ))}
                 <div className={styles.resultsRow}>
                   <span className={styles.caption}>plain</span>
-                  <ResultMeter result="strong" invertStrong={false} />
+                  <ResultGauge result="strong" />
                 </div>
               </div>
             </Card>
@@ -734,13 +764,13 @@ export default async function DesignSystemPage() {
           <Section id="charts" title="Charts" description="Hand-built SVG. 2px lines, ringed end points, hairline grids, values labelled where they matter. Hover or use arrow keys to read a chart.">
             <div className={styles.grid3}>
               <Card className={styles.center}>
-                <ScoreDial score={81} size={200} />
+                <ScoreGauge score={81} />
               </Card>
               <Card className={styles.center}>
-                <ScoreDial score={52} size={200} />
+                <ScoreGauge score={52} />
               </Card>
               <Card className={styles.center}>
-                <ScoreDial score={27} size={200} />
+                <ScoreGauge score={27} />
               </Card>
             </div>
             <Card>
@@ -750,7 +780,7 @@ export default async function DesignSystemPage() {
             </Card>
             <div className={styles.grid2}>
               <Card>
-                <Specimen label="Head to head (you are solid, the rival is hatched)">
+                <Specimen label="Head to head (you in the text colour, the rival in grey, each named beside its bar)">
                   <HeadToHead
                     rivalName="Silverline College"
                     rows={[
@@ -774,6 +804,23 @@ export default async function DesignSystemPage() {
                       <span className={styles.caption}>Steady, 64 to 73</span>
                     </div>
                   </div>
+                </Specimen>
+              </Card>
+            </div>
+            <Card>
+              <Specimen label="Pillar by pillar (you filled with your score, each rival open, your place on the right)">
+                <PillarDots rows={PILLAR_SPREAD} />
+              </Specimen>
+            </Card>
+            <div className={styles.grid2}>
+              <Card>
+                <Specimen label="Month by month (you in the text colour, rivals in grey, named at the end)">
+                  <TrendLines trend={RIVAL_TREND} label="Overall score by month, you and your rivals" />
+                </Specimen>
+              </Card>
+              <Card>
+                <Specimen label="Counts by month (the newest in the text colour)">
+                  <MonthBars points={SEARCHES} title="Searches by month" valueLabel="Searches" />
                 </Specimen>
               </Card>
             </div>

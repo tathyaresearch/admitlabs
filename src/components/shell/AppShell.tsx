@@ -17,8 +17,8 @@ export interface ShellContext {
   title: string;
   /** One short line under it: the plan ("Paid plan, ends 15 Oct"), or the team role. */
   detail: string;
-  /** The square at the left: the institution's initials, or the AdmitLabs mark for the team. */
-  mark: { kind: 'initials'; text: string } | { kind: 'brand' };
+  /** The AdmitLabs mark beside "AdmitLabs team". An institution shows its name and plan only. */
+  brandMark?: boolean;
 }
 
 interface AppShellProps {
@@ -35,21 +35,6 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-/** Up to two initials from the name's main words: "Eastgate University" is EU. */
-export function initialsOf(name: string): string {
-  const words = name.split(/\s+/).filter((word) => word && !['of', 'and', 'the', 'for', '&'].includes(word.toLowerCase()));
-  return (words.slice(0, 2).map((word) => word[0] ?? '').join('') || 'D').toUpperCase();
-}
-
-function Mark({ mark, size }: { mark: ShellContext['mark']; size: 'md' | 'sm' }) {
-  if (mark.kind === 'brand') return <BrandMark size={size === 'md' ? 36 : 28} className={styles.brandMark} />;
-  return (
-    <span className={`${styles.mark} ${styles[`mark-${size}`]}`} aria-hidden="true">
-      {mark.text}
-    </span>
-  );
-}
-
 export function AppShell({ sections, homeHref, email, roleLabel, context, showNotifications = true, unread = 0, banner, children }: AppShellProps) {
   const notificationsLabel = unread ? `Notifications, ${unread} new` : 'Notifications';
   return (
@@ -60,7 +45,7 @@ export function AppShell({ sections, homeHref, email, roleLabel, context, showNo
 
       <aside className={styles.sidebar}>
         <Link href={homeHref} className={styles.context} aria-label={`${context.title}, home`}>
-          <Mark mark={context.mark} size="md" />
+          {context.brandMark ? <BrandMark size={36} className={styles.brandMark} /> : null}
           <span className={styles.contextText}>
             <span className={styles.contextTitle}>{context.title}</span>
             <span className={styles.contextDetail}>{context.detail}</span>
@@ -80,7 +65,7 @@ export function AppShell({ sections, homeHref, email, roleLabel, context, showNo
       <div className={styles.column}>
         <header className={styles.topbar}>
           <Link href={homeHref} className={styles.topbarContext} aria-label={`${context.title}, home`}>
-            <Mark mark={context.mark} size="sm" />
+            {context.brandMark ? <BrandMark size={28} className={styles.brandMark} /> : null}
             <span className={styles.topbarTitle}>{context.title}</span>
           </Link>
           <div className={styles.topbarActions}>

@@ -639,3 +639,10 @@
   font: var(--type-card);
   letter-spacing: var(--tracking-section);
 }
+
+/* A best post's platform: its logo beside the name. */
+.postPlatform {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}

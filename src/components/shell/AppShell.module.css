@@ -54,31 +54,6 @@
   background: var(--surface-hover);
 }
 
-.mark {
-  flex: none;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-md);
-  background: var(--surface-inverse);
-  color: var(--text-inverse);
-  font-weight: var(--weight-bold);
-  letter-spacing: 0.02em;
-  line-height: 1;
-}
-
-.mark-md {
-  width: 2.25rem;
-  height: 2.25rem;
-  font-size: var(--size-small);
-}
-
-.mark-sm {
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-sm);
-  font-size: var(--size-micro);
-}
-
 .brandMark {
   flex: none;
   color: var(--surface-inverse);

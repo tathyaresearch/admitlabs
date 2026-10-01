@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { INSTITUTION_NAV } from '@/components/shell/nav';
-import { AppShell, initialsOf } from '@/components/shell/AppShell';
+import { AppShell } from '@/components/shell/AppShell';
 import { ViewAsBar } from '@/components/team/ViewAsBar';
 import { formatDate } from '@/domain/format';
 import { MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
@@ -22,7 +22,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       roleLabel={viewer.viewingAs ? 'AdmitLabs team, read only' : MEMBERSHIP_ROLE_LABELS[role]}
       unread={count ?? 0}
       banner={viewer.viewingAs ? <ViewAsBar name={institution.name} /> : undefined}
-      context={{ title: institution.name, detail: planLine, mark: { kind: 'initials', text: initialsOf(institution.name) } }}
+      context={{ title: institution.name, detail: planLine }}
     >
       {children}
     </AppShell>

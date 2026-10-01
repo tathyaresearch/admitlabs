@@ -70,6 +70,10 @@
   --dk-field: var(--grey-975);
   --dk-chart-grid: var(--grey-920);
   --dk-chart-track: var(--grey-850);
+  /* One-colour brand logos, in the colours their owners allow (src/graphics/brands/SOURCES.md). */
+  --dk-brand-x: #ffffff;
+  --dk-brand-youtube: #ffffff;
+  --dk-brand-youtube-play: transparent;
 
   /* Light palette: ivory surface. */
   --lt-scheme: light;
@@ -93,6 +97,9 @@
   --lt-field: var(--ivory);
   --lt-chart-grid: var(--grey-175);
   --lt-chart-track: var(--grey-150);
+  --lt-brand-x: #000000;
+  --lt-brand-youtube: #282828;
+  --lt-brand-youtube-play: #ffffff;
 
   /*
     Type. Bricolage Grotesque for every word: headings, text and buttons. Hierarchy from size,
@@ -252,6 +259,9 @@
   --field: var(--dk-field);
   --chart-grid: var(--dk-chart-grid);
   --chart-track: var(--dk-chart-track);
+  --brand-x: var(--dk-brand-x);
+  --brand-youtube: var(--dk-brand-youtube);
+  --brand-youtube-play: var(--dk-brand-youtube-play);
 
   --inv-scheme: var(--lt-scheme);
   --inv-surface: var(--lt-surface);
@@ -274,6 +284,9 @@
   --inv-field: var(--lt-field);
   --inv-chart-grid: var(--lt-chart-grid);
   --inv-chart-track: var(--lt-chart-track);
+  --inv-brand-x: var(--lt-brand-x);
+  --inv-brand-youtube: var(--lt-brand-youtube);
+  --inv-brand-youtube-play: var(--lt-brand-youtube-play);
 }
 
 /* Light theme. Keep in sync with the block inside the media query below. */
@@ -299,6 +312,9 @@
   --field: var(--lt-field);
   --chart-grid: var(--lt-chart-grid);
   --chart-track: var(--lt-chart-track);
+  --brand-x: var(--lt-brand-x);
+  --brand-youtube: var(--lt-brand-youtube);
+  --brand-youtube-play: var(--lt-brand-youtube-play);
 
   --inv-scheme: var(--dk-scheme);
   --inv-surface: var(--dk-surface);
@@ -321,6 +337,9 @@
   --inv-field: var(--dk-field);
   --inv-chart-grid: var(--dk-chart-grid);
   --inv-chart-track: var(--dk-chart-track);
+  --inv-brand-x: var(--dk-brand-x);
+  --inv-brand-youtube: var(--dk-brand-youtube);
+  --inv-brand-youtube-play: var(--dk-brand-youtube-play);
 }
 
 /* No theme saved: follow the device. Same mapping as [data-theme='light']. */
@@ -347,6 +366,9 @@
     --field: var(--lt-field);
     --chart-grid: var(--lt-chart-grid);
     --chart-track: var(--lt-chart-track);
+    --brand-x: var(--lt-brand-x);
+    --brand-youtube: var(--lt-brand-youtube);
+    --brand-youtube-play: var(--lt-brand-youtube-play);
 
     --inv-scheme: var(--dk-scheme);
     --inv-surface: var(--dk-surface);
@@ -369,5 +391,8 @@
     --inv-field: var(--dk-field);
     --inv-chart-grid: var(--dk-chart-grid);
     --inv-chart-track: var(--dk-chart-track);
+    --inv-brand-x: var(--dk-brand-x);
+    --inv-brand-youtube: var(--dk-brand-youtube);
+    --inv-brand-youtube-play: var(--dk-brand-youtube-play);
   }
 }

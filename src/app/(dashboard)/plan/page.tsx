@@ -1,14 +1,15 @@
 import { Notice } from '@/components/ui/Feedback';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, type IconName } from '@/components/ui/Icon';
 import { KpiCard, KpiNote, KpiNumber, KpiWord } from '@/components/ui/Kpi';
-import { Card, PageHead, Section } from '@/components/ui/Layout';
+import { SectionHead } from '@/components/audit/AuditHeader';
+import { Card, PageHead } from '@/components/ui/Layout';
 import { CellText } from '@/components/ui/Results';
-import { ENTITLEMENTS, type EntitlementGroup } from '@/config/entitlements';
+import { ENTITLEMENTS, PLAN_PAGE_GROUPS, type EntitlementCell, type EntitlementRow } from '@/config/entitlements';
 import { PLAN_RULES } from '@/config/plans';
 import { SCHEDULES } from '@/config/schedules';
 import { formatDate, formatInr } from '@/domain/format';
 import { planReminder } from '@/domain/tiers';
-import { TIER_LABELS, TIERS } from '@/domain/types';
+import { TIER_LABELS, TIERS, type Tier } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
 import audit from '@/components/audit/audit.module.css';
@@ -16,7 +17,40 @@ import styles from './plan.module.css';
 
 export const metadata = { title: 'Plan' };
 
-const GROUPS: readonly EntitlementGroup[] = ['Audit', 'Rivals', 'Demand', 'Other'];
+const ROWS = new Map(ENTITLEMENTS.map((row) => [row.key, row]));
+
+const GROUP_ICONS: Readonly<Record<string, IconName>> = { Audit: 'audit', Rivals: 'rivals', Demand: 'demand', Reports: 'reports', 'AdmitLabs service': 'team' };
+
+/** The line under each plan's name: what it costs, or how it comes. */
+function priceLine(tier: Tier) {
+  if (tier === 'paid') {
+    return (
+      <>
+        <span className="num">{formatInr(PLAN_RULES.paid.priceInr)}</span> for {PLAN_RULES.paid.lengthMonths} months
+      </>
+    );
+  }
+  if (tier === 'free') return `One program, every ${SCHEDULES.free.auditEveryMonths} months`;
+  return 'With your AdmitLabs service';
+}
+
+/** A tick when it is included, a short value when it is partly included, nothing when it is not. */
+function PlanCell({ cell }: { cell: EntitlementCell }) {
+  if (cell.access === 'none') return <span className="visually-hidden">Not included</span>;
+  if (cell.text === 'Yes' || cell.text === 'Full') {
+    return (
+      <>
+        <Icon name="check" size={18} className={styles.tick} />
+        <span className="visually-hidden">Included</span>
+      </>
+    );
+  }
+  return (
+    <span className={cell.access === 'placeholder' ? styles.quietValue : styles.value}>
+      <CellText text={cell.text} />
+    </span>
+  );
+}
 
 function daysText(days: number): string {
   if (days === 0) return 'today';
@@ -126,48 +160,66 @@ export default async function PlanPage() {
         </Card>
       ) : null}
 
-      <Section title="Compare plans" description="What each plan sees in Drishti.">
-        <Card padding="none" className={styles.tableCard}>
+      <section className={audit.section} aria-labelledby="compare-title">
+        <SectionHead id="compare-title" icon="plan" title="Compare plans" help="What each plan sees in Drishti. No discounts: one plan, one price." />
+        <div className={styles.tableCard}>
           <div className={styles.tableScroll}>
             <table className={styles.compare}>
-              <caption className="visually-hidden">What each plan sees, by feature</caption>
+              <caption className="visually-hidden">What each plan sees, by feature. Your plan is {TIER_LABELS[tier]}.</caption>
+              <colgroup>
+                <col className={styles.featureColumn} />
+                {TIERS.map((column) => (
+                  <col key={column} />
+                ))}
+              </colgroup>
               <thead>
                 <tr>
-                  <th scope="col">Feature</th>
+                  <th scope="col" className={styles.featureHead}>
+                    <span className="visually-hidden">Feature</span>
+                  </th>
                   {TIERS.map((column) => (
-                    <th key={column} scope="col" className={column === tier ? `invert ${styles.current}` : undefined}>
-                      <span className={styles.columnName}>{TIER_LABELS[column]}</span>
+                    <th key={column} scope="col" className={column === tier ? styles.currentHead : styles.planHead}>
                       {column === tier ? <span className={styles.yours}>Your plan</span> : null}
+                      <span className={styles.planName}>{TIER_LABELS[column]}</span>
+                      <span className={styles.planPrice}>{priceLine(column)}</span>
                     </th>
                   ))}
                 </tr>
               </thead>
-              {GROUPS.map((group) => (
-                <tbody key={group}>
+              {PLAN_PAGE_GROUPS.map((group) => (
+                <tbody key={group.title}>
                   <tr className={styles.groupRow}>
-                    <th scope="colgroup" colSpan={4}>
-                      {group}
+                    <th scope="colgroup" colSpan={TIERS.length + 1}>
+                      <span className={styles.groupName}>
+                        <Icon name={GROUP_ICONS[group.title] ?? 'plan'} size={16} />
+                        {group.title}
+                      </span>
                     </th>
                   </tr>
-                  {ENTITLEMENTS.filter((row) => row.group === group).map((row) => (
-                    <tr key={row.key}>
-                      <th scope="row">{row.label}</th>
-                      {TIERS.map((column) => (
-                        <td key={column} data-current={column === tier ? 'true' : undefined}>
-                          {row.cells[column].access === 'none' ? <span className={styles.no}>No</span> : <CellText text={row.cells[column].text} />}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  {group.keys.map((key) => {
+                    const row = ROWS.get(key) as EntitlementRow;
+                    return (
+                      <tr key={key}>
+                        <th scope="row" className={styles.featureCell}>
+                          {row.label}
+                        </th>
+                        {TIERS.map((column) => (
+                          <td key={column} className={column === tier ? styles.currentCell : undefined}>
+                            <PlanCell cell={row.cells[column]} />
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               ))}
             </table>
           </div>
-        </Card>
+        </div>
         <p className={styles.fine}>
-          Paid is {formatInr(PLAN_RULES.paid.priceInr)} for {PLAN_RULES.paid.lengthMonths} months. Clients get it as part of their AdmitLabs service.
+          Paid is {formatInr(PLAN_RULES.paid.priceInr)} for {PLAN_RULES.paid.lengthMonths} months, with no auto-renew. Clients get it as part of their AdmitLabs service.
         </p>
-      </Section>
+      </section>
     </div>
   );
 }

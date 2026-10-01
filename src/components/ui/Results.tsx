@@ -1,32 +1,28 @@
-// How results and scores are shown without colour (spec section 14):
-// a 3-segment meter plus the word, in one style for every result, labels always in words.
+// How results and scores are shown without colour (spec section 14): a small half-circle gauge
+// plus the word, in one style for every result, labels always in words.
 
 import { scoreLabel, type ScoreLabel as ScoreLabelName } from '@/domain/scores';
 import { DIFFICULTY_LABELS, RESULT_LABELS, type CheckResult, type Difficulty as DifficultyValue } from '@/domain/types';
+import { RESULT_GAUGE, resultGauge } from '@/graphics/gauge';
 import { Icon } from './Icon';
 import styles from './Results.module.css';
 
-const FILLED: Readonly<Record<CheckResult, number>> = { strong: 3, okay: 2, weak: 1, missing: 0 };
-
-interface ResultMeterProps {
+interface ResultGaugeProps {
   result: CheckResult;
   size?: 'sm' | 'md' | 'lg';
-  /** Put Strong results in an inverted block. Off by default, so a list reads the same for every result. */
-  invertStrong?: boolean;
   /** Hide the word only when the word is already shown right next to it. */
   hideWord?: boolean;
 }
 
-export function ResultMeter({ result, size = 'md', invertStrong = false, hideWord = false }: ResultMeterProps) {
-  const filled = FILLED[result];
-  const inverted = invertStrong && result === 'strong';
+/** A check's result: the small half-circle gauge (three segments) and the word. */
+export function ResultGauge({ result, size = 'md', hideWord = false }: ResultGaugeProps) {
   return (
-    <span className={[styles.result, styles[size], inverted ? styles.invertedResult : ''].filter(Boolean).join(' ')} data-result={result}>
-      <span className={styles.meter} aria-hidden="true">
-        {[0, 1, 2].map((index) => (
-          <span key={index} className={styles.segment} data-state={result === 'missing' ? 'missing' : index < filled ? 'on' : 'off'} />
+    <span className={[styles.result, styles[size]].join(' ')} data-result={result}>
+      <svg className={styles.gauge} viewBox={`0 0 ${RESULT_GAUGE.width} ${RESULT_GAUGE.height}`} aria-hidden="true">
+        {resultGauge(result).map((segment, index) => (
+          <path key={index} d={segment.d} className={styles[`segment-${segment.state}`]} strokeWidth={RESULT_GAUGE.stroke} fill="none" />
         ))}
-      </span>
+      </svg>
       <span className={hideWord ? 'visually-hidden' : styles.word}>{RESULT_LABELS[result]}</span>
     </span>
   );

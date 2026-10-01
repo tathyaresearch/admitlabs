@@ -55,6 +55,9 @@ body {
   --field: var(--inv-field);
   --chart-grid: var(--inv-chart-grid);
   --chart-track: var(--inv-chart-track);
+  --brand-x: var(--inv-brand-x);
+  --brand-youtube: var(--inv-brand-youtube);
+  --brand-youtube-play: var(--inv-brand-youtube-play);
   background: var(--surface);
   color: var(--text);
 }

@@ -129,6 +129,53 @@
   gap: 2cqi;
 }
 
+/* The summary page's gauge, as the PDF draws it. */
+.gauge {
+  position: relative;
+  display: block;
+  width: 56cqi;
+}
+
+.gauge svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.gaugeTrack {
+  fill: none;
+  stroke: var(--chart-track);
+}
+
+.gaugeValue {
+  fill: none;
+  stroke: var(--text);
+}
+
+.gaugeNotch {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+
+.gaugeNumber {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.8cqi;
+}
+
+.gaugeValueText {
+  font-size: 15cqi;
+  font-weight: var(--weight-heading);
+  line-height: 0.85;
+  letter-spacing: var(--tracking-num-hero);
+}
+
 .scoreNumber {
   font-size: 26cqi;
   font-weight: var(--weight-heading);

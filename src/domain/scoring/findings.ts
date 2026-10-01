@@ -3,7 +3,7 @@
 // no shaming. The result word and meter already say how it scored.
 
 import type { CheckFacts } from '../facts.ts';
-import type { CheckKey, InstitutionType } from '../types.ts';
+import { AI_ASSISTANT_LABELS, type CheckKey, type InstitutionType } from '../types.ts';
 
 export interface FindingContext {
   institutionType: InstitutionType;
@@ -17,9 +17,9 @@ const quote = (text: string) => `“${text}”`;
 const percent = (share: number) => `${Math.round(share * 100)}%`;
 const days = (count: number) => (count === 0 ? 'today' : count === 1 ? '1 day ago' : `${count} days ago`);
 
-function list(items: readonly string[]): string {
+function list(items: readonly string[], last = 'and'): string {
   if (items.length <= 1) return items.join('');
-  return `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
+  return `${items.slice(0, -1).join(', ')} ${last} ${items.at(-1)}`;
 }
 
 function perWeek(value: number): string {
@@ -53,6 +53,15 @@ const DESCRIBERS: { readonly [K in CheckKey]: Describer<K> } = {
   },
 
   ai_answers(facts) {
+    // Each assistant by name, when the provider says which named you.
+    if (facts.assistants?.length) {
+      const asked = quote(facts.question);
+      const named = facts.assistants.filter((entry) => entry.named).map((entry) => AI_ASSISTANT_LABELS[entry.assistant]);
+      const notNamed = facts.assistants.filter((entry) => !entry.named).map((entry) => AI_ASSISTANT_LABELS[entry.assistant]);
+      if (named.length) return `Named by ${list(named)} when asked ${asked}.${notNamed.length ? ` Not by ${list(notNamed, 'or')}.` : ''}`;
+      if (facts.knownWhenAskedByName) return `Not named by ${list(notNamed, 'or')} when asked ${asked}. They know you when asked by name.`;
+      return `Not named by ${list(notNamed, 'or')} when asked ${asked}, and not known when asked by name.`;
+    }
     if (facts.assistantsNaming > 0) {
       return `Named by ${facts.assistantsNaming} of ${facts.assistantsAsked} AI assistants asked ${quote(facts.question)}.`;
     }

@@ -5,8 +5,9 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { ItemPart, ListItem } from '@/audit/view';
 import { Icon } from '@/components/ui/Icon';
-import { Difficulty, PointsValue, ResultMeter } from '@/components/ui/Results';
-import { DIFFICULTY_LABELS } from '@/domain/types';
+import { CheckIcon } from '@/components/ui/Marks';
+import { Difficulty, PointsValue, ResultGauge } from '@/components/ui/Results';
+import { DIFFICULTY_LABELS, type CheckKey } from '@/domain/types';
 import { PartResults } from './Parts';
 import styles from './audit.module.css';
 
@@ -53,17 +54,20 @@ export function FixCards({ items, basePath = '' }: { items: readonly ListItem[];
   );
 }
 
-function Row({ to, rank, name, sub, result, meta }: { to: string; rank?: number; name: string; sub?: string | null; result: ReactNode; meta: ReactNode }) {
+function Row({ to, check, rank, name, sub, result, meta }: { to: string; check: CheckKey; rank?: number; name: string; sub?: string | null; result: ReactNode; meta: ReactNode }) {
   return (
     <Link href={to} scroll={false} className={styles.row}>
       <span className={styles.rowName}>
-        {rank ? (
-          <span>
-            <span className="num">{rank}.</span> {name}
-          </span>
-        ) : (
-          name
-        )}
+        <span className={styles.rowTitle}>
+          <CheckIcon check={check} size={16} />
+          {rank ? (
+            <span>
+              <span className="num">{rank}.</span> {name}
+            </span>
+          ) : (
+            name
+          )}
+        </span>
         {sub ? <span className={styles.rowSub}>{sub}</span> : null}
       </span>
       <span>{result}</span>
@@ -74,8 +78,8 @@ function Row({ to, rank, name, sub, result, meta }: { to: string; rank?: number;
 }
 
 function ItemResult({ item }: { item: ListItem }) {
-  if (item.parts.length === 1 && item.parts[0]) return <ResultMeter result={item.parts[0].result} size="sm" />;
-  if (item.strength) return <ResultMeter result={item.strength} size="sm" />;
+  if (item.parts.length === 1 && item.parts[0]) return <ResultGauge result={item.parts[0].result} size="sm" />;
+  if (item.strength) return <ResultGauge result={item.strength} size="sm" />;
   return <span className={styles.varies}>{item.parts.length} programs</span>;
 }
 
@@ -90,6 +94,7 @@ export function FixRows({ items }: { items: readonly ListItem[] }) {
           <Row
             key={item.rank}
             to={href('', item)}
+            check={item.key}
             rank={item.rank}
             name={item.name}
             sub={[names, difficulty].filter(Boolean).join('. ') || null}
@@ -110,6 +115,7 @@ export function WorkingRows({ items }: { items: readonly ListItem[] }) {
         <Row
           key={item.rank}
           to={href('', item)}
+          check={item.key}
           name={item.name}
           sub={programNames(item.parts)}
           result={<ItemResult item={item} />}

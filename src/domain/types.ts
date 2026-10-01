@@ -53,6 +53,12 @@ export type AuditTrigger = (typeof AUDIT_TRIGGERS)[number];
 export const RIVAL_MOVE_KINDS = ['new_program', 'fee_change', 'new_page', 'admission_dates'] as const;
 export type RivalMoveKind = (typeof RIVAL_MOVE_KINDS)[number];
 
+/** The AI assistants the AI answers check asks, in this order. */
+export const AI_ASSISTANTS = ['chatgpt', 'gemini', 'perplexity'] as const;
+export type AiAssistant = (typeof AI_ASSISTANTS)[number];
+
+export const AI_ASSISTANT_LABELS: Readonly<Record<AiAssistant, string>> = { chatgpt: 'ChatGPT', gemini: 'Gemini', perplexity: 'Perplexity' };
+
 export const CONTENT_PLATFORMS = ['instagram', 'youtube'] as const;
 export type ContentPlatform = (typeof CONTENT_PLATFORMS)[number];
 

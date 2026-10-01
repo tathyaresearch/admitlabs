@@ -88,39 +88,136 @@
   color: var(--text-muted);
 }
 
-/* The compare table. */
+/* The compare table: each plan heads its column with its price, your plan is marked and tinted,
+   ticks for what is included, short values for what is partly included, and empty cells for
+   what is not (read out as "Not included"). Grouped rows; the head row stays in view. */
 
+/* The card takes the page's width and never the table's: on a phone only the table scrolls. */
 .tableCard {
-  overflow: hidden;
+  contain: inline-size;
+  overflow: clip;
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
+/* Paint containment keeps the scrolled table, sticky cells and all, from widening the page. */
 .tableScroll {
   overflow-x: auto;
+  contain: paint;
+}
+
+/* Wide enough for the whole table: no inner scroll, so the head row sticks to the page. */
+@media (min-width: 48rem) {
+  .tableScroll {
+    overflow: visible;
+    contain: none;
+  }
 }
 
 .compare {
   width: 100%;
-  min-width: 38rem;
+  min-width: 40rem;
+  border-collapse: separate;
+  border-spacing: 0;
   font: var(--type-small);
+}
+
+.featureColumn {
+  width: 36%;
 }
 
 .compare th,
 .compare td {
   padding: var(--space-3) var(--space-5);
   text-align: left;
+  vertical-align: middle;
   border-bottom: 1px solid var(--line-raised);
-  vertical-align: top;
 }
 
+/* The head row: the plan's name and its price, sticky while the rows scroll by. */
 .compare thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-4);
   vertical-align: bottom;
+  background: var(--surface-raised);
   border-bottom-color: var(--line-medium);
-  font-weight: var(--weight-heading);
 }
 
-.compare tbody th {
+.planHead,
+.currentHead {
+  font-weight: var(--weight-regular);
+}
+
+.currentHead {
+  background: var(--surface-nested) !important;
+  box-shadow: inset 0 3px 0 var(--text);
+}
+
+.yours {
+  display: inline-block;
+  margin-bottom: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font: var(--type-caption-strong);
+}
+
+.planName {
+  display: block;
+  font: var(--type-section);
+  letter-spacing: var(--tracking-section);
+}
+
+.planPrice {
+  display: block;
+  margin-top: 2px;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.planPrice :global(.num) {
+  font-weight: var(--weight-heading);
+  color: var(--text);
+}
+
+.currentCell {
+  background: var(--surface-nested);
+}
+
+.groupRow th {
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-2);
+  border-bottom-color: var(--line-raised);
+}
+
+.groupName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.featureCell {
   font-weight: var(--weight-medium);
-  width: 34%;
+}
+
+.tick {
+  display: block;
+  color: var(--text);
+}
+
+.value {
+  font-weight: var(--weight-medium);
+}
+
+.quietValue {
+  color: var(--text-muted);
 }
 
 .compare tbody:last-child tr:last-child th,
@@ -128,35 +225,21 @@
   border-bottom: 0;
 }
 
-.compare td[data-current='true'] {
-  background: var(--surface-nested);
-  font-weight: var(--weight-medium);
-}
+/* On a phone the feature names stay put while the plans scroll sideways. */
+@media (max-width: 48rem) {
+  .compare th[scope='row'],
+  .compare .featureHead {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--surface-raised);
+    box-shadow: 1px 0 0 var(--line-raised);
+  }
 
-.current {
-  border-bottom-color: transparent !important;
-}
-
-.columnName {
-  display: block;
-  font: var(--type-strong);
-  font-weight: var(--weight-heading);
-}
-
-.yours {
-  display: block;
-  font: var(--type-caption);
-  opacity: 0.85;
-}
-
-.groupRow th {
-  padding-top: var(--space-5);
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.no {
-  color: var(--text-muted);
+  .compare th,
+  .compare td {
+    padding: var(--space-3);
+  }
 }
 
 .fine {

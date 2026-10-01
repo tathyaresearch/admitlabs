@@ -3,7 +3,7 @@
 // where the sample profiles say, while still storing facts the way a real provider would.
 
 import { SCORING_V1 } from '../../config/scoring.v1.ts';
-import type { CheckResult, ScoringFamily } from '../../domain/types.ts';
+import { AI_ASSISTANTS, type CheckResult, type ScoringFamily } from '../../domain/types.ts';
 import type {
   AdmissionStepsValue,
   AiAnswersValue,
@@ -121,11 +121,21 @@ export function youtubeFacts(result: CheckResult, rng: Rng, channelUrl: string |
 
 export function aiAnswersFacts(result: CheckResult, rng: Rng, question: string): AiAnswersValue {
   const t = T.ai_answers;
-  const base = { question, assistantsAsked: t.assistantsAsked };
-  if (result === 'strong') return { ...base, assistantsNaming: rng.int(t.strongMinAssistants, t.assistantsAsked), knownWhenAskedByName: true };
-  if (result === 'okay') return { ...base, assistantsNaming: t.okayMinAssistants, knownWhenAskedByName: true };
-  if (result === 'weak') return { ...base, assistantsNaming: 0, knownWhenAskedByName: true };
-  return { ...base, assistantsNaming: 0, knownWhenAskedByName: false };
+  const naming = result === 'strong' ? rng.int(t.strongMinAssistants, t.assistantsAsked) : result === 'okay' ? t.okayMinAssistants : 0;
+  // Which assistants name the institution: the list in a shuffled order, the first `naming` of them.
+  const order: string[] = [...AI_ASSISTANTS];
+  for (let index = order.length - 1; index > 0; index -= 1) {
+    const other = rng.int(0, index);
+    [order[index], order[other]] = [order[other] as string, order[index] as string];
+  }
+  const named = new Set(order.slice(0, naming));
+  return {
+    question,
+    assistantsAsked: t.assistantsAsked,
+    assistantsNaming: naming,
+    knownWhenAskedByName: result !== 'missing',
+    assistants: AI_ASSISTANTS.map((assistant) => ({ assistant, named: named.has(assistant) })),
+  };
 }
 
 export function otherSocialsFacts(

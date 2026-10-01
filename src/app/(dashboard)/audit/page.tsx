@@ -8,13 +8,14 @@ import { monthKey } from '@/domain/dates';
 import { formatDate } from '@/domain/format';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { auditNote, loadAuditPage, programEntries } from '@/lib/audit/load';
+import { loadAddedDetails } from '@/lib/details/load';
 
 export const metadata = { title: 'Audit' };
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
-  const [data, params] = await Promise.all([loadAuditPage(viewer), searchParams]);
+  const [data, params, details] = await Promise.all([loadAuditPage(viewer), searchParams, loadAddedDetails(institution.id)]);
 
   if (!data.audit) {
     return <NoAuditYet tier={viewer.tier} isOwner={role === 'owner'} hasFreeProgram={Boolean(viewer.plan?.freeProgramId)} nextAudit={data.nextAudit} />;
@@ -45,6 +46,8 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       note={auditNote(data, viewer.tier)}
       history={history}
       historyLabel="Overall score by month"
+      details={details}
+      institutionType={institution.type}
     />
   );
 }

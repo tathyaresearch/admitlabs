@@ -88,7 +88,17 @@
 
 .scoreMain {
   display: grid;
+  justify-items: start;
   gap: var(--space-3);
+  min-width: 0;
+  flex: 1 1 13rem;
+  max-width: 16rem;
+}
+
+/* "24 points to Strong": how far the next band is. */
+.nextBand {
+  font: var(--type-caption);
+  color: var(--text-muted);
 }
 
 .scoreMeta {
@@ -121,6 +131,24 @@
   color: var(--text-muted);
 }
 
+.pillarLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* A pillar card measures itself: on a narrow card (three across a phone) the icon steps aside
+   so the pillar's name stays whole. */
+.pillarCard {
+  container-type: inline-size;
+}
+
+@container (max-width: 6rem) {
+  .pillarLabel > svg {
+    display: none;
+  }
+}
+
 .pillarFoot {
   display: grid;
   gap: var(--space-2);
@@ -140,8 +168,24 @@
 }
 
 .blockTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font: var(--type-section);
   letter-spacing: var(--tracking-section);
+}
+
+.blockIcon {
+  flex: none;
+  color: var(--text-muted);
+}
+
+/* A step's own icon, like the check's, before its title. */
+.stepIcon {
+  display: inline-flex;
+  margin-right: var(--space-2);
+  vertical-align: -0.15em;
+  color: var(--text-muted);
 }
 
 .blockText {
@@ -344,6 +388,9 @@
 }
 
 .cardTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font: var(--type-section);
   font-size: 1rem;
   letter-spacing: var(--tracking-section);

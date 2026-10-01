@@ -124,23 +124,25 @@ export function HistoryLine({ points, label = 'Overall score by month', height: 
         </div>
       ) : null}
 
-      <table className="visually-hidden">
-        <caption>{label}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Month</th>
-            <th scope="col">Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          {points.map((point) => (
-            <tr key={point.month}>
-              <th scope="row">{formatMonth(point.month)}</th>
-              <td className="num">{Math.round(point.score)}</td>
+      <div className="visually-hidden">
+        <table>
+          <caption>{label}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Month</th>
+              <th scope="col">Score</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {points.map((point) => (
+              <tr key={point.month}>
+                <th scope="row">{formatMonth(point.month)}</th>
+                <td className="num">{Math.round(point.score)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -31,8 +31,16 @@
 }
 
 .sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font: var(--type-section);
   letter-spacing: var(--tracking-section);
+}
+
+.sectionIcon {
+  flex: none;
+  color: var(--text-muted);
 }
 
 .sectionHelp {
@@ -448,6 +456,58 @@ a.tab:hover {
   font: var(--type-strong);
 }
 
+/* A check's icon beside its name; the sub line stays under the name. */
+.rowTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.rowTitle > svg {
+  color: var(--text-muted);
+}
+
+.rowTitle + .rowSub {
+  padding-left: calc(16px + var(--space-2));
+}
+
+/* Points earned out of possible: a thin bar and the numbers. */
+.pointsCell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.pointsBar {
+  display: block;
+  width: 3.5rem;
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--chart-track);
+}
+
+.pointsBar > span {
+  display: block;
+  height: 100%;
+  background: var(--text);
+}
+
+@media (max-width: 40rem) {
+  .pointsBar {
+    display: none;
+  }
+}
+
+/* The check panel's title, with the check's icon. */
+.panelTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .rowSub {
   font: var(--type-caption);
   color: var(--text-muted);
@@ -566,8 +626,15 @@ a.tab:hover {
 }
 
 .groupTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   font: var(--type-card);
   letter-spacing: var(--tracking-section);
+}
+
+.groupTitle > svg {
+  color: var(--text-muted);
 }
 
 .groupMeta {
@@ -592,7 +659,7 @@ a.tab:hover {
 }
 
 .checkRows .row {
-  grid-template-columns: minmax(0, 1fr) 10rem 3.5rem 1rem;
+  grid-template-columns: minmax(0, 1fr) 10rem 7.5rem 1rem;
 }
 
 .varies {

@@ -26,6 +26,7 @@ export function DemandCard({ highlight, demandHref, place }: { highlight: Demand
     <section className={`${styles.card} ${styles.demandCard}`} aria-labelledby="home-demand-title">
       <div className={styles.cardHead}>
         <h2 id="home-demand-title" className={styles.cardTitle}>
+          <Icon name="demand" size={20} className={styles.blockIcon} />
           What students want
         </h2>
         {demandHref && highlight ? (

@@ -4,7 +4,8 @@
 
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
-import { ResultMeter } from '@/components/ui/Results';
+import { CheckIcon, PillarIcon } from '@/components/ui/Marks';
+import { ResultGauge } from '@/components/ui/Results';
 import { checkName } from '@/domain/checks';
 import { PILLAR_LABELS, PILLARS, RESULT_LABELS, type InstitutionType } from '@/domain/types';
 import type { CheckComparison, SideSummary } from '@/rivals/compare';
@@ -23,7 +24,7 @@ export function Side({ side, label }: { side: SideSummary; label: string }) {
     <span className={styles.side}>
       <span className={styles.sideLabel}>{label}</span>
       {side.kind === 'single' ? (
-        <ResultMeter result={side.result} size="sm" />
+        <ResultGauge result={side.result} size="sm" />
       ) : (
         <span className={audit.varies}>{side.kind === 'varies' ? 'Varies by program' : 'Not checked'}</span>
       )}
@@ -42,7 +43,10 @@ export function CompareChecks({ comparisons, institutionType, rivalName }: { com
         return (
           <details key={pillar} className={audit.group} open>
             <summary className={audit.groupSummary}>
-              <span className={audit.groupTitle}>{PILLAR_LABELS[pillar]}</span>
+              <span className={audit.groupTitle}>
+                <PillarIcon pillar={pillar} size={18} />
+                {PILLAR_LABELS[pillar]}
+              </span>
               <span className={audit.groupMeta}>
                 {`They lead on ${theyLead}, you lead on ${youLead}`}
                 <Icon name="chevronDown" size={16} className={audit.groupIcon} />
@@ -67,7 +71,10 @@ export function CompareChecks({ comparisons, institutionType, rivalName }: { com
                     aria-label={`${name}: ${LEAD_WORDS[item.lead].toLowerCase()}. Open the detail.`}
                   >
                     <span className={audit.rowName}>
-                      {name}
+                      <span className={audit.rowTitle}>
+                        <CheckIcon check={item.key} size={16} />
+                        {name}
+                      </span>
                       {item.programs.length ? <span className={audit.rowSub}>{item.programs.join(', ')}</span> : null}
                     </span>
                     <Side side={item.them} label={rivalName} />

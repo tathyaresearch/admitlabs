@@ -4,7 +4,9 @@
 
 import { Tabs } from '@/components/ui/Tabs';
 import { Icon } from '@/components/ui/Icon';
+import { BrandLogo, Mark } from '@/components/ui/Marks';
 import { formatCount, formatDate, formatMonth, hostAndPath } from '@/domain/format';
+import { PLATFORM_ICONS, platformFromUrl } from '@/graphics/platforms';
 import type { Activity, AdRow, MoveRow, PostRow } from '@/lib/rivals/load';
 import { MOVE_KIND_LABELS } from '@/rivals/text';
 import styles from './rivals.module.css';
@@ -19,6 +21,7 @@ function shortDate(value: string): string {
 function Source({ url, label = 'Source' }: { url: string; label?: string }) {
   return (
     <a href={url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
+      <Mark icon={PLATFORM_ICONS[platformFromUrl(url) ?? 'website']} size={13} />
       {label === 'Source' ? hostAndPath(url) : label}
       <Icon name="external" size={12} />
       <span className="visually-hidden"> (opens in a new tab)</span>
@@ -54,7 +57,10 @@ export function PostCards({ posts, names, showRival = true }: { posts: readonly 
       {posts.map((post) => (
         <li key={post.id} className={styles.post}>
           <span className={styles.postMeta}>
-            <span>{showRival ? (names.get(post.rivalId) ?? 'A rival') : PLATFORM_LABELS[post.platform]}</span>
+            <span className={styles.postPlatform}>
+              <BrandLogo brand={post.platform} size={14} />
+              {showRival ? (names.get(post.rivalId) ?? 'A rival') : PLATFORM_LABELS[post.platform]}
+            </span>
             <span>
               {showRival ? `${PLATFORM_LABELS[post.platform]}, ` : ''}
               {post.postedAt ? shortDate(post.postedAt) : formatMonth(post.month)}

@@ -8,16 +8,20 @@
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { fixAdvice, panelLines, type AreaRow } from '@/audit/view';
+import { AddedNote } from '@/components/details/Added';
+import type { AddedByYou } from '@/domain/details';
 import { SourceLine } from '@/components/ui/Data';
 import { Icon } from '@/components/ui/Icon';
+import { CheckIcon } from '@/components/ui/Marks';
 import { SidePanel } from '@/components/ui/Overlay';
-import { Difficulty, PointsValue, ResultMeter } from '@/components/ui/Results';
+import { Difficulty, PointsValue, ResultGauge } from '@/components/ui/Results';
 import { formatDate, joinNames } from '@/domain/format';
 import { PILLAR_LABELS, RESULT_LABELS } from '@/domain/types';
 import { PlaceholderDetail } from './Placeholders';
 import styles from './audit.module.css';
 
-export function CheckPanel({ rows }: { rows: readonly AreaRow[] }) {
+/** `added`: what the institution added in Settings that relates to each part, by the part's check id. */
+export function CheckPanel({ rows, added = {} }: { rows: readonly AreaRow[]; added?: Readonly<Record<string, AddedByYou>> }) {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -33,13 +37,25 @@ export function CheckPanel({ rows }: { rows: readonly AreaRow[] }) {
   };
 
   return (
-    <SidePanel open={row !== null} onClose={close} title={row?.name ?? ''} description={row ? `${PILLAR_LABELS[row.pillar]}. ${row.looksAt}.` : undefined}>
-      {row ? <PanelBody row={row} /> : null}
+    <SidePanel
+      open={row !== null}
+      onClose={close}
+      title={
+        row ? (
+          <span className={styles.panelTitle}>
+            <CheckIcon check={row.key} size={20} />
+            {row.name}
+          </span>
+        ) : (
+          ''
+        )
+      } description={row ? `${PILLAR_LABELS[row.pillar]}. ${row.looksAt}.` : undefined}>
+      {row ? <PanelBody row={row} added={added} /> : null}
     </SidePanel>
   );
 }
 
-function PanelBody({ row }: { row: AreaRow }) {
+function PanelBody({ row, added }: { row: AreaRow; added: Readonly<Record<string, AddedByYou>> }) {
   const why = row.parts.find((part) => part.detail?.whyItMatters)?.detail?.whyItMatters;
   const lines = panelLines(row.parts);
   const advice = fixAdvice(row.parts);
@@ -54,7 +70,7 @@ function PanelBody({ row }: { row: AreaRow }) {
           {lines.map((line) => (
             <li key={line.key} className={styles.panelLine}>
               {line.programs.length ? <span className={styles.panelLineName}>{joinNames(line.programs)}</span> : null}
-              <ResultMeter result={line.result} />
+              <ResultGauge result={line.result} />
               <span className={styles.points}>
                 <PointsValue kind="fraction" points={line.points} max={line.maxPoints} unit />
                 {line.programs.length > 1 ? ' each' : null}
@@ -90,6 +106,23 @@ function PanelBody({ row }: { row: AreaRow }) {
               {part.detail ? <SourceLine url={part.detail.sourceUrl} checkedAt={part.checkedAt} /> : null}
             </div>
           ))}
+        </div>
+      ) : null}
+
+      {row.parts.some((part) => added[part.checkId]) ? (
+        <div className={styles.panelBlock}>
+          {row.parts.map((part) => {
+            const note = added[part.checkId];
+            if (!note) return null;
+            return (
+              <AddedNote
+                key={part.checkId}
+                added={note}
+                showAdvice={Boolean(part.detail?.howToFix)}
+                label={named && part.programName ? `Added by you for ${part.programName}` : undefined}
+              />
+            );
+          })}
         </div>
       ) : null}
 

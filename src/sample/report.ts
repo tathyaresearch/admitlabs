@@ -7,6 +7,9 @@ import { istDate, istParts } from '../domain/dates.ts';
 import { buildReport, type ReportData, type ReportInput } from '../report/data.ts';
 import { monthEnd, reportDayOf } from '../report/schedule.ts';
 import { mondayOf } from '../rivals/schedule.ts';
+import { EMPTY_INSTITUTION_DETAILS } from '../domain/details.ts';
+import { SAMPLE_INSTITUTION_DETAILS, SAMPLE_PROGRAM_DETAILS } from './details.ts';
+import { programId } from './ids.ts';
 import { sampleInstitution, SAMPLE_WEEKLY_CHECKS_FROM } from './index.ts';
 import { historyOf, sampleAuditChain, sampleDemand, sampleMoves, sampleRivalLessons, sampleRivals, scoresOf, storedAudit } from './world.ts';
 
@@ -70,6 +73,11 @@ export async function sampleReportInput(): Promise<ReportInput> {
     lastRivalCheck: lastWeeklyCheck(cut),
     demand,
     sample: true,
+    // What Eastgate added about itself in Settings, as in the seeded database.
+    added: {
+      institution: SAMPLE_INSTITUTION_DETAILS[slug] ?? EMPTY_INSTITUTION_DETAILS,
+      programs: new Map(SAMPLE_PROGRAM_DETAILS.filter((entry) => entry.slug === slug).map((entry) => [programId(slug, entry.programKey), entry.details])),
+    },
   };
 }
 

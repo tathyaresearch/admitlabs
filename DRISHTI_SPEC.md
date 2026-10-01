@@ -133,6 +133,13 @@ The institution enters:
 
 After onboarding, Free users pick the **one program** their Free Audit covers.
 
+**Details added by you (Settings, every plan).** All optional and short.
+
+- About the institution: year founded, NAAC grade, NIRF rank and its year, AICTE approval, UGC recognition (or skilling recognition), other approvals, campus address, admissions phone and email, hostel, scholarships, and what makes it different.
+- For each program: duration, fees, seats, eligibility, specialisations, placements (year, share placed, average and highest package, top recruiters), application dates and the program page.
+- Labelled "Added by you" wherever they show. Used for context, better how to fix advice and the monthly report. **Never part of the score.**
+- The owner edits them. Members and the AdmitLabs team can read them. Rivals never see them.
+
 ---
 
 ## 7. Feature 1: Audit
@@ -151,7 +158,7 @@ Answers: **"How do we look to a student searching for us?"** Public information 
 | Discovered | `instagram_activity` | Instagram posting and reels | Institution |
 | Discovered | `google_profile` | Google profile exists, number of reviews | Institution |
 | Discovered | `youtube` | YouTube activity | Institution |
-| Discovered | `ai_answers` | Named when a student asks AI assistants "best [program] in [city]" | Program |
+| Discovered | `ai_answers` | Named when a student asks ChatGPT, Gemini and Perplexity "best [program] in [city]" | Program |
 | Discovered | `other_socials` | Facebook, LinkedIn activity | Institution |
 | Trusted | `placement_proof` | Placement or results proof | Program |
 | Trusted | `review_rating` | Google review rating and replies | Institution |
@@ -405,7 +412,7 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 
 - One PDF per institution per month. Downloadable from `/reports`. Paid and Client only.
 - Stored in Supabase Storage.
-- Same brand as the dashboard (section 14).
+- Same brand as the dashboard (section 14): the overall score on its gauge, each result on the small gauge, check and pillar icons, and bars for what each fix could add, how fast a trend rises and how often a question is asked.
 
 **Contents, in order:**
 
@@ -414,10 +421,12 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 3. What's working (top 3)
 4. What to fix (ranked)
 5. By program (one short block each)
-6. Rivals: head to head, key moves
+6. Rivals: head to head, each pillar against every rival, key moves
 7. Demand: rising trends, top questions, content ideas
 8. **3 things to do this month**
 9. Sources and dates checked
+
+Details added by you show next to the fix and the program they relate to, labelled, never scored.
 
 Keep it short enough to read in 5 minutes.
 
@@ -433,16 +442,16 @@ Keep it short enough to read in 5 minutes.
 |---|---|
 | Login | Email, then OTP |
 | Onboarding | The input form from section 6, then program pick for Free |
-| Home | Overall score, 3 pillars, change, top 3 fixes, rival snapshot, 1 demand highlight, 3 things to do |
-| Audit | Pillars, all checks with results, what's working, what to fix, program switcher |
+| Home | Overall score on its gauge, how far the next band is, 3 pillars, change, top 3 fixes, rival snapshot, 1 demand highlight, 3 things to do |
+| Audit | Pillars, all checks with results and points earned against possible, what's working, what to fix, score history, program switcher |
 | Program detail | Same as Audit, for one program |
-| Check detail | Side panel: result, what was found, source link, date checked, how to fix, difficulty |
-| Rivals | Rival list, head to head table, where you lead, moves, best content |
-| Rival detail | One rival's full view |
-| Demand | Region switch (City, State, All India), 6 output sections from 9.4 |
-| Reports | List of monthly PDFs, download |
-| Plan | Current tier, dates, what Paid unlocks, renewal reminder state |
-| Settings | Institution details, programs, social links, users |
+| Check detail | Side panel: result, what was found, source link, date checked, how to fix, difficulty, details added by you |
+| Rivals | Rival list, head to head table, each pillar against every rival, overall score month by month, where you lead, moves, best content |
+| Rival detail | One rival's full view, pillar by pillar and month by month |
+| Demand | Region switch (City, State, All India), 6 output sections from 9.4, the fastest rise by month, rising and falling as bars |
+| Reports | List of monthly PDFs, download, the score trend |
+| Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans |
+| Settings | Institution details, programs, social links, users, details added by you (section 6) |
 | Notifications | Alerts list |
 
 **Team screens (`/team`)**
@@ -492,9 +501,22 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 **Showing Strong, Okay, Weak, Missing without colour**
 
-- A 3-segment meter: Strong = 3 filled, Okay = 2 filled, Weak = 1 filled, Missing = empty outline with dashed border.
-- One meter style for every result, on screen and in the PDF, so a list reads evenly.
-- The word is always shown next to the meter. Never rely on the meter alone.
+- A small semi-circle gauge of three arc segments: Strong = 3 filled, Okay = 2 filled, Weak = 1 filled, Missing = an empty dashed arc.
+- One gauge style for every result, on screen and in the PDF, so a list reads evenly.
+- The word is always shown next to the gauge. Never rely on the gauge alone.
+- The overall score sits on a large gauge: filled to the score out of 100, with a notch where Needs work (40) and Strong (70) begin, and the number inside in Inter.
+
+**Icons and logos**
+
+- Line icons drawn for Drishti (thin strokes, square ends, no icon library): one for each of the 17 checks, the 3 pillars and the main sections. The same icons in the PDF.
+- Real one-colour logos only for Instagram, X and YouTube (from Simple Icons, CC0), unchanged and in the colours each brand allows. Source and licence are kept next to the files.
+- Every other platform (Google, Google Maps, Facebook, LinkedIn, Reddit, Quora, ChatGPT, Gemini, Perplexity, websites) gets a neutral line icon and its name, until AdmitLabs has permission to use its logo.
+- Icons are decoration. The name always sits beside them.
+
+**Charts**
+
+- Hand-built, monochrome: you in the text colour, rivals in grey, each named on the chart. No legend to decode.
+- Numbers in Inter. Every chart can be read as text or a table too.
 
 **Copy rules**
 
@@ -556,6 +578,8 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 | `notifications` | id, institution_id, kind, text, read, created_at |
 | `notes` | id, institution_id, author_id, body, created_at (team only) |
 | `share_links` | token, institution_id, audit_id, created_by, created_at |
+| `institution_details` | institution_id, the details added by the institution (section 6), updated_at, updated_by. Never read by scoring |
+| `program_details` | program_id, institution_id, the details added for each program (section 6), updated_at, updated_by. Never read by scoring |
 | `scoring_config` | version, weights (jsonb), result_shares (jsonb), thresholds (jsonb), labels (jsonb), active (bool) |
 
 **Row Level Security:**
@@ -584,7 +608,7 @@ Each data source is a **provider** with one shared interface: it takes an instit
 | `instagram` | instagram_activity, students_in_content, rival best content, demand | Instagram Graph API (official access only) |
 | `youtube` | youtube, rival best content, demand | YouTube Data API |
 | `socials` | other_socials | Facebook, LinkedIn official access |
-| `ai_answers` | ai_answers | Asking AI assistants the student's question |
+| `ai_answers` | ai_answers | Asking ChatGPT, Gemini and Perplexity the student's question, each result kept |
 | `official_data` | approvals | Official documents (NIRF and others), using Tathya's PDF extraction approach |
 | `reddit`, `x`, `quora`, `trends` | demand | Official APIs, checked for terms of use |
 | `analysis` | "why it worked", how to fix, demand grouping, content ideas, 3 things to do | Claude API |
@@ -638,6 +662,8 @@ Fictional only. No real institution names.
 - Use `.example` domains for websites (for example `northbank-college.example`).
 - A spread of scores: some Strong, some Needs work, some At risk.
 - 6 months of Audit history for at least 2 institutions.
+- Rival scores and Demand pulls from April to September 2026, so the month by month charts have 6 months too.
+- Details added by some institutions, for themselves and their programs.
 - Rivals set up between them, with moves, best content and ads.
 - Demand pulls for Guwahati, Assam and All India across the sample programs, in English, Hindi and Assamese.
 - One institution on each tier: Free, Paid, Client. Plus 2 prospects visible only to the team.

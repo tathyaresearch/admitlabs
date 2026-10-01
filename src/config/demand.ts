@@ -9,4 +9,6 @@ export const DEMAND_RULES = {
   topQuestions: 5,
   contentIdeas: 5,
   trendsShown: 5,
+  /** Months of the fastest rise shown as bars. */
+  historyMonths: 6,
 } as const;

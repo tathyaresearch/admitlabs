@@ -1,6 +1,6 @@
 // Loads what a monthly report needs, with the service key, as it was at the end of the month:
 // the latest own Audit (every detail), score history, rivals and their Audits, the month's moves
-// and Rivals 3 things to do, and the city's Demand. The report job decides whether a report may
+// and Rivals 3 things to do, the city's Demand, and what the institution added about itself. The report job decides whether a report may
 // be made at all; this only reads.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -8,6 +8,7 @@ import { latestStoredAudit, ownHistory } from '../audit/read.ts';
 import { latestDemandRows } from '../demand/read.ts';
 import { regionsFor } from '../demand/regions.ts';
 import { istDate } from '../domain/dates.ts';
+import { institutionDetailsFromRow, programDetailsFromRow } from '../domain/details.ts';
 import type { Database } from '../lib/supabase/database.types.ts';
 import { latestRivalAudits } from '../rivals/read.ts';
 import type { ReportInput, ReportInstitution } from './data.ts';
@@ -87,7 +88,7 @@ export async function loadReportInput(
 
   const covered = programs.filter((program) => !program.archived_at && program.program_key).map((program) => ({ name: program.name, programKey: program.program_key as string }));
   const region = regionsFor(institution).city;
-  const [history, rivalAudits, moves, actions, lastCheck, demand] = await Promise.all([
+  const [history, rivalAudits, moves, actions, lastCheck, demand, institutionDetails, programDetails] = await Promise.all([
     ownHistory(db, institutionId, cut),
     latestRivalAudits(db, rivalIds, cut),
     monthMoves(db, rivalIds, istDate(monthStart), cut),
@@ -101,7 +102,12 @@ export async function loadReportInput(
       .order('rank'),
     lastRivalCheck(db, rivalIds, cut),
     latestDemandRows(db, region, covered, month),
+    // What the institution added about itself: shown as added by them, never scored.
+    db.from('institution_details').select('*').eq('institution_id', institutionId).maybeSingle(),
+    db.from('program_details').select('*').eq('institution_id', institutionId),
   ]);
+  if (institutionDetails.error) throw new ReportLoadError(`Could not read the institution's details: ${institutionDetails.error.message}`);
+  if (programDetails.error) throw new ReportLoadError(`Could not read the program details: ${programDetails.error.message}`);
 
   // The month's Rivals 3 things to do (or the latest month's before it).
   const actionRows = must(actions, 'the Rivals 3 things to do');
@@ -126,5 +132,9 @@ export async function loadReportInput(
     lessons,
     lastRivalCheck: lastCheck,
     demand: { region, ...demand },
+    added: {
+      institution: institutionDetailsFromRow(institutionDetails.data),
+      programs: new Map((programDetails.data ?? []).map((row) => [row.program_id, programDetailsFromRow(row)])),
+    },
   };
 }
