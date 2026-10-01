@@ -23,7 +23,7 @@ interface LockedPanelProps {
 export function LockedPanel({ title, description, teaser, placeholder, actionLabel = 'Unlock with Paid', actionHref = '/plan' }: LockedPanelProps) {
   return (
     <div className={styles.locked}>
-      {teaser ? <div className={styles.teaser}>{teaser}</div> : null}
+      {teaser ? <div>{teaser}</div> : null}
       <div className={styles.area}>
         <div className={styles.placeholder} aria-hidden="true" inert>
           {placeholder}

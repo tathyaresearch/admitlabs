@@ -23,7 +23,7 @@ export function ResultGauge({ result, size = 'md', hideWord = false }: ResultGau
           <path key={index} d={segment.d} className={styles[`segment-${segment.state}`]} strokeWidth={RESULT_GAUGE.stroke} fill="none" />
         ))}
       </svg>
-      <span className={hideWord ? 'visually-hidden' : styles.word}>{RESULT_LABELS[result]}</span>
+      <span className={hideWord ? 'visually-hidden' : undefined}>{RESULT_LABELS[result]}</span>
     </span>
   );
 }

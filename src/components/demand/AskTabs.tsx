@@ -77,7 +77,7 @@ function TrendBars({ rising, falling, showProgram }: { rising: readonly DemandRo
   if (rows.length === 0) return <p className={styles.note}>Nothing is rising or falling this month.</p>;
   const widest = Math.max(1, ...rows.map((row) => Math.abs(row.changePct ?? 0)));
   return (
-    <div className={styles.diverge}>
+    <div>
       <p className={`${styles.divergeItem} ${styles.divergeHead}`} aria-hidden="true">
         <span />
         <span className={styles.divergeHeadBar}>

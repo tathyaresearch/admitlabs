@@ -180,7 +180,7 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
 
       <section className={styles.planRow} aria-label={institution.claimed ? 'Plan' : 'Share this Audit'}>
         {institution.claimed ? (
-          <KpiCard label="Plan" aside={institution.plan?.setBy ? `Set by ${institution.plan.setBy}` : undefined} className={styles.planCard}>
+          <KpiCard label="Plan" aside={institution.plan?.setBy ? `Set by ${institution.plan.setBy}` : undefined}>
             <div className={styles.planBody}>
               <div className={styles.planNow}>
                 <KpiWord>{tier ? TIER_LABELS[tier] : 'Free'}</KpiWord>
@@ -212,7 +212,7 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
             </div>
           </KpiCard>
         ) : (
-          <KpiCard label="Share this Audit" className={styles.planCard}>
+          <KpiCard label="Share this Audit">
             <p className={styles.planText}>
               A private link to the team Audit, for {TEAM_RULES.shareLinkDays} days. It shows how to fix the top {TEAM_RULES.sharedFixesInFull} fixes.
             </p>
