@@ -21,8 +21,9 @@ export const CTA = {
 export const PRODUCTS = {
   label: 'Products',
   items: [
-    { name: 'Drishti', for: 'For institutions', href: '/drishti', newTab: false },
-    { name: 'Tathya', for: 'For students', href: SITE_SETTINGS.tathyaUrl, newTab: true },
+    // Drishti shows its eye, still, before the name.
+    { name: 'Drishti', for: 'For institutions', href: '/drishti', newTab: false, eye: true },
+    { name: 'Tathya', for: 'For students', href: SITE_SETTINGS.tathyaUrl, newTab: true, eye: false },
   ],
 } as const;
 

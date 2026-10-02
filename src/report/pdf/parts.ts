@@ -4,10 +4,11 @@
 // gauge, icons and logos are drawn from the same geometry as the dashboard's (src/graphics).
 
 import { createElement as h, type ReactElement, type ReactNode } from 'react';
-import { Line, Path, Svg, Text, View, type Styles } from '@react-pdf/renderer';
+import { Circle, Line, Path, Svg, Text, View, type Styles } from '@react-pdf/renderer';
 import { bandStarts, resultShare, type ScoreLabel } from '../../domain/scores.ts';
 import { RESULT_LABELS, type CheckKey, type CheckResult, type Pillar } from '../../domain/types.ts';
 import { BRAND_INK, BRAND_MARKS, YOUTUBE_PLAY } from '../../graphics/brands.ts';
+import { EYE_EM, EYE_IRIS, EYE_LASHES, EYE_LIDS, eyeBox } from '../../graphics/eye.ts';
 import { SCORE_GAUGE, SCORE_TEXT, scoreGauge } from '../../graphics/gauge.ts';
 import { CHECK_ICONS, LINE_ICONS, PILLAR_ICONS, type IconRef } from '../../graphics/icons.ts';
 import { PLATFORM_ICONS, type Platform } from '../../graphics/platforms.ts';
@@ -215,17 +216,39 @@ export function Footer({ institution, month, note = null }: { institution: strin
   });
 }
 
-/** "Drishti by AdmitLabs", as the product lockup: Drishti heavy and narrow, Admit heavy, Labs regular. */
+/** The Drishti eye, still and open, in one colour: 1.12 times the word's size wide, as on screen. */
+function EyeDrawing({ size, color, lashes }: { size: number; color: string; lashes: boolean }): ReactElement {
+  const box = eyeBox(lashes);
+  const width = size * EYE_EM.width;
+  return h(
+    Svg,
+    { width, height: (width * box.height) / box.width, viewBox: `${box.x} ${box.y} ${box.width} ${box.height}` },
+    ...(lashes ? EYE_LASHES.map((lash) => h(Path, { d: lash.d, fill: color })) : []),
+    h(Path, { d: EYE_LIDS, fill: color, fillRule: 'evenodd' }),
+    h(Circle, { cx: EYE_IRIS.cx, cy: EYE_IRIS.cy, r: EYE_IRIS.r, fill: color }),
+  );
+}
+
+/**
+ * "Drishti by AdmitLabs", as the product lockup: the Drishti eye (still, with its lashes at this
+ * size), then Drishti heavy and narrow, Admit heavy, Labs regular. The eye's foot sits on the
+ * word's baseline, a touch below it, as on screen.
+ */
 export function Lockup({ size = 16, dark = true }: { size?: number; dark?: boolean }): ReactElement {
   const ink = dark ? COLORS.ivory : COLORS.black;
   const quiet = dark ? COLORS.slate : COLORS.muted;
   return h(
-    Text,
-    { style: { color: ink, lineHeight: 1 } },
-    h(Text, { style: { fontFamily: FONT_SEMI_CONDENSED, fontWeight: 700, fontSize: size, letterSpacing: -size * 0.02 } }, 'Drishti'),
-    h(Text, { style: { fontSize: size * 0.62, color: quiet } }, '  by '),
-    h(Text, { style: { fontSize: size * 0.62, fontWeight: 800 } }, 'Admit'),
-    h(Text, { style: { fontSize: size * 0.62, fontWeight: 400 } }, 'Labs'),
+    View,
+    { style: { flexDirection: 'row', alignItems: 'baseline' } },
+    h(View, { style: { marginRight: size * EYE_EM.gap, marginBottom: -size * EYE_EM.drop } }, h(EyeDrawing, { size, color: ink, lashes: true })),
+    h(
+      Text,
+      { style: { color: ink, lineHeight: 1 } },
+      h(Text, { style: { fontFamily: FONT_SEMI_CONDENSED, fontWeight: 700, fontSize: size, letterSpacing: -size * 0.02 } }, 'Drishti'),
+      h(Text, { style: { fontSize: size * 0.62, color: quiet } }, '  by '),
+      h(Text, { style: { fontSize: size * 0.62, fontWeight: 800 } }, 'Admit'),
+      h(Text, { style: { fontSize: size * 0.62, fontWeight: 400 } }, 'Labs'),
+    ),
   );
 }
 

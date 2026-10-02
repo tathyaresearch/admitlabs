@@ -29,7 +29,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <section className={`invert ${styles.brandPanel}`} aria-label="About Drishti">
         <Wordmark height={20} />
         <div className={styles.brandBody}>
-          <ProductLockup size="lg" />
+          <ProductLockup size="lg" motion="blink" />
           <p className={styles.brandLine}>See where you stand, who&apos;s ahead, and what students want. Every month.</p>
           <ol className={styles.features}>
             {FEATURES.map((feature, index) => (

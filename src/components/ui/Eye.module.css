@@ -1,0 +1,652 @@
+/*
+  The Drishti eye (Eye.tsx), in the text's colour, so it works on black and on ivory. Still unless
+  an ancestor sets data-eye:
+    blink   A: opens as it appears, then blinks once every 23 seconds (the dashboard and login).
+    follow  C: the same, and the iris turns towards the pointer (EyeMotion.tsx).
+    rise    the eye rises from behind the word and peeks over the D, once, then C (the /drishti
+            hero and the website's Drishti section).
+    side    the eye comes out from behind the D, once, then C (the brand motion files only).
+  Every motion uses transforms, opacity and a clip, blinks on hover, and sits inside
+  prefers-reduced-motion: no-preference, so reduced motion shows a still, open eye.
+
+  Set on the logo: --eye-delay holds the opening back (the /drishti hero lets its lift finish).
+  For the reveals, the D the eye hides behind: --eye-d, its left side bearing, and --eye-d-mid,
+  its middle, in ems of the word (Bricolage changes them with size: optical sizing).
+*/
+
+/* EyeMotion's wrapper: no box of its own. */
+.motion {
+  display: contents;
+}
+
+.eye {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+/* The lids, the lashes and the iris: filled shapes, their weight in the drawing, so they scale. */
+.lids {
+  fill: currentColor;
+  fill-rule: evenodd;
+}
+
+.lash,
+.iris {
+  fill: currentColor;
+}
+
+/* The closed eye: a line that shows while the lids meet. */
+.shut {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  opacity: 0;
+}
+
+/* The lids and the iris turn about the eye's centre; each lash about its own root (set inline). */
+.lidLoad,
+.lidHover,
+.irisLook,
+.irisLoad,
+.lashLook {
+  transform-box: view-box;
+  transform-origin: 20px 12px;
+}
+
+.lashLoad,
+.lashHover {
+  transform-box: view-box;
+}
+
+/* Where the iris looks (C), set by EyeMotion.tsx in the eye's own units. Unset, it looks ahead. */
+.irisLook {
+  transform: translate(var(--look-x, 0px), var(--look-y, 0px));
+}
+
+/* C (and either reveal, once done): the lashes shift very slightly with the gaze. */
+:is([data-eye='follow'], [data-eye='rise'], [data-eye='side']) .lashLook {
+  transform: translate(calc(var(--look-x, 0px) * 0.12), calc(var(--look-y, 0px) * 0.25));
+}
+
+/* Before the word: the eye and the word share a baseline, 0.24 em apart. */
+.name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.24em;
+}
+
+/* The slot's foot is the word's baseline (it holds a block, so it has no text of its own). */
+.slot {
+  display: inline-block;
+  flex: none;
+}
+
+/* The eye centred on the word's middle, the lashes up at its ascenders. */
+.mark {
+  width: 1.12em;
+  height: 0.812em;
+  translate: 0 0.02em;
+}
+
+.markPlain {
+  width: 1.12em;
+  height: 0.672em;
+  translate: 0 0.02em;
+}
+
+/* The side reveal: the slot is cut off at the D's left edge (the gap, then its side bearing), so the
+   eye can hide behind the letter and come out from behind it. */
+[data-eye='side'] .slot {
+  clip-path: inset(-0.6em calc(-0.24em - var(--eye-d, 0.056em)) -0.6em -0.6em);
+}
+
+/* The rise: the word is a wall. From the D's left edge on, the eye is out of sight below the top of
+   the D (0.66 em up from the baseline, the slot's foot) and shows above it. While it rises, the wall
+   reaches a little further left, under where it peeks out (rise-wall). */
+[data-eye='rise'] .slot {
+  clip-path: polygon(
+    -1em -1em,
+    8em -1em,
+    8em calc(100% - 0.66em),
+    calc(100% + 0.24em + var(--eye-d, 0.056em)) calc(100% - 0.66em),
+    calc(100% + 0.24em + var(--eye-d, 0.056em)) calc(100% + 1em),
+    -1em calc(100% + 1em)
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A and C open as the logo appears, the lashes sweeping up with the upper lid; then one blink
+     every 23 seconds, the lashes sweeping down and back up with it. */
+  :is([data-eye='blink'], [data-eye='follow']) .lidLoad {
+    animation:
+      eye-open 640ms cubic-bezier(0.22, 0.9, 0.3, 1) calc(150ms + var(--eye-delay, 0ms)) both,
+      eye-idle 23s calc(10s + var(--eye-delay, 0ms)) infinite;
+  }
+
+  :is([data-eye='blink'], [data-eye='follow']) .shutLoad {
+    animation:
+      shut-open 640ms linear calc(150ms + var(--eye-delay, 0ms)) both,
+      shut-idle 23s calc(10s + var(--eye-delay, 0ms)) infinite;
+  }
+
+  :is([data-eye='blink'], [data-eye='follow']) .lashLoad {
+    animation:
+      lash-open 640ms cubic-bezier(0.22, 0.9, 0.3, 1) calc(150ms + var(--eye-delay, 0ms)) both,
+      lash-idle 23s calc(10s + var(--eye-delay, 0ms)) infinite;
+  }
+
+  /* A: the iris settles as the eye opens, as if it focuses. */
+  [data-eye='blink'] .irisLoad {
+    animation: iris-focus 1000ms cubic-bezier(0.22, 0.9, 0.3, 1) calc(150ms + var(--eye-delay, 0ms)) both;
+  }
+
+  /* On hover the eye blinks, and the lashes follow the lid. */
+  [data-eye]:hover .lidHover {
+    animation: eye-blink 400ms both;
+  }
+
+  [data-eye]:hover .shutHover {
+    animation: shut-blink 400ms linear both;
+  }
+
+  [data-eye]:hover .lashHover {
+    animation: lash-blink 400ms both;
+  }
+
+  /* The rise, once: the eye, part open, rises from behind the word and peeks over the top of the D,
+     looks left and right, lifts a touch and glides down into its place before the word, then opens
+     and blinks. The rare blink starts ten seconds after it ends. */
+  [data-eye='rise'] .slot {
+    animation: rise-wall 3000ms linear var(--eye-delay, 0ms) both;
+  }
+
+  [data-eye='rise'] :is(.mark, .markPlain) {
+    animation:
+      rise-x 3000ms linear var(--eye-delay, 0ms) both,
+      rise-y 3000ms linear var(--eye-delay, 0ms) both;
+  }
+
+  [data-eye='rise'] .lidLoad {
+    animation:
+      rise-lid 3000ms linear var(--eye-delay, 0ms) both,
+      eye-idle 23s calc(13s + var(--eye-delay, 0ms)) infinite;
+  }
+
+  [data-eye='rise'] .lashLoad {
+    animation:
+      rise-lash 3000ms linear var(--eye-delay, 0ms) both,
+      lash-idle 23s calc(13s + var(--eye-delay, 0ms)) infinite;
+  }
+
+  [data-eye='rise'] .shutLoad {
+    animation:
+      rise-shut 3000ms linear var(--eye-delay, 0ms) both,
+      shut-idle 23s calc(13s + var(--eye-delay, 0ms)) infinite;
+  }
+
+  [data-eye='rise'] .irisLoad {
+    animation: rise-iris 3000ms linear var(--eye-delay, 0ms) both;
+  }
+
+  /* The side reveal, once: the eye, part open, comes out from behind the D, looks out and back,
+     settles in its place, opens and blinks. Kept for the brand motion files (brand/motion). */
+  [data-eye='side'] :is(.mark, .markPlain) {
+    animation: side-slide 2800ms linear var(--eye-delay, 0ms) both;
+  }
+
+  [data-eye='side'] .lidLoad {
+    animation:
+      side-lid 2800ms linear var(--eye-delay, 0ms) both,
+      eye-idle 23s calc(12.8s + var(--eye-delay, 0ms)) infinite;
+  }
+
+  [data-eye='side'] .lashLoad {
+    animation:
+      side-lash 2800ms linear var(--eye-delay, 0ms) both,
+      lash-idle 23s calc(12.8s + var(--eye-delay, 0ms)) infinite;
+  }
+
+  [data-eye='side'] .shutLoad {
+    animation:
+      side-shut 2800ms linear var(--eye-delay, 0ms) both,
+      shut-idle 23s calc(12.8s + var(--eye-delay, 0ms)) infinite;
+  }
+
+  [data-eye='side'] .irisLoad {
+    animation: side-iris 2800ms linear var(--eye-delay, 0ms) both;
+  }
+
+  /* While it reveals itself, it does not follow the pointer yet (no fill, so after it, it does). */
+  [data-eye='rise'] :is(.irisLook, .lashLook) {
+    animation: look-ahead calc(3000ms + var(--eye-delay, 0ms));
+  }
+
+  [data-eye='side'] :is(.irisLook, .lashLook) {
+    animation: look-ahead calc(2800ms + var(--eye-delay, 0ms));
+  }
+}
+
+@keyframes eye-open {
+  from {
+    transform: scaleY(0.06);
+  }
+}
+
+/* The closed line holds until the lids part. */
+@keyframes shut-open {
+  0%,
+  4% {
+    opacity: 1;
+  }
+
+  11%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The lashes start where the shut lid is, hanging down, and sweep up as it opens: the drop follows
+   the lid's edge exactly (same curve), the flip passes through flat half way. */
+@keyframes lash-open {
+  from {
+    transform: translateY(calc(var(--drop) * 0.94)) scaleY(-1);
+  }
+}
+
+@keyframes iris-focus {
+  from {
+    transform: scale(1.16);
+  }
+}
+
+/* A blink: the lids close quickly, rest, and open a little slower. */
+@keyframes eye-blink {
+  0% {
+    transform: scaleY(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+
+  30%,
+  44% {
+    transform: scaleY(0.06);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.3, 1);
+  }
+
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes shut-blink {
+  0%,
+  23% {
+    opacity: 0;
+  }
+
+  29%,
+  47% {
+    opacity: 1;
+  }
+
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* With the blink, each lash drops with the lid and sweeps down, then back up, on the same beat. */
+@keyframes lash-blink {
+  0% {
+    transform: translateY(0) scaleY(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+
+  30%,
+  44% {
+    transform: translateY(calc(var(--drop) * 0.94)) scaleY(-1);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.3, 1);
+  }
+
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+/* The rare blink: once every 23 seconds, at the end of the cycle; the lashes go with it. */
+@keyframes eye-idle {
+  0%,
+  97.4% {
+    transform: scaleY(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+
+  98%,
+  98.3% {
+    transform: scaleY(0.06);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.3, 1);
+  }
+
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes shut-idle {
+  0%,
+  97.82% {
+    opacity: 0;
+  }
+
+  97.96%,
+  98.36% {
+    opacity: 1;
+  }
+
+  98.55%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes lash-idle {
+  0%,
+  97.4% {
+    transform: translateY(0) scaleY(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+
+  98%,
+  98.3% {
+    transform: translateY(calc(var(--drop) * 0.94)) scaleY(-1);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.3, 1);
+  }
+
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+/* The rise, 3 seconds: hidden behind the word (0 to 0.25 s); it rises and peeks over the top of the
+   D (to 0.85 s); looks left, then right (0.95 to 1.45 s); lifts a touch, clear of the word, and
+   glides down into its place (1.45 to 2.05 s); opens (to 2.45 s); one blink (2.56 to 2.96 s).
+   Across, from its place: centred over the D (0.8 em plus the D's middle: the eye's half width off
+   the gap and the slot). Up: a peek and a lift, each with the eye's 0.02 em nudge down. The lids are
+   part open (0.62) until it opens; the lashes follow them. */
+@keyframes rise-x {
+  0%,
+  48.333% {
+    transform: translateX(calc(0.8em + var(--eye-d-mid, 0.311em)));
+    animation-timing-function: cubic-bezier(0.5, 0, 0.25, 1);
+  }
+
+  66.667%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes rise-y {
+  0%,
+  8.333% {
+    translate: 0 0.02em;
+    animation-timing-function: cubic-bezier(0.25, 0.75, 0.3, 1);
+  }
+
+  28.333%,
+  48.333% {
+    translate: 0 -0.424em;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+
+  53.333% {
+    translate: 0 -0.494em;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.3, 1);
+  }
+
+  68.333%,
+  100% {
+    translate: 0 0.02em;
+  }
+}
+
+/* The wall reaches left to just under where the eye peeks out, so it rises from behind it whole;
+   once the eye has lifted clear of the word it draws back to the D's left edge. */
+@keyframes rise-wall {
+  0%,
+  53.333% {
+    clip-path: polygon(
+      -1em -1em,
+      8em -1em,
+      8em calc(100% - 0.66em),
+      calc(0.792em + var(--eye-d-mid, 0.311em)) calc(100% - 0.66em),
+      calc(0.792em + var(--eye-d-mid, 0.311em)) calc(100% + 1em),
+      -1em calc(100% + 1em)
+    );
+  }
+
+  53.4%,
+  100% {
+    clip-path: polygon(
+      -1em -1em,
+      8em -1em,
+      8em calc(100% - 0.66em),
+      calc(100% + 0.24em + var(--eye-d, 0.056em)) calc(100% - 0.66em),
+      calc(100% + 0.24em + var(--eye-d, 0.056em)) calc(100% + 1em),
+      -1em calc(100% + 1em)
+    );
+  }
+}
+
+@keyframes rise-lid {
+  0%,
+  68.333% {
+    transform: scaleY(0.62);
+    animation-timing-function: cubic-bezier(0.22, 0.9, 0.3, 1);
+  }
+
+  81.667%,
+  85.333% {
+    transform: scaleY(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+
+  89.367%,
+  91.233% {
+    transform: scaleY(0.06);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.3, 1);
+  }
+
+  98.7%,
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes rise-lash {
+  0%,
+  68.333% {
+    transform: translateY(calc(var(--drop) * 0.38)) scaleY(0.19);
+    animation-timing-function: cubic-bezier(0.22, 0.9, 0.3, 1);
+  }
+
+  81.667%,
+  85.333% {
+    transform: translateY(0) scaleY(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+
+  89.367%,
+  91.233% {
+    transform: translateY(calc(var(--drop) * 0.94)) scaleY(-1);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.3, 1);
+  }
+
+  98.7%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+@keyframes rise-shut {
+  0%,
+  88.7% {
+    opacity: 0;
+  }
+
+  89.3%,
+  91.4% {
+    opacity: 1;
+  }
+
+  92.2%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes rise-iris {
+  0%,
+  31.667% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+  }
+
+  36.667%,
+  39.333% {
+    transform: translateX(-4.6px);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+  }
+
+  44.667%,
+  48.333% {
+    transform: translateX(4.4px);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+  }
+
+  55%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* The side reveal, 2.8 seconds: hidden behind the D (0 to 0.25 s), out part way (to 0.85 s), a look
+   out then back at the word (to 1.35 s), into its place (to 1.75 s), open (to 2.15 s), one blink
+   (2.35 to 2.75 s). */
+@keyframes side-slide {
+  0%,
+  8.9% {
+    transform: translateX(1.42em);
+    animation-timing-function: cubic-bezier(0.22, 0.8, 0.3, 1);
+  }
+
+  30.4%,
+  48.2% {
+    transform: translateX(0.5em);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1);
+  }
+
+  62.5%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes side-lid {
+  0%,
+  62.5% {
+    transform: scaleY(0.62);
+    animation-timing-function: cubic-bezier(0.22, 0.9, 0.3, 1);
+  }
+
+  76.8%,
+  83.9% {
+    transform: scaleY(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+
+  88.2%,
+  90.2% {
+    transform: scaleY(0.06);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.3, 1);
+  }
+
+  98.2%,
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes side-lash {
+  0%,
+  62.5% {
+    transform: translateY(calc(var(--drop) * 0.38)) scaleY(0.19);
+    animation-timing-function: cubic-bezier(0.22, 0.9, 0.3, 1);
+  }
+
+  76.8%,
+  83.9% {
+    transform: translateY(0) scaleY(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+
+  88.2%,
+  90.2% {
+    transform: translateY(calc(var(--drop) * 0.94)) scaleY(-1);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.3, 1);
+  }
+
+  98.2%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+@keyframes side-shut {
+  0%,
+  87.5% {
+    opacity: 0;
+  }
+
+  88.1%,
+  90.4% {
+    opacity: 1;
+  }
+
+  91.2%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes side-iris {
+  0%,
+  30.4% {
+    transform: translateX(-3px);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+  }
+
+  36% {
+    transform: translateX(-4.6px);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+  }
+
+  42%,
+  45% {
+    transform: translateX(4.4px);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+  }
+
+  52%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes look-ahead {
+  from,
+  to {
+    transform: none;
+  }
+}

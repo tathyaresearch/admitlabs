@@ -365,7 +365,11 @@ export default async function DesignSystemPage() {
             description="Every token and component, in every state. Contrast comes from size, weight, width, and black and ivory surface flips. Never from colour. Use the sun and moon button to switch themes."
           />
 
-          <Section id="brand" title="Brand" description="The AdmitLabs wordmark: Admit at 800, Labs at 400. The product is always shown as Drishti by AdmitLabs.">
+          <Section
+            id="brand"
+            title="Brand"
+            description="The AdmitLabs wordmark: Admit at 800, Labs at 400. The product is always shown as Drishti by AdmitLabs, with the Drishti eye before the word: three lashes from 20 px up, the eye alone below that and in the favicon. Reduced motion shows every eye still."
+          >
             <div className={styles.grid3}>
               <Specimen label="Wordmark">
                 <Wordmark height={28} />
@@ -373,12 +377,21 @@ export default async function DesignSystemPage() {
               <Specimen label="Mark">
                 <BrandMark size={44} />
               </Specimen>
-              <Specimen label="Product lockup">
+              <Specimen label="Product lockup, still (pictures, PDFs)">
                 <div className={styles.stack}>
                   <ProductLockup size="sm" />
                   <ProductLockup size="md" />
                   <ProductLockup size="lg" />
                 </div>
+              </Specimen>
+              <Specimen label="A: opens, then blinks now and then (dashboard, login)">
+                <ProductLockup size="lg" motion="blink" />
+              </Specimen>
+              <Specimen label="C: also follows the pointer (/drishti, the website)">
+                <ProductLockup size="lg" motion="follow" />
+              </Specimen>
+              <Specimen label="Rise: rises from behind the word once, then C (the /drishti hero, the website's Drishti section)">
+                <ProductLockup size="lg" motion="rise" />
               </Specimen>
             </div>
           </Section>

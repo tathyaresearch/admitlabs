@@ -95,7 +95,7 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
     <div className={styles.page}>
       <header className={styles.top}>
         <div className={styles.topInner}>
-          <ProductLockup size="sm" />
+          <ProductLockup size="sm" motion="blink" />
           <p className={styles.topLabel}>Audit, shared by AdmitLabs</p>
         </div>
       </header>
@@ -253,7 +253,7 @@ export function ExpiredLink() {
   return (
     <main className={styles.expired}>
       <div className={styles.expiredCard}>
-        <ProductLockup size="md" />
+        <ProductLockup size="md" motion="blink" />
         <h1 className={styles.expiredTitle}>This link has expired</h1>
         <p className={styles.muted}>Shared Audits stay open for a while, then close. You can see where you stand today with your own free Audit.</p>
         <ButtonLink href="/login" iconAfter="arrowRight">

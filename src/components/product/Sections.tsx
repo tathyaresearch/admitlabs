@@ -55,7 +55,7 @@ export function Hero({ showcase }: { showcase: Showcase }) {
       <div className={styles.dots} aria-hidden="true" />
       <Frame draw />
       <div className={`${site.container} ${styles.heroContent}`}>
-        <ProductLockup size="lg" className={styles.lockup} />
+        <ProductLockup size="lg" motion="rise" className={styles.lockup} />
         <h1 id="hero-title" className={styles.heroTitle}>
           {HERO.title} <span className={styles.highlight}>{HERO.highlight}</span>
         </h1>

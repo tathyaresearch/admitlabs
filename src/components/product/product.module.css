@@ -50,7 +50,9 @@
   text-align: center;
 }
 
+/* The eye's reveal starts as the hero's lift settles. */
 .lockup {
+  --eye-delay: 400ms;
   color: var(--ivory);
 }
 

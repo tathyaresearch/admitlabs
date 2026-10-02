@@ -6,6 +6,7 @@
 
 import { useRef, useState } from 'react';
 import { ButtonLink } from '@/components/ui/Button';
+import { EyeName } from '@/components/ui/Eye';
 import { Icon } from '@/components/ui/Icon';
 import type { NAV, PRODUCTS } from '@/site/content';
 import styles from './site.module.css';
@@ -37,8 +38,14 @@ export function SiteMenu({ nav, products, work }: { nav: typeof NAV; products: t
                     <li key={item.name}>
                       <a href={item.href} className={styles.menuProduct} onClick={close} target={item.newTab ? '_blank' : undefined} rel={item.newTab ? 'noreferrer' : undefined}>
                         <span className={styles.menuProductName}>
-                          {item.name}
-                          {item.newTab ? <Icon name="arrowUpRight" size={16} /> : null}
+                          {item.eye ? (
+                            <EyeName lashes={false}>
+                              <span>{item.name}</span>
+                            </EyeName>
+                          ) : (
+                            item.name
+                          )}
+                          {item.newTab ? <Icon name="arrowUpRight" size={16} className={styles.menuProductArrow} /> : null}
                         </span>{' '}
                         <span className={styles.menuProductFor}>{item.for}</span>
                         {item.newTab ? <span className="visually-hidden"> (opens in a new tab)</span> : null}

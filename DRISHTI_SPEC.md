@@ -504,6 +504,19 @@ Confirm these hex values against the AdmitLabs brand identity PDF before Phase 1
 - Hierarchy through size, weight and width.
 - Wordmark: "Admit" at weight 800, "Labs" at weight 400. Product name shown as "Drishti by AdmitLabs".
 
+**The Drishti logo**
+
+- "Drishti by AdmitLabs" with the Drishti eye before the word: two lids drawn as an almond within an almond, a round iris, and three short lashes on the upper lid. Drawn once (`src/graphics/eye.ts`) for the screens, the PDFs, the link previews and the favicon, in the text colour, so it works on black and on ivory.
+- Three lashes from 20 px up. Smaller (the dashboard sidebar, menus) and in the favicon, the eye stands alone.
+- How it moves, monochrome and calm, never a constant loop:
+  - **A**, in the dashboard, login and a shared Audit: the eye opens as it appears, then blinks once every 23 seconds, and once on hover. The lashes follow the lid.
+  - **C**, on `/drishti` and the website: the same, and the iris turns gently towards the pointer (on a phone it looks ahead, and a tap blinks).
+  - **The Rise reveal**, once, as the intro of the `/drishti` hero and the website's Drishti section (when it comes into view, not on every scroll): the eye, half open, rises from behind the word and peeks over the top of the D, looks left and right, glides down into its place, opens fully and blinks once; then it is C.
+  - **Still**: pictures of the product, the Products menu, the PDFs and link previews.
+  - With reduced motion turned on, every eye is still and open.
+- Favicon: the eye on a black rounded square for the dashboard, login and `/drishti`. The website's own pages keep the "AL" mark.
+- Motion files: `brand/motion` holds the Rise reveal and the Side reveal (the eye comes out from behind the D) as MP4 and GIF, square and wide, on black and ivory, with and without "by AdmitLabs". `npm run motion:record` makes them again from the development-only stage at `/drishti/motion`.
+
 **Contrast**
 
 Comes from scale, weight, black and ivory surface flips, and inverted highlight blocks. Never from colour.
@@ -549,7 +562,7 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 **Sections, in order:**
 
-1. **Hero**: the product's name, then "See where you stand, who's ahead, and what students want." with the last words in an ivory block. "Get your free Audit" and "See the sample report", the trust line and the proof line, then the dashboard's Home in an app window that settles flat as the page moves
+1. **Hero**: the product's name with the Drishti eye (its Rise reveal plays once as the intro, section 14), then "See where you stand, who's ahead, and what students want." with the last words in an ivory block. "Get your free Audit" and "See the sample report", the trust line and the proof line, then the dashboard's Home in an app window that settles flat as the page moves
 2. **The problem** (ivory): what most teams are left guessing (how they look, what rivals do, what students want), each with what Drishti answers
 3. **Three questions**: the Audit, Rivals and Demand, each laid out its own way around a real picture of the product: the Audit on a dark stage, Rivals on ivory, Demand centred
 4. **The score**: Discovered, Trusted and Chosen, each with its question and its checks by name, then what each result earns
@@ -706,14 +719,14 @@ The main AdmitLabs website, built in this app (section 4), in the **Spotlight** 
 
 **What AdmitLabs is:** an education only content partner. Three services (content only, never ads) and two products: Drishti for institutions and Tathya for students.
 
-**Pages:** the home page (`/`), Work with us (`/work-with-us`) and the product page (`/drishti`, section 15, in the same style). One header on every page: Services, Products (a small menu: Drishti, and Tathya, which opens mytathya.in in a new tab), How we work, FAQ, "Work with us" and "Get your free Audit" (a menu on a phone, with both products); clear over the light at the top, glass once the page moves. The logo and the buttons keep clear of the frame's lines and crosses, on a desktop and on a phone. One footer: "© 2026 AdmitLabs" (the current year), the email, Drishti and Sign in.
+**Pages:** the home page (`/`), Work with us (`/work-with-us`) and the product page (`/drishti`, section 15, in the same style). One header on every page: Services, Products (a small menu: Drishti, with its eye, still, before the name, and Tathya, which opens mytathya.in in a new tab), How we work, FAQ, "Work with us" and "Get your free Audit" (a menu on a phone, with both products); clear over the light at the top, glass once the page moves. The logo and the buttons keep clear of the frame's lines and crosses, on a desktop and on a phone. One footer: "© 2026 AdmitLabs" (the current year), the email, Drishti and Sign in.
 
 **Home page sections, in order:**
 
 1. **Hero**: "Get discovered, trusted, and chosen." in two lines (80px on a desktop), falling from ivory to warm grey, centred on black under a soft cone of light, inside a fine frame with small crosses. One short paragraph, two buttons ("Get your free Audit" and "Work with us"), and the quiet proof line "120+ education companies worked with." No picture, no labels
 2. **The system** (ivory): one dark stage where the three moments happen in the order a student lives them: a search where the institution is the answer (an AI answer and the top result), a review and its proof, and an enquiry that someone receives. Under each, its words set like a caption: Discovered, Trusted or Chosen, its line, and what Drishti checks. Then "Measure. Fix. Repeat." as one sentence on one track, with a dot that travels it. On a phone each moment gets its own small stage
 3. **Services**: three chapters, each laid out its own way around what that service makes: Program Growth beside a program's own page (a browser, and the phone in front; on a phone, the phone alone); Institution Branding on a stage of phones (the official page's posts, a reel, a YouTube film); Admit Campaign beside its season, planned week by week, with this week's posts. Instagram and YouTube appear only as their official one colour logos. Each links to the form with the service named. "We create content. We don't run ads." No prices
-4. **Drishti**: under one small label, "Product", the only one on the page, its name; its three numbers (17 checks, 5 rivals, 1 report), its three questions as a short list beside the product itself, a made up institution's Home in an app window, then "Free to start." with "Get your free Audit" and "Explore Drishti"
+4. **Drishti**: under one small label, "Product", the only one on the page, its name with the Drishti eye (its Rise reveal plays once when the title comes into view, section 14); its three numbers (17 checks, 5 rivals, 1 report), its three questions as a short list beside the product itself, a made up institution's Home in an app window, then "Free to start." with "Get your free Audit" and "Explore Drishti"
 5. **Who we work with** (ivory): private colleges, private universities, and skilling and training institutes, set large as a staircase, for professional and career programs
 6. **Our work**: content samples. Hidden until there are samples (`src/site/work.ts`) and `SITE_SETTINGS.showWork` is on
 7. **How we work**: the promise held on the left; Audit, Blueprint, Run and Report on a line that fills as the page moves. No numbers

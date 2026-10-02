@@ -1,7 +1,9 @@
 // AdmitLabs wordmark and the "Drishti by AdmitLabs" lockup. The wordmark uses the glyph
 // paths from the official logo files ("Admit" at 800, "Labs" at 400), recoloured with
-// currentColor so it follows the theme.
+// currentColor so it follows the theme. The lockup has the Drishti eye before the word.
 
+import { EyeName } from './Eye';
+import { EyeMotion } from './EyeMotion';
 import styles from './Brand.module.css';
 
 const GLYPHS: ReadonlyArray<readonly [number, string]> = [
@@ -48,15 +50,42 @@ export function BrandMark({ size = 28, className }: { size?: number; className?:
   );
 }
 
-/** "Drishti by AdmitLabs". */
-export function ProductLockup({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg'; className?: string }) {
-  return (
-    <span className={[styles.lockup, styles[size], className].filter(Boolean).join(' ')}>
-      <span className={styles.product}>Drishti</span>
-      <span className={styles.by}>
-        by <span className={styles.admit}>Admit</span>
-        <span className={styles.labs}>Labs</span>
-      </span>
+/**
+ * How the eye moves (Eye.module.css). still: pictures of the product, the PDFs. blink (A): opens as
+ * it appears, then blinks now and then; the dashboard and login. follow (C): the same, and the iris
+ * turns towards the pointer; /drishti and the website. rise: the eye rises from behind the word
+ * once, then C; the /drishti hero. side: comes out from behind the D once; the brand motion files.
+ */
+export type EyeMotionKind = 'still' | 'blink' | 'follow' | 'rise' | 'side';
+
+/**
+ * "Drishti by AdmitLabs", with the eye before the word: three lashes from 20 px up, the eye alone
+ * at the small size. `inherit` takes its size from the parent (the motion stage). `byline={false}`
+ * leaves out "by AdmitLabs".
+ */
+export function ProductLockup({
+  size = 'md',
+  motion = 'still',
+  byline = true,
+  className,
+}: {
+  size?: 'sm' | 'md' | 'lg' | 'inherit';
+  motion?: EyeMotionKind;
+  byline?: boolean;
+  className?: string;
+}) {
+  const lockup = (
+    <span className={[styles.lockup, styles[size], className].filter(Boolean).join(' ')} data-eye={motion === 'still' ? undefined : motion}>
+      <EyeName lashes={size !== 'sm'}>
+        <span className={styles.product}>Drishti</span>
+      </EyeName>
+      {byline ? (
+        <span className={styles.by}>
+          by <span className={styles.admit}>Admit</span>
+          <span className={styles.labs}>Labs</span>
+        </span>
+      ) : null}
     </span>
   );
+  return motion === 'follow' || motion === 'rise' ? <EyeMotion intro={motion === 'rise'}>{lockup}</EyeMotion> : lockup;
 }

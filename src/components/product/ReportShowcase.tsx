@@ -5,6 +5,7 @@
 
 import { ScoreGauge } from '@/components/charts/ScoreGauge';
 import { AnchorButton } from '@/components/ui/Button';
+import { EyeName } from '@/components/ui/Eye';
 import type { ReportData } from '@/report/data';
 import { THING_SOURCE_LABELS } from '@/report/things';
 import { REPORT } from '@/product/content';
@@ -15,10 +16,14 @@ import styles from './product.module.css';
 
 export const SAMPLE_REPORT_PATH = '/drishti/sample-report.pdf';
 
+/** The lockup as the PDF's cover has it, with the eye still (a picture), alone at this small size. */
 function Lockup() {
   return (
     <span className={papers.lockup}>
-      <span className={papers.lockupProduct}>Drishti</span> <span className={papers.lockupBy}>by AdmitLabs</span>
+      <EyeName lashes={false}>
+        <span className={papers.lockupProduct}>Drishti</span>
+      </EyeName>{' '}
+      <span className={papers.lockupBy}>by AdmitLabs</span>
     </span>
   );
 }

@@ -150,6 +150,7 @@ Settings has an About tab, and each program has its details under Programs. Ever
 - **Logos:** only Instagram, X and YouTube show their real one-colour logo, from Simple Icons 16.33.0 (CC0), unchanged, in the colours each brand allows. The files, their source and licence are in `src/graphics/brands` (see `SOURCES.md`). Every other platform shows a neutral line icon and its name. No brand's terms have been accepted.
 - **Results without colour** (`src/components/ui/Results.tsx`): in rows and lists, a thin bar of the points a check earns against the points it could, then the word; Missing is an empty dashed bar. In compact grids, one small square per check in four shades (Weak with a thin outline, Missing dashed), with a key nearby. The word is beside the bar, on hover and read out for every square. The shades are tokens (`--result-*`), set for black and for ivory.
 - **The score gauge** draws its number in the same picture as the arc: centred on the arc's baseline, never touching it, "/100" smaller on the same line, "0" and "100" under the two ends. Its geometry and the number's placement (`src/graphics/gauge.ts`, with tests) are shared by the screens and the PDFs.
+- **The Drishti eye** sits before the word in "Drishti by AdmitLabs" (`ProductLockup` in `src/components/ui/Brand.tsx`), drawn once in `src/graphics/eye.ts` for the screens, the PDFs, the link previews and the favicon (`src/app/icon.svg`, checked by a test; the website's own pages keep "AL" in `src/app/(site)/site/icon.svg`). Three lashes from 20 px up, the eye alone below that. Its motion is CSS (`src/components/ui/Eye.module.css`): A in the dashboard, login and a shared Audit, C on `/drishti` and the website, the Rise reveal once in the `/drishti` hero and the website's Drishti section, still in pictures, menus, PDFs and previews, and still everywhere with reduced motion. `EyeMotion.tsx` adds the pointer follow and plays a reveal only once it is in view. The Rise reveal hides the eye behind the D using the D's measures at each size (`--eye-d`, `--eye-d-mid`), because Bricolage changes them with optical sizing.
 
 ## Team tools
 
@@ -225,12 +226,14 @@ The AdmitLabs website (spec section 22), later served at admitlabs.in, is part o
 | `npm run rivals -- ...` | Runs rival Audits, weekly checks and what to learn from rivals by hand (see above) |
 | `npm run demand -- ...` | Runs the monthly Demand pulls by hand (see above) |
 | `npm run report -- ...` | Makes monthly reports by hand (see above) |
+| `npm run motion:record` | Records the Drishti reveals into `brand/motion` (with `npm run dev` running; needs ffmpeg and Edge or Chrome). See `brand/motion/README.md` |
 
 ## Layout
 
 ```
 supabase/        config, migrations (schema, row level security, owner actions), database tests, email template
-scripts/         env, seed, audit, tier, rivals, demand, report, dash check (TypeScript run directly by Node)
+scripts/         env, seed, audit, tier, rivals, demand, report, dash check, reveal recording (TypeScript run directly by Node)
+brand/motion/    the Drishti reveals as MP4 and GIF, made by npm run motion:record
 src/app/         routes: (site)/site (the website), (product)/drishti, login, (dashboard), onboarding, team, share, design-system
 src/components/  ui, charts, audit, rivals, demand, report, team and share screens, the website, institution inputs and the app shell
 src/domain/      pure logic: the scoring engine (domain/scoring), checks, schedules, onboarding checks, dates, tiers
@@ -241,7 +244,7 @@ src/rivals/      comparisons, verdicts, change rules, what to learn from rivals,
 src/demand/      regions, the pull schedule, ranking and spikes, the season clock, the page view, and the pulls
 src/report/      the monthly report (its schedule, the 3 things to do, the snapshot, the PDF, the job) and the shared Audit PDF
 src/team/        team tools: the bulk list reader, list filters, plan rules and the shared Audit
-src/graphics/    the gauges, line icons, brand logos (with their sources) and platform marks, shared by the screens and the PDFs
+src/graphics/    the gauges, line icons, the Drishti eye, brand logos (with their sources) and platform marks, shared by the screens and the PDFs
 src/product/     the product page: its words (numbers from config) and its preview data
 src/site/        the website: its words, what its pictures show, the Work with us form's rules and the Our work samples
 src/sample/      the fictional sample world, and that world worked out in memory (world.ts, report.ts)

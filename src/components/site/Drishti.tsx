@@ -5,6 +5,8 @@
 import type { CSSProperties } from 'react';
 import { ProductLockup } from '@/components/ui/Brand';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
+import { EyeName } from '@/components/ui/Eye';
+import { EyeMotion } from '@/components/ui/EyeMotion';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { appLink } from '@/lib/urls';
 import { FEATURES } from '@/product/content';
@@ -16,6 +18,9 @@ import site from './site.module.css';
 
 const NAV_ICONS: readonly IconName[] = ['home', 'audit', 'rivals', 'demand', 'reports'];
 const vars = (values: Record<string, string | number>) => values as CSSProperties;
+
+/** The title is the product's name: "Drishti", then the rest. */
+const [TITLE_NAME, ...TITLE_REST] = DRISHTI.title.split(' ');
 
 function DashboardPicture() {
   const { score, pillars, fixes, rivals, demand } = DASHBOARD;
@@ -137,9 +142,17 @@ export function DrishtiSection() {
         <div className={styles.head}>
           <div className={site.reveal}>
             <p className={styles.eyebrow}>{DRISHTI.eyebrow}</p>
-            <h2 id="drishti-title" className={`${site.title} ${site.titleLight}`}>
-              {DRISHTI.title}
-            </h2>
+            {/* The Drishti eye before the name: it rises from behind the word once, when the title
+                comes into view, then follows the pointer. */}
+            <EyeMotion intro>
+              <h2 id="drishti-title" className={`${site.title} ${site.titleLight} ${styles.drishtiTitle}`} data-eye="rise">
+                <EyeName lashes className={styles.titleName}>
+                  <span>{TITLE_NAME}</span>
+                </EyeName>{' '}
+                {/* "by AdmitLabs." stays together: on a phone the title breaks after the name. */}
+                {TITLE_REST.join(' ')}
+              </h2>
+            </EyeMotion>
             <p className={`${site.lede} ${styles.lede}`}>{DRISHTI.lede}</p>
           </div>
           <ul className={styles.figures}>

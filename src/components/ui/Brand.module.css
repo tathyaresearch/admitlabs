@@ -33,14 +33,30 @@
   font-weight: var(--weight-regular);
 }
 
+/* Each size, with where its D sits for the reveals (Eye.module.css): Bricolage's optical sizing
+   moves the D's left edge and middle, measured in ems at each size. */
 .sm {
+  --eye-d: 0.059em;
+  --eye-d-mid: 0.318em;
   font-size: 1rem;
 }
 
 .md {
+  --eye-d: 0.058em;
+  --eye-d-mid: 0.316em;
   font-size: 1.25rem;
 }
 
 .lg {
+  --eye-d: 0.056em;
+  --eye-d-mid: 0.311em;
   font-size: 1.75rem;
+}
+
+/* As large as the parent says: the motion stage, from 6.5rem up, where the D is at its largest
+   optical size. */
+.inherit {
+  --eye-d: 0.03em;
+  --eye-d-mid: 0.268em;
+  font-size: inherit;
 }

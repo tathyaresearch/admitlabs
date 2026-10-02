@@ -57,7 +57,7 @@ export function AppShell({ sections, homeHref, email, roleLabel, context, showNo
         <div className={styles.sidebarFoot}>
           <AccountMenu variant="side" email={email} roleLabel={roleLabel} institutionName={context.title} />
           <p className={styles.madeBy}>
-            <ProductLockup size="sm" />
+            <ProductLockup size="sm" motion="blink" />
           </p>
         </div>
       </aside>

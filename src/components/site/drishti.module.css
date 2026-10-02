@@ -11,6 +11,18 @@
   gap: var(--space-10);
 }
 
+/* The title is the product's name with the Drishti eye before it (src/components/ui/Eye.tsx): where
+   its D sits at this weight and size, for the reveal. The title's ink is a gradient clipped to the
+   text, so the eye takes the gradient's tone at the line's middle. */
+.drishtiTitle {
+  --eye-d: 0.066em;
+  --eye-d-mid: 0.345em;
+}
+
+.titleName svg {
+  color: #e5ddcf;
+}
+
 /* The one small label above a heading on the home page. */
 .eyebrow {
   margin-bottom: var(--space-4);
