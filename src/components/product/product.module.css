@@ -203,63 +203,90 @@
   }
 }
 
-/* The problem, on ivory: most teams guess, Drishti checks. Beside it, a Drishti card with the sample
-   university's answers to the three questions, each with where it came from. ----------------- */
+/* The problem, on ivory: most teams guess, Drishti checks. The headline with its line beside it,
+   then one wide Drishti card, dense like the dashboard: a top bar, then the sample university's
+   answers to the three questions in three panels side by side (stacked on a phone), each with
+   where it came from. Less space around it than the other sections: it is one tight band. ---- */
 
 .problem {
-  padding-block: var(--section-pad);
+  padding-block: clamp(3rem, 2rem + 3vw, 4.5rem);
   background: linear-gradient(180deg, var(--ivory) 0%, #efe4d0 100%);
   color: var(--black);
 }
 
-.problemGrid {
+/* The headline on the left and its line on the right, on one row, their last lines level. */
+.problemHead {
   display: grid;
-  gap: var(--space-10);
-  align-items: center;
+  gap: var(--space-3);
 }
 
-.problemWords {
-  display: grid;
-  gap: var(--space-4);
-  align-content: start;
+@media (min-width: 64rem) {
+  .problemHead {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: var(--space-12);
+    align-items: end;
+    align-items: last baseline;
+  }
+
+  .problemLede {
+    justify-self: end;
+  }
 }
 
 .card {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border-radius: 1.25rem;
-  background: linear-gradient(180deg, #17171b 0%, #0d0d10 100%);
+  --card-line: rgba(242, 232, 214, 0.08);
+  margin-top: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  overflow: clip;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #17171b 0%, #0e0e11 100%);
   box-shadow:
-    0 40px 80px -40px rgba(10, 10, 12, 0.65),
+    0 32px 64px -36px rgba(10, 10, 12, 0.6),
     inset 0 1px 0 rgba(242, 232, 214, 0.06);
   color: var(--ivory);
 }
 
-.cardHead {
+/* The top bar: whose card this is, and when it was checked. */
+.cardBar {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--space-1) var(--space-3);
-  padding: var(--space-2) var(--space-3) var(--space-1);
+  gap: var(--space-1) var(--space-4);
+  padding: 0.6875rem var(--space-4);
+  border-bottom: 1px solid var(--card-line);
   font-size: 0.8125rem;
   color: var(--slate);
 }
 
-.cardHead strong {
+.cardBar strong {
   font-weight: var(--weight-heading);
   color: var(--ivory);
 }
 
-.cardBlock {
+.cardPanels {
   display: grid;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border-radius: 0.875rem;
-  background: var(--graphite);
 }
 
-.cardBlockHead {
+/* A panel: its question at the top, the answer, and where the answer came from at its foot, level
+   across the panels, which share one height. */
+.cardPanel {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: 0.875rem var(--space-4) var(--space-4);
+}
+
+.cardPanel + .cardPanel {
+  border-top: 1px solid var(--card-line);
+}
+
+.cardFoot {
+  margin-top: auto;
+}
+
+.cardPanelHead {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -270,14 +297,15 @@
 .cardQuestion {
   font-size: 0.9375rem;
   font-weight: var(--weight-heading);
+  letter-spacing: -0.005em;
 }
 
-/* Where an answer came from: a short note, quiet, beside or under it. */
+/* Where an answer came from: a short note, quiet. */
 .cardSource {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.25rem 0.375rem;
   font-size: 0.75rem;
   color: var(--slate);
 }
@@ -289,14 +317,19 @@
 .cardMarks {
   display: inline-flex;
   gap: 0.3125rem;
-  margin-right: 0.125rem;
 }
 
+/* The score: the number and its word on one line, the bar under them. */
 .cardScore {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-2);
+}
+
+.cardScoreLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .cardScoreNumber {
@@ -306,15 +339,20 @@
 }
 
 .cardScoreNumber :global(.num):first-child {
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: var(--weight-heading);
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.045em;
 }
 
 .cardScoreNumber small {
   font-size: 0.875rem;
   color: var(--slate);
+}
+
+.cardWord {
+  font-size: 0.8125rem;
+  font-weight: var(--weight-heading);
 }
 
 .cardTrack {
@@ -332,11 +370,6 @@
   background: var(--ivory);
 }
 
-.cardWord {
-  font-size: 0.8125rem;
-  font-weight: var(--weight-heading);
-}
-
 .cardRank {
   font-size: 0.8125rem;
   color: var(--slate);
@@ -347,81 +380,103 @@
   color: var(--ivory);
 }
 
+/* The ranking: thin rows in one grid, so every bar starts after the longest name and every score
+   sits in the last column; yours on a quiet band. Without subgrid, each row keeps the same columns
+   on its own. */
 .cardLadder {
   display: grid;
-  gap: 0.375rem;
+  grid-template-columns: 1rem minmax(0, max-content) minmax(2rem, 1fr) 1.75rem;
+  column-gap: var(--space-3);
+  row-gap: 0.125rem;
   list-style: none;
 }
 
 .cardRung {
   display: grid;
-  grid-template-columns: 1rem minmax(0, 11rem) minmax(0, 1fr) 1.75rem;
+  grid-column: 1 / -1;
+  grid-template-columns: 1rem minmax(0, 10rem) minmax(2rem, 1fr) 1.75rem;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: var(--space-3);
-  min-height: 2rem;
-  padding-inline: var(--space-3);
-  border-radius: 0.5rem;
-  background: #26272c;
+  column-gap: var(--space-3);
+  min-height: 1.625rem;
+  padding-inline: var(--space-2);
+  border-radius: 0.375rem;
   font-size: 0.8125rem;
 }
 
 .cardRungYou {
-  background: #34353b;
+  background: #2c2d32;
   font-weight: var(--weight-heading);
 }
 
 .cardRungRank {
+  grid-column: 1;
   color: var(--slate);
 }
 
 .cardRungName {
+  grid-column: 2;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
+.cardRung .cardTrack {
+  grid-column: 3;
+}
+
 .cardRungScore {
+  grid-column: -2 / -1;
   justify-self: end;
   font-weight: var(--weight-heading);
 }
 
+/* The questions: each on one line (wrapping neatly when long), with where and how often it was
+   asked small on the right. */
 .cardAsked {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   list-style: none;
 }
 
 .cardAsk {
   display: grid;
-  gap: 0.3125rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--space-4);
 }
 
 .cardAskText {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: var(--weight-heading);
   line-height: 1.4;
+  text-wrap: pretty;
 }
 
-.cardAskMeta {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
+.cardMeta {
+  justify-self: end;
   font-size: 0.75rem;
+  white-space: nowrap;
   color: var(--slate);
 }
 
-/* The search rising fastest: one small line under the questions, with where it came from. */
+.cardMeta :global(.num) {
+  font-weight: var(--weight-heading);
+  color: var(--ivory);
+}
+
+/* The search rising fastest: one short line at the foot of the students' panel, in the same two
+   columns as the questions. */
 .cardTrend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem var(--space-2);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--space-4);
   padding-top: var(--space-3);
-  border-top: 1px solid rgba(242, 232, 214, 0.08);
+  border-top: 1px solid var(--card-line);
   font-size: 0.75rem;
-  line-height: 1.5;
+  line-height: 1.45;
   color: var(--slate);
 }
 
@@ -430,11 +485,16 @@
   color: var(--ivory);
 }
 
-/* On a phone the names need the room: the ranking keeps its scores and drops its bars (two
-   classes, so this wins whatever order the styles load in). */
-@media (max-width: 40rem) {
+/* A narrow panel (a small phone): the ranking drops its bars and their column, so every name fits
+   beside its score. */
+@container (max-width: 17rem) {
+  .cardLadder {
+    grid-template-columns: 1rem minmax(0, 1fr) 1.75rem;
+  }
+
   .cardRung {
     grid-template-columns: 1rem minmax(0, 1fr) 1.75rem;
+    grid-template-columns: subgrid;
   }
 
   .cardRung .cardTrack {
@@ -442,10 +502,52 @@
   }
 }
 
-@media (min-width: 64rem) {
-  .problemGrid {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    column-gap: var(--space-16);
+/* A phone's panel: the search rising fastest takes the width, its source and rise under it. */
+@container (max-width: 26rem) {
+  .cardTrend {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.25rem;
+  }
+
+  .cardTrend .cardMeta {
+    justify-self: start;
+  }
+}
+
+/* Two panels to a row on a tablet or a small laptop, the students' panel across under them; three
+   on a wide screen, the questions given the most room. */
+@media (min-width: 40rem) {
+  .cardBar {
+    padding-inline: var(--space-5);
+  }
+
+  .cardPanels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cardPanel {
+    padding: var(--space-4) var(--space-5) 1.125rem;
+  }
+
+  .cardPanel:nth-child(2) {
+    border-top: 0;
+    border-left: 1px solid var(--card-line);
+  }
+
+  .cardPanel:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 75rem) {
+  .cardPanels {
+    grid-template-columns: minmax(0, 2.5fr) minmax(0, 3.5fr) minmax(0, 6fr);
+  }
+
+  .cardPanel:nth-child(3) {
+    grid-column: auto;
+    border-top: 0;
+    border-left: 1px solid var(--card-line);
   }
 }
 

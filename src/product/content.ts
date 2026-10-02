@@ -30,9 +30,9 @@ export const CTA = {
 } as const;
 
 /**
- * The problem: most teams guess, Drishti checks. Shown as a Drishti card with the sample
- * university's answers to the three questions, each with where it came from. The card's words are
- * here; every value on it comes from the sample (src/product/showcase.ts).
+ * The problem: most teams guess, Drishti checks. Shown as one wide Drishti card with the sample
+ * university's answers to the three questions side by side, each with where it came from. The
+ * card's words are here; every value on it comes from the sample (src/product/showcase.ts).
  */
 export const PROBLEM = {
   title: 'Most teams guess. Drishti checks.',
@@ -50,6 +50,9 @@ export const PROBLEM = {
     demandSource: 'Asked most in',
     /** Before the search rising fastest, under the questions. */
     rising: 'Rising fastest:',
+    /** What a question's count is, for screen readers ("asked about 96 times"). */
+    asked: 'asked about',
+    times: 'times',
   },
 } as const;
 

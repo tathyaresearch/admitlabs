@@ -10,17 +10,16 @@ import { Frame } from '@/components/site/Frame';
 import { ProductLockup } from '@/components/ui/Brand';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
-import { Mark, PillarIcon, PlatformMark } from '@/components/ui/Marks';
+import { Mark, PillarIcon } from '@/components/ui/Marks';
 import { ResultBar, ScoreLabel } from '@/components/ui/Results';
 import { pillarChecks } from '@/audit/view';
 import { SCORING_V1 } from '@/config/scoring.v1';
-import { countWords } from '@/demand/text';
 import { CHECKS } from '@/domain/checks';
 import { formatDate, ordinal, plural } from '@/domain/format';
 import { scoreLabel } from '@/domain/scores';
 import { PILLAR_LABELS, RESULTS, type CheckResult, type Pillar } from '@/domain/types';
 import type { IconRef } from '@/graphics/icons';
-import { PLATFORM_ICONS } from '@/graphics/platforms';
+import { PLATFORM_ICONS, PLATFORM_NAMES } from '@/graphics/platforms';
 import { appLink } from '@/lib/urls';
 import { CTA, FEATURES, FEATURES_HEAD, FINAL, HERO, PROBLEM, PROOF_LINE, REPORT, SCORE, STEPS, TRUST, type Feature } from '@/product/content';
 import type { Showcase } from '@/product/showcase';
@@ -113,10 +112,12 @@ const CHECKED_MARKS: ReadonlyArray<{ key: string; icon: IconRef }> = [
 ];
 
 /**
- * The problem: most teams guess, Drishti checks. Beside it, a Drishti card with the sample
- * university's answers to the three questions, each with where it came from: its score from the
- * Audit's checks of public pages, its place among its rivals from each one's own Audit, the
- * questions asked most with the site and how often, and under them the search rising fastest.
+ * The problem: most teams guess, Drishti checks. The headline with its line beside it, then one wide
+ * Drishti card, dense like the dashboard: a top bar with the sample university and when it was
+ * checked, then its answers to the three questions side by side (stacked on a phone), each with
+ * where it came from: its score from the Audit's checks of public pages, its place among its rivals
+ * from each one's own Audit, and the questions asked most with their site and count, with the
+ * search rising fastest under them.
  */
 export function Problem({ showcase }: { showcase: Showcase }) {
   const { card } = PROBLEM;
@@ -126,104 +127,116 @@ export function Problem({ showcase }: { showcase: Showcase }) {
   const top = demand.view.topTrend;
   return (
     <section className={styles.problem} data-theme="light" aria-labelledby="problem-title">
-      <div className={`${site.container} ${styles.problemGrid}`}>
-        <div className={`${styles.problemWords} ${site.reveal}`}>
+      <div className={site.container}>
+        <div className={`${styles.problemHead} ${site.reveal}`}>
           <h2 id="problem-title" className={`${site.title} ${styles.heading}`}>
             {PROBLEM.title}
           </h2>
-          <p className={styles.lede}>{PROBLEM.lede}</p>
+          <p className={`${styles.lede} ${styles.problemLede}`}>{PROBLEM.lede}</p>
         </div>
+
         <div className={`${styles.card} ${site.reveal}`} data-theme="dark">
-          <p className={styles.cardHead}>
+          <p className={styles.cardBar}>
             <span>
-              <strong>{institution.name}</strong> {institution.city}
+              <strong>{institution.name}</strong>, {institution.city}
             </span>
             <span>
               {card.checked} {formatDate(showcase.home.checkedAt)}
             </span>
           </p>
 
-          <section className={styles.cardBlock} aria-labelledby="card-score">
-            <div className={styles.cardBlockHead}>
+          <div className={styles.cardPanels}>
+            <section className={styles.cardPanel} aria-labelledby="card-score">
               <h3 id="card-score" className={styles.cardQuestion}>
                 {card.score}
               </h3>
-              <p className={styles.cardSource}>
+              <div className={styles.cardScore}>
+                <p className={styles.cardScoreLine}>
+                  <span className={styles.cardScoreNumber}>
+                    <span className="num">{score}</span>
+                    <small className="num">/100</small>
+                  </span>
+                  <span className={styles.cardWord}>{scoreLabel(score)}</span>
+                </p>
+                <span className={styles.cardTrack} aria-hidden="true">
+                  <i style={{ width: `${score}%` }} data-fill />
+                </span>
+              </div>
+              <p className={`${styles.cardSource} ${styles.cardFoot}`}>
                 <span className={styles.cardMarks} aria-hidden="true">
                   {CHECKED_MARKS.map((mark) => (
                     <Mark key={mark.key} icon={mark.icon} size={13} />
                   ))}
                 </span>
-                <span className="num">{CHECKS.length}</span> {card.scoreSource}
-              </p>
-            </div>
-            <p className={styles.cardScore}>
-              <span className={styles.cardScoreNumber}>
-                <span className="num">{score}</span>
-                <small className="num">/100</small>
-              </span>
-              <span className={styles.cardTrack} aria-hidden="true">
-                <i style={{ width: `${score}%` }} data-fill />
-              </span>
-              <span className={styles.cardWord}>{scoreLabel(score)}</span>
-            </p>
-          </section>
-
-          <section className={styles.cardBlock} aria-labelledby="card-rivals">
-            <div className={styles.cardBlockHead}>
-              <h3 id="card-rivals" className={styles.cardQuestion}>
-                {card.rivals}
-              </h3>
-              {you?.rank ? (
-                <p className={styles.cardRank}>
-                  <span className="num">{ordinal(you.rank)}</span> of <span className="num">{rivals.rows.length}</span>
-                </p>
-              ) : null}
-            </div>
-            <ol className={styles.cardLadder}>
-              {rivals.rows.map((row) => (
-                <li key={row.id} className={`${styles.cardRung} ${row.you ? styles.cardRungYou : ''}`}>
-                  <span className={`${styles.cardRungRank} num`}>{row.rank}</span>
-                  <span className={styles.cardRungName}>{row.you ? card.you : row.name}</span>
-                  <span className={styles.cardTrack} aria-hidden="true">
-                    <i style={{ width: `${row.overall ?? 0}%` }} data-fill />
-                  </span>
-                  <span className={`${styles.cardRungScore} num`}>{row.overall}</span>
-                </li>
-              ))}
-            </ol>
-            <p className={styles.cardSource}>{card.rivalsSource}</p>
-          </section>
-
-          <section className={styles.cardBlock} aria-labelledby="card-demand">
-            <div className={styles.cardBlockHead}>
-              <h3 id="card-demand" className={styles.cardQuestion}>
-                {card.demand}
-              </h3>
-              <p className={styles.cardSource}>
-                {card.demandSource} {demand.place}
-              </p>
-            </div>
-            <ol className={styles.cardAsked}>
-              {demand.view.questions.slice(0, 3).map((question) => (
-                <li key={question.id} className={styles.cardAsk}>
-                  <span className={styles.cardAskText}>{question.text}</span>
-                  <span className={styles.cardAskMeta}>
-                    <PlatformMark platform={askedOn(question)} size={13} />
-                    {countWords('question', question.count)}
-                  </span>
-                </li>
-              ))}
-            </ol>
-            {top ? (
-              <p className={styles.cardTrend}>
-                <PlatformMark platform="search_trends" size={13} />
                 <span>
-                  {card.rising} <strong>{top.text}</strong>, about {plural(top.count, 'search', 'searches')}, up {Math.round(top.changePct ?? 0)}%
+                  <span className="num">{CHECKS.length}</span> {card.scoreSource}
                 </span>
               </p>
-            ) : null}
-          </section>
+            </section>
+
+            <section className={styles.cardPanel} aria-labelledby="card-rivals">
+              <div className={styles.cardPanelHead}>
+                <h3 id="card-rivals" className={styles.cardQuestion}>
+                  {card.rivals}
+                </h3>
+                {you?.rank ? (
+                  <p className={styles.cardRank}>
+                    <span className="num">{ordinal(you.rank)}</span> of <span className="num">{rivals.rows.length}</span>
+                  </p>
+                ) : null}
+              </div>
+              <ol className={styles.cardLadder}>
+                {rivals.rows.map((row) => (
+                  <li key={row.id} className={`${styles.cardRung} ${row.you ? styles.cardRungYou : ''}`}>
+                    <span className={`${styles.cardRungRank} num`}>{row.rank}</span>
+                    <span className={styles.cardRungName}>{row.you ? card.you : row.name}</span>
+                    <span className={styles.cardTrack} aria-hidden="true">
+                      <i style={{ width: `${row.overall ?? 0}%` }} data-fill />
+                    </span>
+                    <span className={`${styles.cardRungScore} num`}>{row.overall}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className={`${styles.cardSource} ${styles.cardFoot}`}>{card.rivalsSource}</p>
+            </section>
+
+            <section className={styles.cardPanel} aria-labelledby="card-demand">
+              <div className={styles.cardPanelHead}>
+                <h3 id="card-demand" className={styles.cardQuestion}>
+                  {card.demand}
+                </h3>
+                <p className={styles.cardSource}>
+                  {card.demandSource} {demand.place}
+                </p>
+              </div>
+              <ol className={styles.cardAsked}>
+                {demand.view.questions.slice(0, 3).map((question) => (
+                  <li key={question.id} className={styles.cardAsk}>
+                    <span className={styles.cardAskText}>{question.text}</span>
+                    <span className={styles.cardMeta}>
+                      {PLATFORM_NAMES[askedOn(question)]}
+                      <span aria-hidden="true"> · </span>
+                      <span className="visually-hidden">, {card.asked} </span>
+                      <span className="num">{question.count}</span>
+                      <span className="visually-hidden"> {card.times}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              {top ? (
+                <p className={`${styles.cardTrend} ${styles.cardFoot}`}>
+                  <span>
+                    {card.rising} <strong>{top.text}</strong>, about {plural(top.count, 'search', 'searches')}
+                  </span>
+                  <span className={styles.cardMeta}>
+                    {PLATFORM_NAMES.search_trends}
+                    <span aria-hidden="true"> · </span>
+                    <span className="num">+{Math.round(top.changePct ?? 0)}%</span>
+                  </span>
+                </p>
+              ) : null}
+            </section>
+          </div>
         </div>
       </div>
     </section>
