@@ -32,7 +32,7 @@ This machine is **Windows**. The project folder is `D:\Drishti`. All scripts and
 
 ## Brand rules (never break)
 
-- **Strictly monochrome.** Black #0A0A0C, Graphite #1E1F23, Ivory #F2E8D6, Slate #8A8D94, and greys between. No accent colour. No green, amber or red. No gradients or glow.
+- **Strictly monochrome.** Black #0A0A0C, Graphite #1E1F23, Ivory #F2E8D6, Slate #8A8D94, and greys between. No accent colour. No green, amber or red. No gradients or glow, with one exception: the AdmitLabs website (admitlabs.in) may use subtle monochrome gradients (black to graphite, soft ivory tones) for light, depth and section transitions. Never colour, neon or glow. The dashboard and /drishti keep no gradients.
 - **Two fonts, two jobs.** Bricolage Grotesque for all headings, text and buttons. Inter only for numbers that stand on their own (scores, points, prices, counts, percentages, numbers in tables), with tabular figures. Numbers and dates inside a sentence stay in Bricolage. No other font.
 - Contrast from size, weight, width, black and ivory surface flips, and inverted blocks.
 - Strong, Okay, Weak, Missing shown with a small semi-circle gauge plus the word. Never colour.

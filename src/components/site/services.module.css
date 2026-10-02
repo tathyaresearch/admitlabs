@@ -1,0 +1,995 @@
+/* Services on black: three chapters, three layouts. */
+
+.services {
+  padding-block: var(--section-pad);
+  background: radial-gradient(60% 40% at 12% 0%, rgba(242, 232, 214, 0.05), transparent 70%), var(--black);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1rem;
+  font-weight: var(--weight-medium);
+  color: var(--ivory);
+}
+
+.note svg {
+  flex: none;
+  color: var(--slate);
+}
+
+.chapter {
+  display: grid;
+  gap: var(--space-8);
+  margin-top: clamp(4rem, 2.5rem + 5.5vw, 7.5rem);
+}
+
+.words {
+  max-width: 26rem;
+}
+
+.name {
+  font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.line {
+  margin: var(--space-4) 0 var(--space-6);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--slate);
+}
+
+.picture {
+  min-width: 0;
+}
+
+/* Program Growth: a program's page in a browser, and on a phone --------------------------- */
+
+/* Phone: the page as a phone shows it. From a tablet up, a browser with the phone in front. */
+.program {
+  position: relative;
+  display: grid;
+  justify-items: center;
+}
+
+.browser {
+  display: none;
+  overflow: hidden;
+  border: 1px solid var(--hair-2);
+  border-radius: 0.875rem;
+  background: #141417;
+  box-shadow: 0 50px 100px -40px rgba(0, 0, 0, 0.85);
+}
+
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: 2.5rem;
+  padding: 0 0.875rem;
+  border-bottom: 1px solid var(--hair);
+}
+
+.lights {
+  display: flex;
+  gap: 6px;
+}
+
+.lights i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--grey-850);
+}
+
+.address {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 22rem;
+  height: 1.5rem;
+  margin-inline: auto;
+  border-radius: 6px;
+  background: var(--grey-930);
+  font-size: 0.71875rem;
+  color: var(--slate);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.webPage {
+  padding: 1rem 1.25rem 1.5rem;
+  background: linear-gradient(180deg, #f7f0e3 0%, #efe5d2 100%);
+  color: var(--black);
+}
+
+.webNav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: 0.6875rem;
+  color: var(--grey-700);
+  white-space: nowrap;
+}
+
+.webNav strong {
+  margin-right: auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.webNav span:not(.webApply) {
+  display: none;
+}
+
+.webApply {
+  padding: 0.375rem 0.75rem;
+  border-radius: 3px;
+  background: var(--black);
+  color: var(--ivory);
+  font-weight: var(--weight-heading);
+}
+
+.webHero {
+  max-width: 30rem;
+  margin-top: 1.75rem;
+}
+
+.webKicker {
+  font-size: 0.65625rem;
+  font-weight: var(--weight-heading);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--grey-700);
+}
+
+.webTitle {
+  margin-top: 0.5rem;
+  font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.625rem);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.webLine {
+  margin-top: 0.75rem;
+  font-size: 0.84375rem;
+  line-height: 1.5;
+  color: var(--grey-700);
+}
+
+.webFacts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--hair-ink);
+}
+
+.webFacts div {
+  padding: 0.875rem 0.75rem 0 0;
+}
+
+.webFacts div + div {
+  padding-left: 0.875rem;
+  border-left: 1px solid var(--hair-ink);
+}
+
+.webFacts dt {
+  font-size: 0.65625rem;
+  color: var(--grey-700);
+}
+
+.webFacts dd {
+  margin-top: 0.25rem;
+  font-size: clamp(1rem, 0.85rem + 0.5vw, 1.375rem);
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.02em;
+}
+
+.webBody {
+  display: none;
+}
+
+.faculty {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+}
+
+.faculty li {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.71875rem;
+  color: var(--grey-700);
+}
+
+.faculty strong {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-heading);
+  color: var(--black);
+}
+
+.face {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #2a2b30, #0a0a0c);
+  color: var(--ivory);
+  font-size: 0.65625rem;
+  font-weight: 700;
+}
+
+.film {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border-radius: 0.5rem;
+  background: radial-gradient(80% 90% at 30% 20%, #45464c 0%, #141417 75%);
+  color: var(--ivory);
+}
+
+.phone {
+  width: 14rem;
+  padding: 0.375rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 1.5rem;
+  background: #0e0e11;
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9);
+}
+
+.phoneScreen {
+  display: flex;
+  flex-direction: column;
+  min-height: 22rem;
+  padding: 1rem 0.75rem 0.75rem;
+  border-radius: 1.125rem;
+  background: linear-gradient(180deg, #f7f0e3 0%, #efe5d2 100%);
+  color: var(--black);
+}
+
+.phoneBrand {
+  font-size: 0.5625rem;
+  font-weight: 700;
+}
+
+.phoneTitle {
+  margin-top: 0.875rem;
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.phoneLine {
+  margin-top: 0.3125rem;
+  font-size: 0.5625rem;
+  line-height: 1.35;
+  color: var(--grey-700);
+}
+
+.phoneFacts {
+  margin-top: 0.75rem;
+}
+
+.phoneFacts div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem;
+  padding: 0.375rem 0;
+  border-top: 1px solid var(--hair-ink);
+  font-size: 0.5625rem;
+  color: var(--grey-700);
+}
+
+.phoneFacts dd {
+  font-size: 0.75rem;
+  font-weight: var(--weight-heading);
+  color: var(--black);
+}
+
+.phoneApply {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 1.875rem;
+  margin-top: auto;
+  border-radius: 3px;
+  background: var(--black);
+  color: var(--ivory);
+  font-size: 0.65625rem;
+  font-weight: var(--weight-heading);
+}
+
+/* Shown on its own on a phone, the page's phone is larger, and so are its words. */
+@media (max-width: 39.99rem) {
+  .phoneScreen {
+    padding: 1.25rem 1rem 1rem;
+  }
+
+  .phoneBrand {
+    font-size: 0.6875rem;
+  }
+
+  .phoneTitle {
+    font-size: 1.5rem;
+  }
+
+  .phoneLine {
+    font-size: 0.71875rem;
+  }
+
+  .phoneFacts div {
+    padding: 0.5rem 0;
+    font-size: 0.71875rem;
+  }
+
+  .phoneFacts dd {
+    font-size: 0.9375rem;
+  }
+
+  .phoneApply {
+    height: 2.375rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Institution Branding: a stage of phones rising from its lower edge ------------------------ */
+
+.institution-branding {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 2rem 1.25rem 0;
+  border: 1px solid var(--hair);
+  border-radius: 1.5rem;
+  background:
+    var(--grain-dark),
+    radial-gradient(60% 70% at 85% 0%, rgba(242, 232, 214, 0.09), transparent 60%),
+    linear-gradient(180deg, #17171b 0%, #0b0b0e 100%);
+}
+
+.institution-branding::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: linear-gradient(90deg, var(--hair) 1px, transparent 1px), linear-gradient(180deg, var(--hair) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(70% 80% at 75% 20%, #000, transparent 80%);
+  mask-image: radial-gradient(70% 80% at 75% 20%, #000, transparent 80%);
+  opacity: 0.6;
+}
+
+.social {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.device {
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--hair-2);
+  border-bottom: 0;
+  border-radius: 1.5rem 1.5rem 0 0;
+  background: #0e0e11;
+  box-shadow: 0 -20px 60px -30px rgba(0, 0, 0, 0.8);
+  color: var(--ivory);
+}
+
+.appBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+}
+
+.appBar strong {
+  font-weight: var(--weight-heading);
+}
+
+.profile {
+  width: 9.5rem;
+  height: 17rem;
+  padding: 0.75rem 0.625rem;
+}
+
+.profileHead {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+}
+
+.profileHead p {
+  display: grid;
+  font-size: 0.75rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.15;
+}
+
+.profileHead small {
+  font-size: 0.5rem;
+  font-weight: var(--weight-regular);
+  color: var(--slate);
+}
+
+.profileMark,
+.profileMarkSmall {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f7f0e3, #d9cfbc);
+  color: var(--black);
+  font-weight: 700;
+}
+
+.profileMark {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 0.875rem;
+}
+
+.profileMarkSmall {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 0.5625rem;
+}
+
+.bio {
+  margin-top: 0.5rem;
+  font-size: 0.5625rem;
+  color: var(--grey-300);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  margin-top: 0.625rem;
+  list-style: none;
+}
+
+.tiles li {
+  position: relative;
+  display: grid;
+  align-content: end;
+  aspect-ratio: 1;
+  padding: 0.25rem;
+  overflow: hidden;
+  background: linear-gradient(160deg, #2c2d32 0%, #16161a 100%);
+}
+
+.tiles small {
+  font-size: 0.4375rem;
+  line-height: 1.2;
+  color: var(--grey-200);
+}
+
+.tiles .tile_figure {
+  background: linear-gradient(160deg, #f4ecdd 0%, #d8cebb 100%);
+}
+
+.tile_figure strong {
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--black);
+}
+
+.tile_figure small {
+  color: var(--grey-800);
+}
+
+.tileFace {
+  position: absolute;
+  top: 0.375rem;
+  left: 0.375rem;
+  display: grid;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: var(--ivory);
+  color: var(--black);
+  font-size: 0.4375rem;
+  font-weight: 700;
+}
+
+.tile_reel svg {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.tiles .tile_text {
+  background: linear-gradient(160deg, #3c3d43 0%, #1c1d21 100%);
+}
+
+.reel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 10.5rem;
+  height: 19rem;
+  padding: 0.75rem;
+  background:
+    radial-gradient(90% 60% at 30% 25%, rgba(242, 232, 214, 0.18), transparent 60%),
+    linear-gradient(180deg, #2c2d32 0%, #0e0e11 75%);
+}
+
+.reelTitle {
+  margin-top: 3.25rem;
+  font-size: 1.5rem;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.reelFoot {
+  margin-top: auto;
+}
+
+.reelWho {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.5625rem;
+  font-weight: var(--weight-heading);
+}
+
+.reelCaption {
+  margin-top: 0.375rem;
+  font-size: 0.5625rem;
+  line-height: 1.35;
+  color: var(--grey-200);
+}
+
+.reelMeta {
+  margin-top: 0.375rem;
+  font-size: 0.5rem;
+  color: var(--slate);
+}
+
+.progress {
+  display: block;
+  height: 2px;
+  margin-top: 0.625rem;
+  background: rgba(242, 232, 214, 0.2);
+}
+
+.progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--ivory);
+  transform: scaleX(0.62);
+  transform-origin: left;
+}
+
+.tube {
+  display: none;
+  width: 13rem;
+  height: 15rem;
+  padding: 0.75rem;
+}
+
+.player {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border-radius: 0.5rem;
+  background: radial-gradient(90% 90% at 35% 30%, #4a4b51 0%, #17171b 75%);
+}
+
+.length {
+  position: absolute;
+  right: 0.375rem;
+  bottom: 0.375rem;
+  padding: 0.0625rem 0.3125rem;
+  border-radius: 3px;
+  background: rgba(10, 10, 12, 0.85);
+  font-size: 0.5625rem;
+  font-weight: var(--weight-heading);
+}
+
+.filmTitle {
+  margin-top: 0.625rem;
+  font-size: 0.75rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.3;
+}
+
+.filmMeta {
+  margin-top: 0.25rem;
+  font-size: 0.5625rem;
+  color: var(--slate);
+}
+
+.channel {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--hair);
+  font-size: 0.5625rem;
+  color: var(--grey-300);
+}
+
+/* Admit Campaign: the season, week by week ------------------------------------------------- */
+
+.season {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #f8f2e7 0%, #efe5d2 100%);
+  box-shadow: 0 50px 100px -40px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: var(--black);
+}
+
+.seasonHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.seasonTitle {
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.seasonKey {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.71875rem;
+  color: var(--grey-700);
+}
+
+.keyScale {
+  display: flex;
+  gap: 2px;
+}
+
+.keyScale i {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 2px;
+  background: rgba(10, 10, 12, calc(0.22 + var(--level) * 0.17));
+}
+
+.calendar {
+  margin-top: 3.75rem;
+}
+
+.weeks {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.week {
+  display: grid;
+  gap: 2px;
+}
+
+.week i {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: rgba(10, 10, 12, 0.06);
+}
+
+.week i.on {
+  background: rgba(10, 10, 12, calc(0.22 + var(--level) * 0.17));
+}
+
+/* A dated moment: a fine line through the weeks, its words above. */
+.flag {
+  position: absolute;
+  top: -1.625rem;
+  bottom: -0.25rem;
+  left: calc(var(--at) * (100% + 2px) / 24 - 1px);
+  padding-left: 0.375rem;
+  border-left: 1px solid var(--black);
+  font-size: 0.65625rem;
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Late in the season: the words end at the line, one step higher so they never meet. */
+.flagEnd {
+  top: -2.875rem;
+  translate: -100% 0;
+  padding: 0 0.375rem 0 0;
+  border-left: 0;
+  border-right: 1px solid var(--black);
+}
+
+.months {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-top: 0.625rem;
+  font-size: 0.6875rem;
+  color: var(--grey-700);
+}
+
+.plan {
+  margin-top: 1.25rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--hair-ink);
+}
+
+.planTitle {
+  font-size: 0.75rem;
+  font-weight: var(--weight-heading);
+}
+
+.plan ul {
+  list-style: none;
+}
+
+.plan li {
+  display: grid;
+  grid-template-columns: 2rem 1rem 2.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--hair-ink);
+  font-size: 0.8125rem;
+}
+
+.plan li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.planDay {
+  font-weight: var(--weight-heading);
+}
+
+.planKind {
+  color: var(--grey-700);
+}
+
+.plan strong {
+  font-weight: var(--weight-medium);
+}
+
+/* Wider: each chapter in its own arrangement ------------------------------------------------ */
+
+@media (min-width: 40rem) {
+  .program {
+    display: block;
+    padding: 0 3rem 2.75rem 0;
+  }
+
+  .browser {
+    display: block;
+  }
+
+  .phone {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 11rem;
+  }
+
+  .phoneScreen {
+    min-height: 18.5rem;
+  }
+
+  .calendar {
+    margin-top: 2.5rem;
+  }
+
+  .flagEnd {
+    top: -1.625rem;
+  }
+
+  .social {
+    gap: 1.25rem;
+  }
+
+  .profile {
+    width: 12.5rem;
+    height: 22rem;
+  }
+
+  .reel {
+    width: 14rem;
+    height: 25rem;
+  }
+
+  .tube {
+    display: block;
+  }
+
+  .institution-branding {
+    padding: 2.5rem 2rem 0;
+  }
+
+  .season {
+    padding: 1.75rem;
+  }
+
+  .weeks,
+  .week {
+    gap: 3px;
+  }
+
+  .flag {
+    left: calc(var(--at) * (100% + 3px) / 24 - 1px);
+  }
+}
+
+@media (min-width: 64rem) {
+  .head {
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+    column-gap: var(--space-16);
+    align-items: end;
+  }
+
+  .note {
+    justify-self: start;
+    padding-bottom: 0.5rem;
+  }
+
+  .program-growth {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    column-gap: var(--space-16);
+    align-items: center;
+  }
+
+  .program {
+    padding: 0 4.5rem 3rem 0;
+  }
+
+  .webPage {
+    padding: 1.25rem 1.75rem 1.75rem;
+  }
+
+  .webNav span:not(.webApply) {
+    display: inline;
+  }
+
+  .webBody {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 1.25rem;
+    align-items: center;
+    margin-top: 1.5rem;
+  }
+
+  .phone {
+    width: 12.5rem;
+  }
+
+  .institution-branding {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    column-gap: var(--space-10);
+    min-height: 31rem;
+    padding: 3.5rem 3.5rem 0;
+  }
+
+  .institution-branding .words {
+    align-self: start;
+  }
+
+  .institution-branding .picture {
+    align-self: end;
+  }
+
+  .admit-campaign {
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+    column-gap: var(--space-16);
+    align-items: center;
+  }
+
+  .admit-campaign .picture {
+    order: -1;
+  }
+}
+
+/* Motion: the phones rise in turn, the reel plays as it passes, the season fills month by month. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .phone,
+    .device {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+
+    .reel {
+      animation-range: entry 10% entry 80%;
+    }
+
+    .tube {
+      animation-range: entry 20% entry 90%;
+    }
+
+    .progress span {
+      animation: play linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 40%;
+    }
+
+    .week {
+      animation: fade linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 35%;
+    }
+
+    .week:nth-child(n + 5) {
+      animation-range: entry 9% entry 39%;
+    }
+
+    .week:nth-child(n + 9) {
+      animation-range: entry 13% entry 43%;
+    }
+
+    .week:nth-child(n + 13) {
+      animation-range: entry 17% entry 47%;
+    }
+
+    .week:nth-child(n + 17) {
+      animation-range: entry 21% entry 51%;
+    }
+
+    .week:nth-child(n + 21) {
+      animation-range: entry 25% entry 55%;
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 2rem;
+  }
+}
+
+@keyframes play {
+  from {
+    transform: scaleX(0.04);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}

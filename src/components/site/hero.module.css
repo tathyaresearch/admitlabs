@@ -1,0 +1,144 @@
+/* The hero, Spotlight: centred on black under a soft cone of light, inside a fine frame. */
+
+.hero {
+  --rule-top: var(--header-h);
+  --rule-bottom: clamp(2.5rem, 1.5rem + 2.5vw, 4rem);
+  overflow: hidden;
+  /* Under the header, so the light reaches the top of the screen. */
+  margin-top: calc(-1 * var(--header-h));
+  padding: calc(var(--header-h) + clamp(4.5rem, 2.5rem + 7vw, 9.5rem)) 0 calc(var(--rule-bottom) + clamp(3.5rem, 2rem + 6vw, 6.5rem));
+  background: var(--grain-dark), var(--black);
+}
+
+/* Light from above: a narrow cone and a wide, fainter wash. */
+.beam {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(80% 42% at 50% -4%, rgba(242, 232, 214, 0.15), rgba(242, 232, 214, 0.045) 48%, transparent 74%),
+    radial-gradient(120% 30% at 50% 0%, rgba(242, 232, 214, 0.05), transparent 70%);
+}
+
+/* A faint field of dots where the light falls. */
+.dots {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(242, 232, 214, 0.16) 0.8px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(70% 45% at 50% 28%, #000 0%, transparent 75%);
+  mask-image: radial-gradient(70% 45% at 50% 28%, #000 0%, transparent 75%);
+  opacity: 0.55;
+}
+
+.content {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.title {
+  max-width: 20ch;
+  font-size: clamp(2.6875rem, 1.55rem + 4.7vw, 5rem);
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.042em;
+  background: var(--title-fall);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.lede {
+  max-width: 34rem;
+  margin-top: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
+  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.15625rem);
+  line-height: 1.55;
+  color: var(--slate);
+}
+
+.lede strong {
+  font-weight: var(--weight-medium);
+  color: var(--ivory);
+}
+
+.actions {
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: clamp(1.75rem, 1.4rem + 1vw, 2.25rem);
+}
+
+.proof {
+  margin-top: clamp(2.25rem, 1.5rem + 2.4vw, 3.5rem);
+  font-size: 0.84375rem;
+  color: var(--slate);
+}
+
+@media (min-width: 40rem) {
+  .actions {
+    display: flex;
+    justify-content: center;
+    width: auto;
+  }
+}
+
+@media (min-width: 64rem) {
+  .beam {
+    background:
+      radial-gradient(42% 52% at 50% -6%, rgba(242, 232, 214, 0.16), rgba(242, 232, 214, 0.05) 46%, transparent 72%),
+      radial-gradient(80% 40% at 50% 0%, rgba(242, 232, 214, 0.05), transparent 70%);
+  }
+
+  .dots {
+    -webkit-mask-image: radial-gradient(46% 58% at 50% 34%, #000 0%, transparent 74%);
+    mask-image: radial-gradient(46% 58% at 50% 34%, #000 0%, transparent 74%);
+  }
+
+  .title {
+    line-height: 0.98;
+    letter-spacing: -0.044em;
+  }
+}
+
+/* On load: the light comes up, the frame draws, the words below the headline follow. The
+   headline itself is there from the first frame. */
+@media (prefers-reduced-motion: no-preference) {
+  .beam {
+    animation: light-up 1600ms var(--ease-out) both;
+  }
+
+  .lede,
+  .actions,
+  .proof {
+    animation: lift 700ms var(--ease-out) both;
+  }
+
+  .lede {
+    animation-delay: 120ms;
+  }
+
+  .actions {
+    animation-delay: 220ms;
+  }
+
+  .proof {
+    animation-delay: 320ms;
+  }
+}
+
+@keyframes light-up {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes lift {
+  from {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+}

@@ -29,7 +29,7 @@ export function SiteMenu({ links, work }: { links: ReadonlyArray<{ href: string;
           ))}
         </nav>
         <div className={styles.menuActions}>
-          <ButtonLink href={work.href} variant="secondary" block onClick={close}>
+          <ButtonLink href={work.href} variant="secondary" block onClick={close} className={styles.ghost}>
             {work.label}
           </ButtonLink>
         </div>

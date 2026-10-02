@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { EnquiryForm } from '@/components/site/EnquiryForm';
 import { SiteFooter } from '@/components/site/Footer';
+import { Frame } from '@/components/site/Frame';
 import { SiteHeader } from '@/components/site/Header';
 import { SITE_SETTINGS } from '@/config/site';
 import { ENQUIRY } from '@/site/content';
@@ -8,7 +9,8 @@ import enquiry from '@/components/site/enquiry.module.css';
 import site from '@/components/site/site.module.css';
 
 // "Work with us" (admitlabs.in/work-with-us): a short form that lands in the team area's
-// Enquiries list. Prerendered; the form sends through a server action.
+// Enquiries list. In the Spotlight style, like the home page. Prerendered; the form sends through
+// a server action.
 export const dynamic = 'force-static';
 
 const TITLE = 'Work with us | AdmitLabs';
@@ -38,10 +40,11 @@ export default function WorkWithUsPage() {
       </a>
       <SiteHeader />
       <main id="main">
-        <section className={enquiry.section} aria-labelledby="enquiry-title">
+        <section className={`${enquiry.section} ${site.grain}`} data-theme="dark" aria-labelledby="enquiry-title">
+          <div className={enquiry.light} aria-hidden="true" />
+          <Frame />
           <div className={`${site.container} ${enquiry.grid}`}>
             <div className={enquiry.intro}>
-              <p className={site.eyebrow}>{ENQUIRY.eyebrow}</p>
               <h1 id="enquiry-title" className={enquiry.title}>
                 {ENQUIRY.title}
               </h1>

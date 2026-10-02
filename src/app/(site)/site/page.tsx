@@ -1,15 +1,17 @@
 import type { Metadata, Viewport } from 'next';
+import { DrishtiSection } from '@/components/site/Drishti';
 import { SiteFooter } from '@/components/site/Footer';
 import { SiteHeader } from '@/components/site/Header';
 import { Hero } from '@/components/site/Hero';
-import { Audience, DrishtiSection, Faq, FinalCall, HowWeWork, OurWork, Services, Tathya } from '@/components/site/Sections';
+import { Audience, Faq, FinalCall, HowWeWork, OurWork, Tathya } from '@/components/site/Sections';
+import { Services } from '@/components/site/Services';
 import { System } from '@/components/site/System';
-import { loadShowcase } from '@/product/showcase';
 import styles from '@/components/site/site.module.css';
 
-// The AdmitLabs website's home page, served at admitlabs.in (src/lib/hosts.ts). Prerendered once
-// at build, like the product page: no request data, and its Drishti pictures come from the sample
-// world in memory. It sets its own black and ivory sections, whatever the device setting.
+// The AdmitLabs website's home page, served at admitlabs.in (src/lib/hosts.ts), in the Spotlight
+// style. Prerendered once at build: no request data, and its pictures are drawn from a made-up
+// institution (src/site/scenes.ts). It sets its own black and ivory sections, whatever the device
+// setting.
 export const dynamic = 'force-static';
 
 const NAME = 'AdmitLabs';
@@ -30,8 +32,7 @@ export const viewport: Viewport = {
   colorScheme: 'dark',
 };
 
-export default async function SitePage() {
-  const showcase = await loadShowcase();
+export default function SitePage() {
   return (
     <div id="top" className={styles.page} data-theme="dark">
       {/* The page behind the page (overscroll) stays black; section links land below the header. */}
@@ -43,10 +44,10 @@ export default async function SitePage() {
       </a>
       <SiteHeader />
       <main id="main">
-        <Hero showcase={showcase} />
+        <Hero />
         <System />
         <Services />
-        <DrishtiSection showcase={showcase} />
+        <DrishtiSection />
         <Audience />
         <OurWork />
         <HowWeWork />

@@ -1,20 +1,42 @@
 /*
-  The AdmitLabs website (admitlabs.in). Same language as the product page: black sections with
-  ivory moments, ivory feature tiles, real product pictures, Bricolage for words and Inter for
-  numbers that stand alone. Monochrome, no gradients or glow.
+  The AdmitLabs website (admitlabs.in), in the Spotlight style (redesign of 2026-10-02): black
+  with soft light from above, ivory surfaces for the moments that matter, fine frames with small
+  cross marks, a light grain, and crafted pictures of what students actually see. Bricolage for
+  words, Inter for numbers that stand alone.
 
-  Motion is CSS only, calm and once: the hero's card measures on load, sections rise in as they
-  scroll into view. The settled state is the default, so reduced motion, browsers without
-  scroll-linked animation and a page with no script all show the finished page.
+  The website alone may use gradients, and only monochrome and subtle ones: black to graphite,
+  soft ivory tones, for light, depth and transitions. No colour, no neon, no glow. The dashboard
+  and the product page keep their no-gradient rule (src/site/scenes.test.ts checks).
+
+  Motion is CSS only and calm. The settled state is the default, so reduced motion, browsers
+  without scroll-linked animation and a page with no script all show the finished page.
 */
 
 .page {
   --site-max: 1200px;
-  --section-pad: clamp(4.5rem, 3rem + 5.5vw, 8.5rem);
+  --section-pad: clamp(5.5rem, 3.5rem + 6vw, 9.5rem);
+  --header-h: 3.75rem;
+  /* The content column's edge, measured inside a full-width section. */
+  --edge: max(var(--gutter), (100% - var(--site-max)) / 2);
+  --hair: rgba(242, 232, 214, 0.08);
+  --hair-2: rgba(242, 232, 214, 0.14);
+  --hair-ink: rgba(10, 10, 12, 0.1);
+  --hair-ink-2: rgba(10, 10, 12, 0.18);
+  /* Ivory text that falls gently towards warm grey: the website's headline finish. */
+  --title-fall: linear-gradient(180deg, #f6eee0 22%, #c8c0b2 100%);
+  /* Film grain: a 64px tile of faint specks (public/textures), the top layer of a surface's own
+     background. Only where light falls: the hero, the dark stages, the final call. */
+  --grain-dark: url('/textures/grain-on-dark.png') 0 0 / 64px 64px repeat;
   min-height: 100dvh;
-  background: var(--surface);
+  background: var(--black);
   color: var(--text);
   overflow-x: clip;
+}
+
+@media (min-width: 64rem) {
+  .page {
+    --header-h: 4.5rem;
+  }
 }
 
 .container {
@@ -22,28 +44,232 @@
   margin-inline: auto;
 }
 
-.eyebrow {
-  font: var(--type-caption-strong);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+/* A textured surface: its own stacking context, so light, dots and frame (z-index -1) sit between
+   its background (which carries the grain) and its content. ------------------------------------ */
+
+.grain {
+  position: relative;
+  isolation: isolate;
+}
+
+/* The frame: two fine rails on the content column's edges, rules across, and a small cross where
+   they meet. Positioned by --rule-top and --rule-bottom on the section. */
+
+.frame {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, var(--hair-2), var(--hair) 70%, transparent);
+}
+
+.railStart {
+  left: var(--edge);
+}
+
+.railEnd {
+  right: var(--edge);
+}
+
+.rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--hair-2) 12%, var(--hair-2) 88%, transparent);
+}
+
+.ruleTop {
+  top: var(--rule-top, 0);
+}
+
+.ruleBottom {
+  bottom: var(--rule-bottom, 0);
+}
+
+.mark {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+}
+
+.mark::before,
+.mark::after {
+  content: '';
+  position: absolute;
+  background: rgba(242, 232, 214, 0.42);
+}
+
+.mark::before {
+  left: 5px;
+  top: 0;
+  width: 1px;
+  height: 11px;
+}
+
+.mark::after {
+  top: 5px;
+  left: 0;
+  width: 11px;
+  height: 1px;
+}
+
+.markTopStart {
+  left: calc(var(--edge) - 5px);
+  top: calc(var(--rule-top, 0px) - 5px);
+}
+
+.markTopEnd {
+  right: calc(var(--edge) - 5px);
+  top: calc(var(--rule-top, 0px) - 5px);
+}
+
+.markBottomStart {
+  left: calc(var(--edge) - 5px);
+  bottom: calc(var(--rule-bottom, 0px) - 5px);
+}
+
+.markBottomEnd {
+  right: calc(var(--edge) - 5px);
+  bottom: calc(var(--rule-bottom, 0px) - 5px);
+}
+
+/* Headings shared by the sections ----------------------------------------------------------- */
+
+.title {
+  font-size: clamp(2.125rem, 1.35rem + 3vw, 3.25rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.03;
+  letter-spacing: -0.038em;
+  text-wrap: balance;
+}
+
+/* On black: ivory falling to warm grey. A second line in a quieter tone. */
+.titleLight {
+  background: var(--title-fall);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.titleSoft {
+  display: block;
   color: var(--text-muted);
 }
 
-/* Header: settles as the page scrolls ------------------------------------------------------- */
+.titleLight .titleSoft {
+  color: var(--slate);
+}
+
+.lede {
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.lede strong {
+  font-weight: var(--weight-heading);
+  color: var(--text);
+}
+
+/* Buttons: the shared buttons, finished for the website with a soft top light. ------------- */
+
+.page .cta {
+  border-color: transparent;
+  background: linear-gradient(180deg, #f8f1e4 0%, #e8ddc9 100%);
+  color: var(--black);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.page .cta:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fbf6ec 0%, #eee5d3 100%);
+}
+
+.page .ghost {
+  border-color: var(--hair-2);
+  background: linear-gradient(180deg, rgba(242, 232, 214, 0.06), rgba(242, 232, 214, 0.015));
+  color: var(--ivory);
+}
+
+.page .ghost:hover:not(:disabled) {
+  border-color: rgba(242, 232, 214, 0.3);
+  background: linear-gradient(180deg, rgba(242, 232, 214, 0.1), rgba(242, 232, 214, 0.03));
+}
+
+/* On ivory: the same pair, inked. */
+.page .ctaInk {
+  border-color: transparent;
+  background: linear-gradient(180deg, #26272c 0%, #0a0a0c 100%);
+  color: var(--ivory);
+  box-shadow: inset 0 1px 0 rgba(242, 232, 214, 0.12), 0 1px 2px rgba(10, 10, 12, 0.3);
+}
+
+.page .ctaInk:hover:not(:disabled) {
+  background: linear-gradient(180deg, #303137 0%, #141417 100%);
+}
+
+.page .ghostInk {
+  border-color: var(--hair-ink-2);
+  background: transparent;
+  color: var(--black);
+}
+
+.page .ghostInk:hover:not(:disabled) {
+  border-color: rgba(10, 10, 12, 0.35);
+  background: rgba(10, 10, 12, 0.03);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* A text link with an arrow that moves on hover. */
+.arrowLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-strong);
+  font-weight: var(--weight-heading);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.arrowLink svg {
+  transition: translate var(--duration) var(--ease-out);
+}
+
+.arrowLink:hover svg,
+.arrowLink:focus-visible svg {
+  translate: 3px 0;
+}
+
+/* Header: transparent over the light at the top, glass once the page moves. ---------------- */
 
 .header {
   position: sticky;
   top: 0;
   z-index: var(--z-nav);
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  height: var(--header-h);
+  border-bottom: 1px solid var(--hair);
+  background: rgba(10, 10, 12, 0.82);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
 }
 
 .headerInner {
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  height: 4rem;
+  height: 100%;
 }
 
 .homeLink {
@@ -60,12 +286,12 @@
   position: relative;
   padding-block: var(--space-2);
   font: var(--type-label);
-  color: var(--text-muted);
+  font-size: 0.875rem;
+  color: var(--slate);
   text-decoration: none;
   transition: color var(--duration-fast) var(--ease-out);
 }
 
-/* A hairline that grows from the left on hover. */
 .navLink::after {
   content: '';
   position: absolute;
@@ -79,7 +305,7 @@
 
 .navLink:hover,
 .navLink:focus-visible {
-  color: var(--text);
+  color: var(--ivory);
 }
 
 .navLink:hover::after {
@@ -103,10 +329,10 @@
   place-items: center;
   width: 2.25rem;
   height: 2.25rem;
-  border: 1px solid var(--line-medium);
+  border: 1px solid var(--hair-2);
   border-radius: var(--radius-xs);
   background: transparent;
-  color: var(--text);
+  color: var(--ivory);
   cursor: pointer;
 }
 
@@ -135,14 +361,14 @@
 /* The phone menu: the browser's own popover, under the header. */
 .menu {
   position: fixed;
-  inset: 4rem 0 auto;
+  inset: var(--header-h) 0 auto;
   width: 100%;
   margin: 0;
   padding: var(--space-2) var(--gutter) var(--space-6);
   border: 0;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--text);
+  border-bottom: 1px solid var(--hair);
+  background: rgba(10, 10, 12, 0.96);
+  color: var(--ivory);
 }
 
 .menuLinks {
@@ -152,10 +378,11 @@
 .menuLink {
   display: block;
   padding-block: var(--space-4);
-  border-bottom: 1px solid var(--line);
-  font-size: var(--size-section);
+  border-bottom: 1px solid var(--hair);
+  font-size: 1.25rem;
   font-weight: var(--weight-heading);
-  color: var(--text);
+  letter-spacing: -0.02em;
+  color: var(--ivory);
   text-decoration: none;
 }
 
@@ -169,19 +396,34 @@
     animation: menu-in var(--duration-slow) var(--ease-out);
   }
 
-  /* Over the black hero the header shows no edge; once the page moves, its hairline comes in and
-     its contents settle 8px up. Tied to the scroll, so it never jumps. */
+  .frameDraw .rail {
+    transform-origin: top;
+    animation: rail-draw 1400ms var(--ease-out) both;
+  }
+
+  .frameDraw .rule {
+    animation: rule-draw 1400ms 150ms var(--ease-out) both;
+  }
+
+  .frameDraw .mark {
+    animation: mark-in 600ms 900ms var(--ease-out) both;
+  }
+
+  /* At the very top the header has no glass and no edge; both come in as the page moves. */
   @supports (animation-timeline: scroll()) {
     .header {
-      animation: header-settle linear both;
+      animation: header-glass linear both;
       animation-timeline: scroll(root);
-      animation-range: 0 4.5rem;
+      animation-range: 0 5rem;
     }
+  }
 
-    .headerInner {
-      animation: header-tighten linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 4.5rem;
+  @supports (animation-timeline: view()) {
+    /* Rises into place as it comes into view, settled well before the middle of the screen. */
+    .reveal {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 60%;
     }
   }
 }
@@ -193,718 +435,37 @@
   }
 }
 
-@keyframes header-settle {
+@keyframes header-glass {
   from {
     border-bottom-color: transparent;
-  }
-}
-
-@keyframes header-tighten {
-  from {
-    translate: 0 0.5rem;
-  }
-}
-
-/* Hero ------------------------------------------------------------------------------------- */
-
-.hero {
-  padding-block: clamp(3rem, 2rem + 4vw, 6rem) clamp(4.5rem, 3rem + 5vw, 8rem);
-}
-
-.heroTitle {
-  font-size: clamp(2.875rem, 1.2rem + 6.6vw, 6.25rem);
-  font-weight: var(--weight-heading);
-  line-height: 0.97;
-  letter-spacing: -0.036em;
-}
-
-/* On a wide screen the headline breaks after "trusted,". */
-.wideBreak {
-  display: none;
-}
-
-@media (min-width: 64rem) {
-  .wideBreak {
-    display: inline;
-  }
-}
-
-.heroGrid {
-  display: grid;
-  gap: var(--space-12);
-  margin-top: clamp(1.75rem, 1rem + 2.5vw, 3.75rem);
-}
-
-@media (min-width: 64rem) {
-  .heroGrid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 33.75rem);
-    align-items: center;
-    gap: var(--space-20);
-  }
-
-  .heroText {
-    padding-bottom: var(--space-8);
-  }
-}
-
-.heroLede {
-  max-width: 31rem;
-  font-size: clamp(1.0625rem, 0.98rem + 0.35vw, 1.3125rem);
-  line-height: 1.5;
-  color: var(--text-muted);
-  text-wrap: pretty;
-}
-
-.heroLede strong {
-  font-weight: var(--weight-medium);
-  color: var(--text);
-}
-
-.heroActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-8);
-}
-
-@media (max-width: 39.99rem) {
-  .heroActions > * {
-    flex: 1 1 100%;
-  }
-}
-
-.proof {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  max-width: 31rem;
-  margin-top: var(--space-8);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--line-raised);
-  font: var(--type-small);
-  color: var(--text-muted);
-  text-wrap: pretty;
-}
-
-.proofMark {
-  flex: none;
-  color: var(--text);
-}
-
-/* The hero's card: a real Drishti Audit of the sample institution, in ivory. */
-.cardFigure {
-  margin: 0;
-}
-
-.scoreCard {
-  container-type: inline-size;
-  padding: clamp(1.25rem, 1rem + 1vw, 1.75rem) clamp(1.125rem, 0.85rem + 1.2vw, 1.875rem) var(--space-2);
-  border-radius: 1.5rem;
-  background: var(--surface);
-  color: var(--text);
-}
-
-.cardHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  font: var(--type-caption-strong);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.cardTitle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--text);
-}
-
-.gauge {
-  position: relative;
-  width: min(100%, 17.5rem);
-  margin: var(--space-4) auto 0;
-}
-
-.gauge svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-
-.gaugeTrack {
-  fill: none;
-  stroke: var(--line-raised);
-}
-
-.gaugeValue {
-  fill: none;
-  stroke: var(--text);
-  stroke-dasharray: 100;
-}
-
-.gaugeNotch {
-  stroke: var(--text-muted);
-  stroke-width: 1.5;
-}
-
-.gaugeEnd {
-  font-family: var(--font-numeric);
-  font-size: 10px;
-  fill: var(--text-muted);
-  text-anchor: middle;
-}
-
-.gaugeNumber {
-  position: absolute;
-  inset: auto 0 4%;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.15em;
-  line-height: 1;
-}
-
-.gaugeValueText {
-  font: var(--type-num-hero);
-  font-size: clamp(3rem, 2.5rem + 1.6vw, 4rem);
-  letter-spacing: var(--tracking-num-hero);
-}
-
-.gaugeOf {
-  font: var(--type-num);
-  color: var(--text-muted);
-}
-
-.cardMeta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  min-height: 1.5rem;
-  margin-top: var(--space-3);
-  color: var(--text-muted);
-}
-
-.cardPillars {
-  margin-top: var(--space-5);
-}
-
-.cardPillar {
-  display: grid;
-  grid-template-columns: 1.125rem minmax(0, 6rem) minmax(0, 1fr) minmax(4rem, 6.5rem) 1.75rem;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 3.125rem;
-  border-top: 1px solid var(--line-raised);
-}
-
-.cardPillarName {
-  font: var(--type-strong);
-  font-weight: var(--weight-heading);
-}
-
-.cardPillarQuestion {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-/* A narrow card (a phone) leaves out each pillar's question. */
-@container (max-width: 26rem) {
-  .cardPillar {
-    grid-template-columns: 1.125rem minmax(0, 1fr) minmax(4rem, 6rem) 1.75rem;
-  }
-
-  .cardPillarQuestion {
-    display: none;
-  }
-}
-
-.bar {
-  display: block;
-  height: 6px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--line-raised);
-}
-
-.barFill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--text);
-  transform-origin: left;
-}
-
-.cardPillarValue {
-  font: var(--type-num);
-  font-size: var(--size-lead);
-  font-weight: var(--weight-heading);
-  text-align: right;
-}
-
-.cardCaption {
-  margin-top: var(--space-3);
-  font: var(--type-caption);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-/* Numbers that count up, in CSS: the number is drawn from an animated integer, so it needs no
-   script. --to is the number; --delay and --count-for set when and how long. */
-@property --count {
-  syntax: '<integer>';
-  inherits: false;
-  initial-value: 0;
-}
-
-.count {
-  --count: var(--to);
-  counter-reset: count var(--count);
-}
-
-.count::after {
-  content: counter(count);
-}
-
-@keyframes count-up {
-  from {
-    --count: 0;
-  }
-
-  to {
-    --count: var(--to);
-  }
-}
-
-/*
-  The signature moment, about 2.4 seconds, once, on load: the gauge draws to the score as the
-  number counts; then each pillar's bar fills and counts, and as it finishes, its word in the
-  headline turns from grey to ivory; last, the label and the change come in. The headline, text
-  and buttons are there from the first frame.
-*/
-@media (prefers-reduced-motion: no-preference) {
-  /* The gauge sweeps like an instrument: a soft start, a soft settle. Its number keeps pace. */
-  .gaugeValue {
-    animation: gauge-draw 1300ms 250ms var(--ease-in-out) both;
-  }
-
-  .count {
-    animation: count-up var(--count-for, 1200ms) var(--delay, 0ms) var(--ease-out) both;
-  }
-
-  .gaugeValueText.count {
-    animation-timing-function: var(--ease-in-out);
-  }
-
-  .barFill {
-    animation: bar-fill 600ms var(--delay, 0ms) var(--ease-out) both;
-  }
-
-  .word {
-    animation: word-light 450ms var(--delay, 0ms) var(--ease-out) both;
-  }
-
-  .cardMeta {
-    animation: meta-in 450ms 1950ms var(--ease-out) both;
-  }
-}
-
-@keyframes gauge-draw {
-  from {
-    stroke-dashoffset: 100;
-  }
-
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes bar-fill {
-  from {
-    transform: scaleX(0);
-  }
-}
-
-@keyframes word-light {
-  from {
-    color: var(--text-muted);
-  }
-}
-
-@keyframes meta-in {
-  from {
-    opacity: 0;
-    translate: 0 0.375rem;
-  }
-}
-
-/* The system: ivory ------------------------------------------------------------------------- */
-
-.system {
-  padding-block: var(--section-pad);
-  background: var(--surface);
-  color: var(--text);
-}
-
-.systemTitle {
-  margin-top: var(--space-4);
-  font-size: clamp(2.25rem, 1.4rem + 3.4vw, 4rem);
-  font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.03em;
-  text-wrap: balance;
-}
-
-.systemTitle span {
-  display: block;
-}
-
-.systemLede {
-  max-width: 40rem;
-  margin-top: var(--space-6);
-  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.25rem);
-  line-height: 1.55;
-  color: var(--text-muted);
-  text-wrap: pretty;
-}
-
-.systemLede strong {
-  font-weight: var(--weight-heading);
-  color: var(--text);
-}
-
-.pillars {
-  display: grid;
-  gap: var(--space-10);
-  margin-top: clamp(2.75rem, 2rem + 3vw, 5rem);
-}
-
-@media (min-width: 48rem) {
-  .pillars {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.pillar {
-  display: grid;
-  align-content: start;
-  gap: var(--space-4);
-  padding-top: var(--space-6);
-  border-top: 1.5px solid var(--text);
-}
-
-.pillarIcon {
-  display: grid;
-  place-items: center;
-  width: 2.875rem;
-  height: 2.875rem;
-  border-radius: var(--radius-lg);
-  background: var(--surface-inverse);
-  color: var(--text-inverse);
-}
-
-.pillarWord {
-  margin-top: var(--space-1);
-  font-size: clamp(2.25rem, 1.85rem + 1.4vw, 2.875rem);
-  font-weight: var(--weight-bold);
-  line-height: 1;
-  letter-spacing: -0.03em;
-}
-
-.pillarLine {
-  font-size: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
-  font-weight: var(--weight-medium);
-  line-height: 1.4;
-  letter-spacing: -0.01em;
-}
-
-.pillarChecks {
-  font: var(--type-small);
-  color: var(--text-muted);
-  text-wrap: pretty;
-}
-
-.pillarChecksLabel {
-  display: block;
-  margin-bottom: var(--space-1);
-  font: var(--type-caption-strong);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text);
-}
-
-/* The loop: an inverted black block in the ivory section. */
-.loop {
-  margin-top: clamp(3.5rem, 2.5rem + 4vw, 6rem);
-  padding: clamp(2rem, 1.25rem + 3vw, 3.5rem) clamp(1.375rem, 0.75rem + 3vw, 4rem) clamp(2.25rem, 1.5rem + 3vw, 3.75rem);
-  border-radius: clamp(1.375rem, 1rem + 1vw, 1.75rem);
-  background: var(--surface);
-  color: var(--text);
-}
-
-.loopHead {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.loopTitle {
-  font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
-  font-weight: var(--weight-heading);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-}
-
-.loopNote {
-  max-width: 22rem;
-  font: var(--type-body);
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
-@media (min-width: 64rem) {
-  .loopHead {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-  }
-
-  .loopNote {
-    text-align: right;
-  }
-}
-
-/* The track: a racetrack round the three steps. On a phone it stands up: down through the
-   steps, back up the right side. Wide, it lies down: along the top through the steps, back
-   along the bottom. */
-.track {
-  --node: 2.375rem;
-  position: relative;
-  margin-top: clamp(2rem, 1.5rem + 2vw, 3.25rem);
-  view-timeline-name: --loop-track;
-}
-
-.trackLine {
-  position: absolute;
-  inset: 0 0 0 calc(var(--node) / 2);
-  pointer-events: none;
-}
-
-.trackLine svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.trackRect {
-  fill: none;
-  stroke: var(--line-medium);
-  stroke-width: 1.5;
-  stroke-dasharray: 100;
-}
-
-.back {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  padding: 0 var(--space-3);
-  background: var(--surface);
-  font: var(--type-caption-strong);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--text-muted);
-  transform: translate(50%, -50%) rotate(90deg);
-}
-
-/* The dot laps the track (moved by the loop's script); this layer fades it in. */
-.dotFade {
-  position: absolute;
-  inset: 0;
-}
-
-.dot {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0.6875rem;
-  height: 0.6875rem;
-  margin: -0.34375rem;
-  border-radius: 50%;
-  background: var(--text);
-}
-
-.steps {
-  position: relative;
-  display: grid;
-  gap: var(--space-8);
-  padding: var(--space-6) var(--space-8) var(--space-14) calc(var(--node) + var(--space-5));
-}
-
-.step {
-  position: relative;
-}
-
-.node {
-  position: absolute;
-  top: -0.25rem;
-  left: calc(-1 * (var(--node) + var(--space-5)));
-  display: grid;
-  place-items: center;
-  width: var(--node);
-  height: var(--node);
-  border: 1.5px solid var(--line-medium);
-  border-radius: 50%;
-  background: var(--surface);
-  font: var(--type-num);
-  font-weight: var(--weight-heading);
-  color: var(--text-muted);
-}
-
-/* The lit node: on top, faded in by the loop's script as the dot arrives. */
-.nodeLit {
-  position: absolute;
-  inset: -1.5px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--text);
-  color: var(--text-inverse);
-  opacity: 0;
-}
-
-.stepName {
-  font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.75rem);
-  font-weight: var(--weight-heading);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-}
-
-.stepWho {
-  margin-top: var(--space-1);
-  font: var(--type-caption-strong);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.stepLine {
-  max-width: 18rem;
-  margin-top: var(--space-3);
-  font: var(--type-body);
-  font-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
-  line-height: 1.5;
-  color: var(--text-muted);
-  text-wrap: pretty;
-}
-
-@media (min-width: 48rem) {
-  .track {
-    --node: 2.625rem;
-  }
-
-  .trackLine {
-    inset: calc(var(--node) / 2) 0 0;
-  }
-
-  .back {
-    top: auto;
-    right: auto;
-    bottom: 0;
-    left: 50%;
-    transform: translate(-50%, 50%);
-  }
-
-  .steps {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0;
-    padding: 0 0 var(--space-16);
-  }
-
-  .step {
-    display: grid;
-    justify-items: center;
-    padding: 0 var(--space-6);
-    text-align: center;
-  }
-
-  .node {
-    position: relative;
-    top: auto;
-    left: auto;
-    margin-bottom: var(--space-5);
-  }
-}
-
-/* Scroll reveals: sections rise in as they enter, tied to the scroll. The track draws itself as
-   it comes into view and is whole once all of it is in view; then the dot appears. */
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    .reveal {
-      animation: rise linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 60%;
-    }
-
-    .pillars > .reveal:nth-child(2) {
-      animation-range: entry 8% entry 68%;
-    }
-
-    .pillars > .reveal:nth-child(3) {
-      animation-range: entry 16% entry 76%;
-    }
-
-    .trackRect {
-      animation: track-draw linear both;
-      animation-timeline: --loop-track;
-      animation-range: entry 10% entry 100%;
-    }
-
-    .dotFade {
-      animation: dot-in linear both;
-      animation-timeline: --loop-track;
-      animation-range: entry 92% entry 100%;
-    }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dot {
-    display: none;
+    background-color: rgba(10, 10, 12, 0);
+    -webkit-backdrop-filter: blur(0) saturate(1);
+    backdrop-filter: blur(0) saturate(1);
   }
 }
 
 @keyframes rise {
   from {
     opacity: 0;
-    translate: 0 1.5rem;
-  }
-
-  to {
-    opacity: 1;
-    translate: 0 0;
+    translate: 0 1.75rem;
   }
 }
 
-@keyframes track-draw {
+@keyframes rail-draw {
   from {
-    stroke-dashoffset: 100;
-  }
-
-  to {
-    stroke-dashoffset: 0;
+    transform: scaleY(0);
   }
 }
 
-@keyframes dot-in {
+@keyframes rule-draw {
   from {
     opacity: 0;
+    transform: scaleX(0.6);
   }
+}
 
-  to {
-    opacity: 1;
+@keyframes mark-in {
+  from {
+    opacity: 0;
   }
 }

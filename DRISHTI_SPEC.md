@@ -494,7 +494,7 @@ Drishti uses the AdmitLabs brand. **No exceptions.**
 | Ivory | #F2E8D6 | Text on dark, main light surface |
 | Slate | #8A8D94 | Captions, metadata |
 
-Confirm these hex values against the AdmitLabs brand identity PDF before Phase 1 ends. Greys between black and ivory are allowed. **No accent colour. No green, amber or red. No gradients, no glow.**
+Confirm these hex values against the AdmitLabs brand identity PDF before Phase 1 ends. Greys between black and ivory are allowed. **No accent colour. No green, amber or red. No gradients, no glow.** One exception: the AdmitLabs website (section 22) may use subtle monochrome gradients (black to graphite, soft ivory tones) for light, depth and section transitions. Never colour, neon or glow. The dashboard and `/drishti` keep no gradients.
 
 **Type**
 
@@ -688,43 +688,39 @@ Fictional only. No real institution names.
 
 - WhatsApp summary of the monthly report (later)
 - Email reminders for plan end (later)
-- Whether AdmitLabs serves two direct rivals for the same program in the same city (services decision)
-- Moving thresholds from fixed rules to peer comparison (after enough Audits)
-- Final hex values, confirmed against the brand identity PDF
+- Whet## 22. AdmitLabs website (admitlabs.in)
 
----
-
-## 22. AdmitLabs website (admitlabs.in)
-
-The main AdmitLabs website, built in this app (section 4) with the same design system as `/drishti` and the dashboard. It turns a visitor into a free Audit or an enquiry.
+The main AdmitLabs website, built in this app (section 4), in the **Spotlight** style chosen on 2026-10-02: premium and calm (think Linear, Vercel, Resend, Attio, Raycast). Black with soft light from above, ivory surfaces for the moments that matter, fine frames with small cross marks, a light grain where light falls, and crafted pictures of what students actually see. It turns a visitor into a free Audit or an enquiry.
 
 **What AdmitLabs is:** an education only content partner. Three services (content only, never ads) and two products: Drishti for institutions and Tathya for students.
 
-**Pages:** the home page (`/`), Work with us (`/work-with-us`) and the product page (`/drishti`, section 15). One header on every page: Services, Drishti, How we work, FAQ, "Work with us" and "Get your free Audit" (a menu on a phone). One footer: "© 2026 AdmitLabs" (the current year), the email, Drishti and Sign in.
+**Pages:** the home page (`/`), Work with us (`/work-with-us`) and the product page (`/drishti`, section 15, unchanged). One header on every page: Services, Drishti, How we work, FAQ, "Work with us" and "Get your free Audit" (a menu on a phone); clear over the light at the top, glass once the page moves. One footer: "© 2026 AdmitLabs" (the current year), the email, Drishti and Sign in.
 
 **Home page sections, in order:**
 
-1. **Hero**: "Get discovered, trusted, and chosen." Two buttons: "Get your free Audit" (main) and "Work with us". The proof line "Education only. 120+ education companies worked with." Beside it, a sample Drishti Audit card that measures on load (on a phone, when it comes into view); as each pillar fills, its word in the headline lights
-2. **The system**: Discovered, Trusted and Chosen with the Drishti checks under each, then the monthly loop: Measure (Drishti), Fix (our team), Repeat (a report every month)
-3. **Services**: Program Growth, Institution Branding and Admit Campaign, each with a picture and a "Work with us" link that names the service in the form. "We create content. We don't run ads." No prices
-4. **Drishti**: 17 checks, 5 rivals, 1 report; the three feature tiles from the product page (sample data); "Get your free Audit" and "Explore Drishti"
-5. **Who we work with**: private colleges, private universities, and skilling and training institutes, for professional and career programs
+1. **Hero**: "Get discovered, trusted, and chosen." in two lines (80px on a desktop), falling from ivory to warm grey, centred on black under a soft cone of light, inside a fine frame with small crosses. One short paragraph, two buttons ("Get your free Audit" and "Work with us"), and the quiet proof line "120+ education companies worked with." No picture, no labels
+2. **The system** (ivory): one dark stage where the three moments happen in the order a student lives them: a search where the institution is the answer (an AI answer and the top result), a review and its proof, and an enquiry that someone receives. Under each, its words set like a caption: Discovered, Trusted or Chosen, its line, and what Drishti checks. Then "Measure. Fix. Repeat." as one sentence on one track, with a dot that travels it. On a phone each moment gets its own small stage
+3. **Services**: three chapters, each laid out its own way around what that service makes: Program Growth beside a program's own page (a browser, and the phone in front; on a phone, the phone alone); Institution Branding on a stage of phones (the official page's posts, a reel, a YouTube film); Admit Campaign beside its season, planned week by week, with this week's posts. Instagram and YouTube appear only as their official one colour logos. Each links to the form with the service named. "We create content. We don't run ads." No prices
+4. **Drishti**: its three numbers (17 checks, 5 rivals, 1 report), its three questions as a short list beside the product itself, a made up institution's Home in an app window, then "Free to start." with "Get your free Audit" and "Explore Drishti"
+5. **Who we work with** (ivory): private colleges, private universities, and skilling and training institutes, set large as a staircase, for professional and career programs
 6. **Our work**: content samples. Hidden until there are samples (`src/site/work.ts`) and `SITE_SETTINGS.showWork` is on
-7. **How we work**: Audit, Blueprint, Run, Report
-8. **Tathya**: one line for students. Its button shows once `SITE_SETTINGS.tathyaUrl` is set
+7. **How we work**: the promise held on the left; Audit, Blueprint, Run and Report on a line that fills as the page moves. No numbers
+8. **Tathya**: one line for students in a framed band. Its button shows once `SITE_SETTINGS.tathyaUrl` is set
 9. **FAQ**: ads, who we work with, who owns the content, whether Drishti is free, how to start
-10. **Final call**: "See where you stand this month." with both buttons
+10. **Final call**: "See where you stand this month." under the same light as the top of the page, with both buttons
 
 **Rules:**
 
 - Say only who we work with, never who we don't.
 - No service prices on the website. No discounts.
-- Every sample says "Sample institution. Fictional data."
-- Motion is CSS, with two small scripts and no animation library. The hero card and the sections play once and settle; a dot laps the system's loop every 10 seconds while it is on screen. With reduced motion nothing moves and everything shows settled. Lighthouse 90 or more on a phone.
+- No small labels above headings, no numbered steps, no icons in boxes, and no two sections built the same way.
+- The pictures show a made up institution, Larkmoor University, in Bangalore, with made up neighbours (Calderwood College, Brackenfield University, Thornbury College): none is a real institution, and none of it is Drishti's own sample data (`src/site/scenes.ts`). They carry no caption.
+- Gradients: subtle and monochrome only (black to graphite, soft ivory tones), for light, depth and transitions. Never colour, neon or glow. The website only (section 14).
+- Motion is CSS only, with no animation library: the light and frame come in on load, the moments arrive as they scroll into view, a dot travels the loop. With reduced motion nothing moves and everything shows settled. Lighthouse near 90 on a phone.
 - Works on a phone, with no stretched cards.
 
-**Work with us:** name, institution, role (Founder or director, Principal or dean, Admissions, Marketing, Other), email and phone are required; the program to grow and a message are optional. Then "Thanks. We'll reply within one working day." Each enquiry is saved to `enquiries` (section 16) and shows in the team's Enquiries list (section 13). No emails are sent. A hidden field turns bots away, and one email can send at most 3 a day.
+**Work with us:** the same style (light from above, the frame), the words on the left and the form on an ivory card. Name, institution, role (Founder or director, Principal or dean, Admissions, Marketing, Other), email and phone are required; the program to grow and a message are optional. Then "Thanks. We'll reply within one working day." Each enquiry is saved to `enquiries` (section 16) and shows in the team's Enquiries list (section 13). No emails are sent. A hidden field turns bots away, and one email can send at most 3 a day.
 
-**Search and sharing:** every page has its own title, description and link preview image (1200 by 630: the headline beside the sample Audit card).
+**Search and sharing:** every page has its own title, description and link preview image (1200 by 630: the headline in the hero's light and frame, with the proof line).
 
 **Settings** (`src/config/site.ts`): `showWork`, `tathyaUrl` and the contact email.

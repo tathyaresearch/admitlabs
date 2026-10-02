@@ -29,8 +29,7 @@ describe('the website copy', () => {
     assert.equal(`${before} ${words.discovered}, ${words.trusted}, and ${words.chosen}.`, 'Get discovered, trusted, and chosen.');
     assert.equal(content.CTA.primary, 'Get your free Audit');
     assert.equal(content.CTA.secondary, 'Work with us');
-    assert.equal(content.HERO.proof, 'Education only. 120+ education companies worked with.');
-    assert.equal(content.HERO.sample, 'Sample institution. Fictional data.');
+    assert.equal(content.HERO.proof, '120+ education companies worked with.');
     assert.deepEqual(
       content.NAV.map((item) => item.label),
       ['Services', 'Drishti', 'How we work', 'FAQ'],

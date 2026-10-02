@@ -1,5 +1,7 @@
-// The AdmitLabs website's words (admitlabs.in), in one place, as approved on 2026-10-01. Short,
-// confident, plain. No dashes, curly quotes only (src/site/content.test.ts checks).
+// The AdmitLabs website's words (admitlabs.in), in one place, as approved on 2026-10-01 and kept
+// through the Spotlight redesign of 2026-10-02 (no small labels above headings any more). Short,
+// confident, plain. No dashes, curly quotes only (src/site/content.test.ts checks). What the
+// website's pictures show lives in ./scenes.ts.
 
 import { SITE_SETTINGS } from '../config/site.ts';
 import { RIVAL_RULES } from '../config/rivals.ts';
@@ -24,13 +26,11 @@ export const NAV = [
 ] as const;
 
 export const HERO = {
-  /** "Get discovered, trusted, and chosen." The three pillar words light up as the card measures them. */
+  /** "Get discovered, trusted, and chosen.", set in two lines: "Get discovered, trusted," and "and chosen." */
   title: { before: 'Get', words: { discovered: 'discovered', trusted: 'trusted', chosen: 'chosen' } satisfies Record<Pillar, string> },
   lede: 'AdmitLabs helps colleges, universities and skilling institutes grow admissions. We measure where you stand, then build the content that makes students choose you.',
   ledeEnd: 'Every month.',
-  proof: 'Education only. 120+ education companies worked with.',
-  card: 'Drishti Audit',
-  sample: 'Sample institution. Fictional data.',
+  proof: '120+ education companies worked with.',
 } as const;
 
 const PILLAR_LINES: Readonly<Record<Pillar, string>> = {
@@ -40,7 +40,6 @@ const PILLAR_LINES: Readonly<Record<Pillar, string>> = {
 };
 
 export const SYSTEM = {
-  eyebrow: 'The system',
   title: ['One system.', 'Run the same way every month.'],
   lede: { strong: 'Drishti measures where you stand. Our services fix it.', rest: 'Three things decide whether a student picks you, and we work on all three.' },
   checksLabel: 'Drishti checks',
@@ -66,7 +65,6 @@ export const SYSTEM = {
 export type ServiceKey = 'program-growth' | 'institution-branding' | 'admit-campaign';
 
 export const SERVICES = {
-  eyebrow: 'Services',
   title: 'Three ways we grow your admissions.',
   items: [
     { key: 'program-growth', name: 'Program Growth', line: 'A content page for one program, with its own identity. Built for the students you want next. You own it.' },
@@ -85,7 +83,6 @@ export function aboutService(key: string | null | undefined): string | null {
 }
 
 export const DRISHTI = {
-  eyebrow: 'Drishti',
   title: 'Drishti by AdmitLabs.',
   lede: 'See where you stand, who’s ahead, and what students want.',
   stats: [
@@ -99,20 +96,18 @@ export const DRISHTI = {
 } as const;
 
 export const AUDIENCE = {
-  eyebrow: 'Who we work with',
+  title: 'Who we work with',
   lines: ['Private colleges.', 'Private universities.', 'Skilling and training institutes.'],
   programs: 'Professional and career programs.',
 } as const;
 
 /** Our work: built, and hidden until the content samples are ready (SITE_SETTINGS.showWork). */
 export const WORK = {
-  eyebrow: 'Our work',
   title: 'Content that students choose.',
 } as const;
 
 export const HOW = {
-  eyebrow: 'How we work',
-  title: 'Start with an Audit. Then we run it with you.',
+  title: ['Start with an Audit.', 'Then we run it with you.'],
   steps: [
     { name: 'Audit', line: 'We see where you stand today, with Drishti.' },
     { name: 'Blueprint', line: 'We plan what to build first, and why.' },
@@ -122,14 +117,13 @@ export const HOW = {
 } as const;
 
 export const TATHYA = {
-  eyebrow: 'For students',
+  forWhom: 'For students',
   name: 'Tathya',
   line: 'Every government opportunity a student qualifies for, with real odds. Sirf data.',
   link: 'Visit Tathya',
 } as const;
 
 export const FAQ = {
-  eyebrow: 'FAQ',
   title: 'Questions, answered.',
   more: 'Something else? Write to',
   items: [
@@ -154,7 +148,6 @@ export const FOOTER = {
 
 /** The "Work with us" page. */
 export const ENQUIRY = {
-  eyebrow: 'Work with us',
   title: 'Tell us about your institution.',
   lede: 'A few details, and we’ll reply within one working day.',
   orWrite: 'Or write to us at',

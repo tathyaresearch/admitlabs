@@ -1,0 +1,805 @@
+/* The system: one dark stage where the three moments happen in order, a caption under each, and
+   the monthly loop on one track. Phone first: each moment on its own small stage. */
+
+.system {
+  padding-block: var(--section-pad);
+  background: linear-gradient(180deg, #efe4d0 0%, var(--ivory) 12rem, var(--ivory) 100%);
+  color: var(--black);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.head p {
+  max-width: 28rem;
+}
+
+/* The moments ------------------------------------------------------------------------------- */
+
+.moments {
+  display: grid;
+  gap: var(--space-12);
+  margin-top: var(--space-12);
+  list-style: none;
+}
+
+.moment {
+  display: grid;
+  gap: var(--space-5);
+}
+
+/* Each moment's own small stage (phone and tablet). */
+.scene {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 1.375rem 1rem;
+  border-radius: 1rem;
+  background:
+    var(--grain-dark),
+    radial-gradient(90% 80% at 10% 0%, rgba(242, 232, 214, 0.1), transparent 60%),
+    linear-gradient(180deg, #17171b 0%, var(--black) 100%);
+  color: var(--ivory);
+}
+
+.scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: linear-gradient(90deg, var(--hair) 1px, transparent 1px), linear-gradient(180deg, var(--hair) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(90% 90% at 30% 20%, #000, transparent 85%);
+  mask-image: radial-gradient(90% 90% at 30% 20%, #000, transparent 85%);
+  opacity: 0.55;
+}
+
+.words {
+  max-width: 30rem;
+}
+
+.pillarName {
+  font-size: 1.75rem;
+  font-weight: 640;
+  font-stretch: 92%;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.pillarLine {
+  margin-top: var(--space-2);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.checks {
+  margin-top: var(--space-3);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.checks strong {
+  font-weight: var(--weight-heading);
+  color: var(--text);
+}
+
+/* Only where the shared stage has room. (Scoped so it wins over each part's own display.) */
+@media (max-width: 71.99rem) {
+  .scene .wide {
+    display: none;
+  }
+}
+
+/* The search ------------------------------------------------------------------------------ */
+
+.search {
+  padding: 1.125rem 1.125rem 0.5rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 0.875rem;
+  background: rgba(20, 20, 23, 0.86);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--hair);
+  border-radius: 1.375rem;
+  background: var(--graphite);
+  font-size: 0.9375rem;
+  white-space: nowrap;
+}
+
+.searchBar svg {
+  flex: none;
+  color: var(--slate);
+}
+
+.query {
+  display: inline-block;
+}
+
+.caret {
+  width: 1px;
+  height: 1.125rem;
+  margin-left: -0.375rem;
+  background: var(--ivory);
+}
+
+.answer {
+  margin-top: 0.875rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--hair);
+  border-radius: 0.625rem;
+  background: linear-gradient(180deg, rgba(242, 232, 214, 0.06), rgba(242, 232, 214, 0.02));
+}
+
+.answerLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  font-size: 0.75rem;
+  font-weight: var(--weight-heading);
+  color: var(--grey-300);
+}
+
+.answerText {
+  margin-top: 0.375rem;
+  font-size: 0.84375rem;
+  line-height: 1.5;
+  color: var(--grey-200);
+}
+
+.answerText strong {
+  font-weight: var(--weight-heading);
+  color: var(--ivory);
+}
+
+.source {
+  display: inline-flex;
+  margin-top: 0.5rem;
+  padding: 0.1875rem 0.5rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 0.625rem;
+  font-size: 0.71875rem;
+  color: var(--slate);
+}
+
+.result {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  column-gap: 0.75rem;
+  padding: 0.875rem 0.25rem;
+}
+
+.result + .result {
+  border-top: 1px solid var(--hair);
+}
+
+.favicon {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--hair);
+  border-radius: 50%;
+  background: var(--grey-920);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--grey-300);
+}
+
+.top .favicon {
+  background: var(--ivory);
+  color: var(--black);
+}
+
+.site {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--slate);
+}
+
+.site strong {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-heading);
+  color: var(--grey-200);
+}
+
+.resultTitle {
+  margin-top: 0.375rem;
+  font-size: 1.03125rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--ivory);
+}
+
+.resultLine {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--slate);
+}
+
+.dim {
+  opacity: 0.38;
+}
+
+.dim .resultTitle {
+  font-weight: var(--weight-medium);
+}
+
+/* The review and its proof ------------------------------------------------------------------ */
+
+.trust {
+  margin-inline: 0.5rem;
+  padding: 1.375rem 1.375rem 1.125rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #f8f2e7 0%, #efe5d2 100%);
+  box-shadow: 0 40px 70px -24px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: var(--black);
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.ratingValue {
+  font-size: 2.875rem;
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.stars {
+  display: flex;
+  gap: 0.1875rem;
+  color: var(--black);
+}
+
+.count {
+  margin-top: 0.3125rem;
+  font-size: 0.78125rem;
+  color: var(--grey-700);
+}
+
+.quote {
+  margin-top: 1rem;
+  font-size: 0.9375rem;
+  font-weight: var(--weight-medium);
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 0.5625rem;
+  margin-top: 0.75rem;
+  font-size: 0.78125rem;
+  color: var(--grey-700);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--black);
+  color: var(--ivory);
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.proofs {
+  margin-top: 1rem;
+  border-top: 1px solid var(--hair-ink);
+  list-style: none;
+}
+
+.proofs li {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding-top: 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--grey-800);
+}
+
+.proofs svg {
+  color: var(--black);
+}
+
+.proofValue {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-heading);
+  color: var(--black);
+}
+
+/* The enquiry, and the note that it arrived ------------------------------------------------- */
+
+.enquiryScene {
+  position: relative;
+}
+
+.enquiry {
+  padding: 1.25rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 1rem;
+  background: rgba(30, 31, 35, 0.92);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
+}
+
+.enquiryTitle {
+  font-size: 0.96875rem;
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.01em;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.125rem;
+  margin-top: 0.5rem;
+  font-size: 0.78125rem;
+  color: var(--slate);
+}
+
+.facts strong {
+  font-weight: var(--weight-medium);
+  color: var(--grey-200);
+}
+
+.field {
+  margin-top: 0.875rem;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  color: var(--slate);
+}
+
+.fieldBox {
+  display: flex;
+  align-items: center;
+  height: 2.5rem;
+  margin-top: 0.375rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 0.5rem;
+  background: var(--grey-975);
+  font-size: 0.875rem;
+}
+
+.focus {
+  border-color: rgba(242, 232, 214, 0.45);
+  box-shadow: 0 0 0 3px rgba(242, 232, 214, 0.06);
+}
+
+.send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.625rem;
+  margin-top: 1rem;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #f7f0e3 0%, #ece2cf 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.35);
+  color: var(--black);
+  font-size: 0.875rem;
+  font-weight: var(--weight-heading);
+}
+
+.received {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: max-content;
+  margin: 0.75rem 0 0 auto;
+  padding: 0.625rem 0.875rem 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(242, 232, 214, 0.96);
+  box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.7);
+  color: var(--black);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-heading);
+}
+
+.received span {
+  font-weight: var(--weight-regular);
+  color: var(--grey-700);
+}
+
+/* The loop ---------------------------------------------------------------------------------- */
+
+.loop {
+  display: grid;
+  gap: var(--space-7);
+  margin-top: clamp(4.5rem, 3rem + 5vw, 7rem);
+  padding-top: 2.75rem;
+  border-top: 1px solid var(--hair-ink);
+}
+
+.loopNote {
+  max-width: 21rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.cycle {
+  position: relative;
+}
+
+/* Phone: the track runs down the left. */
+.steps {
+  position: relative;
+  display: grid;
+  gap: 1.625rem;
+  padding-left: 1.375rem;
+  border-left: 1px solid rgba(10, 10, 12, 0.22);
+  list-style: none;
+}
+
+.step {
+  position: relative;
+}
+
+/* Where each step begins on the track. */
+.step::before {
+  content: '';
+  position: absolute;
+  left: calc(-1.375rem - 4px);
+  top: 0.75rem;
+  width: 7px;
+  height: 7px;
+  background: var(--black);
+}
+
+.stepWord {
+  font-size: clamp(2.125rem, 1.6rem + 1.6vw, 2.875rem);
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.stepWho {
+  margin-top: 0.625rem;
+  font-size: 0.78125rem;
+  font-weight: var(--weight-heading);
+}
+
+.stepLine {
+  margin-top: 0.375rem;
+  font-size: 0.90625rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-left: 1.375rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.back svg {
+  color: var(--black);
+}
+
+/* The dot that travels the track: a carrier as long as the track, the dot at its start. */
+.rail {
+  display: none;
+}
+
+/* Tablet: each moment's stage beside its words --------------------------------------------- */
+
+@media (min-width: 48rem) {
+  .moment {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--space-10);
+  }
+
+  .scene {
+    padding: 1.75rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .head {
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+    column-gap: var(--space-16);
+    align-items: end;
+  }
+
+  .loop {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    column-gap: var(--space-16);
+  }
+
+  .loopNote {
+    padding-top: 0.625rem;
+  }
+
+  /* One track across, under the three words. */
+  .steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 1.75rem;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .steps::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 4.25rem;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(10, 10, 12, 0.3), rgba(10, 10, 12, 0.3) 85%, rgba(10, 10, 12, 0.05));
+  }
+
+  .step::before {
+    left: 0;
+    top: calc(4.25rem - 3px);
+  }
+
+  .stepWho {
+    margin-top: 2.5rem;
+  }
+
+  .back {
+    position: absolute;
+    right: 0;
+    top: 4.75rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  .rail {
+    display: block;
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: calc(4.25rem - 4px);
+    height: 9px;
+    pointer-events: none;
+  }
+
+  .rail::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 0;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--black);
+    box-shadow: 0 0 0 4px rgba(10, 10, 12, 0.08);
+  }
+}
+
+/* Wide: the shared stage. The three moments sit in its columns, staggered like a scene; their
+   words line up under where each one starts. */
+@media (min-width: 72rem) {
+  .moments {
+    grid-template-columns: 3.667% 39.167% 2.167% 25% minmax(0, 1fr) 25% 3.667%;
+    grid-template-rows: auto auto;
+    gap: 0;
+    margin-top: 4.5rem;
+  }
+
+  .moments::before,
+  .moments::after {
+    content: '';
+    grid-row: 1;
+    grid-column: 1 / -1;
+    border-radius: 1.25rem;
+  }
+
+  .moments::before {
+    background:
+      var(--grain-dark),
+      radial-gradient(70% 90% at 12% 0%, rgba(242, 232, 214, 0.1), transparent 55%),
+      radial-gradient(60% 70% at 100% 100%, rgba(242, 232, 214, 0.05), transparent 60%),
+      linear-gradient(180deg, #17171b 0%, var(--black) 100%);
+    box-shadow: 0 40px 80px -40px rgba(10, 10, 12, 0.55), 0 0 0 1px rgba(10, 10, 12, 0.9);
+  }
+
+  .moments::after {
+    z-index: 0;
+    pointer-events: none;
+    background-image: linear-gradient(90deg, var(--hair) 1px, transparent 1px), linear-gradient(180deg, var(--hair) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: -1px -1px;
+    -webkit-mask-image: radial-gradient(75% 85% at 40% 30%, #000 0%, transparent 80%);
+    mask-image: radial-gradient(75% 85% at 40% 30%, #000 0%, transparent 80%);
+    opacity: 0.6;
+  }
+
+  .moment {
+    display: grid;
+    grid-row: 1 / span 2;
+    grid-template-rows: subgrid;
+    grid-template-columns: none;
+    align-items: start;
+    gap: 0;
+  }
+
+  .moment:nth-child(1) {
+    grid-column: 2;
+  }
+
+  .moment:nth-child(2) {
+    grid-column: 4;
+  }
+
+  .moment:nth-child(3) {
+    grid-column: 6;
+  }
+
+  .scene {
+    z-index: 1;
+    align-self: start;
+    overflow: visible;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+  }
+
+  .scene::before {
+    content: none;
+  }
+
+  .moment:nth-child(1) .scene {
+    margin-block: 3.25rem 3rem;
+  }
+
+  .moment:nth-child(2) .scene {
+    margin-top: 11rem;
+  }
+
+  .moment:nth-child(3) .scene {
+    margin-top: 5.25rem;
+  }
+
+  .trust {
+    margin-inline: 0;
+  }
+
+  /* The note sits under the enquiry, a little in from its edge. */
+  .received {
+    position: absolute;
+    right: 1.25rem;
+    top: calc(100% + 1.75rem);
+    margin: 0;
+  }
+
+  .words {
+    padding: 2.25rem 2rem 0 0;
+  }
+
+  .pillarName {
+    font-size: 1.875rem;
+  }
+}
+
+/* Motion: the moments arrive in order as the stage comes into view; the query types; the
+   enquiry is received; a dot travels the loop. All settled without it. */
+@media (prefers-reduced-motion: no-preference) {
+  .caret {
+    animation: blink 1100ms steps(1, end) infinite;
+  }
+
+  @supports (animation-timeline: view()) {
+    .scene {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 50%;
+    }
+
+    .query {
+      animation: type linear both;
+      animation-timeline: view();
+      animation-range: entry 15% entry 75%;
+    }
+
+    .received {
+      animation: arrive linear both;
+      animation-timeline: view();
+      animation-range: entry 30% entry 90%;
+    }
+  }
+
+  @media (min-width: 72rem) {
+    @supports (animation-timeline: view()) {
+      .moment:nth-child(2) .scene {
+        animation-range: entry 10% entry 60%;
+      }
+
+      .moment:nth-child(3) .scene {
+        animation-range: entry 20% entry 70%;
+      }
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .rail {
+      animation: travel 9s var(--ease-in-out) infinite;
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 2rem;
+  }
+}
+
+@keyframes type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    translate: 0 0.5rem;
+    scale: 0.96;
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Rests at each step, then goes round to next month. */
+@keyframes travel {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  4%,
+  14% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  30%,
+  42% {
+    transform: translateX(33.6%);
+  }
+  58%,
+  70% {
+    transform: translateX(67.2%);
+  }
+  88% {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}

@@ -15,6 +15,7 @@ import { ENQUIRY_RULES } from '@/config/site';
 import { aboutService, ENQUIRY } from '@/site/content';
 import { ENQUIRY_ROLE_LABELS, ENQUIRY_ROLES, TRAP_FIELD } from '@/site/enquiry';
 import styles from './enquiry.module.css';
+import site from './site.module.css';
 
 const IDLE: EnquiryState = { status: 'idle', errors: {}, message: null, values: {}, attempt: 0 };
 const ROLE_OPTIONS = ENQUIRY_ROLES.map((role) => ({ value: role, label: ENQUIRY_ROLE_LABELS[role] }));
@@ -79,7 +80,7 @@ export function EnquiryForm() {
         </label>
       </div>
       <div className={styles.submitRow}>
-        <Button type="submit" size="lg" loading={pending} iconAfter="arrowRight">
+        <Button type="submit" size="lg" loading={pending} iconAfter="arrowRight" className={site.ctaInk}>
           {ENQUIRY.send}
         </Button>
         <p className={styles.consent}>{ENQUIRY.consent}</p>

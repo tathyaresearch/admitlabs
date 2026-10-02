@@ -1,9 +1,25 @@
-/* The "Work with us" page: the words on the left, the form on an ivory card on the right. */
+/* The "Work with us" page, in the Spotlight style: light from above, a fine frame, the words on
+   the left and the form on an ivory card on the right. */
 
 .section {
-  padding-block: clamp(3rem, 2rem + 4vw, 6rem) var(--section-pad);
-  background: var(--surface);
+  --rule-top: var(--header-h);
+  --rule-bottom: 0px;
+  overflow: hidden;
+  /* Under the header, like the home page's hero, so the light reaches the top. */
+  margin-top: calc(-1 * var(--header-h));
+  padding: calc(var(--header-h) + clamp(3rem, 2rem + 4vw, 6rem)) 0 var(--section-pad);
+  background: var(--grain-dark), var(--black);
   color: var(--text);
+}
+
+.light {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 40% at 22% -4%, rgba(242, 232, 214, 0.14), rgba(242, 232, 214, 0.04) 50%, transparent 75%),
+    radial-gradient(50% 40% at 80% 10%, rgba(242, 232, 214, 0.04), transparent 70%);
 }
 
 .grid {
@@ -20,7 +36,7 @@
 
   .intro {
     position: sticky;
-    top: 6rem;
+    top: calc(var(--header-h) + var(--space-10));
   }
 }
 
@@ -31,36 +47,42 @@
 }
 
 .title {
-  font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+  font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.25rem);
   font-weight: var(--weight-heading);
   line-height: 1;
-  letter-spacing: -0.036em;
+  letter-spacing: -0.04em;
   text-wrap: balance;
+  background: var(--title-fall);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .lede {
   max-width: 30rem;
-  font-size: clamp(1.0625rem, 0.98rem + 0.35vw, 1.3125rem);
+  font-size: clamp(1.0625rem, 0.98rem + 0.35vw, 1.25rem);
   line-height: 1.5;
-  color: var(--text-muted);
+  color: var(--slate);
   text-wrap: pretty;
 }
 
 .write {
   font: var(--type-small);
-  color: var(--text-muted);
+  color: var(--slate);
 }
 
 .write a {
-  color: var(--text);
+  color: var(--ivory);
   text-underline-offset: 0.2em;
 }
 
+/* The card: ivory with a soft top light, lifted off the black. */
 .card {
   container-type: inline-size;
   padding: clamp(1.375rem, 0.9rem + 2vw, 2.5rem);
-  border-radius: 1.5rem;
-  background: var(--surface);
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, #f8f2e7 0%, #efe5d2 100%);
+  box-shadow: 0 60px 120px -50px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   color: var(--text);
 }
 
@@ -117,13 +139,8 @@
 }
 
 .thanksIcon {
-  display: grid;
-  place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: var(--radius-lg);
-  background: var(--surface-inverse);
-  color: var(--text-inverse);
+  display: inline-flex;
+  color: var(--text);
 }
 
 .thanksTitle {
