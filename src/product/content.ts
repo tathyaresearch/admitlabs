@@ -29,17 +29,29 @@ export const CTA = {
   signIn: 'Sign in',
 } as const;
 
+/**
+ * The problem, shown rather than told: the three questions as a Drishti card with nothing in it.
+ * The card's values are unknowns and its names placeholders, never real data hidden.
+ */
 export const PROBLEM = {
-  title: 'Most institutions are guessing.',
-  lede: 'What students see when they look you up. What your rivals changed this month. What students are asking right now. Most teams find out late, or never.',
-  items: [
-    { guess: 'How you look', answer: `Drishti checks ${CHECKS.length} things a student sees when they look you up, each with its source.` },
-    { guess: 'What rivals do', answer: `Drishti tracks ${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals: their scores, their moves and their best content.` },
-    { guess: 'What students want', answer: 'Drishti listens to what students in your city search, ask and worry about.' },
-  ],
+  title: 'Can your team answer these?',
+  lede: 'Most teams answer with a guess. Drishti checks, every month, from public pages.',
+  card: {
+    who: 'Your institution',
+    checked: 'Last checked: never',
+    score: 'How do students see us?',
+    unknown: 'Unknown',
+    rivals: 'Who’s ahead of us?',
+    you: 'You?',
+    rank: 'Your rank:',
+    demand: 'What are students asking?',
+    searches: 'searches this month',
+  },
+  /** What a screen reader hears instead of the card. */
+  summary: 'A Drishti card with nothing in it: no score, no rank among your rivals, and no idea what students are asking.',
 } as const;
 
-/** The features section. Two lines: the second in a quieter tone. */
+/** The features section's heading, for screen readers: each feature then opens with its own bar. */
 export const FEATURES_HEAD = {
   title: ['Three questions.', 'Answered every month.'],
 } as const;
@@ -48,7 +60,10 @@ export interface Feature {
   key: 'audit' | 'rivals' | 'demand';
   name: string;
   question: string;
+  /** The website's line for the feature (its Drishti section). */
   lede: string;
+  /** The product page's one short line under the feature's bar. */
+  line: string;
 }
 
 export const FEATURES: readonly Feature[] = [
@@ -57,18 +72,21 @@ export const FEATURES: readonly Feature[] = [
     name: 'Audit',
     question: 'How do we look?',
     lede: `A score out of 100 from ${CHECKS.length} checks: how easily students find you, trust you and choose you. Then what to fix first, ranked by the points it could add.`,
+    line: `Your score out of 100 from ${CHECKS.length} checks, and what to fix first.`,
   },
   {
     key: 'rivals',
     name: 'Rivals',
     question: 'Who’s ahead of us?',
     lede: `Pick ${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals. See where you lead, where they lead, and what changed.`,
+    line: `Pick ${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals. See where you lead, where they lead, and what changed.`,
   },
   {
     key: 'demand',
     name: 'Demand',
     question: 'What do students want?',
     lede: 'What students in your city search for, ask and worry about, every month.',
+    line: 'What students in your city search for, ask and worry about, every month.',
   },
 ];
 
@@ -85,10 +103,17 @@ const PILLAR_QUESTIONS: Readonly<Record<Pillar, string>> = {
   chosen: 'Is it easy to pick you?',
 };
 
+/**
+ * The score, inside the Audit: every check by part, its result, and what each result earns. The
+ * label names the feature it belongs to. `pillars` (with each check by name) is also the website's.
+ */
 export const SCORE = {
-  title: ['One score.', 'Three questions.'] as const,
+  label: 'Inside Audit',
+  title: `One score, from ${CHECKS.length} checks.`,
+  lede: 'Each check earns points. They add up to three parts, each a question a student asks. Your score is the three, averaged.',
   resultsTitle: 'What each result earns',
-  lede: 'Your score is out of 100: the average of three pillars, each asking what a student asks. Every check is Strong, Okay, Weak or Missing, and always shows what was found.',
+  /** Under the results: how a check made for each program shows. */
+  perProgram: 'A check made for each program shows its weakest program.',
   pillars: PILLARS.map((pillar) => ({
     pillar,
     name: PILLAR_LABELS[pillar],

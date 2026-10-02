@@ -556,16 +556,18 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 ## 15. Product page (`/drishti`)
 
-**Premium product landing page, part of the AdmitLabs website** (section 22), rebuilt in its **Spotlight** style on 2026-10-02: the website's header and footer, its light, frames and buttons, and the product itself for pictures. Same design system, with the website's subtle monochrome gradients (section 14). No small labels above headings.
+**Premium product landing page, part of the AdmitLabs website** (section 22), rebuilt in its **Spotlight** style on 2026-10-02: the website's header and footer, its light, frames and buttons, and the product itself for pictures. Same design system, with the website's subtle monochrome gradients (section 14).
+
+**Headings are calm and confident** (redesigned 2026-10-03): the hero headline 52 px (30 on a phone), section headings 36 px (28 on a phone), a line under a heading 16 to 17 px. These sizes are the page's own; the website keeps its sizes. No small labels above headings, but a feature's own name: each feature opens with its bar, and the score names the feature it belongs to. Each visual shows something real from the product, never decoration.
 
 **The pictures** are the dashboard's own components, filled from the sample world by the real scoring engine and shown under the website's made-up names: Larkmoor University, Bangalore, with Calderwood College, Brackenfield University and Thornbury College as its rivals (Karnataka, Kannada). Only the names change, never a number, so the website, this page and the sample report agree. They carry no caption. The dashboard's own sample keeps its names.
 
 **Sections, in order:**
 
-1. **Hero**: the product's name with the Drishti eye (its Rise reveal plays once as the intro, section 14), then "See where you stand, who's ahead, and what students want." with the last words in an ivory block. "Get your free Audit" and "See the sample report", the trust line and the proof line, then the dashboard's Home in an app window that settles flat as the page moves
-2. **The problem** (ivory): what most teams are left guessing (how they look, what rivals do, what students want), each with what Drishti answers
-3. **Three questions**: the Audit, Rivals and Demand, each laid out its own way around a real picture of the product: the Audit on a dark stage, Rivals on ivory, Demand centred
-4. **The score**: Discovered, Trusted and Chosen, each with its question and its checks by name, then what each result earns
+1. **Hero**: the product's name with the Drishti eye (its Rise reveal plays once as the intro, section 14), then "See where you stand, who's ahead, and what students want." (two lines on a wide screen) with the last words in an ivory block. "Get your free Audit" and "See the sample report", the trust line and the proof line, then the dashboard's Home in an app window that settles flat as the page moves
+2. **The problem** (ivory), shown rather than told: "Can your team answer these?" beside a Drishti card with nothing in it. No score, no rank among your rivals, no idea what students ask: unknowns in dashed boxes, dashed bars where the product marks what it could not find, soft bars for names no one has checked. Placeholders only, never real data hidden
+3. **The three features**, each in the same frame: a bar with its name (heavy and narrow, with the dashboard's icon), its question and its place ("1 of 3"), which stays under the header while its pictures pass, on a phone too; one short line; then the product across the full width on a dark stage. The Audit with its score gauge, what to fix first and every check; Rivals with the ladder, the latest move and each pillar; Demand with the fastest rise by month, what else is rising and the question asked most
+4. **The score**, inside the Audit (its label says so): "One score, from 17 checks." The sample's score is held beside a ledger of every check by part (Discovered, Trusted, Chosen), each part's score and question and each check's result; a check made for each program shows its weakest program, as the Audit's grid does. Then what each result earns. No lines between rows; two columns of checks, and on a phone each part stays three short rows
 5. **Public data only**: the rules every result follows, in one framed band
 6. **How it works**: four steps on a line that fills as the page moves: enter details, Drishti checks everything, see results, get a monthly report
 7. **Sample report** (ivory): three of its pages fanned out, and the download of the full sample PDF, marked "Sample report. Fictional data." on every page
@@ -574,7 +576,7 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 10. **FAQ**: data sources, privacy, what "public data only" means, renewal
 11. **Final call to action**: "Get your free Audit", under the same light as the top of the page
 
-**Motion**, calm and almost all CSS: sections and headings fade and rise in; the score counts up while its gauge draws; points bars fill; the rivals slide into rank order; Demand's bars grow; the report's pages fan out; buttons, cards and plans answer the pointer. With reduced motion, or no script, everything shows settled.
+**Motion**, calm and almost all CSS: sections and headings fade and rise in; each feature's bar holds its place while its pictures pass; the score counts up while its gauge draws; points bars fill; the rivals slide into rank order; Demand's bars grow; the report's pages fan out; buttons, cards and plans answer the pointer. With reduced motion, or no script, everything shows settled.
 
 "Get your free Audit" leads to `/login` then `/onboarding`.
 

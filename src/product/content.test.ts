@@ -58,21 +58,41 @@ describe('the product page copy', () => {
       content.SCORE.pillars.reduce((sum, pillar) => sum + pillar.checks.length, 0),
       CHECKS.length,
     );
-    assert.match(content.PROBLEM.items[0]?.answer ?? '', new RegExp(`${CHECKS.length} things`));
+    assert.match(content.SCORE.title, new RegExp(`${CHECKS.length} checks`));
+    assert.match(content.FEATURES[0]?.line ?? '', new RegExp(`${CHECKS.length} checks`));
+    assert.match(content.FEATURES[1]?.line ?? '', new RegExp(`${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals`));
+    // The website's Drishti section keeps its own line for each feature.
     assert.match(content.FEATURES[1]?.lede ?? '', new RegExp(`${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals`));
   });
 
-  test('no small labels above headings, and the pictures carry no caption: only the sample PDF says it is a sample', () => {
+  test('each feature opens with its name, its question and one short line', () => {
+    assert.deepEqual(
+      content.FEATURES.map((feature) => feature.name),
+      ['Audit', 'Rivals', 'Demand'],
+    );
+    for (const feature of content.FEATURES) {
+      assert.match(feature.question, /\?$/);
+      assert.ok(feature.line.split(' ').length <= 20, feature.line);
+    }
+  });
+
+  test('the problem card holds no values: only unknowns and placeholders, never real data', () => {
+    for (const text of texts(content.PROBLEM.card)) assert.doesNotMatch(text, /\d/, text);
+    assert.match(content.PROBLEM.summary, /nothing in it/);
+  });
+
+  test('no small labels above headings but the score’s, which names its feature; the pictures carry no caption: only the sample PDF says it is a sample', () => {
     const keys = (value: unknown): string[] =>
       Array.isArray(value) ? value.flatMap(keys) : value && typeof value === 'object' ? Object.entries(value).flatMap(([key, entry]) => [key, ...keys(entry)]) : [];
     assert.equal(keys(Object.fromEntries(Object.entries(content))).includes('eyebrow'), false);
+    assert.equal(content.SCORE.label, `Inside ${content.FEATURES[0]?.name}`);
     const pictures = readFileSync(new URL('../components/product/Previews.tsx', import.meta.url), 'utf8');
     assert.doesNotMatch(pictures, /Sample institution|Fictional data/);
     assert.equal(content.REPORT.note, 'Sample report. Fictional data.');
   });
 
   test('two-line titles, the second in a quieter tone', () => {
-    for (const title of [content.FEATURES_HEAD.title, content.SCORE.title, content.STEPS.title, content.REPORT.title, content.PLANS.title, content.CLIENTS.title]) {
+    for (const title of [content.FEATURES_HEAD.title, content.STEPS.title, content.REPORT.title, content.PLANS.title, content.CLIENTS.title]) {
       assert.equal(title.length, 2);
       for (const line of title) assert.match(line, /\.$/);
     }

@@ -10,6 +10,33 @@
   all show it finished.
 */
 
+/* Headings and the lines under them: calm and confident, a size down from the website's (the user's
+   pick, 2026-10-02). Section headings 36 px (28 on a phone); a line under a heading 16 to 17 px.
+   Some headings carry the website's own title classes for their finish, so the sizes sit under the
+   page's class: two classes win whatever order the styles load in. ---------------------------- */
+
+.heading {
+  font-weight: var(--weight-heading);
+  text-wrap: balance;
+}
+
+.page .heading {
+  font-size: clamp(1.75rem, 1.45rem + 1vw, 2.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.lede {
+  max-width: 36rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.page .lede {
+  font-size: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
+}
+
 /* The hero: the promise under the light, then Home itself, tipped back and settling flat as the
    page moves, fading into the dark below. --------------------------------------------------- */
 
@@ -56,20 +83,26 @@
   color: var(--ivory);
 }
 
-/* The website's headline finish, a size down from the home page's: this page's promise sits under
-   the product's name. */
+/* The website's headline finish at a calm size: 52 px, 30 on a phone. On a wide screen it sits in
+   two lines, "See where you stand, who's ahead," then "and what students want." */
 .heroTitle {
-  max-width: 15ch;
-  margin-top: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
-  font-size: clamp(2.4rem, 1.35rem + 4.4vw, 4.6rem);
+  max-width: 34ch;
+  margin-top: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  font-size: clamp(1.875rem, 1.4rem + 2.07vw, 3.25rem);
   font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.045em;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
   text-wrap: balance;
   background: var(--title-fall);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+@media (min-width: 48rem) {
+  .heroLine {
+    display: block;
+  }
 }
 
 /* The last words in an ivory block: Drishti's own mark. */
@@ -84,10 +117,10 @@
 }
 
 .heroLede {
-  max-width: 36rem;
-  margin-top: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
-  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.15625rem);
-  line-height: 1.55;
+  max-width: 34rem;
+  margin-top: clamp(1rem, 0.85rem + 0.6vw, 1.375rem);
+  font-size: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
+  line-height: 1.6;
   color: var(--slate);
 }
 
@@ -170,7 +203,8 @@
   }
 }
 
-/* The problem, on ivory: what most teams are left guessing, and what Drishti answers. -------- */
+/* The problem, on ivory, shown rather than told: the questions most teams can't answer, as a
+   Drishti card with nothing in it. ------------------------------------------------------------ */
 
 .problem {
   padding-block: var(--section-pad);
@@ -178,65 +212,183 @@
   color: var(--black);
 }
 
-.problemHead {
+.blankGrid {
   display: grid;
-  gap: var(--space-5);
-  max-width: 46rem;
+  gap: var(--space-10);
+  align-items: center;
 }
 
-.problemTitle {
-  font-size: clamp(2.375rem, 1.4rem + 4vw, 4.25rem);
+.blankWords {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.blankCard {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, #17171b 0%, #0d0d10 100%);
+  box-shadow:
+    0 40px 80px -40px rgba(10, 10, 12, 0.65),
+    inset 0 1px 0 rgba(242, 232, 214, 0.06);
+  color: var(--ivory);
+}
+
+.blankHead {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  font-size: 0.8125rem;
   font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.042em;
-  text-wrap: balance;
+  color: var(--slate);
 }
 
-.problemLede {
-  max-width: 38rem;
-  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
-  line-height: 1.55;
-  color: var(--text-muted);
-  text-wrap: pretty;
+.blankHead strong {
+  font-weight: var(--weight-heading);
+  color: var(--ivory);
 }
 
-.guesses {
-  margin-top: clamp(3rem, 2rem + 3vw, 5rem);
-  list-style: none;
-  border-bottom: 1px solid var(--hair-ink-2);
-}
-
-.guess {
+.blankRow {
   display: grid;
   gap: var(--space-3);
-  padding-block: clamp(1.25rem, 0.9rem + 1.2vw, 2rem);
-  border-top: 1px solid var(--hair-ink-2);
+  padding: var(--space-4);
+  border-radius: 0.875rem;
+  background: var(--graphite);
 }
 
-.guessText {
-  font-size: clamp(1.75rem, 1.15rem + 2.4vw, 3.25rem);
+.blankQuestion {
+  font-size: 0.9375rem;
   font-weight: var(--weight-heading);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
 }
 
-.guessAnswer {
-  max-width: 32rem;
-  font-size: 1.0625rem;
-  line-height: 1.55;
-  color: var(--text-muted);
-  text-wrap: pretty;
+/* An unknown value: a question mark in a dashed box, where a number would be. */
+.unknown {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5em;
+  height: 1.25em;
+  padding-inline: 0.15em;
+  border: 1.5px dashed rgba(242, 232, 214, 0.42);
+  border-radius: 0.25em;
+  font-family: var(--font-numeric);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  color: rgba(242, 232, 214, 0.7);
+}
+
+.blankScore {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.blankBig {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-size: 2rem;
+}
+
+.blankBig small {
+  font-size: 0.875rem;
+  color: var(--slate);
+}
+
+/* An empty points bar, dashed: as the product draws a check it found nothing for. */
+.dashBar {
+  flex: 1;
+  min-width: 4rem;
+  height: 4px;
+  border: 1px dashed rgba(242, 232, 214, 0.32);
+  border-radius: var(--radius-full);
+}
+
+.blankWord {
+  font-size: 0.8125rem;
+  font-weight: var(--weight-heading);
+  color: var(--slate);
+}
+
+.ghostLadder {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.ghostRow {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 7rem) minmax(0, 1fr) 1.75rem;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 2rem;
+  padding-inline: var(--space-3);
+  border-radius: 0.5rem;
+  background: #26272c;
+  font-size: 0.8125rem;
+  color: var(--slate);
+}
+
+.ghostRow .unknown,
+.blankMeta .unknown {
+  font-size: 0.75rem;
+}
+
+.ghostYou {
+  font-weight: var(--weight-heading);
+  color: var(--ivory);
+}
+
+/* A name no one has checked: a soft bar of placeholder, never real words hidden. */
+.ghostName {
+  display: block;
+  height: 0.5rem;
+  border-radius: var(--radius-full);
+  background: rgba(242, 232, 214, 0.2);
+  filter: blur(1.5px);
+}
+
+.ghostLines {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ghostLines i {
+  display: block;
+  height: 0.625rem;
+  border-radius: var(--radius-full);
+  background: rgba(242, 232, 214, 0.18);
+  filter: blur(2px);
+}
+
+.ghostLines i:nth-child(2) {
+  width: 78%;
+}
+
+.ghostLines i:nth-child(3) {
+  width: 52%;
+}
+
+.blankMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--slate);
 }
 
 @media (min-width: 64rem) {
-  .guess {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    align-items: baseline;
-    column-gap: var(--space-12);
+  .blankGrid {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    column-gap: var(--space-16);
   }
 }
 
-/* The three features: three questions, each laid out its own way around the product's answer. -- */
+/* The three features, each in the same frame: a bar with its name, its question and its place in
+   the three, which stays under the header while its pictures pass; one short line; then the
+   product itself across the full width. ------------------------------------------------------ */
 
 .features {
   --rule-top: 0px;
@@ -244,51 +396,99 @@
   background: radial-gradient(50% 35% at 10% 0%, rgba(242, 232, 214, 0.045), transparent 70%), var(--black);
 }
 
-.featuresTitle {
-  max-width: 22ch;
-}
-
 .chapter {
   display: grid;
-  gap: var(--space-8);
-  margin-top: clamp(3.5rem, 2rem + 5vw, 7rem);
+  margin-top: clamp(4rem, 2.5rem + 5vw, 7rem);
 }
 
-.words {
+.chapter:first-of-type {
+  margin-top: 0;
+}
+
+.featureBar {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 2;
   display: grid;
-  align-content: start;
-  gap: var(--space-4);
-  max-width: 32rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-1) var(--space-5);
+  padding-block: var(--space-4);
+  border-bottom: 1px solid var(--hair-2);
+  background: rgba(10, 10, 12, 0.82);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
-/* The question, with the feature's name on the same line at the far side: no label above it. */
-.featureHead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.question {
-  font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
-  font-weight: var(--weight-heading);
-  line-height: 1.05;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
-}
-
+/* The feature's name, set like the product's own wordmark: heavy and narrow. */
 .featureName {
-  flex: none;
-  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+  font-weight: var(--weight-heavy);
+  font-stretch: var(--width-narrow);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: var(--ivory);
+}
+
+.featureQuestion {
+  grid-column: 1 / -1;
+  font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.375rem);
   font-weight: var(--weight-heading);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--ivory);
+}
+
+.featureCount {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  grid-row: 1;
+  grid-column: 2;
+  font-size: 0.875rem;
+  color: var(--slate);
+  white-space: nowrap;
+}
+
+.featureTicks {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.featureTicks i {
+  display: block;
+  width: 1.25rem;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--hair-2);
+}
+
+.featureTicks i[data-on] {
+  background: var(--ivory);
+}
+
+.featureLine {
+  margin-block: var(--space-5);
   color: var(--slate);
 }
 
-.featureLede {
-  font-size: 1.0625rem;
-  line-height: 1.6;
-  color: var(--slate);
-  text-wrap: pretty;
+@media (min-width: 64rem) {
+  .featureBar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: var(--space-8);
+  }
+
+  .featureQuestion {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .featureCount {
+    grid-column: 3;
+  }
 }
 
 /* What each picture stands on: a dark stage with light and grain, or ivory. The pictures size
@@ -330,20 +530,6 @@
   border-color: var(--hair-2);
 }
 
-.ivoryStage {
-  border: 1px solid transparent;
-  background: linear-gradient(180deg, var(--ivory) 0%, #e9dfcb 100%);
-  box-shadow:
-    0 50px 100px -50px rgba(0, 0, 0, 0.9),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
-}
-
-.ivoryStage:hover {
-  box-shadow:
-    0 56px 110px -48px rgba(0, 0, 0, 0.95),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
 /* The rivals' rows pass over each other as they slide into rank order, so each carries the card's
    own colour, and yours stays on top. Settled, they look as they always do. */
 .rivals [data-slide] {
@@ -356,47 +542,9 @@
   background-color: var(--surface-nested);
 }
 
-@media (min-width: 64rem) {
-  .audit {
-    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
-    align-items: center;
-    column-gap: var(--space-16);
-  }
-
-  .rivals {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    align-items: center;
-    column-gap: var(--space-16);
-  }
-
-  .rivals .words {
-    order: 2;
-  }
-
-  /* Demand closes the three in the middle: its words centred over the picture, which stands alone
-     on a narrower stage. */
-  .demand {
-    justify-items: center;
-  }
-
-  .demand .words {
-    justify-items: center;
-    max-width: 38rem;
-    text-align: center;
-  }
-
-  .demand .featureHead {
-    justify-content: center;
-    gap: var(--space-5);
-  }
-
-  .demand .pictureStage {
-    width: min(100%, 46rem);
-  }
-}
-
-/* The score: the words held on the left, the three pillars and their checks on the right, then
-   what each result earns. ------------------------------------------------------------------- */
+/* The score, inside the Audit, as a ledger: the score held on the left; on the right every check by
+   part, each part's score and question, each check's result, then what each result earns. Kept
+   light to scan: no row lines, two columns of checks once there is room. --------------------- */
 
 .score {
   padding-block: var(--section-pad);
@@ -406,123 +554,244 @@
 
 .scoreGrid {
   display: grid;
-  gap: var(--space-10);
+  gap: var(--space-6);
 }
 
 .scoreHead {
   display: grid;
   align-content: start;
-  gap: var(--space-5);
+  justify-items: start;
+  gap: var(--space-4);
 }
 
-.pillars {
-  list-style: none;
-  border-top: 1px solid var(--hair-2);
+/* The feature the score belongs to, named as the dashboard names it: an ivory block with its icon. */
+.featureTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.3125rem 0.75rem 0.3125rem 0.5625rem;
+  border-radius: var(--radius-full);
+  background: var(--ivory);
+  color: var(--black);
+  font-size: 0.875rem;
+  font-weight: 650;
+  letter-spacing: -0.005em;
 }
 
-.pillar {
+.total {
   display: grid;
   gap: var(--space-3);
-  padding-block: var(--space-6);
-  border-bottom: 1px solid var(--hair-2);
+  width: min(100%, 22rem);
+  margin-top: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid var(--hair-2);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #17171b 0%, #101013 100%);
 }
 
-.pillarHead {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.pillarHead svg {
-  flex: none;
-  color: var(--ivory);
-}
-
-.pillarName {
-  font-size: clamp(1.625rem, 1.3rem + 1.2vw, 2.25rem);
+.totalNote {
+  font-size: 0.8125rem;
   font-weight: var(--weight-heading);
-  line-height: 1.05;
-  letter-spacing: -0.035em;
-}
-
-.pillarCount {
-  margin-left: auto;
-  font-size: 0.9375rem;
+  line-height: 1.45;
   color: var(--slate);
-  white-space: nowrap;
 }
 
-.pillarCount :global(.num) {
+.totalScore {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.totalScore :global(.num):first-child {
+  font-size: 3rem;
   font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.totalScore small {
+  font-size: 0.875rem;
+  color: var(--slate);
+}
+
+.totalTrack {
+  display: block;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: rgba(242, 232, 214, 0.12);
+  overflow: hidden;
+}
+
+.totalTrack i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ivory);
+}
+
+.totalMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  font-size: 0.8125rem;
+  color: var(--slate);
+}
+
+.ledger {
+  container-type: inline-size;
+  border: 1px solid var(--hair-2);
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, #141417 0%, #0e0e11 100%);
+}
+
+.ledgerPart {
+  padding: var(--space-4) var(--space-4) var(--space-5);
+}
+
+@container (min-width: 34rem) {
+  .ledgerPart {
+    padding: var(--space-5) var(--space-5) var(--space-4);
+  }
+}
+
+.ledgerPart + .ledgerPart {
+  border-top: 1px solid var(--hair);
+}
+
+.ledgerHead {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+}
+
+.ledgerHead svg {
   color: var(--ivory);
 }
 
-.pillarQuestion {
-  font-size: 1.0625rem;
-  line-height: 1.5;
+.ledgerName {
+  font-size: 1.125rem;
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.015em;
+}
+
+.ledgerScore {
+  font-size: 1.5rem;
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.ledgerQuestion {
+  grid-column: 2 / -1;
+  font-size: 0.875rem;
+  color: var(--slate);
+}
+
+/* The checks, two to a row with no lines between. Narrow (a phone): the name over its result, so
+   each part stays three rows short. Wide: the name and its result on one line, with its icon. */
+.ledgerRows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-4);
+  list-style: none;
+}
+
+.ledgerRow {
+  display: grid;
+  justify-items: start;
+  gap: 0.3125rem;
+  min-width: 0;
+  font-size: 0.8125rem;
+}
+
+.ledgerCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
   color: var(--grey-200);
 }
 
-/* The pillar's checks, each by name. */
-.pillarChecks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-1);
-  list-style: none;
-}
-
-.pillarChecks li {
-  padding: 0.3125rem 0.6875rem;
-  border: 1px solid var(--hair-2);
-  border-radius: var(--radius-full);
-  font-size: 0.8125rem;
-  line-height: 1.3;
+.ledgerCheck > :first-child {
+  display: none;
+  flex: none;
   color: var(--slate);
 }
 
-.resultsRow {
-  display: grid;
-  gap: var(--space-6);
-  margin-top: clamp(3rem, 2rem + 3vw, 5rem);
-  padding-top: var(--space-8);
-  border-top: 1px solid var(--hair-2);
+@container (min-width: 34rem) {
+  .ledgerRows {
+    gap: 0.125rem var(--space-8);
+    margin-top: var(--space-3);
+  }
+
+  .ledgerRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 2rem;
+    font-size: 0.875rem;
+  }
+
+  .ledgerCheck > :first-child {
+    display: inline-block;
+  }
 }
 
-.resultsTitle {
-  font-size: 1.0625rem;
+/* What each result earns: the bars' key, closing the ledger. */
+.ledgerKey {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-top: 1px solid var(--hair-2);
+  border-radius: 0 0 1.25rem 1.25rem;
+  background: rgba(242, 232, 214, 0.03);
+}
+
+.ledgerKeyTitle {
+  font-size: 0.875rem;
   font-weight: var(--weight-heading);
-  letter-spacing: -0.01em;
 }
 
 .results {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-6) var(--space-4);
+  gap: var(--space-4) var(--space-4);
   list-style: none;
 }
 
 .result {
   display: grid;
   align-content: start;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .resultShare {
-  font-size: 0.875rem;
-  line-height: 1.45;
+  font-size: 0.8125rem;
+  line-height: 1.4;
   color: var(--slate);
 }
 
-@media (min-width: 48rem) {
+.ledgerNote {
+  font-size: 0.8125rem;
+  color: var(--slate);
+}
+
+@container (min-width: 34rem) {
+  .ledgerKey {
+    padding: var(--space-5);
+  }
+
   .results {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 64rem) {
-  .scoreGrid,
-  .resultsRow {
+  .scoreGrid {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     column-gap: var(--space-16);
     align-items: start;
@@ -679,11 +948,12 @@
   top: 0.55rem;
 }
 
+/* A step's name: a size under the section's heading, as the features' questions are. */
 .stepTitle {
-  font-size: clamp(1.375rem, 1.2rem + 0.7vw, 1.75rem);
+  font-size: clamp(1.125rem, 1.05rem + 0.35vw, 1.375rem);
   font-weight: var(--weight-heading);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .stepText {
@@ -1060,10 +1330,10 @@
 }
 
 .clientsLine {
-  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.5rem);
+  font-size: clamp(1.75rem, 1.45rem + 1vw, 2.25rem);
   font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.04em;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
 }
 
 .clientsEmail {
@@ -1170,6 +1440,18 @@
       animation: appear linear both;
       animation-timeline: --picture;
       animation-range: cover 36% cover 46%;
+    }
+
+    /* The score's bar fills as it comes up the screen; its track clips it, so it follows its card. */
+    .total {
+      view-timeline: --total block;
+    }
+
+    .total [data-fill] {
+      transform-origin: left;
+      animation: fill-across linear both;
+      animation-timeline: --total;
+      animation-range: cover 10% cover 35%;
     }
 
     /* What each result earns: each bar fills to its share, one after the other. */

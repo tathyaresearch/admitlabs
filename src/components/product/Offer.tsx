@@ -22,7 +22,7 @@ export function Plans() {
       <div className={site.container}>
         <div className={`${styles.plansHead} ${site.reveal}`}>
           <Title id="plans-title" lines={PLANS.title} />
-          <p className={site.lede}>{PLANS.lede}</p>
+          <p className={`${site.lede} ${styles.lede}`}>{PLANS.lede}</p>
         </div>
         <ul className={styles.planList}>
           {PLANS.cards.map((card, index) => {
@@ -139,10 +139,10 @@ export function Faq() {
     <section id="faq" className={`${sections.faq} ${site.grain}`} data-theme="dark" aria-labelledby="faq-title">
       <div className={`${site.container} ${sections.faqGrid}`}>
         <div className={`${sections.faqHead} ${site.reveal}`}>
-          <h2 id="faq-title" className={`${site.title} ${site.titleLight}`}>
+          <h2 id="faq-title" className={`${site.title} ${site.titleLight} ${styles.heading}`}>
             {FAQ_TITLE}
           </h2>
-          <p className={site.lede}>
+          <p className={`${site.lede} ${styles.lede}`}>
             Something else? Write to <a href={`mailto:${CLIENTS.email}`}>{CLIENTS.email}</a>.
           </p>
         </div>

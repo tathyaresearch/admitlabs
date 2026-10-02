@@ -144,7 +144,7 @@ export function ReportShowcase({ data }: { data: ReportData }) {
       </div>
       <div className={`${site.container} ${styles.reportGrid}`}>
         <div className={`${styles.reportHead} ${site.reveal}`}>
-          <p className={site.lede}>{REPORT.lede}</p>
+          <p className={`${site.lede} ${styles.lede}`}>{REPORT.lede}</p>
           <div className={styles.download}>
             <AnchorButton href={SAMPLE_REPORT_PATH} download icon="download" size="lg" className={site.ctaInk}>
               {REPORT.download}

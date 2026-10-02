@@ -8,6 +8,7 @@ import { SiteHeader } from '@/components/site/Header';
 import { PRODUCT_URL } from '@/lib/urls';
 import { FOOTER } from '@/product/content';
 import { loadShowcase } from '@/product/showcase';
+import product from '@/components/product/product.module.css';
 import site from '@/components/site/site.module.css';
 
 // The product page (spec section 15), part of the AdmitLabs website: the website's header, footer
@@ -34,7 +35,7 @@ export const viewport: Viewport = {
 export default async function ProductPage() {
   const showcase = await loadShowcase();
   return (
-    <div id="top" className={site.page} data-theme="dark">
+    <div id="top" className={`${site.page} ${product.page}`} data-theme="dark">
       {/* The page behind the page (overscroll) stays black; section links land below the header. */}
       <style href="admitlabs-site" precedence="default">
         {'html,body{background:#0a0a0c}html{scroll-behavior:smooth;scroll-padding-top:4.5rem}'}
@@ -45,9 +46,9 @@ export default async function ProductPage() {
       <SiteHeader />
       <main id="main">
         <Hero showcase={showcase} />
-        <Problem />
+        <Problem rivalCount={showcase.rivals.rows.length} />
         <Features showcase={showcase} />
-        <Score />
+        <Score showcase={showcase} />
         <Trust />
         <Steps />
         <ReportShowcase data={showcase.report} />

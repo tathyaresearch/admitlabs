@@ -19,7 +19,7 @@ import { CheckIcon, PillarIcon, PlatformMark } from '@/components/ui/Marks';
 import { Delta, ResultBar, ResultKey, ResultSquares, ScoreLabel } from '@/components/ui/Results';
 import { pillarChecks, type ListItem } from '@/audit/view';
 import { countWords } from '@/demand/text';
-import { ordinal } from '@/domain/format';
+import { formatDate, hostAndPath, ordinal } from '@/domain/format';
 import { PILLAR_LABELS, PILLARS, RESULTS, type CheckResult } from '@/domain/types';
 import { DEMAND_PLATFORMS, platformFromUrl } from '@/graphics/platforms';
 import type { Showcase } from '@/product/showcase';
@@ -195,22 +195,43 @@ function byName(rows: readonly LadderRow[]): Map<string, number> {
   return new Map([...rows].sort((a, b) => a.name.localeCompare(b.name)).map((row, index) => [row.id, index]));
 }
 
-/** The Rivals tile: you and your rivals by overall score, sliding into rank order, then pillar by pillar. */
+/**
+ * The Rivals tile: you and your rivals by overall score, sliding into rank order, and the latest
+ * move with where it was found; beside them, pillar by pillar. Side by side once there is room.
+ */
 export function RivalsPicture({ showcase }: { showcase: Showcase }) {
   const rows = pictureLadder(showcase.rivals.rows);
   const you = rows.find((row) => row.you);
+  const move = showcase.rivals.moves[0];
+  const mover = move ? showcase.rivals.names.get(move.rivalId) : undefined;
   return (
-    <div className={styles.picture} data-theme="dark" aria-hidden="true" inert>
-      <div className={styles.pictureCard}>
-        <p className={styles.pictureHead}>
-          <span>Your rank by overall score</span>
-          {you?.rank ? (
-            <span>
-              <span className={`${styles.pictureRank} num`}>{ordinal(you.rank)}</span> of {rows.length}
-            </span>
-          ) : null}
-        </p>
-        <RivalLadder rows={rows} from={byName(rows)} />
+    <div className={`${styles.picture} ${styles.pictureWide}`} data-theme="dark" aria-hidden="true" inert>
+      <div className={styles.pictureColumn}>
+        <div className={styles.pictureCard}>
+          <p className={styles.pictureHead}>
+            <span>Your rank by overall score</span>
+            {you?.rank ? (
+              <span>
+                <span className={`${styles.pictureRank} num`}>{ordinal(you.rank)}</span> of {rows.length}
+              </span>
+            ) : null}
+          </p>
+          <RivalLadder rows={rows} from={byName(rows)} />
+        </div>
+        {move && mover ? (
+          <div className={`${styles.pictureCard} ${styles.pictureGrow}`}>
+            <p className={styles.pictureHead}>
+              <span>Latest move</span>
+              <span>{formatDate(move.detectedAt)}</span>
+            </p>
+            <p className={styles.pictureTitle}>{mover}</p>
+            <p className={styles.moveText}>{move.description}</p>
+            <p className={styles.pictureMeta}>
+              <PlatformMark platform={platformFromUrl(move.sourceUrl) ?? 'website'} name={false} />
+              {hostAndPath(move.sourceUrl)}
+            </p>
+          </div>
+        ) : null}
       </div>
       <div className={`${styles.pictureCard} ${styles.pictureGrow}`}>
         <p className={styles.pictureHead}>Pillar by pillar</p>
@@ -220,16 +241,19 @@ export function RivalsPicture({ showcase }: { showcase: Showcase }) {
   );
 }
 
-/** The Demand tile: the fastest rise in the city this month, its searches by month and what else is rising, then the question asked most. */
+/**
+ * The Demand tile: the fastest rise in the city this month and its searches by month; beside it,
+ * what else is rising and the question asked most. Side by side once there is room.
+ */
 export function DemandPicture({ showcase }: { showcase: Showcase }) {
   const highlight = demandHighlight(showcase);
-  const rising = showcase.demand.view.rising.filter((row) => row.text !== highlight?.text).slice(0, 2);
+  const rising = showcase.demand.view.rising.filter((row) => row.text !== highlight?.text).slice(0, 4);
   const asked = showcase.demand.view.questions[0] ?? null;
   if (!highlight) return null;
   const rounded = Math.round(highlight.changePct ?? 0);
   const askedOn = asked ? ((typeof asked.meta.platform === 'string' ? DEMAND_PLATFORMS[asked.meta.platform] : undefined) ?? platformFromUrl(asked.sourceUrl) ?? 'website') : null;
   return (
-    <div className={styles.picture} data-theme="dark" aria-hidden="true" inert>
+    <div className={`${styles.picture} ${styles.pictureWide}`} data-theme="dark" aria-hidden="true" inert>
       <div className={`${styles.pictureCard} ${styles.pictureGrow}`}>
         <p className={styles.pictureHead}>Rising fastest in {highlight.region}</p>
         <KpiNumber icon={<Icon name="arrowUp" size={20} />} value={`${rounded}%`} suffix="up since last month" />
@@ -239,28 +263,33 @@ export function DemandPicture({ showcase }: { showcase: Showcase }) {
           {countWords('rising', highlight.count)}
         </p>
         <MonthBars points={showcase.demand.topHistory} title="Searches by month" valueLabel="Searches" grow />
+      </div>
+      <div className={styles.pictureColumn}>
         {rising.length ? (
-          <ul className={styles.risingList}>
-            {rising.map((row) => (
-              <li key={row.id} className={styles.risingRow}>
-                <span>{row.text}</span>
-                <span className="num">+{Math.round(row.changePct ?? 0)}%</span>
-              </li>
-            ))}
-          </ul>
+          <div className={styles.pictureCard}>
+            <p className={styles.pictureHead}>Also rising in {highlight.region}</p>
+            <ul className={styles.risingList}>
+              {rising.map((row) => (
+                <li key={row.id} className={styles.risingRow}>
+                  <span>{row.text}</span>
+                  <span className="num">+{Math.round(row.changePct ?? 0)}%</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {asked && askedOn ? (
+          <div className={`${styles.pictureCard} ${styles.pictureGrow}`}>
+            <p className={styles.pictureHead}>What students ask</p>
+            <p className={styles.pictureTitle}>{asked.text}</p>
+            <p className={styles.pictureMeta}>
+              <PlatformMark platform={askedOn} name={false} />
+              <span>{asked.programName}</span>
+              <span>{countWords('question', asked.count)}</span>
+            </p>
+          </div>
         ) : null}
       </div>
-      {asked && askedOn ? (
-        <div className={styles.pictureCard}>
-          <p className={styles.pictureHead}>What students ask</p>
-          <p className={styles.pictureTitle}>{asked.text}</p>
-          <p className={styles.pictureMeta}>
-            <PlatformMark platform={askedOn} name={false} />
-            <span>{asked.programName}</span>
-            <span>{countWords('question', asked.count)}</span>
-          </p>
-        </div>
-      ) : null}
     </div>
   );
 }

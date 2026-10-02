@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
+import { pillarChecks } from '../audit/view.ts';
+import { CHECKS, checksForPillar } from '../domain/checks.ts';
+import { PILLARS } from '../domain/types.ts';
 import { reportTexts, SAMPLE_REPORT_NOTE } from '../report/data.ts';
 import { sampleReportData } from '../sample/report.ts';
 import { CITY, DASHBOARD, INSTITUTION, OTHERS } from '../site/scenes.ts';
@@ -69,6 +72,32 @@ describe('the product page previews', () => {
       'every pull up to the report month, oldest first',
     );
     assert.equal(demand.topHistory.at(-1)?.count, demand.view.topTrend?.count, 'the newest month is the one the tile names');
+  });
+
+  test('the score’s ledger: every check, in its part, with the result its weakest program earned', async () => {
+    const { audit } = await loadShowcase();
+    const parts = pillarChecks(audit);
+    assert.deepEqual(
+      parts.map((part) => part.pillar),
+      [...PILLARS],
+    );
+    for (const part of parts) {
+      assert.deepEqual(
+        part.checks.map((check) => check.key),
+        checksForPillar(part.pillar).map((check) => check.key),
+        part.pillar,
+      );
+    }
+    assert.equal(
+      parts.reduce((sum, part) => sum + part.checks.length, 0),
+      CHECKS.length,
+    );
+    // A check made for each program shows its weakest: Placement proof is missing for one program.
+    const placement = parts.flatMap((part) => part.checks).find((check) => check.key === 'placement_proof');
+    assert.equal(placement?.result, 'missing');
+    // The rival count the problem card shows: you and three rivals.
+    const { rivals } = await loadShowcase();
+    assert.equal(rivals.rows.length, 4);
   });
 
   test("the website's names and numbers: Larkmoor University, Bangalore, and its three rivals", async () => {
