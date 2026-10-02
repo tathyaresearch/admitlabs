@@ -1,19 +1,23 @@
 // The product page, /drishti, in the website's Spotlight style: the hero with Home itself, the
-// problem as a Drishti card with nothing in it, the three features (each opening with a bar that
-// stays while its pictures pass), the score as a ledger of every check, the rules, how it works and
-// the final call. Plans, clients and the FAQ are in ./Offer.tsx; the sample report in
-// ./ReportShowcase.tsx. The header, footer, frame, buttons and light are the website's.
+// problem (most teams guess, Drishti checks) beside a card of the sample university's answers, the
+// three features (each opening with a bar that stays while its pictures pass), the score as a table
+// of its three parts, the rules, how it works and the final call. Plans, clients and the FAQ are in
+// ./Offer.tsx; the sample report in ./ReportShowcase.tsx. The header, footer, frame, buttons and
+// light are the website's.
 
 import type { CSSProperties, JSX } from 'react';
 import { Frame } from '@/components/site/Frame';
 import { ProductLockup } from '@/components/ui/Brand';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
-import { CheckIcon, Mark, PillarIcon } from '@/components/ui/Marks';
-import { Delta, ResultBar, ScoreLabel } from '@/components/ui/Results';
+import { Mark, PillarIcon, PlatformMark } from '@/components/ui/Marks';
+import { ResultBar, ScoreLabel } from '@/components/ui/Results';
 import { pillarChecks } from '@/audit/view';
 import { SCORING_V1 } from '@/config/scoring.v1';
-import { formatDate } from '@/domain/format';
+import { countWords } from '@/demand/text';
+import { CHECKS } from '@/domain/checks';
+import { formatDate, ordinal, plural } from '@/domain/format';
+import { scoreLabel } from '@/domain/scores';
 import { PILLAR_LABELS, RESULTS, type CheckResult, type Pillar } from '@/domain/types';
 import type { IconRef } from '@/graphics/icons';
 import { PLATFORM_ICONS } from '@/graphics/platforms';
@@ -22,7 +26,7 @@ import { CTA, FEATURES, FEATURES_HEAD, FINAL, HERO, PROBLEM, PROOF_LINE, REPORT,
 import type { Showcase } from '@/product/showcase';
 import sections from '@/components/site/sections.module.css';
 import site from '@/components/site/site.module.css';
-import { AppWindow, AuditPicture, DemandPicture, RivalsPicture } from './Previews';
+import { AppWindow, askedOn, AuditPicture, DemandPicture, RivalsPicture } from './Previews';
 import styles from './product.module.css';
 
 export const vars = (values: Record<string, string | number>) => values as CSSProperties;
@@ -98,70 +102,128 @@ export function Hero({ showcase }: { showcase: Showcase }) {
   );
 }
 
-/** A value no one knows yet: a question mark where a number would be. */
-function Unknown() {
-  return <span className={styles.unknown}>?</span>;
-}
+/** Where the Audit looks, as marks: Google, your website, social media, reviews and AI answers. */
+const CHECKED_MARKS: ReadonlyArray<{ key: string; icon: IconRef }> = [
+  { key: 'google', icon: PLATFORM_ICONS.google },
+  { key: 'website', icon: PLATFORM_ICONS.website },
+  { key: 'instagram', icon: PLATFORM_ICONS.instagram },
+  { key: 'youtube', icon: PLATFORM_ICONS.youtube },
+  { key: 'reviews', icon: { kind: 'line', name: 'star' } },
+  { key: 'ai', icon: PLATFORM_ICONS.ai_assistants },
+];
 
 /**
- * The problem, shown: the three questions as a Drishti card with nothing in it. Dashed bars are how
- * the product marks what it could not find; the soft bars stand in for names no one has checked.
- * A screen reader hears one sentence instead of the picture.
+ * The problem: most teams guess, Drishti checks. Beside it, a Drishti card with the sample
+ * university's answers to the three questions, each with where it came from: its score from the
+ * Audit's checks of public pages, its place among its rivals from each one's own Audit, the
+ * questions asked most with the site and how often, and under them the search rising fastest.
  */
-export function Problem({ rivalCount }: { rivalCount: number }) {
+export function Problem({ showcase }: { showcase: Showcase }) {
   const { card } = PROBLEM;
+  const { audit, institution, rivals, demand } = showcase;
+  const score = audit.scores.overall;
+  const you = rivals.rows.find((row) => row.you);
+  const top = demand.view.topTrend;
   return (
     <section className={styles.problem} data-theme="light" aria-labelledby="problem-title">
-      <div className={`${site.container} ${styles.blankGrid}`}>
-        <div className={`${styles.blankWords} ${site.reveal}`}>
+      <div className={`${site.container} ${styles.problemGrid}`}>
+        <div className={`${styles.problemWords} ${site.reveal}`}>
           <h2 id="problem-title" className={`${site.title} ${styles.heading}`}>
             {PROBLEM.title}
           </h2>
           <p className={styles.lede}>{PROBLEM.lede}</p>
         </div>
-        <div className={`${styles.blankCard} ${site.reveal}`} data-theme="dark" role="img" aria-label={PROBLEM.summary}>
-          <p className={styles.blankHead}>
-            <strong>{card.who}</strong>
-            <span>{card.checked}</span>
+        <div className={`${styles.card} ${site.reveal}`} data-theme="dark">
+          <p className={styles.cardHead}>
+            <span>
+              <strong>{institution.name}</strong> {institution.city}
+            </span>
+            <span>
+              {card.checked} {formatDate(showcase.home.checkedAt)}
+            </span>
           </p>
-          <div className={styles.blankRow}>
-            <p className={styles.blankQuestion}>{card.score}</p>
-            <div className={styles.blankScore}>
-              <span className={styles.blankBig}>
-                <Unknown />
+
+          <section className={styles.cardBlock} aria-labelledby="card-score">
+            <div className={styles.cardBlockHead}>
+              <h3 id="card-score" className={styles.cardQuestion}>
+                {card.score}
+              </h3>
+              <p className={styles.cardSource}>
+                <span className={styles.cardMarks} aria-hidden="true">
+                  {CHECKED_MARKS.map((mark) => (
+                    <Mark key={mark.key} icon={mark.icon} size={13} />
+                  ))}
+                </span>
+                <span className="num">{CHECKS.length}</span> {card.scoreSource}
+              </p>
+            </div>
+            <p className={styles.cardScore}>
+              <span className={styles.cardScoreNumber}>
+                <span className="num">{score}</span>
                 <small className="num">/100</small>
               </span>
-              <span className={styles.dashBar} />
-              <span className={styles.blankWord}>{card.unknown}</span>
+              <span className={styles.cardTrack} aria-hidden="true">
+                <i style={{ width: `${score}%` }} data-fill />
+              </span>
+              <span className={styles.cardWord}>{scoreLabel(score)}</span>
+            </p>
+          </section>
+
+          <section className={styles.cardBlock} aria-labelledby="card-rivals">
+            <div className={styles.cardBlockHead}>
+              <h3 id="card-rivals" className={styles.cardQuestion}>
+                {card.rivals}
+              </h3>
+              {you?.rank ? (
+                <p className={styles.cardRank}>
+                  <span className="num">{ordinal(you.rank)}</span> of <span className="num">{rivals.rows.length}</span>
+                </p>
+              ) : null}
             </div>
-          </div>
-          <div className={styles.blankRow}>
-            <p className={styles.blankQuestion}>{card.rivals}</p>
-            <div className={styles.ghostLadder}>
-              {Array.from({ length: rivalCount }, (_, index) => (
-                <span key={index} className={styles.ghostRow}>
-                  <span className="num">{index + 1}</span>
-                  {index === 1 ? <span className={styles.ghostYou}>{card.you}</span> : <i className={styles.ghostName} />}
-                  <span className={styles.dashBar} />
-                  <Unknown />
-                </span>
+            <ol className={styles.cardLadder}>
+              {rivals.rows.map((row) => (
+                <li key={row.id} className={`${styles.cardRung} ${row.you ? styles.cardRungYou : ''}`}>
+                  <span className={`${styles.cardRungRank} num`}>{row.rank}</span>
+                  <span className={styles.cardRungName}>{row.you ? card.you : row.name}</span>
+                  <span className={styles.cardTrack} aria-hidden="true">
+                    <i style={{ width: `${row.overall ?? 0}%` }} data-fill />
+                  </span>
+                  <span className={`${styles.cardRungScore} num`}>{row.overall}</span>
+                </li>
               ))}
+            </ol>
+            <p className={styles.cardSource}>{card.rivalsSource}</p>
+          </section>
+
+          <section className={styles.cardBlock} aria-labelledby="card-demand">
+            <div className={styles.cardBlockHead}>
+              <h3 id="card-demand" className={styles.cardQuestion}>
+                {card.demand}
+              </h3>
+              <p className={styles.cardSource}>
+                {card.demandSource} {demand.place}
+              </p>
             </div>
-            <p className={styles.blankMeta}>
-              {card.rank} <Unknown /> of <span className="num">{rivalCount}</span>
-            </p>
-          </div>
-          <div className={styles.blankRow}>
-            <p className={styles.blankQuestion}>{card.demand}</p>
-            <div className={styles.ghostLines}>
-              <i />
-              <i />
-              <i />
-            </div>
-            <p className={styles.blankMeta}>
-              <Unknown /> {card.searches}
-            </p>
-          </div>
+            <ol className={styles.cardAsked}>
+              {demand.view.questions.slice(0, 3).map((question) => (
+                <li key={question.id} className={styles.cardAsk}>
+                  <span className={styles.cardAskText}>{question.text}</span>
+                  <span className={styles.cardAskMeta}>
+                    <PlatformMark platform={askedOn(question)} size={13} />
+                    {countWords('question', question.count)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+            {top ? (
+              <p className={styles.cardTrend}>
+                <PlatformMark platform="search_trends" size={13} />
+                <span>
+                  {card.rising} <strong>{top.text}</strong>, about {plural(top.count, 'search', 'searches')}, up {Math.round(top.changePct ?? 0)}%
+                </span>
+              </p>
+            ) : null}
+          </section>
         </div>
       </div>
     </section>
@@ -227,91 +289,104 @@ export function Features({ showcase }: { showcase: Showcase }) {
 
 const QUESTIONS = Object.fromEntries(SCORE.pillars.map((part) => [part.pillar, part.question])) as Readonly<Record<Pillar, string>>;
 
-/** What a result earns, short enough for one line on a phone: from the scoring settings. */
-function earns(result: CheckResult): string {
+/** What a result earns, from the scoring settings: a share (a number, in Inter), or words. */
+function Earns({ result }: { result: CheckResult }) {
   const share = SCORING_V1.resultShares[result];
-  if (share >= 1) return 'Every point';
-  if (share <= 0) return 'No points yet';
-  return `${Math.round(share * 100)}% of the points`;
+  if (share >= 1) return <>every point</>;
+  if (share <= 0) return <>none yet</>;
+  return <span className="num">{Math.round(share * 100)}%</span>;
 }
 
 /**
- * One score, inside the Audit, as a ledger: the score held on the left; on the right every check
- * by part (Discovered, Trusted, Chosen), each part's score and question, each check's result, then
- * what each result earns. A check made for each program shows its weakest program, as the Audit's
- * own grid of checks does.
+ * One score, inside the Audit: the words and the sample's total, then a table of the three parts
+ * side by side (stacked on a phone), each with its question, its score on a thin bar and every
+ * check's result, then what each result earns. The checks sit in slots of one height, so the rows
+ * line up across the parts; a part with fewer checks ends in an empty slot. A check made for each
+ * program shows its weakest program, as the Audit's own grid of checks does. The only numbers are
+ * the total and the three part scores.
  */
 export function Score({ showcase }: { showcase: Showcase }) {
   const { audit, institution } = showcase;
   const parts = pillarChecks(audit);
+  const slots = Math.max(...parts.map((part) => part.checks.length));
   return (
     <section id="score" className={styles.score} data-theme="dark" aria-labelledby="score-title">
-      <div className={`${site.container} ${styles.scoreGrid}`}>
-        <div className={`${styles.scoreHead} ${site.reveal}`}>
-          <p className={styles.featureTag}>
-            <Icon name="audit" size={15} />
-            {SCORE.label}
-          </p>
-          <h2 id="score-title" className={`${site.title} ${site.titleLight} ${styles.heading}`}>
-            {SCORE.title}
-          </h2>
-          <p className={styles.lede}>{SCORE.lede}</p>
-          <div className={styles.total}>
-            <p className={styles.totalNote}>
+      <div className={site.container}>
+        <div className={styles.scoreTop}>
+          <div className={`${styles.scoreHead} ${site.reveal}`}>
+            <p className={styles.featureTag}>
+              <Icon name="audit" size={15} />
+              {SCORE.label}
+            </p>
+            <h2 id="score-title" className={`${site.title} ${site.titleLight} ${styles.heading}`}>
+              {SCORE.title}
+            </h2>
+            <p className={styles.lede}>{SCORE.lede}</p>
+          </div>
+          <div className={`${styles.total} ${site.reveal}`}>
+            <p className={styles.totalCaption}>
               {institution.name}, a sample. Checked {formatDate(showcase.home.checkedAt)}.
             </p>
-            <p className={styles.totalScore}>
-              <span className="num">{audit.scores.overall}</span>
-              <small className="num">/100</small>
+            <p className={styles.totalLabel}>{SCORE.total}</p>
+            <p className={styles.totalLine}>
+              <span className={styles.totalScore}>
+                <span className="num">{audit.scores.overall}</span>
+                <small className="num">/100</small>
+              </span>
+              <ScoreLabel score={audit.scores.overall} />
             </p>
             <span className={styles.totalTrack} aria-hidden="true">
               <i style={{ width: `${audit.scores.overall}%` }} data-fill />
             </span>
-            <p className={styles.totalMeta}>
-              <ScoreLabel score={audit.scores.overall} />
-              <Delta change={audit.changes.overall} since="last Audit" size="sm" />
-            </p>
+            <p className={styles.totalHow}>{SCORE.totalHow}</p>
           </div>
         </div>
+
         <div className={`${styles.ledger} ${site.reveal}`}>
           {parts.map((part) => (
             <section key={part.pillar} className={styles.ledgerPart} aria-labelledby={`part-${part.pillar}`}>
               <header className={styles.ledgerHead}>
-                <PillarIcon pillar={part.pillar} size={18} />
                 <h3 id={`part-${part.pillar}`} className={styles.ledgerName}>
+                  <PillarIcon pillar={part.pillar} size={18} />
                   {PILLAR_LABELS[part.pillar]}
                 </h3>
+                <p className={styles.ledgerQuestion}>{QUESTIONS[part.pillar]}</p>
                 <p className={styles.ledgerScore}>
                   <span className="num">{audit.scores[part.pillar]}</span>
-                  <span className="visually-hidden"> out of 100</span>
+                  <small className="num">/100</small>
                 </p>
-                <p className={styles.ledgerQuestion}>{QUESTIONS[part.pillar]}</p>
+                <span className={styles.ledgerTrack} aria-hidden="true">
+                  <i style={{ width: `${audit.scores[part.pillar]}%` }} data-fill />
+                </span>
               </header>
               <ul className={styles.ledgerRows} aria-label={`${PILLAR_LABELS[part.pillar]} checks`}>
                 {part.checks.map((check) => (
                   <li key={check.key} className={styles.ledgerRow}>
-                    <span className={styles.ledgerCheck}>
-                      <CheckIcon check={check.key} size={15} />
-                      {check.name}
-                    </span>
+                    <span className={styles.ledgerCheck}>{check.name}</span>
                     <ResultBar result={check.result} points={check.points} max={check.maxPoints} showPoints={false} size="sm" />
                   </li>
+                ))}
+                {Array.from({ length: slots - part.checks.length }, (_, index) => (
+                  <li key={`empty-${index}`} className={styles.ledgerEmpty} aria-hidden="true" />
                 ))}
               </ul>
             </section>
           ))}
-          <div className={styles.ledgerKey}>
-            <h3 className={styles.ledgerKeyTitle}>{SCORE.resultsTitle}</h3>
-            <ul className={styles.results}>
-              {RESULTS.map((result, index) => (
-                <li key={result} className={styles.result} style={vars({ '--order': index })}>
-                  <ResultBar result={result} size="sm" />
-                  <span className={styles.resultShare}>{earns(result)}</span>
-                </li>
-              ))}
-            </ul>
-            <p className={styles.ledgerNote}>{SCORE.perProgram}</p>
-          </div>
+        </div>
+
+        <div className={`${styles.ledgerKey} ${site.reveal}`}>
+          <h3 className={styles.ledgerKeyTitle}>{SCORE.resultsTitle}</h3>
+          <ul className={styles.results}>
+            {RESULTS.map((result, index) => (
+              <li key={result} className={styles.result} style={vars({ '--order': index })}>
+                <ResultBar result={result} size="sm" />
+                <span className={styles.resultShare}>
+                  <Earns result={result} />
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className={styles.ledgerNote}>{SCORE.perProgram}</p>
         </div>
       </div>
     </section>
@@ -345,17 +420,7 @@ export function Trust() {
   );
 }
 
-/** What "Drishti checks everything" names, as marks: Google, your website, social media, reviews and AI answers. */
-const CHECKED_MARKS: ReadonlyArray<{ key: string; icon: IconRef }> = [
-  { key: 'google', icon: PLATFORM_ICONS.google },
-  { key: 'website', icon: PLATFORM_ICONS.website },
-  { key: 'instagram', icon: PLATFORM_ICONS.instagram },
-  { key: 'youtube', icon: PLATFORM_ICONS.youtube },
-  { key: 'reviews', icon: { kind: 'line', name: 'star' } },
-  { key: 'ai', icon: PLATFORM_ICONS.ai_assistants },
-];
-
-/** Four steps on a line that fills as the page moves. */
+/** Four steps on a line that fills as the page moves; under "Drishti checks everything", where it looks. */
 export function Steps() {
   return (
     <section id="how" className={`${styles.steps} ${site.grain}`} data-theme="dark" aria-labelledby="how-title">

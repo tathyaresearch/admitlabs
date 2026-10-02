@@ -95,9 +95,35 @@ describe('the product page previews', () => {
     // A check made for each program shows its weakest: Placement proof is missing for one program.
     const placement = parts.flatMap((part) => part.checks).find((check) => check.key === 'placement_proof');
     assert.equal(placement?.result, 'missing');
-    // The rival count the problem card shows: you and three rivals.
-    const { rivals } = await loadShowcase();
+    // The parts with fewer checks than the longest end in empty slots: Trusted, one.
+    const slots = Math.max(...parts.map((part) => part.checks.length));
+    assert.deepEqual(
+      parts.map((part) => slots - part.checks.length),
+      [0, 1, 0],
+    );
+    // The total is the three parts, averaged: the only numbers the ledger shows add up.
+    const { discovered, trusted, chosen, overall } = audit.scores;
+    assert.equal(Math.round((discovered + trusted + chosen) / 3), overall);
+  });
+
+  test('the problem card: the sample’s score, its place among its rivals, what students ask most and the search rising fastest', async () => {
+    const { audit, rivals, demand } = await loadShowcase();
+    assert.equal(audit.scores.overall, 73);
     assert.equal(rivals.rows.length, 4);
+    assert.equal(rivals.rows.find((row) => row.you)?.rank, 2);
+    assert.equal(rivals.rows[0]?.name, 'Calderwood College');
+    // The three questions asked most, most first, each with where it was asked.
+    const asked = demand.view.questions.slice(0, 3);
+    assert.deepEqual(
+      asked.map((question) => question.count),
+      [96, 91, 88],
+    );
+    assert.ok(asked.every((question) => question.meta.platform === 'quora'));
+    // Under them, a second source: the search rising fastest, with its numbers.
+    assert.equal(demand.view.topTrend?.text, 'BCA with AI and Machine Learning');
+    assert.equal(demand.view.topTrend?.count, 350);
+    assert.equal(Math.round(demand.view.topTrend?.changePct ?? 0), 24);
+    assert.equal(demand.place, 'Bangalore');
   });
 
   test("the website's names and numbers: Larkmoor University, Bangalore, and its three rivals", async () => {

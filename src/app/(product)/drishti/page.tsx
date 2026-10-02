@@ -46,7 +46,7 @@ export default async function ProductPage() {
       <SiteHeader />
       <main id="main">
         <Hero showcase={showcase} />
-        <Problem rivalCount={showcase.rivals.rows.length} />
+        <Problem showcase={showcase} />
         <Features showcase={showcase} />
         <Score showcase={showcase} />
         <Trust />

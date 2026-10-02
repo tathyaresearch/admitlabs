@@ -30,25 +30,27 @@ export const CTA = {
 } as const;
 
 /**
- * The problem, shown rather than told: the three questions as a Drishti card with nothing in it.
- * The card's values are unknowns and its names placeholders, never real data hidden.
+ * The problem: most teams guess, Drishti checks. Shown as a Drishti card with the sample
+ * university's answers to the three questions, each with where it came from. The card's words are
+ * here; every value on it comes from the sample (src/product/showcase.ts).
  */
 export const PROBLEM = {
-  title: 'Can your team answer these?',
-  lede: 'Most teams answer with a guess. Drishti checks, every month, from public pages.',
+  title: 'Most teams guess. Drishti checks.',
+  lede: 'Here’s what it found for a sample university, and where each answer came from.',
   card: {
-    who: 'Your institution',
-    checked: 'Last checked: never',
+    checked: 'Last checked',
     score: 'How do students see us?',
-    unknown: 'Unknown',
+    /** After the number of checks: where the score came from. */
+    scoreSource: 'checks, public pages',
     rivals: 'Who’s ahead of us?',
-    you: 'You?',
-    rank: 'Your rank:',
+    you: 'You',
+    rivalsSource: 'From each one’s own Audit',
     demand: 'What are students asking?',
-    searches: 'searches this month',
+    /** Before the city: where the questions came from. */
+    demandSource: 'Asked most in',
+    /** Before the search rising fastest, under the questions. */
+    rising: 'Rising fastest:',
   },
-  /** What a screen reader hears instead of the card. */
-  summary: 'A Drishti card with nothing in it: no score, no rank among your rivals, and no idea what students are asking.',
 } as const;
 
 /** The features section's heading, for screen readers: each feature then opens with its own bar. */
@@ -104,16 +106,20 @@ const PILLAR_QUESTIONS: Readonly<Record<Pillar, string>> = {
 };
 
 /**
- * The score, inside the Audit: every check by part, its result, and what each result earns. The
- * label names the feature it belongs to. `pillars` (with each check by name) is also the website's.
+ * The score, inside the Audit: the total, then the three parts side by side with every check's
+ * result, and what each result earns. The label names the feature it belongs to. `pillars` (with
+ * each check by name) is also the website's.
  */
 export const SCORE = {
   label: 'Inside Audit',
   title: `One score, from ${CHECKS.length} checks.`,
   lede: 'Each check earns points. They add up to three parts, each a question a student asks. Your score is the three, averaged.',
+  total: 'Overall score',
+  /** Under the total: how it is made. */
+  totalHow: 'The three parts below, averaged.',
   resultsTitle: 'What each result earns',
   /** Under the results: how a check made for each program shows. */
-  perProgram: 'A check made for each program shows its weakest program.',
+  perProgram: 'Checks run per program show the weakest program.',
   pillars: PILLARS.map((pillar) => ({
     pillar,
     name: PILLAR_LABELS[pillar],

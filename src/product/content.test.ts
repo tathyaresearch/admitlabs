@@ -76,9 +76,15 @@ describe('the product page copy', () => {
     }
   });
 
-  test('the problem card holds no values: only unknowns and placeholders, never real data', () => {
+  test('the problem: the headline the user picked, and a card whose values all come from the sample', () => {
+    assert.equal(content.PROBLEM.title, 'Most teams guess. Drishti checks.');
+    assert.notEqual(content.PROBLEM.title, `${content.HERO.title} ${content.HERO.highlight}`);
+    // The card's words carry no numbers of their own: every value on it is the sample's.
     for (const text of texts(content.PROBLEM.card)) assert.doesNotMatch(text, /\d/, text);
-    assert.match(content.PROBLEM.summary, /nothing in it/);
+  });
+
+  test('the score shows only its total and its three parts: no other numbers in its words', () => {
+    for (const text of [content.SCORE.lede, content.SCORE.total, content.SCORE.totalHow, content.SCORE.perProgram]) assert.doesNotMatch(text, /\d/, text);
   });
 
   test('no small labels above headings but the score’s, which names its feature; the pictures carry no caption: only the sample PDF says it is a sample', () => {

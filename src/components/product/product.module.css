@@ -203,8 +203,8 @@
   }
 }
 
-/* The problem, on ivory, shown rather than told: the questions most teams can't answer, as a
-   Drishti card with nothing in it. ------------------------------------------------------------ */
+/* The problem, on ivory: most teams guess, Drishti checks. Beside it, a Drishti card with the sample
+   university's answers to the three questions, each with where it came from. ----------------- */
 
 .problem {
   padding-block: var(--section-pad);
@@ -212,19 +212,19 @@
   color: var(--black);
 }
 
-.blankGrid {
+.problemGrid {
   display: grid;
   gap: var(--space-10);
   align-items: center;
 }
 
-.blankWords {
+.problemWords {
   display: grid;
   gap: var(--space-4);
   align-content: start;
 }
 
-.blankCard {
+.card {
   display: grid;
   gap: var(--space-2);
   padding: var(--space-3);
@@ -236,22 +236,22 @@
   color: var(--ivory);
 }
 
-.blankHead {
+.cardHead {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-1) var(--space-3);
   padding: var(--space-2) var(--space-3) var(--space-1);
   font-size: 0.8125rem;
-  font-weight: var(--weight-heading);
   color: var(--slate);
 }
 
-.blankHead strong {
+.cardHead strong {
   font-weight: var(--weight-heading);
   color: var(--ivory);
 }
 
-.blankRow {
+.cardBlock {
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -259,68 +259,103 @@
   background: var(--graphite);
 }
 
-.blankQuestion {
+.cardBlockHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.cardQuestion {
   font-size: 0.9375rem;
   font-weight: var(--weight-heading);
 }
 
-/* An unknown value: a question mark in a dashed box, where a number would be. */
-.unknown {
-  display: inline-grid;
-  place-items: center;
-  min-width: 1.5em;
-  height: 1.25em;
-  padding-inline: 0.15em;
-  border: 1.5px dashed rgba(242, 232, 214, 0.42);
-  border-radius: 0.25em;
-  font-family: var(--font-numeric);
-  font-weight: var(--weight-medium);
-  line-height: 1;
-  color: rgba(242, 232, 214, 0.7);
-}
-
-.blankScore {
-  display: flex;
+/* Where an answer came from: a short note, quiet, beside or under it. */
+.cardSource {
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2) var(--space-4);
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--slate);
 }
 
-.blankBig {
+.cardSource :global(.num) {
+  color: var(--ivory);
+}
+
+.cardMarks {
+  display: inline-flex;
+  gap: 0.3125rem;
+  margin-right: 0.125rem;
+}
+
+.cardScore {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.cardScoreNumber {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.25rem;
-  font-size: 2rem;
+  gap: 0.15em;
 }
 
-.blankBig small {
+.cardScoreNumber :global(.num):first-child {
+  font-size: 2rem;
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.cardScoreNumber small {
   font-size: 0.875rem;
   color: var(--slate);
 }
 
-/* An empty points bar, dashed: as the product draws a check it found nothing for. */
-.dashBar {
-  flex: 1;
-  min-width: 4rem;
+.cardTrack {
+  display: block;
   height: 4px;
-  border: 1px dashed rgba(242, 232, 214, 0.32);
+  overflow: hidden;
   border-radius: var(--radius-full);
+  background: rgba(242, 232, 214, 0.12);
 }
 
-.blankWord {
+.cardTrack i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ivory);
+}
+
+.cardWord {
   font-size: 0.8125rem;
   font-weight: var(--weight-heading);
+}
+
+.cardRank {
+  font-size: 0.8125rem;
   color: var(--slate);
 }
 
-.ghostLadder {
-  display: grid;
-  gap: 0.375rem;
+.cardRank :global(.num) {
+  font-weight: var(--weight-heading);
+  color: var(--ivory);
 }
 
-.ghostRow {
+.cardLadder {
   display: grid;
-  grid-template-columns: 1rem minmax(0, 7rem) minmax(0, 1fr) 1.75rem;
+  gap: 0.375rem;
+  list-style: none;
+}
+
+.cardRung {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 11rem) minmax(0, 1fr) 1.75rem;
   align-items: center;
   gap: var(--space-3);
   min-height: 2rem;
@@ -328,59 +363,87 @@
   border-radius: 0.5rem;
   background: #26272c;
   font-size: 0.8125rem;
+}
+
+.cardRungYou {
+  background: #34353b;
+  font-weight: var(--weight-heading);
+}
+
+.cardRungRank {
   color: var(--slate);
 }
 
-.ghostRow .unknown,
-.blankMeta .unknown {
-  font-size: 0.75rem;
+.cardRungName {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.ghostYou {
+.cardRungScore {
+  justify-self: end;
+  font-weight: var(--weight-heading);
+}
+
+.cardAsked {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+.cardAsk {
+  display: grid;
+  gap: 0.3125rem;
+}
+
+.cardAskText {
+  font-size: 0.875rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.4;
+}
+
+.cardAskMeta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.75rem;
+  color: var(--slate);
+}
+
+/* The search rising fastest: one small line under the questions, with where it came from. */
+.cardTrend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(242, 232, 214, 0.08);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--slate);
+}
+
+.cardTrend strong {
   font-weight: var(--weight-heading);
   color: var(--ivory);
 }
 
-/* A name no one has checked: a soft bar of placeholder, never real words hidden. */
-.ghostName {
-  display: block;
-  height: 0.5rem;
-  border-radius: var(--radius-full);
-  background: rgba(242, 232, 214, 0.2);
-  filter: blur(1.5px);
-}
+/* On a phone the names need the room: the ranking keeps its scores and drops its bars (two
+   classes, so this wins whatever order the styles load in). */
+@media (max-width: 40rem) {
+  .cardRung {
+    grid-template-columns: 1rem minmax(0, 1fr) 1.75rem;
+  }
 
-.ghostLines {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.ghostLines i {
-  display: block;
-  height: 0.625rem;
-  border-radius: var(--radius-full);
-  background: rgba(242, 232, 214, 0.18);
-  filter: blur(2px);
-}
-
-.ghostLines i:nth-child(2) {
-  width: 78%;
-}
-
-.ghostLines i:nth-child(3) {
-  width: 52%;
-}
-
-.blankMeta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 0.8125rem;
-  color: var(--slate);
+  .cardRung .cardTrack {
+    display: none;
+  }
 }
 
 @media (min-width: 64rem) {
-  .blankGrid {
+  .problemGrid {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     column-gap: var(--space-16);
   }
@@ -542,9 +605,11 @@
   background-color: var(--surface-nested);
 }
 
-/* The score, inside the Audit, as a ledger: the score held on the left; on the right every check by
-   part, each part's score and question, each check's result, then what each result earns. Kept
-   light to scan: no row lines, two columns of checks once there is room. --------------------- */
+/* The score, inside the Audit: the words and the sample's total, then a table of its three parts
+   side by side (stacked on a phone), each with its question, its score on a thin bar and every
+   check's result, then what each result earns. A table: every row one height, every bar one width
+   in one place, every result word in one column. Only the total and the part scores are
+   numbers. --------------------------------------------------------------------------------------- */
 
 .score {
   padding-block: var(--section-pad);
@@ -552,7 +617,7 @@
   background: radial-gradient(45% 40% at 100% 0%, rgba(242, 232, 214, 0.045), transparent 70%), var(--black);
 }
 
-.scoreGrid {
+.scoreTop {
   display: grid;
   gap: var(--space-6);
 }
@@ -580,30 +645,40 @@
 
 .total {
   display: grid;
-  gap: var(--space-3);
-  width: min(100%, 22rem);
-  margin-top: var(--space-2);
+  gap: var(--space-2);
   padding: var(--space-5);
   border: 1px solid var(--hair-2);
   border-radius: 1rem;
   background: linear-gradient(180deg, #17171b 0%, #101013 100%);
 }
 
-.totalNote {
+.totalCaption {
   font-size: 0.8125rem;
-  font-weight: var(--weight-heading);
   line-height: 1.45;
   color: var(--slate);
 }
 
-.totalScore {
+.totalLabel {
+  margin-top: var(--space-1);
+  font-size: 0.9375rem;
+  font-weight: var(--weight-heading);
+}
+
+.totalLine {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.totalScore {
+  display: inline-flex;
   align-items: baseline;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .totalScore :global(.num):first-child {
-  font-size: 3rem;
+  font-size: 2.75rem;
   font-weight: var(--weight-heading);
   line-height: 1;
   letter-spacing: -0.045em;
@@ -614,192 +689,266 @@
   color: var(--slate);
 }
 
-.totalTrack {
+.totalTrack,
+.ledgerTrack {
   display: block;
   height: 4px;
+  overflow: hidden;
   border-radius: var(--radius-full);
   background: rgba(242, 232, 214, 0.12);
-  overflow: hidden;
 }
 
-.totalTrack i {
+.totalTrack {
+  margin-top: var(--space-1);
+}
+
+.totalTrack i,
+.ledgerTrack i {
   display: block;
   height: 100%;
   border-radius: inherit;
   background: var(--ivory);
 }
 
-.totalMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
+.totalHow {
   font-size: 0.8125rem;
   color: var(--slate);
 }
 
+@media (min-width: 64rem) {
+  .scoreTop {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    column-gap: var(--space-16);
+    align-items: end;
+  }
+}
+
+/* The table. Each part is a column (a block on a phone): its header, then its checks, one to a row.
+   The rows sit in slots of one height, so they line up across the columns; a part with fewer
+   checks ends in an empty slot, ruled like the rest. */
 .ledger {
-  container-type: inline-size;
+  --row-h: 2.25rem;
+  display: grid;
+  margin-top: var(--space-6);
+  overflow: clip;
   border: 1px solid var(--hair-2);
   border-radius: 1.25rem;
   background: linear-gradient(180deg, #141417 0%, #0e0e11 100%);
 }
 
 .ledgerPart {
-  padding: var(--space-4) var(--space-4) var(--space-5);
-}
-
-@container (min-width: 34rem) {
-  .ledgerPart {
-    padding: var(--space-5) var(--space-5) var(--space-4);
-  }
+  container-type: inline-size;
+  padding: var(--space-5) var(--space-4) var(--space-2);
 }
 
 .ledgerPart + .ledgerPart {
-  border-top: 1px solid var(--hair);
+  border-top: 1px solid var(--hair-2);
 }
 
+/* A part's header. On a phone: its name with its score on the same line, the question under the
+   name, the bar across. In a column: the name, the question, the score, the bar. */
 .ledgerHead {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name score'
+    'question score'
+    'track track';
   align-items: center;
   column-gap: var(--space-3);
-}
-
-.ledgerHead svg {
-  color: var(--ivory);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--hair);
 }
 
 .ledgerName {
-  font-size: 1.125rem;
+  grid-area: name;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1.0625rem;
   font-weight: var(--weight-heading);
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
 }
 
-.ledgerScore {
-  font-size: 1.5rem;
-  font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.03em;
+.ledgerName svg {
+  flex: none;
+  color: var(--ivory);
 }
 
 .ledgerQuestion {
-  grid-column: 2 / -1;
-  font-size: 0.875rem;
+  grid-area: question;
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
   color: var(--slate);
 }
 
-/* The checks, two to a row with no lines between. Narrow (a phone): the name over its result, so
-   each part stays three rows short. Wide: the name and its result on one line, with its icon. */
+.ledgerScore {
+  grid-area: score;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
+.ledgerScore :global(.num):first-child {
+  font-size: 1.75rem;
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.ledgerScore small {
+  font-size: 0.8125rem;
+  color: var(--slate);
+}
+
+.ledgerTrack {
+  grid-area: track;
+  margin-top: var(--space-3);
+}
+
+/* The checks: a name, then its result: the bar one width, the word in one column after it. */
 .ledgerRows {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3) var(--space-4);
-  margin-top: var(--space-4);
+  --bar-w: 3.75rem;
+  --word-w: 3.75rem;
+  --result-col: calc(var(--bar-w) + 0.6rem + var(--word-w));
   list-style: none;
 }
 
 .ledgerRow {
   display: grid;
-  justify-items: start;
-  gap: 0.3125rem;
-  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) var(--result-col);
+  align-items: center;
+  column-gap: var(--space-4);
+  height: var(--row-h);
+}
+
+.ledgerRow + .ledgerRow,
+.ledgerRow + .ledgerEmpty,
+.ledgerEmpty + .ledgerEmpty {
+  border-top: 1px solid rgba(242, 232, 214, 0.06);
+}
+
+/* The product's own result bar, held to the table's bar width (two classes, so it wins over the
+   bar's own size whatever order the styles load in). */
+.ledgerRow [data-result] {
+  --bar-width: var(--bar-w);
   font-size: 0.8125rem;
 }
 
 .ledgerCheck {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
   min-width: 0;
+  overflow: hidden;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--grey-200);
 }
 
-.ledgerCheck > :first-child {
+/* An empty slot: only where the parts stand side by side. */
+.ledgerEmpty {
   display: none;
-  flex: none;
-  color: var(--slate);
+  height: var(--row-h);
 }
 
-@container (min-width: 34rem) {
+/* A narrow part (a small phone): shorter bars, so every check's name fits. */
+@container (max-width: 17rem) {
   .ledgerRows {
-    gap: 0.125rem var(--space-8);
-    margin-top: var(--space-3);
+    --bar-w: 2.5rem;
+    --word-w: 3.5rem;
   }
 
-  .ledgerRow {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    min-height: 2rem;
-    font-size: 0.875rem;
-  }
-
-  .ledgerCheck > :first-child {
-    display: inline-block;
+  .ledgerCheck {
+    font-size: 0.8125rem;
   }
 }
 
-/* What each result earns: the bars' key, closing the ledger. */
+@media (min-width: 60rem) {
+  .ledger {
+    --row-h: 2.5rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: var(--space-10);
+  }
+
+  .ledgerPart {
+    padding: var(--space-6) var(--space-6) var(--space-3);
+  }
+
+  .ledgerPart + .ledgerPart {
+    border-top: 0;
+    border-left: 1px solid var(--hair-2);
+  }
+
+  .ledgerHead {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'name'
+      'question'
+      'score'
+      'track';
+  }
+
+  .ledgerScore {
+    margin-top: var(--space-4);
+  }
+
+  .ledgerScore :global(.num):first-child {
+    font-size: 2rem;
+  }
+
+  .ledgerEmpty {
+    display: block;
+  }
+}
+
+/* What each result earns, compact: one line on a wide screen; on a phone one result to a line,
+   its bar and word in one column and what it earns in the next. */
 .ledgerKey {
   display: grid;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  border-top: 1px solid var(--hair-2);
-  border-radius: 0 0 1.25rem 1.25rem;
-  background: rgba(242, 232, 214, 0.03);
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--hair-2);
+  border-radius: 1rem;
 }
 
 .ledgerKeyTitle {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: var(--weight-heading);
 }
 
 .results {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4) var(--space-4);
+  gap: var(--space-2);
   list-style: none;
 }
 
 .result {
   display: grid;
-  align-content: start;
-  gap: var(--space-1);
+  grid-template-columns: 5.75rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.8125rem;
 }
 
 .resultShare {
-  font-size: 0.8125rem;
-  line-height: 1.4;
   color: var(--slate);
 }
 
 .ledgerNote {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: var(--slate);
 }
 
-@container (min-width: 34rem) {
-  .ledgerKey {
-    padding: var(--space-5);
-  }
-
+@media (min-width: 48rem) {
   .results {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 64rem) {
-  .scoreGrid {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    column-gap: var(--space-16);
-    align-items: start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-8);
   }
 
-  .scoreHead {
-    position: sticky;
-    top: calc(var(--header-h) + var(--space-10));
+  .result {
+    display: inline-flex;
+    gap: var(--space-2);
   }
 }
 
@@ -1442,6 +1591,19 @@
       animation-range: cover 36% cover 46%;
     }
 
+    /* The problem card's bars fill as it comes up the screen. Their tracks clip them, so they follow
+       the card's own timeline, never their own. */
+    .card {
+      view-timeline: --card block;
+    }
+
+    .card [data-fill] {
+      transform-origin: left;
+      animation: fill-across linear both;
+      animation-timeline: --card;
+      animation-range: cover 12% cover 32%;
+    }
+
     /* The score's bar fills as it comes up the screen; its track clips it, so it follows its card. */
     .total {
       view-timeline: --total block;
@@ -1452,6 +1614,23 @@
       animation: fill-across linear both;
       animation-timeline: --total;
       animation-range: cover 10% cover 35%;
+    }
+
+    /* The parts' bars, then their checks', fill as the table comes up the screen. */
+    .ledger {
+      view-timeline: --ledger block;
+    }
+
+    .ledgerTrack [data-fill],
+    .ledgerRow [data-fill] {
+      transform-origin: left;
+      animation: fill-across linear both;
+      animation-timeline: --ledger;
+      animation-range: cover 6% cover 24%;
+    }
+
+    .ledgerRow [data-fill] {
+      animation-range: cover 10% cover 28%;
     }
 
     /* What each result earns: each bar fills to its share, one after the other. */

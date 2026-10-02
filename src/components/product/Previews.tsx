@@ -21,7 +21,8 @@ import { pillarChecks, type ListItem } from '@/audit/view';
 import { countWords } from '@/demand/text';
 import { formatDate, hostAndPath, ordinal } from '@/domain/format';
 import { PILLAR_LABELS, PILLARS, RESULTS, type CheckResult } from '@/domain/types';
-import { DEMAND_PLATFORMS, platformFromUrl } from '@/graphics/platforms';
+import type { DemandRow } from '@/demand/view';
+import { DEMAND_PLATFORMS, platformFromUrl, type Platform } from '@/graphics/platforms';
 import type { Showcase } from '@/product/showcase';
 import type { LadderRow } from '@/rivals/compare';
 import home from '@/components/home/home.module.css';
@@ -29,6 +30,11 @@ import shell from '@/components/shell/AppShell.module.css';
 import styles from './pictures.module.css';
 
 const SAMPLE_EMAIL = 'owner@larkmoor-university.example';
+
+/** Where a student asked something: the platform it was pulled from, else read from its link. */
+export function askedOn(row: Pick<DemandRow, 'meta' | 'sourceUrl'>): Platform {
+  return (typeof row.meta.platform === 'string' ? DEMAND_PLATFORMS[row.meta.platform] : undefined) ?? platformFromUrl(row.sourceUrl) ?? 'website';
+}
 
 function demandHighlight(showcase: Showcase): DemandHighlightData | null {
   const top = showcase.demand.view.topTrend;
@@ -251,7 +257,6 @@ export function DemandPicture({ showcase }: { showcase: Showcase }) {
   const asked = showcase.demand.view.questions[0] ?? null;
   if (!highlight) return null;
   const rounded = Math.round(highlight.changePct ?? 0);
-  const askedOn = asked ? ((typeof asked.meta.platform === 'string' ? DEMAND_PLATFORMS[asked.meta.platform] : undefined) ?? platformFromUrl(asked.sourceUrl) ?? 'website') : null;
   return (
     <div className={`${styles.picture} ${styles.pictureWide}`} data-theme="dark" aria-hidden="true" inert>
       <div className={`${styles.pictureCard} ${styles.pictureGrow}`}>
@@ -278,12 +283,12 @@ export function DemandPicture({ showcase }: { showcase: Showcase }) {
             </ul>
           </div>
         ) : null}
-        {asked && askedOn ? (
+        {asked ? (
           <div className={`${styles.pictureCard} ${styles.pictureGrow}`}>
             <p className={styles.pictureHead}>What students ask</p>
             <p className={styles.pictureTitle}>{asked.text}</p>
             <p className={styles.pictureMeta}>
-              <PlatformMark platform={askedOn} name={false} />
+              <PlatformMark platform={askedOn(asked)} name={false} />
               <span>{asked.programName}</span>
               <span>{countWords('question', asked.count)}</span>
             </p>
