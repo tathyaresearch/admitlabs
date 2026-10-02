@@ -32,8 +32,26 @@ describe('the website copy', () => {
     assert.equal(content.HERO.proof, '120+ education companies worked with.');
     assert.deepEqual(
       content.NAV.map((item) => item.label),
-      ['Services', 'Drishti', 'How we work', 'FAQ'],
+      ['Services', 'Products', 'How we work', 'FAQ'],
     );
+  });
+
+  test('the Products menu: Drishti on the website, Tathya in a new tab', () => {
+    assert.deepEqual(
+      content.PRODUCTS.items.map((item) => [item.name, item.href, item.newTab]),
+      [
+        ['Drishti', '/drishti', false],
+        ['Tathya', 'https://mytathya.in', true],
+      ],
+    );
+    assert.equal(content.NAV.filter((item) => 'menu' in item).length, 1);
+  });
+
+  test('one small label above a heading on the home page: Product, above Drishti', () => {
+    assert.equal(content.DRISHTI.eyebrow, 'Product');
+    for (const section of [content.SYSTEM, content.SERVICES, content.AUDIENCE, content.HOW, content.FAQ, content.FINAL, content.ENQUIRY]) {
+      assert.equal('eyebrow' in section, false);
+    }
   });
 
   test('who we work with, only: never who we don’t, and no prices anywhere', () => {
@@ -53,12 +71,13 @@ describe('the website copy', () => {
     assert.match(content.FAQ.items[2]?.answer ?? '', /^Yes\./);
   });
 
-  test('our work stays hidden and Tathya has no link until the user sets them', async () => {
+  test('our work stays hidden until the user sets it; Tathya links to its own site', async () => {
     const { SITE_SETTINGS } = await import('../config/site.ts');
     const { WORK_SAMPLES } = await import('./work.ts');
     assert.equal(SITE_SETTINGS.showWork, false);
     assert.equal(WORK_SAMPLES.length, 0);
-    assert.equal(SITE_SETTINGS.tathyaUrl, null);
+    assert.equal(SITE_SETTINGS.tathyaUrl, 'https://mytathya.in');
+    assert.equal(content.TATHYA.link, 'Explore Tathya');
     assert.equal(content.FOOTER.email, 'hello@admitlabs.in');
   });
 

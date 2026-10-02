@@ -42,7 +42,7 @@ export default function WorkWithUsPage() {
       <main id="main">
         <section className={`${enquiry.section} ${site.grain}`} data-theme="dark" aria-labelledby="enquiry-title">
           <div className={enquiry.light} aria-hidden="true" />
-          <Frame />
+          <Frame draw />
           <div className={`${site.container} ${enquiry.grid}`}>
             <div className={enquiry.intro}>
               <h1 id="enquiry-title" className={enquiry.title}>

@@ -99,7 +99,9 @@ export function EnquiryScene() {
         {ENQUIRY_SCENE.fields.map((field, index) => (
           <div key={field.label} className={`${styles.field} ${index === 0 ? styles.wide : ''}`}>
             <p className={styles.fieldLabel}>{field.label}</p>
-            <p className={`${styles.fieldBox} ${index === 1 ? styles.focus : ''}`}>{field.value}</p>
+            <p className={`${styles.fieldBox} ${index === 1 ? styles.focus : ''}`}>
+              <span className={styles.typed}>{field.value}</span>
+            </p>
           </div>
         ))}
         <p className={styles.send}>

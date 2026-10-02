@@ -135,15 +135,16 @@ export function DrishtiSection() {
       <Frame bottom={false} rails={false} />
       <div className={site.container}>
         <div className={styles.head}>
-          <div>
+          <div className={site.reveal}>
+            <p className={styles.eyebrow}>{DRISHTI.eyebrow}</p>
             <h2 id="drishti-title" className={`${site.title} ${site.titleLight}`}>
               {DRISHTI.title}
             </h2>
             <p className={`${site.lede} ${styles.lede}`}>{DRISHTI.lede}</p>
           </div>
           <ul className={styles.figures}>
-            {DRISHTI.stats.map((stat) => (
-              <li key={stat.label}>
+            {DRISHTI.stats.map((stat, index) => (
+              <li key={stat.label} className={site.reveal} style={vars({ '--order': index })}>
                 <span className={`${styles.figure} num`}>{stat.value}</span>
                 <span className={styles.figureLabel}>{stat.label}</span>
               </li>
@@ -154,9 +155,11 @@ export function DrishtiSection() {
         <div className={styles.body}>
           <ul className={styles.questions}>
             {FEATURES.map((feature) => (
-              <li key={feature.key}>
-                <p className={styles.featureName}>{feature.name}</p>
-                <h3 className={styles.question}>{feature.question}</h3>
+              <li key={feature.key} className={site.reveal}>
+                <div className={styles.featureHead}>
+                  <h3 className={styles.question}>{feature.question}</h3>
+                  <p className={styles.featureName}>{feature.name}</p>
+                </div>
                 <p className={styles.featureLede}>{feature.lede}</p>
               </li>
             ))}
@@ -166,7 +169,7 @@ export function DrishtiSection() {
           </div>
         </div>
 
-        <div className={styles.foot}>
+        <div className={`${styles.foot} ${site.reveal}`}>
           <p className={styles.free}>{DRISHTI.free}</p>
           <div className={site.actions}>
             <ButtonLink href={appLink('/login')} size="lg" iconAfter="arrowRight" className={site.cta}>

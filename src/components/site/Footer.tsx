@@ -11,7 +11,7 @@ import site from './site.module.css';
 export function SiteFooter() {
   return (
     <footer className={sections.footer} data-theme="dark">
-      <div className={`${site.container} ${sections.footerInner}`}>
+      <div className={`${site.container} ${sections.footerInner} ${site.reveal}`}>
         <div className={sections.footerBrand}>
           <Wordmark height={20} />
           <p className={sections.copyright}>

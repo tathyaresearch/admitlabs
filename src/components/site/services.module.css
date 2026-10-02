@@ -63,7 +63,7 @@
 
 .browser {
   display: none;
-  overflow: hidden;
+  overflow: clip;
   border: 1px solid var(--hair-2);
   border-radius: 0.875rem;
   background: #141417;
@@ -357,7 +357,7 @@
 .institution-branding {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
+  overflow: clip;
   padding: 2rem 1.25rem 0;
   border: 1px solid var(--hair);
   border-radius: 1.5rem;
@@ -388,13 +388,19 @@
 
 .device {
   flex: none;
-  overflow: hidden;
+  overflow: clip;
   border: 1px solid var(--hair-2);
   border-bottom: 0;
   border-radius: 1.5rem 1.5rem 0 0;
   background: #0e0e11;
   box-shadow: 0 -20px 60px -30px rgba(0, 0, 0, 0.8);
   color: var(--ivory);
+  transition: border-color var(--duration-slow) var(--ease-out);
+}
+
+/* The phones rise from the stage's edge, so under the pointer they catch light instead of lifting. */
+.picture:hover .device {
+  border-color: rgba(242, 232, 214, 0.26);
 }
 
 .appBar {
@@ -920,8 +926,24 @@
   }
 }
 
-/* Motion: the phones rise in turn, the reel plays as it passes, the season fills month by month. */
+/* Motion: the phones rise in turn and the posts come in, the newest one last; the reel plays as it
+   passes; the page's numbers settle in; the season fills week by week, its dates and this week's
+   plan follow. Under the pointer the devices lift a touch. All settled without it. */
 @media (prefers-reduced-motion: no-preference) {
+  .browser,
+  .phone,
+  .season {
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+
+  .picture:hover .browser {
+    transform: translateY(-2px);
+  }
+
+  .picture:hover :is(.phone, .season) {
+    transform: translateY(-4px);
+  }
+
   @supports (animation-timeline: view()) {
     .phone,
     .device {
@@ -944,30 +966,84 @@
       animation-range: entry 0% exit 40%;
     }
 
-    .week {
+    .webFacts dd,
+    .phoneFacts dd {
       animation: fade linear both;
       animation-timeline: view();
-      animation-range: entry 5% entry 35%;
+      animation-range: entry 30% entry 80%;
     }
 
-    .week:nth-child(n + 5) {
-      animation-range: entry 9% entry 39%;
+    .webFacts div:nth-child(2) dd,
+    .phoneFacts div:nth-child(2) dd {
+      animation-range: entry 40% entry 90%;
     }
 
-    .week:nth-child(n + 9) {
-      animation-range: entry 13% entry 43%;
+    .webFacts div:nth-child(3) dd,
+    .phoneFacts div:nth-child(3) dd {
+      animation-range: entry 50% entry 100%;
     }
 
-    .week:nth-child(n + 13) {
-      animation-range: entry 17% entry 47%;
+    /* The posts, then the newest one appearing in the first place. */
+    .profile {
+      view-timeline: --profile;
     }
 
-    .week:nth-child(n + 17) {
-      animation-range: entry 21% entry 51%;
+    .tiles li {
+      animation: fade linear both;
+      animation-timeline: --profile;
+      animation-range: entry 30% entry 55%;
     }
 
-    .week:nth-child(n + 21) {
-      animation-range: entry 25% entry 55%;
+    .tiles li:nth-child(3) {
+      animation-range: entry 34% entry 59%;
+    }
+
+    .tiles li:nth-child(4) {
+      animation-range: entry 38% entry 63%;
+    }
+
+    .tiles li:nth-child(5) {
+      animation-range: entry 42% entry 67%;
+    }
+
+    .tiles li:nth-child(6) {
+      animation-range: entry 46% entry 71%;
+    }
+
+    .tiles li:first-child {
+      animation-name: post;
+      animation-range: entry 62% entry 92%;
+    }
+
+    /* The season, filling week by week as it rises towards the middle of the screen. */
+    .season {
+      view-timeline: --season;
+    }
+
+    .week i.on {
+      animation: fill-in linear both;
+      animation-timeline: --season;
+      animation-range: cover calc(8% + var(--i) * 1.2%) cover calc(16% + var(--i) * 1.2%);
+    }
+
+    .flag {
+      animation: fade linear both;
+      animation-timeline: --season;
+      animation-range: cover calc(14% + var(--at) * 1.2%) cover calc(22% + var(--at) * 1.2%);
+    }
+
+    .plan li {
+      animation: settle linear both;
+      animation-timeline: --season;
+      animation-range: cover 34% cover 44%;
+    }
+
+    .plan li:nth-child(2) {
+      animation-range: cover 37% cover 47%;
+    }
+
+    .plan li:nth-child(3) {
+      animation-range: cover 40% cover 50%;
     }
   }
 }
@@ -991,5 +1067,27 @@
 @keyframes fade {
   from {
     opacity: 0;
+  }
+}
+
+/* A new post: in from a little smaller, as if just shared. */
+@keyframes post {
+  from {
+    opacity: 0;
+    scale: 0.82;
+  }
+}
+
+@keyframes fill-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    translate: 0 0.375rem;
   }
 }

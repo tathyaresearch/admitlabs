@@ -6,7 +6,7 @@ import { hasDashes } from '../domain/copy.ts';
 import * as scenes from './scenes.ts';
 
 // The website's pictures (2026-10-02): a made-up institution in Bangalore, no caption, and the
-// website alone allowed its subtle monochrome gradients.
+// website (the /drishti product page with it) allowed its subtle monochrome gradients.
 
 function texts(value: unknown): string[] {
   if (typeof value === 'string') return [value];
@@ -24,7 +24,9 @@ function files(dir: string, ending: RegExp): string[] {
 
 const ROOT = join(import.meta.dirname, '..');
 const WEBSITE = [join(ROOT, 'components', 'site'), join(ROOT, 'app', '(site)')];
-const isWebsite = (path: string) => WEBSITE.some((dir) => path.startsWith(dir));
+/** The product page, now part of the website's look: its gradients are allowed too. */
+const PRODUCT_PAGE = [join(ROOT, 'components', 'product'), join(ROOT, 'app', '(product)', 'drishti')];
+const mayHaveGradients = (path: string) => [...WEBSITE, ...PRODUCT_PAGE].some((dir) => path.startsWith(dir));
 const ALL = texts(Object.fromEntries(Object.entries(scenes)));
 
 describe('the website’s pictures', () => {
@@ -52,8 +54,8 @@ describe('the website’s pictures', () => {
     }
   });
 
-  test('gradients only on the website: the dashboard and the product page keep none', () => {
-    const outside = files(ROOT, /\.(css|tsx)$/).filter((path) => !isWebsite(path));
+  test('gradients only on the website and the product page: the dashboard keeps none', () => {
+    const outside = files(ROOT, /\.(css|tsx)$/).filter((path) => !mayHaveGradients(path));
     assert.ok(outside.length > 20);
     for (const path of outside) assert.doesNotMatch(readFileSync(path, 'utf8'), /gradient\(/, path);
   });

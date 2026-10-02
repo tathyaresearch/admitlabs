@@ -3,6 +3,7 @@
 // a caption underneath. Then the monthly loop as one sentence on one track. On a phone, each
 // moment gets its own small stage, followed by its words. One set of markup for both.
 
+import type { CSSProperties } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { SYSTEM } from '@/site/content';
 import { EnquiryScene, SearchScene, TrustScene } from './Scenes';
@@ -16,7 +17,7 @@ export function System() {
   return (
     <section id="system" className={`${styles.system} ${site.grain}`} data-theme="light" aria-labelledby="system-title">
       <div className={site.container}>
-        <div className={styles.head}>
+        <div className={`${styles.head} ${site.reveal}`}>
           <h2 id="system-title" className={site.title}>
             {first} <span className={site.titleSoft}>{second}</span>
           </h2>
@@ -33,7 +34,7 @@ export function System() {
                 <div className={styles.scene} data-theme="dark" aria-hidden="true">
                   <Scene />
                 </div>
-                <div className={styles.words}>
+                <div className={`${styles.words} ${site.reveal}`}>
                   <h3 className={styles.pillarName}>{pillar.name}</h3>
                   <p className={styles.pillarLine}>{pillar.line}</p>
                   <p className={styles.checks}>
@@ -47,11 +48,11 @@ export function System() {
 
         <div className={styles.loop}>
           <h3 className="visually-hidden">{SYSTEM.loop.title}</h3>
-          <p className={styles.loopNote}>{SYSTEM.loop.note}</p>
+          <p className={`${styles.loopNote} ${site.reveal}`}>{SYSTEM.loop.note}</p>
           <div className={styles.cycle}>
             <ol className={styles.steps}>
-              {SYSTEM.loop.steps.map((step) => (
-                <li key={step.name} className={styles.step}>
+              {SYSTEM.loop.steps.map((step, index) => (
+                <li key={step.name} className={`${styles.step} ${site.reveal}`} style={{ '--order': index } as CSSProperties}>
                   <p className={styles.stepWord}>{step.name}.</p>
                   <p className={styles.stepWho}>{step.who}</p>
                   <p className={styles.stepLine}>{step.line}</p>

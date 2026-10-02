@@ -1,7 +1,7 @@
 // The AdmitLabs website's words (admitlabs.in), in one place, as approved on 2026-10-01 and kept
-// through the Spotlight redesign of 2026-10-02 (no small labels above headings any more). Short,
-// confident, plain. No dashes, curly quotes only (src/site/content.test.ts checks). What the
-// website's pictures show lives in ./scenes.ts.
+// through the Spotlight redesign of 2026-10-02 (no small labels above headings, but the one the user
+// asked for above Drishti). Short, confident, plain. No dashes, curly quotes only
+// (src/site/content.test.ts checks). What the website's pictures show lives in ./scenes.ts.
 
 import { SITE_SETTINGS } from '../config/site.ts';
 import { RIVAL_RULES } from '../config/rivals.ts';
@@ -17,10 +17,20 @@ export const CTA = {
   signIn: 'Sign in',
 } as const;
 
-/** The header's links, to sections of the home page (from any page of the website). */
+/** The products, in the header's Products menu and in the phone menu. Tathya opens in a new tab. */
+export const PRODUCTS = {
+  label: 'Products',
+  items: [
+    { name: 'Drishti', for: 'For institutions', href: '/drishti', newTab: false },
+    { name: 'Tathya', for: 'For students', href: SITE_SETTINGS.tathyaUrl, newTab: true },
+  ],
+} as const;
+
+/** The header's links, to sections of the home page (from any page of the website), with the
+ *  Products menu after Services. */
 export const NAV = [
   { href: '/#services', label: 'Services' },
-  { href: '/#drishti', label: 'Drishti' },
+  { menu: 'products', label: PRODUCTS.label },
   { href: '/#how', label: 'How we work' },
   { href: '/#faq', label: 'FAQ' },
 ] as const;
@@ -83,6 +93,8 @@ export function aboutService(key: string | null | undefined): string | null {
 }
 
 export const DRISHTI = {
+  /** The page's only small label above a heading, as the user asked. */
+  eyebrow: 'Product',
   title: 'Drishti by AdmitLabs.',
   lede: 'See where you stand, who’s ahead, and what students want.',
   stats: [
@@ -120,7 +132,7 @@ export const TATHYA = {
   forWhom: 'For students',
   name: 'Tathya',
   line: 'Every government opportunity a student qualifies for, with real odds. Sirf data.',
-  link: 'Visit Tathya',
+  link: 'Explore Tathya',
 } as const;
 
 export const FAQ = {

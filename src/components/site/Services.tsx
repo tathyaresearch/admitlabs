@@ -19,7 +19,7 @@ export function Services() {
   return (
     <section id="services" className={`${styles.services} ${site.grain}`} data-theme="dark" aria-labelledby="services-title">
       <div className={site.container}>
-        <div className={styles.head}>
+        <div className={`${styles.head} ${site.reveal}`}>
           <h2 id="services-title" className={`${site.title} ${site.titleLight}`}>
             {SERVICES.title}
           </h2>
@@ -32,7 +32,7 @@ export function Services() {
           const Picture = PICTURES[service.key];
           return (
             <article key={service.key} className={`${styles.chapter} ${styles[service.key]}`} aria-labelledby={`service-${service.key}`}>
-              <div className={styles.words}>
+              <div className={`${styles.words} ${site.reveal}`}>
                 <h3 id={`service-${service.key}`} className={styles.name}>
                   {service.name}
                 </h3>

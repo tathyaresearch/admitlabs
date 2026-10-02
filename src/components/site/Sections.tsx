@@ -20,7 +20,7 @@ export function Audience() {
   return (
     <section id="who" className={`${styles.who} ${site.grain}`} data-theme="light" aria-labelledby="who-title">
       <div className={site.container}>
-        <div className={styles.whoHead}>
+        <div className={`${styles.whoHead} ${site.reveal}`}>
           <h2 id="who-title" className={styles.whoTitle}>
             {AUDIENCE.title}
           </h2>
@@ -69,12 +69,12 @@ export function HowWeWork() {
   return (
     <section id="how" className={`${styles.how} ${site.grain}`} data-theme="dark" aria-labelledby="how-title">
       <div className={`${site.container} ${styles.howGrid}`}>
-        <h2 id="how-title" className={`${site.title} ${site.titleLight} ${styles.howTitle}`}>
+        <h2 id="how-title" className={`${site.title} ${site.titleLight} ${styles.howTitle} ${site.reveal}`}>
           {first} <span className={site.titleSoft}>{second}</span>
         </h2>
         <ol className={styles.howSteps}>
           {HOW.steps.map((step) => (
-            <li key={step.name} className={styles.howStep}>
+            <li key={step.name} className={`${styles.howStep} ${site.reveal}`}>
               <h3 className={styles.howName}>{step.name}</h3>
               <p className={styles.howLine}>{step.line}</p>
             </li>
@@ -92,19 +92,17 @@ export function Tathya() {
         <div className={`${styles.tathya} ${site.reveal}`}>
           <span className={styles.corners} aria-hidden="true" />
           <div>
-            <p className={styles.forWhom}>{TATHYA.forWhom}</p>
             <h2 id="tathya-title" className={styles.tathyaName}>
               {TATHYA.name}
             </h2>
+            <p className={styles.forWhom}>{TATHYA.forWhom}</p>
           </div>
           <div className={styles.tathyaSide}>
             <p className={styles.tathyaLine}>{TATHYA.line}</p>
-            {SITE_SETTINGS.tathyaUrl ? (
-              <AnchorButton href={SITE_SETTINGS.tathyaUrl} variant="secondary" iconAfter="external" target="_blank" rel="noreferrer" className={site.ghost}>
-                {TATHYA.link}
-                <span className="visually-hidden"> (opens in a new tab)</span>
-              </AnchorButton>
-            ) : null}
+            <AnchorButton href={SITE_SETTINGS.tathyaUrl} variant="secondary" iconAfter="arrowUpRight" target="_blank" rel="noreferrer" className={`${site.ghost} ${styles.tathyaLink}`}>
+              {TATHYA.link}
+              <span className="visually-hidden"> (opens in a new tab)</span>
+            </AnchorButton>
           </div>
         </div>
       </div>
@@ -116,7 +114,7 @@ export function Faq() {
   return (
     <section id="faq" className={`${styles.faq} ${site.grain}`} data-theme="dark" aria-labelledby="faq-title">
       <div className={`${site.container} ${styles.faqGrid}`}>
-        <div className={styles.faqHead}>
+        <div className={`${styles.faqHead} ${site.reveal}`}>
           <h2 id="faq-title" className={`${site.title} ${site.titleLight}`}>
             {FAQ.title}
           </h2>
@@ -126,7 +124,7 @@ export function Faq() {
         </div>
         <div className={styles.faqList}>
           {FAQ.items.map((item) => (
-            <details key={item.question} className={styles.faqItem}>
+            <details key={item.question} className={`${styles.faqItem} ${site.reveal}`}>
               <summary className={styles.faqQuestion}>
                 {item.question}
                 <Icon name="plus" size={18} />
@@ -146,11 +144,13 @@ export function FinalCall() {
       <div className={styles.finalLight} aria-hidden="true" />
       <Frame />
       <div className={`${site.container} ${styles.finalInner}`}>
-        <h2 id="final-title" className={styles.finalTitle}>
+        <h2 id="final-title" className={`${styles.finalTitle} ${site.reveal}`}>
           {FINAL.title}
         </h2>
-        <p className={styles.finalLine}>{FINAL.line}</p>
-        <div className={`${site.actions} ${styles.finalActions}`}>
+        <p className={`${styles.finalLine} ${site.reveal}`} style={vars({ '--order': 1 })}>
+          {FINAL.line}
+        </p>
+        <div className={`${site.actions} ${styles.finalActions} ${site.reveal}`} style={vars({ '--order': 2 })}>
           <ButtonLink href={appLink('/login')} size="lg" iconAfter="arrowRight" className={site.cta}>
             {CTA.primary}
           </ButtonLink>

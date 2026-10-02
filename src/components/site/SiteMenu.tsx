@@ -1,16 +1,18 @@
 'use client';
 
 // The website's phone menu: the browser's own popover (opens and closes with the button, Escape or
-// a tap outside), closed again when a link is chosen so the page can scroll to it.
+// a tap outside), closed again when a link is chosen so the page can scroll to it. The products sit
+// together under their own small label; Tathya opens in a new tab.
 
 import { useRef, useState } from 'react';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import type { NAV, PRODUCTS } from '@/site/content';
 import styles from './site.module.css';
 
 const MENU_ID = 'site-menu';
 
-export function SiteMenu({ links, work }: { links: ReadonlyArray<{ href: string; label: string }>; work: { href: string; label: string } }) {
+export function SiteMenu({ nav, products, work }: { nav: typeof NAV; products: typeof PRODUCTS; work: { href: string; label: string } }) {
   const menu = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const close = () => menu.current?.hidePopover();
@@ -22,11 +24,31 @@ export function SiteMenu({ links, work }: { links: ReadonlyArray<{ href: string;
       </button>
       <div id={MENU_ID} ref={menu} popover="auto" className={styles.menu} onToggle={(event) => setOpen(event.newState === 'open')}>
         <nav className={styles.menuLinks} aria-label="Main">
-          {links.map((link) => (
-            <a key={link.href} href={link.href} className={styles.menuLink} onClick={close}>
-              {link.label}
-            </a>
-          ))}
+          {nav.map((entry) =>
+            'href' in entry ? (
+              <a key={entry.href} href={entry.href} className={styles.menuLink} onClick={close}>
+                {entry.label}
+              </a>
+            ) : (
+              <div key={entry.label} className={styles.menuGroup}>
+                <p className={styles.menuGroupLabel}>{products.label}</p>
+                <ul className={styles.menuProducts}>
+                  {products.items.map((item) => (
+                    <li key={item.name}>
+                      <a href={item.href} className={styles.menuProduct} onClick={close} target={item.newTab ? '_blank' : undefined} rel={item.newTab ? 'noreferrer' : undefined}>
+                        <span className={styles.menuProductName}>
+                          {item.name}
+                          {item.newTab ? <Icon name="arrowUpRight" size={16} /> : null}
+                        </span>{' '}
+                        <span className={styles.menuProductFor}>{item.for}</span>
+                        {item.newTab ? <span className="visually-hidden"> (opens in a new tab)</span> : null}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ),
+          )}
         </nav>
         <div className={styles.menuActions}>
           <ButtonLink href={work.href} variant="secondary" block onClick={close} className={styles.ghost}>

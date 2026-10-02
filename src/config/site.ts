@@ -6,8 +6,8 @@ export const SITE_SETTINGS = {
    * and listed in src/site/work.ts; with no samples the section never shows, whatever this says.
    */
   showWork: false,
-  /** [ADJUSTABLE] Tathya's address, for the students band. Until it is set, the band has no link. */
-  tathyaUrl: null as string | null,
+  /** [ADJUSTABLE] Tathya's address: the students band's button and the header's Products menu. */
+  tathyaUrl: 'https://mytathya.in',
   /** Where enquiries and questions go. */
   email: 'hello@admitlabs.in',
 } as const;

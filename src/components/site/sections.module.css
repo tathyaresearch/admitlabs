@@ -227,6 +227,17 @@
   background:
     radial-gradient(55% 120% at 100% 50%, rgba(242, 232, 214, 0.06), transparent 70%),
     linear-gradient(180deg, #121215 0%, #0c0c0f 100%);
+  transition: border-color var(--duration-slow) var(--ease-out);
+}
+
+/* Under the pointer the band's edge catches a little more light. */
+.tathya:hover {
+  border-color: rgba(242, 232, 214, 0.24);
+}
+
+/* Its button's arrow leans out, the way the new tab opens. */
+.tathya .tathyaSide .tathyaLink:hover svg:last-child {
+  translate: 2px -2px;
 }
 
 /* Four small crosses on the corners, drawn by one element's backgrounds. */
@@ -245,14 +256,15 @@
     linear-gradient(rgba(242, 232, 214, 0.45), rgba(242, 232, 214, 0.45)) 100% calc(100% - 5px) / 11px 1px no-repeat;
 }
 
+/* Who it is for, under the name: no label above it. */
 .forWhom {
-  font-size: 0.875rem;
+  margin-top: var(--space-3);
+  font-size: 0.9375rem;
   font-weight: var(--weight-medium);
   color: var(--slate);
 }
 
 .tathyaName {
-  margin-top: var(--space-2);
   font-size: clamp(2.5rem, 1.8rem + 2.8vw, 4rem);
   font-weight: var(--weight-heading);
   line-height: 1;
@@ -305,6 +317,16 @@
 
 .faqHead a {
   color: var(--ivory);
+  text-decoration-color: rgba(242, 232, 214, 0.35);
+  text-underline-offset: 0.2em;
+  transition:
+    text-decoration-color var(--duration) var(--ease-out),
+    text-underline-offset var(--duration) var(--ease-out);
+}
+
+.faqHead a:hover {
+  text-decoration-color: var(--ivory);
+  text-underline-offset: 0.28em;
 }
 
 .faqList {
@@ -332,10 +354,17 @@
   display: none;
 }
 
+/* Under the pointer the question's plus brightens. */
 .faqQuestion svg {
   flex: none;
   color: var(--slate);
-  transition: rotate var(--duration) var(--ease-out);
+  transition:
+    rotate var(--duration) var(--ease-out),
+    color var(--duration) var(--ease-out);
+}
+
+.faqQuestion:hover svg {
+  color: var(--ivory);
 }
 
 .faqItem[open] .faqQuestion svg {
@@ -364,7 +393,7 @@
 .final {
   --rule-top: 3rem;
   --rule-bottom: 3rem;
-  overflow: hidden;
+  overflow: clip;
   padding-block: calc(var(--section-pad) + 2rem);
   background: var(--grain-dark), var(--black);
 }
