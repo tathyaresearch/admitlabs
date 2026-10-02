@@ -125,12 +125,14 @@
   gap: var(--space-3);
 }
 
-.signIn {
+/* Two classes, so this wins over the button's own display whichever order a build loads the two
+   style sheets in. */
+.headerActions .signIn {
   display: none;
 }
 
 @media (min-width: 40rem) {
-  .signIn {
+  .headerActions .signIn {
     display: inline-flex;
   }
 }
