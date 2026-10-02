@@ -14,11 +14,11 @@ import { Icon } from '@/components/ui/Icon';
 import { KpiCard, KpiNumber } from '@/components/ui/Kpi';
 import { LockedPanel } from '@/components/ui/LockedPanel';
 import { PillarIcon } from '@/components/ui/Marks';
-import { Change, Delta, ResultGauge, ScoreLabel } from '@/components/ui/Results';
+import { Change, Delta, ResultBar, ResultKey, ResultSquares, ScoreLabel } from '@/components/ui/Results';
 import { CHECKS } from '@/domain/checks';
 import { formatDate } from '@/domain/format';
 import { nextBandText, resultShareText } from '@/domain/scores';
-import { PILLAR_LABELS, PILLARS, RESULT_LABELS, RESULTS, type Pillar } from '@/domain/types';
+import { PILLAR_LABELS, PILLARS, RESULTS, type Pillar } from '@/domain/types';
 import { scoreRange } from '@/graphics/range';
 import styles from './home.module.css';
 
@@ -65,7 +65,7 @@ function ScoreSide({ trend, side, label }: { trend: MonthScores | null; side: 'l
       <ul className={styles.earns}>
         {RESULTS.map((result) => (
           <li key={result} className={styles.earn}>
-            <ResultGauge result={result} />
+            <ResultBar result={result} />
             <span>{resultShareText(result)}</span>
           </li>
         ))}
@@ -83,20 +83,13 @@ function PillarChecksRow({ pillar, checks, checkLinks }: { pillar: Pillar; check
   const weakestBody = weakest ? (
     <>
       <span className={styles.weakestName}>{weakest.name}</span>
-      <ResultGauge result={weakest.result} size="sm" />
+      <ResultBar result={weakest.result} points={weakest.points} max={weakest.maxPoints} showPoints={false} size="sm" />
     </>
   ) : null;
   return (
     <>
       <div className={styles.pillarChecks}>
-        <ul className={styles.checkStrip} aria-label={`${PILLAR_LABELS[pillar]} checks`}>
-          {checks.checks.map((check) => (
-            <li key={check.key} title={`${check.name}: ${RESULT_LABELS[check.result]}`}>
-              <span className="visually-hidden">{check.name}: </span>
-              <ResultGauge result={check.result} size="sm" hideWord />
-            </li>
-          ))}
-        </ul>
+        <ResultSquares checks={checks.checks} label={`${PILLAR_LABELS[pillar]} checks`} />
         <p className={styles.strongCount}>{checks.strong ? `${checks.strong} of ${checks.checks.length} checks Strong` : 'No checks Strong yet'}</p>
       </div>
       {weakest ? (
@@ -225,6 +218,7 @@ export function HomeSummary({
             );
           })}
         </div>
+        {checks.size ? <ResultKey className={styles.resultKey} /> : null}
       </div>
     </section>
   );

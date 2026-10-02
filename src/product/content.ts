@@ -39,10 +39,9 @@ export const PROBLEM = {
   ],
 } as const;
 
-/** The features section: a bento grid of what Drishti does. */
+/** The features section. Two lines: the second in a quieter tone. */
 export const FEATURES_HEAD = {
-  eyebrow: 'What Drishti does',
-  title: 'Three questions. Answered every month.',
+  title: ['Three questions.', 'Answered every month.'],
 } as const;
 
 export interface Feature {
@@ -73,16 +72,8 @@ export const FEATURES: readonly Feature[] = [
   },
 ];
 
-/** The report tile in the features grid. The full sample sits further down the page. */
-export const REPORT_TILE = {
-  name: 'Report',
-  title: 'A short report on the 1st.',
-  lede: 'With Paid, one PDF every month: your score, your rivals, what students want, and 3 things to do.',
-  link: 'See the sample report',
-} as const;
-
-/** The rules every result follows, as one tile. */
-export const TRUST_TILE = {
+/** The rules every result follows, as one band: the promise, then what it means. */
+export const TRUST = {
   name: 'Public data only',
   title: 'Nothing private. Ever.',
   points: ['Every result shows what was found, where and when.', 'Learn from rivals, never copy. They never know you track them.', 'Demand is grouped. Never one student.'],
@@ -95,7 +86,8 @@ const PILLAR_QUESTIONS: Readonly<Record<Pillar, string>> = {
 };
 
 export const SCORE = {
-  title: 'One score. Three questions.',
+  title: ['One score.', 'Three questions.'] as const,
+  resultsTitle: 'What each result earns',
   lede: 'Your score is out of 100: the average of three pillars, each asking what a student asks. Every check is Strong, Okay, Weak or Missing, and always shows what was found.',
   pillars: PILLARS.map((pillar) => ({
     pillar,
@@ -106,7 +98,7 @@ export const SCORE = {
 };
 
 export const STEPS = {
-  title: 'Four steps. Then every month.',
+  title: ['Four steps.', 'Then every month.'],
   items: [
     { title: 'Tell us who you are', text: 'Your name, city, programs and public links. About two minutes.' },
     { title: 'Drishti checks everything', text: 'Google, your website, social media, reviews and AI answers. Public pages only.' },
@@ -116,8 +108,10 @@ export const STEPS = {
 } as const;
 
 export const REPORT = {
-  title: 'Read it in five minutes.',
-  lede: 'One short PDF on the 1st of every month: your score and what changed, what to fix, your rivals, what students want in your city, and 3 things to do.',
+  title: ['A short report on the 1st.', 'Read it in five minutes.'],
+  lede: 'With Paid, one short PDF on the 1st of every month: your score and what changed, what to fix, your rivals, what students want in your city, and 3 things to do.',
+  /** The hero's second button, down to the sample. */
+  see: 'See the sample report',
   download: 'Download the sample report',
   note: SAMPLE_REPORT_NOTE,
 } as const;
@@ -181,7 +175,8 @@ export const PLANS: { title: readonly [string, string]; lede: string; cards: rea
 };
 
 export const CLIENTS = {
-  eyebrow: 'For AdmitLabs clients',
+  /** Who it is for, under the title: no label above it. */
+  forWhom: 'For AdmitLabs clients',
   /** Two lines: the fact, then the promise. */
   title: ['Included.', 'And we act on it.'],
   text: 'Drishti comes with every AdmitLabs service. Each month our team reads your Audit, your rivals and what students ask, then gets to work on it with you.',

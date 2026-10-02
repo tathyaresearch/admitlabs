@@ -1,7 +1,8 @@
 /* Chart marks: thin, monochrome, with the data as the only loud thing. */
 
-/* The score gauge: a half circle filled to the score, the number inside it in Inter. */
+/* The score gauge: a half circle filled to the score, the number part of the drawing, in Inter. */
 .gauge {
+  container-type: inline-size;
   position: relative;
   width: 100%;
   max-width: var(--gauge-max, 15rem);
@@ -30,35 +31,48 @@
   stroke-width: 1.5;
 }
 
+.gaugeNumber,
+.gaugeOf,
 .gaugeEnd {
   font-family: var(--font-numeric);
-  font-size: 10px;
-  fill: var(--text-muted);
-  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
 }
 
-/* The number sits in the bowl of the half circle. */
 .gaugeNumber {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 4%;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.15em;
-  line-height: 1;
-}
-
-.gaugeValueText {
-  font: var(--type-num-hero);
-  font-size: clamp(2.5rem, 2.1rem + 1.6cqi, 3.25rem);
-  letter-spacing: var(--tracking-num-hero);
+  font-weight: var(--weight-heading);
+  fill: var(--text);
 }
 
 .gaugeOf {
-  font: var(--type-num);
-  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+  fill: var(--text-muted);
+}
+
+.gaugeEnd {
+  fill: var(--text-muted);
+}
+
+/* On a small gauge "0" and "100" would be too small to read: the number says it all. */
+@container (max-width: 11rem) {
+  .gaugeEnd {
+    display: none;
+  }
+}
+
+/* The product page counts the score up as its gauge comes into view (src/components/product/
+   CountUp.tsx sets the state): ready, the arc not yet drawn; run, it draws as the number counts,
+   with the same easing. With no state, as everywhere else, the arc is simply there. */
+.gauge[data-count-state] .gaugeValue {
+  stroke-dasharray: 100 100;
+}
+
+.gauge[data-count-state='ready'] .gaugeValue {
+  stroke-dashoffset: 100;
+}
+
+.gauge[data-count-state='run'] .gaugeValue {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1400ms cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .sparkline {

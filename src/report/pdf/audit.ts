@@ -9,7 +9,7 @@ import { ADMITLABS_CAN_FIX } from '../../team/share.ts';
 import type { AuditPdfData } from '../audit.ts';
 import type { ReportFix } from '../data.ts';
 import { nextBandText } from '../../domain/scores.ts';
-import { BigNumber, CheckIcon, clamp, Keep, LabelChip, Lockup, PageHead, PillarIcon, PlatformIcon, ResultGauge, ScoreBar, ScoreGauge, SectionTitle, ValueText } from './parts.ts';
+import { BigNumber, CheckIcon, clamp, Keep, LabelChip, Lockup, PageHead, PillarIcon, PlatformIcon, ResultBar, ScoreBar, ScoreGauge, SectionTitle, ValueText } from './parts.ts';
 import { biggestGain, ContentPage, FixBlock, ProgramsPage } from './pages.ts';
 import { COLORS, NUM, PAGE, registerFonts, styles } from './theme.ts';
 
@@ -98,7 +98,7 @@ function AuditSummaryPage({ data }: { data: AuditPdfData }): ReactElement {
               item.programs ? h(Text, { style: { ...styles.caption, ...clamp(1) } }, item.programs) : null,
               item.finding ? h(Text, { style: { ...styles.small, color: COLORS.muted, marginTop: 3, ...clamp(2) } }, item.finding) : null,
             ),
-            h(View, { style: { width: 128, alignItems: 'flex-end', gap: 5 } }, h(ResultGauge, { result: item.result }), h(ValueText, { text: item.worth, style: { ...styles.caption, textAlign: 'right' } })),
+            h(View, { style: { width: 128, alignItems: 'flex-end', gap: 5 } }, h(ResultBar, { result: item.result }), h(ValueText, { text: item.worth, style: { ...styles.caption, textAlign: 'right' } })),
           ),
         ),
       ),
@@ -123,7 +123,7 @@ function MoreFix({ fix, first }: { fix: ReportFix; first: boolean }): ReactEleme
           View,
           { style: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, paddingRight: 12 } },
           h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 5 } }, h(CheckIcon, { check: fix.key, size: 10 }), h(Text, { style: { fontSize: 10, fontWeight: 600 } }, fix.name)),
-          single ? h(ResultGauge, { result: single.result, size: 'sm' }) : fix.resultsNote ? h(Text, { style: styles.caption }, fix.resultsNote) : null,
+          single ? h(ResultBar, { result: single.result, size: 'sm' }) : fix.resultsNote ? h(Text, { style: styles.caption }, fix.resultsNote) : null,
         ),
         h(ValueText, { text: fix.gain, style: { ...styles.caption, color: COLORS.black } }),
       ),
@@ -136,7 +136,7 @@ function MoreFix({ fix, first }: { fix: ReportFix; first: boolean }): ReactEleme
                 View,
                 { key: index, style: { flexDirection: 'row', alignItems: 'center', gap: 5 } },
                 part.program ? h(Text, { style: { fontSize: 7.5, color: COLORS.muted } }, part.program) : null,
-                h(ResultGauge, { result: part.result, size: 'sm' }),
+                h(ResultBar, { result: part.result, size: 'sm' }),
               ),
             ),
           )
@@ -197,7 +197,7 @@ function AuditChecksPage({ data }: { data: AuditPdfData }): ReactElement {
                     View,
                     { style: { width: 132, gap: 3 } },
                     part.program ? h(Text, { style: { fontSize: 7.5, color: COLORS.muted, ...clamp(1) } }, part.program) : null,
-                    h(ResultGauge, { result: part.result, size: 'sm' }),
+                    h(ResultBar, { result: part.result, size: 'sm' }),
                   ),
                   h(
                     View,

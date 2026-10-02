@@ -31,12 +31,14 @@ import {
   DIFFICULTY_LABELS,
   INSTITUTION_TYPE_LABELS,
   LANGUAGE_LABELS,
+  LANGUAGES,
   PILLAR_LABELS,
   PILLARS,
   TIER_LABELS,
   type CheckKey,
   type CheckResult,
   type InstitutionType,
+  type Language,
   type Pillar,
   type RivalMoveKind,
   type Tier,
@@ -203,6 +205,8 @@ export interface ReportData {
     /** `changePct` and `asked` are the numbers behind the words, for the bars. */
     rising: Array<{ text: string; change: string; changePct: number | null; count: string; program: string }>;
     questions: Array<{ text: string; count: string; asked: number; program: string; language: string | null }>;
+    /** "What students ask most, grouped. Hindi and Assamese questions are shown in English." Only the languages asked in. */
+    questionsLead: string;
     ideas: Array<{ text: string; program: string; basedOn: string | null }>;
     pulledOn: string | null;
     caption: string;
@@ -519,6 +523,7 @@ export function buildReport(input: ReportInput): ReportData {
             program: row.programName,
             language: LANGUAGE_TAGS[row.language],
           })),
+          questionsLead: questionsLead(demand.languages),
           ideas: demand.ideas.slice(0, REPORT_LIMITS.ideas).map((idea) => ({ text: idea.text, program: idea.programName, basedOn: idea.question?.text ?? null })),
           pulledOn: input.demand.pulledAt ? formatDate(input.demand.pulledAt) : null,
           caption: sourcesCaption(demand.platforms.length, demand.languages.length),
@@ -529,6 +534,13 @@ export function buildReport(input: ReportInput): ReportData {
     contact: input.tier === 'paid' ? { ...PAID_CONTACT } : null,
     sample: input.sample ? SAMPLE_REPORT_NOTE : null,
   });
+}
+
+/** What the questions list says first: grouped, and which languages are shown in English, if any. */
+export function questionsLead(languages: readonly Language[]): string {
+  // In the languages' own order (Hindi before Assamese), whatever order they come in.
+  const others = LANGUAGES.filter((language) => language !== 'en' && languages.includes(language)).map((language) => LANGUAGE_LABELS[language]);
+  return others.length ? `What students ask most, grouped. ${joinNames(others)} questions are shown in English.` : 'What students ask most, grouped.';
 }
 
 /**

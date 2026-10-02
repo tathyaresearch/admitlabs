@@ -15,7 +15,7 @@ import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
 import { CheckIcon, Mark, PillarIcon } from '@/components/ui/Marks';
-import { PointsValue, ResultGauge } from '@/components/ui/Results';
+import { PointsValue, ResultBar } from '@/components/ui/Results';
 import { ADMITLABS_EMAIL } from '@/config/team';
 import { formatDate, hostAndPath, plural } from '@/domain/format';
 import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS } from '@/domain/types';
@@ -157,7 +157,7 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
                         <span className={styles.rowName}>
                           <CheckIcon check={item.key} size={16} />
                           {item.name}
-                          <ResultGauge result={item.strength ?? 'okay'} size="sm" />
+                          <ResultBar result={item.strength ?? 'okay'} size="sm" />
                         </span>
                         <span className={styles.rowValue}>
                           <PointsValue kind="earned" points={item.points} />
@@ -222,7 +222,7 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
                           <div key={part.checkId} className={styles.part}>
                             <span className={styles.partResult}>
                               {part.programName ? <span className={styles.partProgram}>{part.programName}</span> : null}
-                              <ResultGauge result={part.result} size="sm" />
+                              <ResultBar result={part.result} points={part.points} max={part.maxPoints} size="sm" />
                             </span>
                             <span className={styles.partText}>
                               {part.detail?.finding ? <span className={styles.text}>{part.detail.finding}</span> : null}

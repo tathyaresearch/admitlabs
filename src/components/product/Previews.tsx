@@ -1,7 +1,8 @@
 // Real pictures of the dashboard for the product page: the dashboard's own components, filled with
-// the sample institution's data (Eastgate University, from the sample world, through the real
-// scoring engine). They can't be focused or clicked, and screen readers get a short summary
-// instead. Every picture says it is sample data.
+// the sample institution's data (the sample world through the real scoring engine, under the
+// website's names: Larkmoor University, Bangalore; src/product/showcase.ts). They can't be focused
+// or clicked, and screen readers get a short summary instead. Like the website's pictures, they
+// carry no caption.
 
 import { MonthBars } from '@/components/charts/MonthBars';
 import { PillarDots } from '@/components/charts/PillarDots';
@@ -15,7 +16,7 @@ import { Icon } from '@/components/ui/Icon';
 import { KpiNumber } from '@/components/ui/Kpi';
 import { PageHead } from '@/components/ui/Layout';
 import { CheckIcon, PillarIcon, PlatformMark } from '@/components/ui/Marks';
-import { Delta, ResultGauge, ScoreLabel } from '@/components/ui/Results';
+import { Delta, ResultBar, ResultKey, ResultSquares, ScoreLabel } from '@/components/ui/Results';
 import { pillarChecks, type ListItem } from '@/audit/view';
 import { countWords } from '@/demand/text';
 import { ordinal } from '@/domain/format';
@@ -25,11 +26,9 @@ import type { Showcase } from '@/product/showcase';
 import type { LadderRow } from '@/rivals/compare';
 import home from '@/components/home/home.module.css';
 import shell from '@/components/shell/AppShell.module.css';
-import styles from './product.module.css';
+import styles from './pictures.module.css';
 
-export const SAMPLE_CAPTION = 'Sample institution. Fictional data.';
-
-const SAMPLE_EMAIL = 'owner@eastgate-university.example';
+const SAMPLE_EMAIL = 'owner@larkmoor-university.example';
 
 function demandHighlight(showcase: Showcase): DemandHighlightData | null {
   const top = showcase.demand.view.topTrend;
@@ -103,13 +102,10 @@ export function AppWindow({ showcase }: { showcase: Showcase }) {
           </div>
         </div>
       </div>
-      <figcaption className={styles.windowCaption} data-theme="light">
-        <span className="visually-hidden">
-          The Drishti dashboard’s Home for {institution.name}: overall score {audit.scores.overall} out of 100, {audit.label}. Discovered{' '}
-          {audit.scores.discovered}, Trusted {audit.scores.trusted}, Chosen {audit.scores.chosen}. Then 3 things to do this month, the rivals and what
-          students want.{' '}
-        </span>
-        {SAMPLE_CAPTION}
+      <figcaption className="visually-hidden">
+        The Drishti dashboard’s Home for {institution.name}: overall score {audit.scores.overall} out of 100, {audit.label}. Discovered{' '}
+        {audit.scores.discovered}, Trusted {audit.scores.trusted}, Chosen {audit.scores.chosen}. Then 3 things to do this month, the rivals and what
+        students want.
       </figcaption>
     </figure>
   );
@@ -133,7 +129,7 @@ export function AuditPicture({ showcase }: { showcase: Showcase }) {
       <div className={`${styles.pictureCard} ${styles.scoreCard}`}>
         <p className={styles.pictureHead}>Overall score</p>
         <div className={styles.scoreGauge}>
-          <ScoreGauge score={audit.scores.overall} />
+          <ScoreGauge score={audit.scores.overall} countUp />
         </div>
         <p className={styles.scoreCardMeta}>
           <ScoreLabel score={audit.scores.overall} />
@@ -145,7 +141,7 @@ export function AuditPicture({ showcase }: { showcase: Showcase }) {
               <PillarIcon pillar={pillar} />
               <span>{PILLAR_LABELS[pillar]}</span>
               <span className={styles.pillarTrack}>
-                <span className={styles.pillarFill} style={{ width: `${Math.max(0, Math.min(100, audit.scores[pillar]))}%` }} />
+                <span className={styles.pillarFill} style={{ width: `${Math.max(0, Math.min(100, audit.scores[pillar]))}%` }} data-fill />
               </span>
               <span className={`${styles.pillarValue} num`}>{audit.scores[pillar]}</span>
             </li>
@@ -167,7 +163,7 @@ export function AuditPicture({ showcase }: { showcase: Showcase }) {
                 <CheckIcon check={fix.key} />
                 {fix.name}
               </span>
-              <ResultGauge result={weakest(fix)} size="sm" />
+              <ResultBar result={weakest(fix)} size="sm" />
               <span className={styles.fixGain}>
                 <span className="num">+{Math.round(fix.points)}</span> points
               </span>
@@ -184,20 +180,22 @@ export function AuditPicture({ showcase }: { showcase: Showcase }) {
           {pillars.map((row) => (
             <li key={row.pillar} className={styles.everyCheckPillar}>
               <PillarIcon pillar={row.pillar} size={14} />
-              <span className={styles.everyCheckGauges}>
-                {row.checks.map((check) => (
-                  <ResultGauge key={check.key} result={check.result} size="sm" hideWord />
-                ))}
-              </span>
+              <ResultSquares checks={row.checks} label={`${PILLAR_LABELS[row.pillar]} checks`} />
             </li>
           ))}
         </ul>
+        <ResultKey className={styles.pictureKey} />
       </div>
     </div>
   );
 }
 
-/** The Rivals tile: you and your rivals by overall score, then pillar by pillar. */
+/** Where each row stands before the picture ranks them: in the order of their names, as a list is kept before anyone ranks it. */
+function byName(rows: readonly LadderRow[]): Map<string, number> {
+  return new Map([...rows].sort((a, b) => a.name.localeCompare(b.name)).map((row, index) => [row.id, index]));
+}
+
+/** The Rivals tile: you and your rivals by overall score, sliding into rank order, then pillar by pillar. */
 export function RivalsPicture({ showcase }: { showcase: Showcase }) {
   const rows = pictureLadder(showcase.rivals.rows);
   const you = rows.find((row) => row.you);
@@ -212,7 +210,7 @@ export function RivalsPicture({ showcase }: { showcase: Showcase }) {
             </span>
           ) : null}
         </p>
-        <RivalLadder rows={rows} />
+        <RivalLadder rows={rows} from={byName(rows)} />
       </div>
       <div className={`${styles.pictureCard} ${styles.pictureGrow}`}>
         <p className={styles.pictureHead}>Pillar by pillar</p>

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import { PLAN_RULES } from '../config/plans.ts';
 import { RIVAL_RULES } from '../config/rivals.ts';
@@ -59,6 +60,22 @@ describe('the product page copy', () => {
     );
     assert.match(content.PROBLEM.items[0]?.answer ?? '', new RegExp(`${CHECKS.length} things`));
     assert.match(content.FEATURES[1]?.lede ?? '', new RegExp(`${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals`));
+  });
+
+  test('no small labels above headings, and the pictures carry no caption: only the sample PDF says it is a sample', () => {
+    const keys = (value: unknown): string[] =>
+      Array.isArray(value) ? value.flatMap(keys) : value && typeof value === 'object' ? Object.entries(value).flatMap(([key, entry]) => [key, ...keys(entry)]) : [];
+    assert.equal(keys(Object.fromEntries(Object.entries(content))).includes('eyebrow'), false);
+    const pictures = readFileSync(new URL('../components/product/Previews.tsx', import.meta.url), 'utf8');
+    assert.doesNotMatch(pictures, /Sample institution|Fictional data/);
+    assert.equal(content.REPORT.note, 'Sample report. Fictional data.');
+  });
+
+  test('two-line titles, the second in a quieter tone', () => {
+    for (const title of [content.FEATURES_HEAD.title, content.SCORE.title, content.STEPS.title, content.REPORT.title, content.PLANS.title, content.CLIENTS.title]) {
+      assert.equal(title.length, 2);
+      for (const line of title) assert.match(line, /\.$/);
+    }
   });
 
   test('the FAQ covers data sources, privacy, public data only and renewal', () => {

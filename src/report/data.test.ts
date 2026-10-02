@@ -3,7 +3,7 @@ import { describe, test } from 'node:test';
 import { regionsFor } from '../demand/regions.ts';
 import { hasDashes } from '../domain/copy.ts';
 import { istDate } from '../domain/dates.ts';
-import { buildReport, changeSince, compactLinks, curlyQuotes, REPORT_LIMITS, reportTexts, sinceWhen } from './data.ts';
+import { buildReport, changeSince, compactLinks, curlyQuotes, questionsLead, REPORT_LIMITS, reportTexts, sinceWhen } from './data.ts';
 import { sampleReportInput as input } from './testing.ts';
 
 // The report snapshot, from Eastgate University's sample Audit (see ./testing.ts).
@@ -90,6 +90,13 @@ describe('what goes into the monthly report', () => {
     );
     assert.equal(data.demand?.questions[1]?.language, 'Asked in Hindi');
     assert.equal(data.demand?.pulledOn, '28 Sep 2026');
+  });
+
+  test('the questions say which languages are shown in English: only those they were asked in', () => {
+    assert.equal(questionsLead(['as', 'en', 'hi']), 'What students ask most, grouped. Hindi and Assamese questions are shown in English.');
+    assert.equal(questionsLead(['en', 'hi']), 'What students ask most, grouped. Hindi questions are shown in English.');
+    assert.equal(questionsLead(['en']), 'What students ask most, grouped.');
+    assert.equal(questionsLead([]), 'What students ask most, grouped.');
   });
 
   test('by program: every program, in name order, each with the one fix that would help it most', async () => {

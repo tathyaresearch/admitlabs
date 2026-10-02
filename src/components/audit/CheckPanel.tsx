@@ -14,7 +14,7 @@ import { SourceLine } from '@/components/ui/Data';
 import { Icon } from '@/components/ui/Icon';
 import { CheckIcon } from '@/components/ui/Marks';
 import { SidePanel } from '@/components/ui/Overlay';
-import { Difficulty, PointsValue, ResultGauge } from '@/components/ui/Results';
+import { Difficulty, ResultBar } from '@/components/ui/Results';
 import { formatDate, joinNames } from '@/domain/format';
 import { PILLAR_LABELS, RESULT_LABELS } from '@/domain/types';
 import { PlaceholderDetail } from './Placeholders';
@@ -70,10 +70,9 @@ function PanelBody({ row, added }: { row: AreaRow; added: Readonly<Record<string
           {lines.map((line) => (
             <li key={line.key} className={styles.panelLine}>
               {line.programs.length ? <span className={styles.panelLineName}>{joinNames(line.programs)}</span> : null}
-              <ResultGauge result={line.result} />
               <span className={styles.points}>
-                <PointsValue kind="fraction" points={line.points} max={line.maxPoints} unit />
-                {line.programs.length > 1 ? ' each' : null}
+                <ResultBar result={line.result} points={line.points} max={line.maxPoints} />
+                {line.programs.length > 1 ? <span className={styles.each}>each</span> : null}
               </span>
               {line.previousResult ? <span className={styles.was}>Was {RESULT_LABELS[line.previousResult]} at the last Audit</span> : null}
             </li>

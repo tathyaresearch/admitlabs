@@ -1,907 +1,693 @@
 /*
-  The product page (spec section 15). A composed page, not a dashboard: mostly black, with ivory
-  sections at three moments (the problem, how it works, the final call). Contrast comes from scale
-  and from black and ivory surface flips only. Monochrome, Bricolage for words and Inter for
-  numbers, no gradients or glow.
-  The page sets data-theme itself, so it looks the same whatever the device setting.
+  The product page, /drishti (spec section 15), in the website's Spotlight style (2026-10-02): the
+  website's header, footer, frame, buttons and light (src/components/site), with the product itself
+  for pictures (./Previews.tsx, styled in ./pictures.module.css). Black with soft light from above,
+  ivory at the moments that matter. Gradients as on the website: monochrome and subtle only.
+  Bricolage for words, Inter for numbers that stand alone.
+
+  Motion is calm and CSS only, but for the score's count (./CountUp.tsx). The settled page is the
+  default, so reduced motion, browsers without scroll-linked animation and a page with no script
+  all show it finished.
 */
 
-.page {
-  --product-max: 1200px;
-  --section-pad: clamp(5rem, 3.25rem + 5.5vw, 9rem);
-  /* How far the hero preview reaches down into the ivory section below it. */
-  --overlap: clamp(5rem, 2rem + 11vw, 13rem);
-  min-height: 100dvh;
-  background: var(--surface);
-  color: var(--text);
-  overflow-x: clip;
-}
-
-.container {
-  width: min(100% - 2 * var(--gutter), var(--product-max));
-  margin-inline: auto;
-}
-
-.section {
-  padding-block: var(--section-pad);
-  background: var(--surface);
-  color: var(--text);
-}
-
-/* Two dark sections in a row get a hairline between them. */
-.ruled {
-  border-top: 1px solid var(--line);
-}
-
-.head {
-  display: grid;
-  gap: var(--space-4);
-  max-width: 46rem;
-  margin-bottom: clamp(2.5rem, 1.75rem + 2.5vw, 4.5rem);
-}
-
-.headCenter {
-  margin-inline: auto;
-  text-align: center;
-  justify-items: center;
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  font: var(--type-caption-strong);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.title {
-  font-size: clamp(2rem, 1.3rem + 2.8vw, 3.5rem);
-  font-weight: var(--weight-heading);
-  line-height: 1.04;
-  letter-spacing: -0.03em;
-  text-wrap: balance;
-}
-
-.lede {
-  max-width: 40rem;
-  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.1875rem);
-  line-height: 1.55;
-  color: var(--text-muted);
-  text-wrap: pretty;
-}
-
-/* Header -------------------------------------------------------------------------------------- */
-
-.header {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-nav);
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-
-.headerInner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-6);
-  height: 3.5rem;
-}
-
-.homeLink {
-  color: var(--text);
-  text-decoration: none;
-  border-radius: var(--radius-xs);
-}
-
-.nav {
-  display: none;
-}
-
-@media (min-width: 64rem) {
-  .nav {
-    display: flex;
-    gap: var(--space-8);
-    margin-left: auto;
-  }
-}
-
-.navLink {
-  font: var(--type-label);
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: color var(--duration-fast) var(--ease-out);
-}
-
-.navLink:hover {
-  color: var(--text);
-}
-
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-/* Two classes, so this wins over the button's own display whichever order a build loads the two
-   style sheets in. */
-.headerActions .signIn {
-  display: none;
-}
-
-@media (min-width: 40rem) {
-  .headerActions .signIn {
-    display: inline-flex;
-  }
-}
-
-/* Hero ---------------------------------------------------------------------------------------- */
+/* The hero: the promise under the light, then Home itself, tipped back and settling flat as the
+   page moves, fading into the dark below. --------------------------------------------------- */
 
 .hero {
-  padding-top: clamp(3.5rem, 2rem + 6vw, 7.5rem);
-  /* The preview at the bottom reaches into the next section instead. */
-  padding-bottom: 0;
+  --rule-top: var(--header-h);
+  --rule-bottom: 0px;
+  overflow: clip;
+  margin-top: calc(-1 * var(--header-h));
+  padding-top: calc(var(--header-h) + clamp(4rem, 2.5rem + 6vw, 8rem));
+  background: var(--grain-dark), var(--black);
+}
+
+.beam {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(80% 30% at 50% -4%, rgba(242, 232, 214, 0.15), rgba(242, 232, 214, 0.045) 48%, transparent 74%),
+    radial-gradient(120% 20% at 50% 0%, rgba(242, 232, 214, 0.05), transparent 70%);
+}
+
+.dots {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(242, 232, 214, 0.16) 0.8px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(70% 30% at 50% 18%, #000 0%, transparent 75%);
+  mask-image: radial-gradient(70% 30% at 50% 18%, #000 0%, transparent 75%);
+  opacity: 0.55;
+}
+
+.heroContent {
+  display: grid;
+  justify-items: center;
   text-align: center;
 }
 
-.heroInner {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-6);
+.lockup {
+  color: var(--ivory);
 }
 
-.proof {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
-  border: 1px solid var(--line-medium);
-  border-radius: var(--radius-full);
-  font: var(--type-caption);
-  color: var(--text-muted);
-  text-align: left;
-}
-
-.proofMark {
-  flex: none;
-  color: var(--text);
-}
-
+/* The website's headline finish, a size down from the home page's: this page's promise sits under
+   the product's name. */
 .heroTitle {
-  max-width: 17ch;
-  font-size: clamp(2.6rem, 1.25rem + 5.6vw, 5.75rem);
+  max-width: 15ch;
+  margin-top: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
+  font-size: clamp(2.4rem, 1.35rem + 4.4vw, 4.6rem);
   font-weight: var(--weight-heading);
   line-height: 1;
-  letter-spacing: -0.038em;
+  letter-spacing: -0.045em;
   text-wrap: balance;
+  background: var(--title-fall);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-.heroTitle mark {
-  padding-inline: 0.1em;
-  border-radius: 0.08em;
+/* The last words in an ivory block: Drishti's own mark. */
+.highlight {
+  display: inline-block;
+  margin-top: 0.06em;
+  padding: 0 0.14em 0.06em;
+  border-radius: 0.1em;
+  background: linear-gradient(180deg, #f8f1e4 0%, #e6dbc6 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 18px 40px -18px rgba(0, 0, 0, 0.8);
+  color: var(--black);
 }
 
 .heroLede {
   max-width: 36rem;
-  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.3125rem);
+  margin-top: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
+  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.15625rem);
+  line-height: 1.55;
+  color: var(--slate);
+}
+
+.heroLede strong {
+  font-weight: var(--weight-medium);
+  color: var(--ivory);
+}
+
+.heroActions {
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: clamp(1.75rem, 1.4rem + 1vw, 2.25rem);
+}
+
+.assurances {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  max-width: 36rem;
+  margin-top: clamp(1.5rem, 1.2rem + 1vw, 2.25rem);
+  list-style: none;
+  font-size: 0.84375rem;
   line-height: 1.5;
+  color: var(--slate);
+}
+
+.assurances svg {
+  display: inline-block;
+  margin-right: 0.375rem;
+  vertical-align: -0.1875rem;
+  color: var(--ivory);
+}
+
+.heroStage {
+  position: relative;
+  margin-top: clamp(3.5rem, 2rem + 5vw, 6.5rem);
+  perspective: 1800px;
+}
+
+/* A soft pool of light where the window's top edge meets the dark. */
+.heroStage::before {
+  content: '';
+  position: absolute;
+  inset: -5rem 6% auto;
+  z-index: -1;
+  height: 14rem;
+  background: radial-gradient(50% 55% at 50% 60%, rgba(242, 232, 214, 0.08), transparent 70%);
+}
+
+.tilt {
+  transform-origin: 50% 0;
+}
+
+@media (min-width: 40rem) {
+  .heroActions {
+    display: flex;
+    justify-content: center;
+    width: auto;
+  }
+}
+
+@media (min-width: 64rem) {
+  .beam {
+    background:
+      radial-gradient(42% 40% at 50% -6%, rgba(242, 232, 214, 0.16), rgba(242, 232, 214, 0.05) 46%, transparent 72%),
+      radial-gradient(80% 30% at 50% 0%, rgba(242, 232, 214, 0.05), transparent 70%);
+  }
+
+  .assurances {
+    display: flex;
+    gap: 0;
+    max-width: none;
+  }
+
+  .assurances li + li {
+    margin-left: var(--space-5);
+    padding-left: var(--space-5);
+    border-left: 1px solid var(--hair-2);
+  }
+}
+
+/* The problem, on ivory: what most teams are left guessing, and what Drishti answers. -------- */
+
+.problem {
+  padding-block: var(--section-pad);
+  background: linear-gradient(180deg, var(--ivory) 0%, #efe4d0 100%);
+  color: var(--black);
+}
+
+.problemHead {
+  display: grid;
+  gap: var(--space-5);
+  max-width: 46rem;
+}
+
+.problemTitle {
+  font-size: clamp(2.375rem, 1.4rem + 4vw, 4.25rem);
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.042em;
+  text-wrap: balance;
+}
+
+.problemLede {
+  max-width: 38rem;
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  line-height: 1.55;
   color: var(--text-muted);
   text-wrap: pretty;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-}
-
-.trust {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-.stage {
-  position: relative;
-  z-index: 1;
-  margin-top: clamp(3rem, 2rem + 4vw, 5.5rem);
-  margin-bottom: calc(-1 * var(--overlap));
-  text-align: left;
-}
-
-/* The section under the hero makes room for the preview reaching into it. */
-.underStage {
-  padding-top: calc(var(--overlap) + var(--section-pad));
-}
-
-/* The hero picture: Home as the dashboard shows it, in a plain app window ----------------------- */
-
-.window {
-  display: grid;
-  gap: var(--space-4);
-  max-width: 75rem;
-  margin-inline: auto;
-}
-
-.windowFrame {
-  container-type: inline-size;
-  height: clamp(28rem, 16rem + 34vw, 46rem);
-  overflow: hidden;
-  border: 1px solid var(--line-raised);
-  border-radius: 1rem;
-  background: var(--surface);
-  color: var(--text);
-}
-
-.windowScreen {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: stretch;
-  height: 100%;
-  text-align: left;
-  pointer-events: none;
-  user-select: none;
-}
-
-.windowSidebar {
-  display: none;
-}
-
-.windowPanel {
-  --surface: var(--surface-panel);
-  min-width: 0;
-  padding: var(--space-6) var(--space-4);
-  background: var(--surface);
-}
-
-@container (min-width: 56rem) {
-  .windowScreen {
-    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-  }
-
-  .windowSidebar {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
-    padding: var(--space-3);
-  }
-
-  .windowSidebar > :last-child {
-    margin-top: auto;
-  }
-
-  .windowPanel {
-    margin: var(--space-2) var(--space-2) 0 0;
-    padding: var(--space-10);
-    border-radius: 0.75rem 0.75rem 0 0;
-  }
-}
-
-.windowCaption {
-  font: var(--type-caption);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-/* The problem (ivory) --------------------------------------------------------------------------- */
-
-.problemGrid {
-  display: grid;
-  gap: var(--space-10);
-}
-
-@media (min-width: 64rem) {
-  .problemGrid {
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-    gap: var(--space-16);
-    align-items: start;
-  }
-
-  .problemGrid .head {
-    position: sticky;
-    top: calc(3.5rem + var(--space-10));
-    margin-bottom: 0;
-  }
-}
-
 .guesses {
-  border-top: 1px solid var(--text);
+  margin-top: clamp(3rem, 2rem + 3vw, 5rem);
+  list-style: none;
+  border-bottom: 1px solid var(--hair-ink-2);
 }
 
 .guess {
   display: grid;
-  gap: var(--space-2);
-  padding-block: var(--space-6);
-  border-bottom: 1px solid var(--line-medium);
-}
-
-@media (min-width: 48rem) {
-  .guess {
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    gap: var(--space-8);
-    align-items: baseline;
-  }
+  gap: var(--space-3);
+  padding-block: clamp(1.25rem, 0.9rem + 1.2vw, 2rem);
+  border-top: 1px solid var(--hair-ink-2);
 }
 
 .guessText {
-  font-size: clamp(1.375rem, 1.2rem + 0.7vw, 1.75rem);
+  font-size: clamp(1.75rem, 1.15rem + 2.4vw, 3.25rem);
   font-weight: var(--weight-heading);
-  line-height: 1.15;
-  letter-spacing: -0.025em;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
 }
 
-.answer {
-  font-size: var(--size-lead);
+.guessAnswer {
+  max-width: 32rem;
+  font-size: 1.0625rem;
   line-height: 1.55;
+  color: var(--text-muted);
+  text-wrap: pretty;
 }
 
-/* What Drishti does: one bento grid. The three features come first and largest: ivory tiles with
-   their icon, their place among the three, and a picture of the dashboard. The score, the report
-   and the rules follow as quieter graphite tiles. */
-
-.bento {
-  --tile-pad: clamp(1.375rem, 1rem + 1.2vw, 2rem);
-  display: grid;
-  gap: var(--space-4);
-}
-
-/* Two across: each feature and the score keep a full row, the report and the rules share one. */
-@media (min-width: 48rem) {
-  .bento {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .feature,
-  .tileScore {
-    grid-column: 1 / -1;
-  }
-}
-
-/* Six columns: the Audit across the top, Rivals and Demand side by side, then three small tiles. */
 @media (min-width: 64rem) {
-  .bento {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-
-  .feature {
-    grid-column: span 3;
-  }
-
-  .featureWide {
-    grid-column: 1 / -1;
-  }
-
-  .tile {
-    grid-column: span 2;
+  .guess {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: baseline;
+    column-gap: var(--space-12);
   }
 }
 
-/* A feature: ivory, its words, then its picture filling the rest of the tile. */
-.feature {
-  container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  min-width: 0;
-  padding: var(--tile-pad);
-  border-radius: 1.375rem;
-  background: var(--surface);
+/* The three features: three questions, each laid out its own way around the product's answer. -- */
+
+.features {
+  --rule-top: 0px;
+  padding-block: var(--section-pad);
+  background: radial-gradient(50% 35% at 10% 0%, rgba(242, 232, 214, 0.045), transparent 70%), var(--black);
 }
 
-/* The Audit across the top: its words on the left, its picture on the right, once both have room. */
-@media (min-width: 80rem) {
-  .featureWide {
-    display: grid;
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.25fr);
-    align-items: center;
-    gap: var(--space-8);
-  }
+.featuresTitle {
+  max-width: 22ch;
 }
 
-.featureText {
+.chapter {
+  display: grid;
+  gap: var(--space-8);
+  margin-top: clamp(3.5rem, 2rem + 5vw, 7rem);
+}
+
+.words {
   display: grid;
   align-content: start;
   gap: var(--space-4);
-  max-width: 34rem;
+  max-width: 32rem;
 }
 
+/* The question, with the feature's name on the same line at the far side: no label above it. */
 .featureHead {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+  justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: var(--space-1);
 }
 
-.featureIcon {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 2.875rem;
-  height: 2.875rem;
-  border-radius: var(--radius-lg);
-  background: var(--surface-inverse);
-  color: var(--text-inverse);
-}
-
-.featureNames {
-  display: grid;
-  gap: 2px;
-}
-
-.featurePlace {
-  font: var(--type-caption-strong);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+.question {
+  font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .featureName {
-  font-size: var(--size-section);
-  font-weight: var(--weight-bold);
-  line-height: 1.2;
-  letter-spacing: var(--tracking-section);
-}
-
-.featureTitle {
-  font-size: clamp(1.75rem, 1.45rem + 1.1vw, 2.375rem);
+  flex: none;
+  font-size: 0.875rem;
   font-weight: var(--weight-heading);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  text-wrap: balance;
+  color: var(--slate);
 }
 
 .featureLede {
-  font-size: var(--size-lead);
+  font-size: 1.0625rem;
   line-height: 1.6;
-  color: var(--text-muted);
+  color: var(--slate);
   text-wrap: pretty;
 }
 
-/* A piece of the dashboard on the ivory tile: the dark page panel, with the app's own cards on it.
-   Bars by month stand a little taller here than on the dashboard's cards. */
-.picture {
-  --bars-min: 6rem;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-4);
-  border-radius: 1rem;
-  background: var(--surface-panel);
-  pointer-events: none;
-  user-select: none;
-}
-
-.pictureCard {
+/* What each picture stands on: a dark stage with light and grain, or ivory. The pictures size
+   themselves to the stage. */
+.pictureStage {
+  position: relative;
+  isolation: isolate;
   container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--surface-raised);
+  overflow: clip;
+  padding: clamp(0.75rem, 0.3rem + 2vw, 2.25rem);
+  border-radius: 1.5rem;
+  transition:
+    border-color var(--duration-slow) var(--ease-out),
+    box-shadow var(--duration-slow) var(--ease-out);
 }
 
-/* In a row of two features, this card takes the height to spare, so both pictures end together. */
-.pictureGrow {
-  flex: 1;
+.darkStage {
+  border: 1px solid var(--hair);
+  background:
+    var(--grain-dark),
+    radial-gradient(70% 60% at 15% 0%, rgba(242, 232, 214, 0.09), transparent 60%),
+    linear-gradient(180deg, #17171b 0%, #0b0b0e 100%);
 }
 
-.pictureHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-1) var(--space-3);
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
+.darkStage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: linear-gradient(90deg, var(--hair) 1px, transparent 1px), linear-gradient(180deg, var(--hair) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(80% 80% at 20% 10%, #000, transparent 80%);
+  mask-image: radial-gradient(80% 80% at 20% 10%, #000, transparent 80%);
+  opacity: 0.6;
 }
 
-.pictureHead :global(.num) {
-  color: var(--text);
+/* Under the pointer a stage's edge catches a little more light. */
+.darkStage:hover {
+  border-color: var(--hair-2);
 }
 
-.pictureHeadNext {
-  margin-top: var(--space-2);
+.ivoryStage {
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, var(--ivory) 0%, #e9dfcb 100%);
+  box-shadow:
+    0 50px 100px -50px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
-.pictureRank {
-  font-size: var(--size-body);
-  font-weight: var(--weight-heading);
+.ivoryStage:hover {
+  box-shadow:
+    0 56px 110px -48px rgba(0, 0, 0, 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-.pictureTitle {
-  font: var(--type-card);
-  font-size: 1rem;
-  letter-spacing: var(--tracking-section);
+/* The rivals' rows pass over each other as they slide into rank order, so each carries the card's
+   own colour, and yours stays on top. Settled, they look as they always do. */
+.rivals [data-slide] {
+  position: relative;
+  background-color: var(--surface-raised);
 }
 
-.pictureMeta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font: var(--type-caption);
-  color: var(--text-muted);
+.rivals [data-slide='you'] {
+  z-index: 1;
+  background-color: var(--surface-nested);
 }
 
-/* The Audit picture: the score and its pillars beside the fixes and every check, once there is room. */
-@container (min-width: 40rem) {
-  .auditPicture {
-    display: grid;
-    grid-template-columns: minmax(12rem, 0.62fr) minmax(0, 1fr);
+@media (min-width: 64rem) {
+  .audit {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    align-items: center;
+    column-gap: var(--space-16);
+  }
+
+  .rivals {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: center;
+    column-gap: var(--space-16);
+  }
+
+  .rivals .words {
+    order: 2;
+  }
+
+  /* Demand closes the three in the middle: its words centred over the picture, which stands alone
+     on a narrower stage. */
+  .demand {
+    justify-items: center;
+  }
+
+  .demand .words {
+    justify-items: center;
+    max-width: 38rem;
+    text-align: center;
+  }
+
+  .demand .featureHead {
+    justify-content: center;
+    gap: var(--space-5);
+  }
+
+  .demand .pictureStage {
+    width: min(100%, 46rem);
   }
 }
 
-/* The score card spreads its parts over the height it shares with the fixes beside it. */
-.scoreCard {
-  justify-content: space-between;
+/* The score: the words held on the left, the three pillars and their checks on the right, then
+   what each result earns. ------------------------------------------------------------------- */
+
+.score {
+  padding-block: var(--section-pad);
+  border-top: 1px solid var(--hair);
+  background: radial-gradient(45% 40% at 100% 0%, rgba(242, 232, 214, 0.045), transparent 70%), var(--black);
 }
 
-.scoreGauge {
-  container-type: inline-size;
-  display: flex;
-  justify-content: center;
-  --gauge-max: 10.5rem;
-}
-
-.scoreCardMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
-  font-size: var(--size-caption);
-}
-
-.pillarBars {
+.scoreGrid {
   display: grid;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--line-raised);
+  gap: var(--space-10);
 }
 
-.pillarBar {
-  display: grid;
-  grid-template-columns: 1rem minmax(0, 1fr) minmax(2.5rem, 34%) 1.5rem;
-  align-items: center;
-  gap: var(--space-2);
-  font: var(--type-label);
-}
-
-.pillarTrack {
-  display: block;
-  height: 4px;
-  border-radius: var(--radius-full);
-  background: var(--chart-track);
-  overflow: hidden;
-}
-
-.pillarFill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--text);
-}
-
-.pillarValue {
-  font-weight: var(--weight-heading);
-  text-align: right;
-}
-
-/* A narrow card drops the bars: the scores say the same. */
-@container (max-width: 12rem) {
-  .pillarBar {
-    grid-template-columns: 1rem minmax(0, 1fr) 1.5rem;
-  }
-
-  .pillarTrack {
-    display: none;
-  }
-}
-
-.fixList {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.fixRow {
-  display: grid;
-  grid-template-columns: 1rem minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 2.75rem;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--surface-nested);
-}
-
-/* A narrow card (a phone) keeps the result and leaves out the points. */
-@container (max-width: 20rem) {
-  .fixRow {
-    grid-template-columns: 1rem minmax(0, 1fr) auto;
-  }
-
-  .fixRow > :nth-child(4) {
-    display: none;
-  }
-}
-
-.fixNumber {
-  font: var(--type-num-caption);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.fixName {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  font: var(--type-label);
-  font-weight: var(--weight-heading);
-  overflow-wrap: anywhere;
-}
-
-.fixGain {
-  font: var(--type-caption);
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.fixGain :global(.num) {
-  color: var(--text);
-  font-weight: var(--weight-heading);
-}
-
-.everyCheck {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-5);
-}
-
-.everyCheckPillar {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--text-muted);
-}
-
-.everyCheckGauges {
-  display: inline-flex;
-  gap: 4px;
-  color: var(--text);
-}
-
-.risingList {
-  display: grid;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--line-raised);
-}
-
-.risingRow {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-.risingRow :global(.num) {
-  color: var(--text);
-}
-
-/* The score, the report and the rules: quieter graphite tiles, smaller words. */
-.tile {
-  container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  min-width: 0;
-  padding: var(--tile-pad);
-  overflow: hidden;
-  border: 1px solid var(--line-raised);
-  border-radius: 1.125rem;
-  background: var(--surface-raised);
-}
-
-.tileText {
-  display: grid;
-  gap: var(--space-3);
-  max-width: 34rem;
-}
-
-.tileTitle {
-  font-size: 1.375rem;
-  font-weight: var(--weight-heading);
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
-}
-
-.tileLede {
-  font-size: var(--size-body);
-  line-height: 1.55;
-  color: var(--text-muted);
-  text-wrap: pretty;
-}
-
-.tileLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  width: fit-content;
-  font: var(--type-strong);
-  color: var(--text);
-  text-underline-offset: 0.25em;
-}
-
-/* The score tile: each pillar on a line, then what each result earns. */
-.scorePillars {
-  display: grid;
-}
-
-.scorePillar {
-  display: grid;
-  grid-template-columns: 1rem minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-3);
-  padding-block: var(--space-2);
-  border-top: 1px solid var(--line-raised);
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-.scorePillar svg {
-  color: var(--text);
-}
-
-.scorePillarName {
-  font-weight: var(--weight-heading);
-  color: var(--text);
-}
-
-.scorePillarChecks {
-  white-space: nowrap;
-}
-
-.scorePillarChecks :global(.num) {
-  color: var(--text);
-  font-weight: var(--weight-heading);
-}
-
-.resultsKey {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3) var(--space-4);
-}
-
-@container (min-width: 36rem) {
-  .resultsKey {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.resultsKeyItem {
+.scoreHead {
   display: grid;
   align-content: start;
-  gap: var(--space-1);
+  gap: var(--space-5);
 }
 
-.resultsKeyShare {
-  font: var(--type-caption);
-  color: var(--text-muted);
+.pillars {
+  list-style: none;
+  border-top: 1px solid var(--hair-2);
 }
 
-/* The report tile: the words, then a page of the sample report filling the rest, cut by the tile's edge. */
-.paperCrop {
-  flex: 1 1 0px;
-  min-height: 13rem;
-  margin: 0 calc(-1 * var(--space-2)) calc(-1 * var(--tile-pad));
-  overflow: hidden;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* The rules tile: the three rules share the height under the title, one band each. */
-.trustList {
+.pillar {
   display: grid;
-  flex: 1 1 auto;
-  grid-auto-rows: 1fr;
-}
-
-.trustPoint {
-  display: grid;
-  grid-template-columns: 1rem minmax(0, 1fr);
-  align-content: center;
   gap: var(--space-3);
-  padding-block: var(--space-4);
-  border-top: 1px solid var(--line-raised);
-  font-size: var(--size-lead);
+  padding-block: var(--space-6);
+  border-bottom: 1px solid var(--hair-2);
+}
+
+.pillarHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.pillarHead svg {
+  flex: none;
+  color: var(--ivory);
+}
+
+.pillarName {
+  font-size: clamp(1.625rem, 1.3rem + 1.2vw, 2.25rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.pillarCount {
+  margin-left: auto;
+  font-size: 0.9375rem;
+  color: var(--slate);
+  white-space: nowrap;
+}
+
+.pillarCount :global(.num) {
+  font-weight: var(--weight-heading);
+  color: var(--ivory);
+}
+
+.pillarQuestion {
+  font-size: 1.0625rem;
   line-height: 1.5;
+  color: var(--grey-200);
 }
 
-.trustPoint svg {
-  margin-top: 0.2em;
+/* The pillar's checks, each by name. */
+.pillarChecks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  list-style: none;
 }
 
-.bentoCaption {
-  margin-top: var(--space-5);
-  font: var(--type-caption);
-  color: var(--text-muted);
-  text-align: center;
+.pillarChecks li {
+  padding: 0.3125rem 0.6875rem;
+  border: 1px solid var(--hair-2);
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: var(--slate);
 }
 
-/* Plan points (./Offer.tsx) */
-
-.points {
+.resultsRow {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-6);
+  margin-top: clamp(3rem, 2rem + 3vw, 5rem);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--hair-2);
 }
 
-.point {
+.resultsTitle {
+  font-size: 1.0625rem;
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.01em;
+}
+
+.results {
   display: grid;
-  grid-template-columns: 1.125rem minmax(0, 1fr);
-  gap: var(--space-3);
-  align-items: start;
-  font-size: var(--size-lead);
-  line-height: 1.5;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-4);
+  list-style: none;
 }
 
-.point svg {
-  margin-top: 0.2em;
-}
-
-/* How it works ------------------------------------------------------------------------------- */
-
-.steps {
+.result {
   display: grid;
-  gap: var(--space-8);
-  counter-reset: step;
+  align-content: start;
+  gap: var(--space-2);
+}
+
+.resultShare {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--slate);
 }
 
 @media (min-width: 48rem) {
-  .steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .results {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 64rem) {
-  .steps {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-6);
+  .scoreGrid,
+  .resultsRow {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    column-gap: var(--space-16);
+    align-items: start;
+  }
+
+  .scoreHead {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-10));
   }
 }
 
-.step {
-  display: grid;
-  gap: var(--space-3);
-  align-content: start;
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--line-medium);
+/* The rules, as one band with a cross at each corner: the promise, then what it means. --------- */
+
+.trustSection {
+  padding-bottom: var(--section-pad);
+  background: var(--black);
 }
 
-.stepNumber {
-  font: var(--weight-heading) var(--size-score-medium) / 0.9 var(--font-numeric);
-  letter-spacing: var(--tracking-num-hero);
-  margin-bottom: var(--space-3);
+.trust {
+  position: relative;
+  display: grid;
+  gap: var(--space-8);
+  padding: clamp(1.75rem, 1.2rem + 2vw, 3rem);
+  border: 1px solid var(--hair-2);
+  background:
+    radial-gradient(55% 120% at 0% 50%, rgba(242, 232, 214, 0.06), transparent 70%),
+    linear-gradient(180deg, #121215 0%, #0c0c0f 100%);
+  transition: border-color var(--duration-slow) var(--ease-out);
+}
+
+.trust:hover {
+  border-color: rgba(242, 232, 214, 0.24);
+}
+
+.trustTitle {
+  font-size: clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem);
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  background: var(--title-fall);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.trustName {
+  margin-top: var(--space-3);
+  font-size: 0.9375rem;
+  font-weight: var(--weight-medium);
+  color: var(--slate);
+}
+
+.trustPoints {
+  display: grid;
+  list-style: none;
+}
+
+.trustPoints li {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+  border-top: 1px solid var(--hair);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--grey-200);
+}
+
+.trustPoints li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.trustPoints li:last-child {
+  padding-bottom: 0;
+}
+
+.trustPoints svg {
+  margin-top: 0.25em;
+  color: var(--ivory);
+}
+
+@media (min-width: 48rem) {
+  .trust {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    align-items: center;
+    column-gap: var(--space-12);
+  }
+}
+
+/* How it works: four steps on a line that fills as the page moves, down the side on a phone and
+   across on a wide screen. ------------------------------------------------------------------- */
+
+.steps {
+  padding-block: var(--section-pad);
+  border-top: 1px solid var(--hair);
+  background: radial-gradient(45% 40% at 0% 30%, rgba(242, 232, 214, 0.04), transparent 70%), var(--black);
+}
+
+.stepList {
+  position: relative;
+  display: grid;
+  margin-top: clamp(3rem, 2rem + 3vw, 5rem);
+  padding-left: 1.75rem;
+  list-style: none;
+}
+
+.stepList::before,
+.stepList::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.stepList::before {
+  background: var(--hair-2);
+}
+
+.stepList::after {
+  background: linear-gradient(180deg, var(--ivory), rgba(242, 232, 214, 0.5));
+  transform-origin: top;
+}
+
+.step {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding-block: var(--space-6);
+  border-top: 1px solid var(--hair);
+}
+
+.step:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* Each step's mark on the line. */
+.step::before {
+  content: '';
+  position: absolute;
+  left: calc(-1.75rem - 3px);
+  top: calc(var(--space-6) + 0.55rem);
+  width: 7px;
+  height: 7px;
+  background: var(--ivory);
+}
+
+.step:first-child::before {
+  top: 0.55rem;
 }
 
 .stepTitle {
-  font-size: var(--size-section);
+  font-size: clamp(1.375rem, 1.2rem + 0.7vw, 1.75rem);
   font-weight: var(--weight-heading);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
 }
 
 .stepText {
-  font: var(--type-body);
-  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--slate);
 }
 
 /* What "Drishti checks everything" names, as a row of marks under it. */
@@ -909,62 +695,124 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin: var(--space-1) 0 0;
-  padding: 0;
+  margin-top: var(--space-2);
   list-style: none;
-  color: var(--text-muted);
+  color: var(--slate);
 }
 
 .stepMarks li {
   display: flex;
 }
 
-/* The sample report ----------------------------------------------------------------------------- */
+@media (min-width: 64rem) {
+  .stepList {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: var(--space-8);
+    padding-top: 2.5rem;
+    padding-left: 0;
+  }
+
+  .stepList::before,
+  .stepList::after {
+    top: 3px;
+    right: 0;
+    bottom: auto;
+    width: auto;
+    height: 1px;
+  }
+
+  .stepList::after {
+    background: linear-gradient(90deg, var(--ivory), rgba(242, 232, 214, 0.5));
+    transform-origin: left;
+  }
+
+  .step,
+  .step:first-child {
+    padding-block: 0;
+    border-top: 0;
+  }
+
+  .step::before,
+  .step:first-child::before {
+    left: 0;
+    top: -2.5rem;
+  }
+}
+
+/* The sample report, on ivory: the words and the download, and three of its pages, fanned out. - */
+
+.report {
+  overflow: clip;
+  padding-block: var(--section-pad);
+  background:
+    radial-gradient(55% 55% at 78% 45%, rgba(255, 252, 245, 0.55), transparent 70%),
+    linear-gradient(180deg, #efe4d0 0%, var(--ivory) 100%);
+  color: var(--black);
+}
 
 .reportGrid {
   display: grid;
   gap: var(--space-12);
   align-items: center;
+  margin-top: clamp(2.5rem, 1.75rem + 2.5vw, 4rem);
+}
+
+.reportHead {
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+  max-width: 34rem;
+}
+
+.download {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-3);
+}
+
+.sampleNote {
+  font-size: 0.8125rem;
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
 }
 
 @media (min-width: 64rem) {
   .reportGrid {
-    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-    gap: var(--space-16);
-  }
-
-  .reportGrid .head {
-    margin-bottom: 0;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    column-gap: var(--space-16);
   }
 }
 
-.download {
-  display: grid;
-  justify-items: start;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-}
+/* Plans: Free and Paid side by side, Paid on ivory. Each as tall as its own points: no card is
+   stretched to match the other. ------------------------------------------------------------- */
 
-.sampleNote {
-  display: inline-block;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-xs);
-  font: var(--type-caption-strong);
-}
-
-/* Plans ------------------------------------------------------------------------------------- */
-
-/* Each plan as tall as its own points: no card is stretched to match the other. */
 .plans {
+  padding-block: var(--section-pad);
+  background: radial-gradient(50% 35% at 50% 0%, rgba(242, 232, 214, 0.06), transparent 70%), var(--black);
+}
+
+.plansHead {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-5);
+  max-width: 40rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.planList {
   display: grid;
   align-items: start;
   gap: var(--space-4);
   max-width: 64rem;
-  margin-inline: auto;
+  margin: clamp(3rem, 2rem + 3vw, 4.5rem) auto 0;
+  list-style: none;
 }
 
 @media (min-width: 56rem) {
-  .plans {
+  .planList {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -974,9 +822,32 @@
   flex-direction: column;
   gap: var(--space-6);
   padding: clamp(1.5rem, 1rem + 2vw, 2.75rem);
-  border: 1px solid var(--line-raised);
+  border: 1px solid var(--hair-2);
   border-radius: 1.25rem;
-  background: var(--surface-raised);
+  background:
+    radial-gradient(70% 50% at 0% 0%, rgba(242, 232, 214, 0.05), transparent 70%),
+    linear-gradient(180deg, #141418 0%, #0c0c0f 100%);
+  color: var(--text);
+  transition:
+    border-color var(--duration-slow) var(--ease-out),
+    box-shadow var(--duration-slow) var(--ease-out),
+    translate var(--duration-slow) var(--ease-out);
+}
+
+.plan:hover {
+  border-color: rgba(242, 232, 214, 0.26);
+}
+
+.planPaid {
+  border-color: transparent;
+  background: linear-gradient(180deg, var(--ivory) 0%, #e9dfcb 100%);
+  box-shadow:
+    0 50px 100px -50px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.planPaid:hover {
+  border-color: transparent;
 }
 
 .planTop {
@@ -985,9 +856,8 @@
 }
 
 .planName {
-  font: var(--type-caption-strong);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 1.0625rem;
+  font-weight: var(--weight-heading);
   color: var(--text-muted);
 }
 
@@ -1006,13 +876,35 @@
 }
 
 .priceTerm {
-  font-size: var(--size-lead);
+  font-size: 1.0625rem;
   color: var(--text-muted);
 }
 
 .planLine {
-  font-size: var(--size-section);
+  font-size: 1.25rem;
   font-weight: var(--weight-heading);
+  letter-spacing: -0.015em;
+}
+
+.points {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--line-medium);
+  list-style: none;
+}
+
+.point {
+  display: grid;
+  grid-template-columns: 1.125rem minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.point svg {
+  margin-top: 0.2em;
 }
 
 .planFoot {
@@ -1022,23 +914,25 @@
 }
 
 .planNote {
-  font: var(--type-caption);
+  font-size: 0.8125rem;
+  line-height: 1.45;
   color: var(--text-muted);
 }
 
 .fine {
   max-width: 44rem;
   margin: var(--space-6) auto 0;
-  font: var(--type-small);
-  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--slate);
   text-align: center;
 }
 
 .compare {
   max-width: 64rem;
   margin: var(--space-10) auto 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--hair-2);
+  border-bottom: 1px solid var(--hair-2);
 }
 
 .compareSummary {
@@ -1047,9 +941,11 @@
   justify-content: center;
   gap: var(--space-2);
   padding: var(--space-5) 0;
-  font: var(--type-strong);
-  cursor: pointer;
+  font-size: 1rem;
+  font-weight: var(--weight-heading);
+  color: var(--ivory);
   list-style: none;
+  cursor: pointer;
 }
 
 .compareSummary::-webkit-details-marker {
@@ -1057,11 +953,19 @@
 }
 
 .compareSummary svg {
-  transition: transform var(--duration) var(--ease-out);
+  color: var(--slate);
+  transition:
+    rotate var(--duration) var(--ease-out),
+    color var(--duration) var(--ease-out);
+}
+
+.compareSummary:hover svg {
+  color: var(--ivory);
 }
 
 .compare[open] .compareSummary svg {
-  transform: rotate(180deg);
+  rotate: 180deg;
+  color: var(--ivory);
 }
 
 .tableScroll {
@@ -1072,256 +976,276 @@
 .table {
   width: 100%;
   min-width: 36rem;
-  font: var(--type-small);
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.45;
 }
 
 .table th,
 .table td {
-  padding: var(--space-3) var(--space-3);
-  border-bottom: 1px solid var(--line);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--hair);
   text-align: left;
   vertical-align: top;
 }
 
 .table thead th {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-heading);
+  color: var(--slate);
 }
 
 .table tbody th {
   font-weight: var(--weight-regular);
+  color: var(--grey-200);
 }
 
 .groupRow th {
   padding-top: var(--space-6);
-  font: var(--type-caption-strong);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  font-size: 0.9375rem;
+  font-weight: var(--weight-heading);
+  color: var(--ivory);
 }
 
 .no {
-  color: var(--text-muted);
+  color: var(--slate);
 }
 
-/* For AdmitLabs clients ---------------------------------------------------------------------- */
+/* For AdmitLabs clients: one ivory block, the promise and who to write to. ------------------- */
+
+.clientsSection {
+  padding-bottom: var(--section-pad);
+  background: var(--black);
+}
 
 .clients {
   display: grid;
   gap: var(--space-8);
   padding: clamp(2rem, 1.25rem + 3.5vw, 4.5rem);
   border-radius: 1.5rem;
+  background:
+    radial-gradient(60% 80% at 100% 100%, rgba(255, 252, 245, 0.5), transparent 70%),
+    linear-gradient(180deg, var(--ivory) 0%, #e9dfcb 100%);
+  color: var(--black);
+  box-shadow:
+    0 50px 100px -50px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.clientsWords {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.clientsFor {
+  font-size: 0.9375rem;
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+
+.clientsText {
+  max-width: 36rem;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.clientsSide {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-5);
+}
+
+.clientsLine {
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.5rem);
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.clientsEmail {
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 
 @media (min-width: 64rem) {
   .clients {
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
     align-items: end;
-    gap: var(--space-16);
+    column-gap: var(--space-16);
   }
 }
 
-.clientsLine {
-  font-size: clamp(2.25rem, 1.5rem + 3vw, 4rem);
-  font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.clientsSide {
-  display: grid;
-  gap: var(--space-5);
-  justify-items: start;
-}
-
-.clientsEmail {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-/* FAQ ---------------------------------------------------------------------------------------- */
-
-.faqGrid {
-  display: grid;
-  gap: var(--space-8);
-}
-
-@media (min-width: 64rem) {
-  .faqGrid {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    gap: var(--space-16);
-    align-items: start;
-  }
-
-  .faqGrid .head {
-    margin-bottom: 0;
-  }
-}
-
-.faqList {
-  border-top: 1px solid var(--line-medium);
-}
-
-.faqItem {
-  border-bottom: 1px solid var(--line-medium);
-}
-
-.faqQuestion {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-5) 0;
-  font-size: var(--size-section);
-  font-weight: var(--weight-heading);
-  cursor: pointer;
-  list-style: none;
-}
-
-.faqQuestion::-webkit-details-marker {
-  display: none;
-}
-
-.faqQuestion svg {
-  flex: none;
-  transition: transform var(--duration) var(--ease-out);
-}
-
-.faqItem[open] .faqQuestion svg {
-  transform: rotate(45deg);
-}
-
-.faqAnswer {
-  max-width: 44rem;
-  padding-bottom: var(--space-6);
-  font-size: var(--size-lead);
-  line-height: 1.6;
-  color: var(--text-muted);
-}
-
-/* Final call (ivory) ---------------------------------------------------------------------------- */
-
-.final {
-  text-align: center;
-}
-
-.finalInner {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-6);
-}
-
-.finalTitle {
-  max-width: 15ch;
-  font-size: clamp(2.5rem, 1.4rem + 4.4vw, 5rem);
-  font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.04em;
-  text-wrap: balance;
-}
-
-/* Footer ------------------------------------------------------------------------------------- */
-
-.footer {
-  padding-block: var(--space-12) var(--space-10);
-  border-top: 1px solid var(--line);
-}
-
-.footerTop {
-  display: grid;
-  gap: var(--space-8);
-}
-
-@media (min-width: 48rem) {
-  .footerTop {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-  }
-}
-
-.footerBrand {
-  display: grid;
-  gap: var(--space-3);
-  max-width: 24rem;
-}
-
-.footerTagline {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-.footerLinks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3) var(--space-8);
-}
-
-.footerLink {
-  font: var(--type-label);
-  color: var(--text);
-  text-decoration: none;
-}
-
-.footerLink:hover {
-  text-decoration: underline;
-}
-
-.footerBottom {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-6);
-  margin-top: var(--space-10);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--line);
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-/* Motion: the hero settles in, and each block rises once as it comes into view. CSS only. ------- */
+/* Motion: calm, and settled without it. --------------------------------------------------------- */
 
 @media (prefers-reduced-motion: no-preference) {
-  .heroInner > * {
-    animation: rise 700ms var(--ease-out) both;
+  .beam {
+    animation: light-up 1600ms var(--ease-out) both;
   }
 
-  .heroInner > :nth-child(2) {
-    animation-delay: 70ms;
+  .lockup,
+  .heroTitle,
+  .heroLede,
+  .heroActions,
+  .assurances {
+    animation: lift 700ms var(--ease-out) both;
   }
 
-  .heroInner > :nth-child(3) {
+  .heroTitle {
+    animation-delay: 60ms;
+  }
+
+  .heroLede {
     animation-delay: 140ms;
   }
 
-  .heroInner > :nth-child(4) {
-    animation-delay: 210ms;
+  .heroActions {
+    animation-delay: 220ms;
   }
 
-  .heroInner > :nth-child(5) {
-    animation-delay: 280ms;
+  .assurances {
+    animation-delay: 300ms;
   }
 
-  .stage {
-    animation: rise 900ms 320ms var(--ease-out) both;
+  /* A plan lifts a little under the pointer, with a softer, deeper shadow. */
+  .plan:hover {
+    translate: 0 -2px;
+    box-shadow: 0 28px 56px -32px rgba(0, 0, 0, 0.9);
+  }
+
+  .planPaid:hover {
+    box-shadow:
+      0 60px 110px -48px rgba(0, 0, 0, 0.95),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7);
   }
 
   @supports (animation-timeline: view()) {
-    .reveal {
-      animation: rise linear both;
+    /* Home tips back, then settles flat as the page moves. */
+    .tilt {
+      animation: settle linear both;
       animation-timeline: view();
-      animation-range: entry 0% entry 60%;
+      animation-range: entry 0% cover 42%;
+    }
+
+    /* Each picture plays as its stage comes up the screen. The bars sit in tracks that clip them,
+       so they follow their stage's timeline, never their own. */
+    .pictureStage {
+      view-timeline: --picture block;
+    }
+
+    /* The Audit: the score counts up (./CountUp.tsx), the bars fill to their points. */
+    .audit [data-fill] {
+      transform-origin: left;
+      animation: fill-across linear both;
+      animation-timeline: --picture;
+      animation-range: cover 18% cover 42%;
+    }
+
+    /* Rivals: the rows slide from the order of their names into rank order, then the bars fill. */
+    .rivals [data-slide] {
+      animation: take-place linear both;
+      animation-timeline: --picture;
+      animation-range: cover 16% cover 40%;
+    }
+
+    .rivals [data-fill] {
+      transform-origin: left;
+      animation: fill-across linear both;
+      animation-timeline: --picture;
+      animation-range: cover 30% cover 46%;
+    }
+
+    /* Demand: the months grow in turn, and the counts come in once their bars stand. */
+    .demand [data-fill] {
+      transform-origin: bottom;
+      animation: grow-up linear both;
+      animation-timeline: --picture;
+      animation-range: cover calc(14% + var(--i, 0) * 3%) cover calc(30% + var(--i, 0) * 3%);
+    }
+
+    .demand :has(+ [data-fill]) {
+      animation: appear linear both;
+      animation-timeline: --picture;
+      animation-range: cover 36% cover 46%;
+    }
+
+    /* What each result earns: each bar fills to its share, one after the other. */
+    .results {
+      view-timeline: --results block;
+    }
+
+    .results [data-fill] {
+      transform-origin: left;
+      animation: fill-across linear both;
+      animation-timeline: --results;
+      animation-range: entry calc(20% + var(--order, 0) * 15%) cover calc(40% + var(--order, 0) * 6%);
+    }
+
+    /* How it works: the line fills as the steps pass the middle of the screen. */
+    .stepList::after {
+      animation: fill-down linear both;
+      animation-timeline: view();
+      animation-range: entry 40% exit 60%;
     }
   }
 }
 
-@keyframes rise {
+@media (prefers-reduced-motion: no-preference) and (min-width: 64rem) {
+  @supports (animation-timeline: view()) {
+    .stepList::after {
+      animation-name: fill-across;
+      animation-range: entry 60% cover 55%;
+    }
+  }
+}
+
+@keyframes light-up {
   from {
     opacity: 0;
-    translate: 0 1.5rem;
   }
+}
 
-  to {
-    opacity: 1;
-    translate: 0 0;
+@keyframes lift {
+  from {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0.6;
+    transform: rotateX(12deg) scale(0.95);
+  }
+}
+
+@keyframes fill-across {
+  from {
+    scale: 0 1;
+  }
+}
+
+@keyframes fill-down {
+  from {
+    scale: 1 0;
+  }
+}
+
+@keyframes grow-up {
+  from {
+    scale: 1 0;
+  }
+}
+
+@keyframes take-place {
+  from {
+    translate: 0 calc(var(--from, 0) * (100% + 2px));
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
   }
 }

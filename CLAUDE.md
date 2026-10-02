@@ -32,10 +32,10 @@ This machine is **Windows**. The project folder is `D:\Drishti`. All scripts and
 
 ## Brand rules (never break)
 
-- **Strictly monochrome.** Black #0A0A0C, Graphite #1E1F23, Ivory #F2E8D6, Slate #8A8D94, and greys between. No accent colour. No green, amber or red. No gradients or glow, with one exception: the AdmitLabs website (admitlabs.in) may use subtle monochrome gradients (black to graphite, soft ivory tones) for light, depth and section transitions. Never colour, neon or glow. The dashboard and /drishti keep no gradients.
+- **Strictly monochrome.** Black #0A0A0C, Graphite #1E1F23, Ivory #F2E8D6, Slate #8A8D94, and greys between. No accent colour. No green, amber or red. No gradients or glow, with one exception: the AdmitLabs website (admitlabs.in), the /drishti product page included, may use subtle monochrome gradients (black to graphite, soft ivory tones) for light, depth and section transitions. Never colour, neon or glow. The dashboard keeps no gradients.
 - **Two fonts, two jobs.** Bricolage Grotesque for all headings, text and buttons. Inter only for numbers that stand on their own (scores, points, prices, counts, percentages, numbers in tables), with tabular figures. Numbers and dates inside a sentence stay in Bricolage. No other font.
 - Contrast from size, weight, width, black and ivory surface flips, and inverted blocks.
-- Strong, Okay, Weak, Missing shown with a small semi-circle gauge plus the word. Never colour.
+- Strong, Okay, Weak, Missing shown as a thin bar of points earned plus the word in rows and lists, or a small square in one of four shades with a key nearby in compact grids. Never colour.
 - **No em dashes or en dashes** anywhere in UI, pages or PDF.
 - Plain language, short sentences. A low score is an opportunity, never a failure.
 - Premium SaaS feel. Works on phone.

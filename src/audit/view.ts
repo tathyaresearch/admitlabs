@@ -379,6 +379,9 @@ export interface PillarCheck {
   name: string;
   /** The weakest result across the programs the check covers. */
   result: CheckResult;
+  /** That weakest program's points, earned and possible, for its bar. */
+  points: number;
+  maxPoints: number;
 }
 
 export interface PillarChecks {
@@ -398,9 +401,13 @@ const worse = (a: CheckResult, b: CheckResult) => ((RESULT_RANK.get(b) ?? 0) > (
 export function pillarChecks(view: Pick<AuditView, 'areas' | 'fixes'>): PillarChecks[] {
   const gain = new Map(view.fixes.map((item) => [item.key, item.points]));
   return view.areas.map((area) => {
-    const checks = area.rows.flatMap((row): PillarCheck[] =>
-      row.parts.length ? [{ key: row.key, name: row.name, result: row.parts.reduce<CheckResult>((worst, item) => worse(worst, item.result), 'strong') }] : [],
-    );
+    const checks = area.rows.flatMap((row): PillarCheck[] => {
+      const [first] = row.parts;
+      if (!first) return [];
+      // The weakest program: the worst result, then the fewest points.
+      const weakest = row.parts.reduce((worst, item) => (worse(worst.result, item.result) !== worst.result || (item.result === worst.result && item.points < worst.points) ? item : worst), first);
+      return [{ key: row.key, name: row.name, result: weakest.result, points: weakest.points, maxPoints: weakest.maxPoints }];
+    });
     const [weakest = null] = checks
       .filter((check) => check.result !== 'strong')
       .sort((a, b) => (RESULT_RANK.get(b.result) ?? 0) - (RESULT_RANK.get(a.result) ?? 0) || (gain.get(b.key) ?? 0) - (gain.get(a.key) ?? 0));

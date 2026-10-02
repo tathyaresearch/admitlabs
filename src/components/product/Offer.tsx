@@ -8,53 +8,60 @@ import { ENTITLEMENTS, type EntitlementGroup } from '@/config/entitlements';
 import { TIER_LABELS, TIERS } from '@/domain/types';
 import { appLink } from '@/lib/urls';
 import { CLIENTS, FAQ, FAQ_TITLE, PLANS } from '@/product/content';
-import { Eyebrow } from './Sections';
+import sections from '@/components/site/sections.module.css';
+import site from '@/components/site/site.module.css';
+import { Title, vars } from './Sections';
 import styles from './product.module.css';
 
 const GROUPS: readonly EntitlementGroup[] = ['Audit', 'Rivals', 'Demand', 'Other'];
 
+/** Free and Paid side by side, Paid on ivory, then the fine print and every feature compared. */
 export function Plans() {
   return (
-    <section id="plans" className={`${styles.section} ${styles.ruled}`} data-theme="dark" aria-labelledby="plans-title">
-      <div className={styles.container}>
-        <div className={`${styles.head} ${styles.headCenter}`}>
-          <Eyebrow>Plans</Eyebrow>
-          <h2 id="plans-title" className={styles.title}>
-            {PLANS.title[0]}{' '}
-            <br />
-            {PLANS.title[1]}
-          </h2>
-          <p className={styles.lede}>{PLANS.lede}</p>
+    <section id="plans" className={styles.plans} data-theme="dark" aria-labelledby="plans-title">
+      <div className={site.container}>
+        <div className={`${styles.plansHead} ${site.reveal}`}>
+          <Title id="plans-title" lines={PLANS.title} />
+          <p className={site.lede}>{PLANS.lede}</p>
         </div>
-        <ul className={styles.plans}>
-          {PLANS.cards.map((card) => (
-            <li key={card.key} className={`${styles.plan} ${card.key === 'paid' ? 'invert' : ''} ${styles.reveal}`} aria-labelledby={`plan-${card.key}`}>
-              <div className={styles.planTop}>
-                <h3 id={`plan-${card.key}`} className={styles.planName}>
-                  {card.name}
-                </h3>
-                <p className={styles.price}>
-                  <span className={`${styles.priceValue} num`}>{card.price}</span>
-                  <span className={styles.priceTerm}>{card.term}</span>
-                </p>
-                <p className={styles.planLine}>{card.line}</p>
-              </div>
-              <ul className={styles.points}>
-                {card.points.map((point) => (
-                  <li key={point} className={styles.point}>
-                    <Icon name="check" size={16} />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className={styles.planFoot}>
-                <ButtonLink href={appLink('/login')} variant={card.key === 'paid' ? 'primary' : 'secondary'} block iconAfter="arrowRight">
-                  {card.cta}
-                </ButtonLink>
-                {card.note ? <p className={styles.planNote}>{card.note}</p> : null}
-              </div>
-            </li>
-          ))}
+        <ul className={styles.planList}>
+          {PLANS.cards.map((card, index) => {
+            const paid = card.key === 'paid';
+            return (
+              <li
+                key={card.key}
+                className={`${styles.plan} ${paid ? styles.planPaid : ''} ${site.reveal}`}
+                style={vars({ '--order': index })}
+                data-theme={paid ? 'light' : 'dark'}
+                aria-labelledby={`plan-${card.key}`}
+              >
+                <div className={styles.planTop}>
+                  <h3 id={`plan-${card.key}`} className={styles.planName}>
+                    {card.name}
+                  </h3>
+                  <p className={styles.price}>
+                    <span className={`${styles.priceValue} num`}>{card.price}</span>
+                    <span className={styles.priceTerm}>{card.term}</span>
+                  </p>
+                  <p className={styles.planLine}>{card.line}</p>
+                </div>
+                <ul className={styles.points}>
+                  {card.points.map((point) => (
+                    <li key={point} className={styles.point}>
+                      <Icon name="check" size={16} />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className={styles.planFoot}>
+                  <ButtonLink href={appLink('/login')} variant={paid ? 'primary' : 'secondary'} size="lg" block iconAfter="arrowRight" className={paid ? site.ctaInk : site.ghost}>
+                    {card.cta}
+                  </ButtonLink>
+                  {card.note ? <p className={styles.planNote}>{card.note}</p> : null}
+                </div>
+              </li>
+            );
+          })}
         </ul>
         <p className={styles.fine}>{PLANS.fine}</p>
         <details className={styles.compare}>
@@ -102,23 +109,20 @@ export function Plans() {
   );
 }
 
+/** For AdmitLabs clients: one ivory block, the promise and who to write to. */
 export function ForClients() {
   return (
-    <section className={styles.section} data-theme="dark" aria-labelledby="clients-title">
-      <div className={styles.container}>
-        <div className={`${styles.clients} invert ${styles.reveal}`}>
-          <div className={styles.head} style={{ marginBottom: 0 }}>
-            <Eyebrow>{CLIENTS.eyebrow}</Eyebrow>
-            <h2 id="clients-title" className={styles.title}>
-              {CLIENTS.title[0]}{' '}
-              <br />
-              {CLIENTS.title[1]}
-            </h2>
-            <p className={styles.lede}>{CLIENTS.text}</p>
+    <section className={styles.clientsSection} data-theme="dark" aria-labelledby="clients-title">
+      <div className={site.container}>
+        <div className={`${styles.clients} ${site.reveal}`} data-theme="light">
+          <div className={styles.clientsWords}>
+            <Title id="clients-title" lines={CLIENTS.title} light={false} />
+            <p className={styles.clientsFor}>{CLIENTS.forWhom}</p>
+            <p className={styles.clientsText}>{CLIENTS.text}</p>
           </div>
           <div className={styles.clientsSide}>
             <p className={styles.clientsLine}>{CLIENTS.line}</p>
-            <AnchorButton href={`mailto:${CLIENTS.email}`} icon="mail">
+            <AnchorButton href={`mailto:${CLIENTS.email}`} icon="mail" size="lg" className={site.ctaInk}>
               {CLIENTS.cta}
             </AnchorButton>
             <p className={styles.clientsEmail}>{CLIENTS.email}</p>
@@ -129,27 +133,27 @@ export function ForClients() {
   );
 }
 
+/** The website's FAQ, with the product's questions. */
 export function Faq() {
   return (
-    <section id="faq" className={`${styles.section} ${styles.ruled}`} data-theme="dark" aria-labelledby="faq-title">
-      <div className={`${styles.container} ${styles.faqGrid}`}>
-        <div className={styles.head}>
-          <Eyebrow>FAQ</Eyebrow>
-          <h2 id="faq-title" className={styles.title}>
+    <section id="faq" className={`${sections.faq} ${site.grain}`} data-theme="dark" aria-labelledby="faq-title">
+      <div className={`${site.container} ${sections.faqGrid}`}>
+        <div className={`${sections.faqHead} ${site.reveal}`}>
+          <h2 id="faq-title" className={`${site.title} ${site.titleLight}`}>
             {FAQ_TITLE}
           </h2>
-          <p className={styles.lede}>
+          <p className={site.lede}>
             Something else? Write to <a href={`mailto:${CLIENTS.email}`}>{CLIENTS.email}</a>.
           </p>
         </div>
-        <div className={styles.faqList}>
+        <div className={sections.faqList}>
           {FAQ.map((item) => (
-            <details key={item.question} className={styles.faqItem}>
-              <summary className={styles.faqQuestion}>
+            <details key={item.question} className={`${sections.faqItem} ${site.reveal}`}>
+              <summary className={sections.faqQuestion}>
                 {item.question}
                 <Icon name="plus" size={18} />
               </summary>
-              <p className={styles.faqAnswer}>{item.answer}</p>
+              <p className={sections.faqAnswer}>{item.answer}</p>
             </details>
           ))}
         </div>

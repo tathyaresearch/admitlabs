@@ -423,6 +423,18 @@ a.tab:hover {
   border-radius: var(--card-radius);
 }
 
+/* In a list the result and the points keep their own columns, so the bars line up (wider than a
+   phone; there the row has its own two lines). */
+@media (min-width: 40.0625rem) {
+  .rows .row {
+    grid-template-columns: minmax(0, 1fr) 7rem 5.25rem 1rem;
+  }
+
+  .rows .row > :nth-child(3) {
+    text-align: right;
+  }
+}
+
 .row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto 1rem;
@@ -472,33 +484,10 @@ a.tab:hover {
   padding-left: calc(16px + var(--space-2));
 }
 
-/* Points earned out of possible: a thin bar and the numbers. */
-.pointsCell {
-  display: inline-flex;
+/* A check's result: the bar of points earned against possible, the numbers, the word. */
+.checkResult {
+  display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-.pointsBar {
-  display: block;
-  width: 3.5rem;
-  height: 4px;
-  overflow: hidden;
-  border-radius: var(--radius-full);
-  background: var(--chart-track);
-}
-
-.pointsBar > span {
-  display: block;
-  height: 100%;
-  background: var(--text);
-}
-
-@media (max-width: 40rem) {
-  .pointsBar {
-    display: none;
-  }
 }
 
 /* The check panel's title, with the check's icon. */
@@ -662,6 +651,11 @@ a.tab:hover {
   grid-template-columns: minmax(0, 1fr) 10rem 7.5rem 1rem;
 }
 
+/* A check row: the name, the result in a column of its own (so the bars line up), the chevron. */
+.checkRows .checkRow {
+  grid-template-columns: minmax(0, 1fr) 14.5rem 1rem;
+}
+
 .varies {
   font: var(--type-caption-strong);
   color: var(--text-muted);
@@ -674,6 +668,22 @@ a.tab:hover {
 
   .checkRows .row {
     grid-template-columns: minmax(0, 1fr) auto 1rem;
+  }
+
+  /* On a phone the result goes under the name. */
+  .checkRows .checkRow {
+    grid-template-columns: minmax(0, 1fr) 1rem;
+    grid-template-areas:
+      'name chevron'
+      'result chevron';
+  }
+
+  .checkRows .checkRow > :nth-child(2) {
+    grid-area: result;
+  }
+
+  .checkRows .checkRow > :nth-child(3) {
+    grid-area: chevron;
   }
 }
 
@@ -808,9 +818,17 @@ a.tab:hover {
 }
 
 .points {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   font: var(--type-caption-strong);
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* "each", after the points when one line covers several programs. */
+.each {
+  font: var(--type-caption);
 }
 
 .strongNote {

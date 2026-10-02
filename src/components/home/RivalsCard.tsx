@@ -3,6 +3,7 @@
 // or behind, by name, with no numbers.
 
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { KpiNumber } from '@/components/ui/Kpi';
@@ -34,15 +35,25 @@ const GROUPS: ReadonlyArray<{ standing: Standing; label: string; icon: IconName 
 ];
 
 /** You and your rivals by overall score: rank, name, a bar, the score and its change. */
-export function RivalLadder({ rows }: { rows: readonly LadderRow[] }) {
+/**
+ * You and your rivals by overall score. `from`: each row's place before ranking, by id, for the
+ * product page's picture, where the rows slide into rank order (data-slide, "you" on your own row,
+ * and --from: how many rows away each one starts).
+ */
+export function RivalLadder({ rows, from }: { rows: readonly LadderRow[]; from?: ReadonlyMap<string, number> }) {
   return (
     <ol className={styles.ladder} aria-label="You and your rivals by overall score">
-      {rows.map((row) => (
-        <li key={row.id} className={[styles.ladderRow, row.you ? styles.ladderYou : ''].join(' ')}>
+      {rows.map((row, index) => (
+        <li
+          key={row.id}
+          className={[styles.ladderRow, row.you ? styles.ladderYou : ''].join(' ')}
+          data-slide={from ? (row.you ? 'you' : 'rival') : undefined}
+          style={from ? ({ '--from': (from.get(row.id) ?? index) - index } as CSSProperties) : undefined}
+        >
           <span className={`${styles.ladderRank} num`}>{row.rank ?? ''}</span>
           <span className={styles.ladderName}>{row.you ? 'You' : row.name}</span>
           <span className={styles.ladderBar} aria-hidden="true">
-            <span className={styles.ladderFill} style={{ width: `${Math.max(0, Math.min(100, row.overall ?? 0))}%` }} />
+            <span className={styles.ladderFill} style={{ width: `${Math.max(0, Math.min(100, row.overall ?? 0))}%` }} data-fill />
           </span>
           <span className={`${styles.ladderScore} num`}>
             {row.overall ?? ''}

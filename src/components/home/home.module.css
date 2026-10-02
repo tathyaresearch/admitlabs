@@ -218,13 +218,9 @@
   border-top: 1px solid var(--line-raised);
 }
 
-.checkStrip {
-  display: flex;
-  gap: 5px;
-}
-
-.checkStrip li {
-  display: flex;
+/* The key to the pillar cards' squares, just under them. */
+.resultKey {
+  margin-top: calc(-1 * var(--space-1));
 }
 
 .strongCount {
@@ -232,9 +228,10 @@
   color: var(--text-muted);
 }
 
+/* On the name's line, so "Weakest" stays beside the name when its result wraps below it. */
 .weakest {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-3);
   min-height: 1.5rem;
   font: var(--type-small);

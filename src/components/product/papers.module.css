@@ -1,7 +1,8 @@
 /*
   Three pages of the sample report, drawn in HTML from the same data as the PDF: the black cover,
   the score summary and the 3 things to do. Each page is an A4 sheet whose type scales with its
-  width (container units), so the stack looks the same from phone to desktop.
+  width (container units), so the stack looks the same from phone to desktop. They lie on the
+  report section's ivory like paper on a desk, and fan out from one pile as they come into view.
 */
 
 .stack {
@@ -22,6 +23,9 @@
   border-radius: 6px;
   background: var(--surface);
   color: var(--text);
+  box-shadow:
+    0 40px 70px -40px rgba(10, 10, 12, 0.45),
+    0 2px 6px rgba(10, 10, 12, 0.08);
 }
 
 /* The page's content, sized against the page (the container above it). */
@@ -46,12 +50,6 @@
 .things {
   left: 54%;
   top: 12%;
-}
-
-/* One page on its own (the features grid), not part of the stack. */
-.single {
-  position: relative;
-  width: 100%;
 }
 
 .row {
@@ -129,51 +127,11 @@
   gap: 2cqi;
 }
 
-/* The summary page's gauge, as the PDF draws it. */
+/* The summary page's gauge: the dashboard's own, which the PDF draws the same way. */
 .gauge {
-  position: relative;
+  --gauge-max: none;
   display: block;
   width: 56cqi;
-}
-
-.gauge svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-
-.gaugeTrack {
-  fill: none;
-  stroke: var(--chart-track);
-}
-
-.gaugeValue {
-  fill: none;
-  stroke: var(--text);
-}
-
-.gaugeNotch {
-  stroke: var(--text-muted);
-  stroke-width: 1.5;
-}
-
-.gaugeNumber {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0.8cqi;
-}
-
-.gaugeValueText {
-  font-size: 15cqi;
-  font-weight: var(--weight-heading);
-  line-height: 0.85;
-  letter-spacing: var(--tracking-num-hero);
 }
 
 .scoreNumber {
@@ -330,4 +288,46 @@
   color: var(--text-muted);
   padding-top: 1.6cqi;
   border-top: 1px solid var(--line-medium);
+}
+
+/* Fanning out: the cover and the 3 things start on the pile under the summary, tipped a little,
+   and slide out to their places as the stack comes up the screen. Settled, they lie as above. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .stack {
+      view-timeline: --pages block;
+    }
+
+    .cover,
+    .things {
+      animation-timeline: --pages;
+      animation-range: entry 30% cover 50%;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+    }
+
+    .cover {
+      animation-name: fan-cover;
+    }
+
+    .things {
+      animation-name: fan-things;
+    }
+  }
+}
+
+/* From the summary's place: 27% of the stack to the side is 58.7% of a page, and the tops differ
+   by 8% and 12% of the stack's height, 9.5% and 14.2% of a page's. */
+@keyframes fan-cover {
+  from {
+    translate: 58.7% -9.5%;
+    rotate: -4deg;
+  }
+}
+
+@keyframes fan-things {
+  from {
+    translate: -58.7% -14.2%;
+    rotate: 4deg;
+  }
 }

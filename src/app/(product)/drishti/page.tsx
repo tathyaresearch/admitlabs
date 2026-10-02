@@ -1,16 +1,19 @@
 import type { Metadata, Viewport } from 'next';
-import { ProductFooter, ProductHeader } from '@/components/product/Chrome';
+import { CountUp } from '@/components/product/CountUp';
 import { Faq, ForClients, Plans } from '@/components/product/Offer';
 import { ReportShowcase } from '@/components/product/ReportShowcase';
-import { Features, FinalCall, Hero, Problem, Steps } from '@/components/product/Sections';
+import { Features, FinalCall, Hero, Problem, Score, Steps, Trust } from '@/components/product/Sections';
+import { SiteFooter } from '@/components/site/Footer';
+import { SiteHeader } from '@/components/site/Header';
 import { PRODUCT_URL } from '@/lib/urls';
 import { FOOTER } from '@/product/content';
 import { loadShowcase } from '@/product/showcase';
-import styles from '@/components/product/product.module.css';
+import site from '@/components/site/site.module.css';
 
-// The product page (spec section 15). Prerendered once at build: it reads no request data, and
-// its previews come from the sample world in memory, never the database. It sets its own black
-// and ivory sections, so it looks the same whatever the device setting.
+// The product page (spec section 15), part of the AdmitLabs website: the website's header, footer
+// and Spotlight style, with the product itself for pictures. Prerendered once at build: it reads
+// no request data, and its pictures come from the sample world in memory, never the database. It
+// sets its own black and ivory sections, so it looks the same whatever the device setting.
 export const dynamic = 'force-static';
 
 const NAME = 'Drishti by AdmitLabs';
@@ -31,19 +34,21 @@ export const viewport: Viewport = {
 export default async function ProductPage() {
   const showcase = await loadShowcase();
   return (
-    <div id="top" className={styles.page} data-theme="dark">
-      {/* The page behind the page (overscroll, the top of a long scroll) stays black too. */}
-      <style href="drishti-product-page" precedence="default">
-        {'html,body{background:#0a0a0c}html{scroll-behavior:smooth}'}
+    <div id="top" className={site.page} data-theme="dark">
+      {/* The page behind the page (overscroll) stays black; section links land below the header. */}
+      <style href="admitlabs-site" precedence="default">
+        {'html,body{background:#0a0a0c}html{scroll-behavior:smooth;scroll-padding-top:4.5rem}'}
       </style>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <ProductHeader />
+      <SiteHeader />
       <main id="main">
         <Hero showcase={showcase} />
         <Problem />
         <Features showcase={showcase} />
+        <Score />
+        <Trust />
         <Steps />
         <ReportShowcase data={showcase.report} />
         <Plans />
@@ -51,7 +56,8 @@ export default async function ProductPage() {
         <Faq />
         <FinalCall />
       </main>
-      <ProductFooter />
+      <SiteFooter />
+      <CountUp />
     </div>
   );
 }

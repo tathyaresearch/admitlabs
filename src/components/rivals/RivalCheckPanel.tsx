@@ -9,7 +9,7 @@ import { SourceLine } from '@/components/ui/Data';
 import { Icon } from '@/components/ui/Icon';
 import { CheckIcon } from '@/components/ui/Marks';
 import { SidePanel } from '@/components/ui/Overlay';
-import { ResultGauge } from '@/components/ui/Results';
+import { ResultBar } from '@/components/ui/Results';
 import { checkLooksAt, checkName } from '@/domain/checks';
 import { PILLAR_LABELS, type InstitutionType } from '@/domain/types';
 import type { CheckComparison } from '@/rivals/compare';
@@ -57,7 +57,7 @@ export function RivalCheckPanel({ comparisons, rivalName, institutionType }: { c
               <div key={part.checkId} className={audit.panelPart}>
                 <div className={audit.panelPartHead}>
                   {part.programName ? <p className={audit.panelProgram}>{part.programName}</p> : null}
-                  <ResultGauge result={part.result} size="lg" />
+                  <ResultBar result={part.result} size="lg" />
                 </div>
                 {part.finding ? (
                   <div className={audit.panelBlock}>
@@ -80,7 +80,7 @@ export function RivalCheckPanel({ comparisons, rivalName, institutionType }: { c
                   {item.yourParts.map((part) => (
                     <span key={part.checkId} className={audit.partResult}>
                       {part.programName ? <span className={audit.partName}>{part.programName}</span> : null}
-                      <ResultGauge result={part.result} size="sm" />
+                      <ResultBar result={part.result} size="sm" />
                     </span>
                   ))}
                 </div>

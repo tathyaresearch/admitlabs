@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import { contrastRatio } from './contrast.ts';
 import { istDate } from './dates.ts';
 import { formatCount, formatDate, formatDateLong, formatDateTime, formatInr, formatMonth, formatMonthName, formatMonthShort, formatTime, groupIndian, hostAndPath, joinNames, ordinal, plural } from './format.ts';
-import { scoreLabel } from './scores.ts';
+import { resultShare, resultShareText, scoreLabel } from './scores.ts';
 
 describe('formatting for India', () => {
   test('dates read in India time', () => {
@@ -60,6 +61,18 @@ describe('score labels from config', () => {
     assert.equal(scoreLabel(0), 'At risk');
     assert.equal(scoreLabel(69.5), 'Strong');
   });
+
+  test('what each result earns: the length of its bar, and the words beside it', () => {
+    assert.deepEqual(
+      (['strong', 'okay', 'weak', 'missing'] as const).map((result) => [resultShare(result), resultShareText(result)]),
+      [
+        [1, 'Earns every point of the check'],
+        [0.6, 'Earns 60% of the points'],
+        [0.3, 'Earns 30% of the points'],
+        [0, 'Earns no points yet'],
+      ],
+    );
+  });
 });
 
 describe('brand contrast', () => {
@@ -68,5 +81,24 @@ describe('brand contrast', () => {
     assert.equal(contrastRatio('#8A8D94', '#0A0A0C').toFixed(2), '5.95');
     assert.equal(contrastRatio('#8A8D94', '#F2E8D6').toFixed(2), '2.74');
     assert.equal(contrastRatio('#5E6066', '#F2E8D6').toFixed(2), '5.17');
+  });
+
+  test('the result squares stand out at least 3 to 1 from the cards they sit on, on black and on ivory', () => {
+    const css = readFileSync(new URL('../styles/tokens.css', import.meta.url), 'utf8');
+    const tokens = new Map<string, string>();
+    for (const [, name, value] of css.matchAll(/(--[\w-]+):\s*([^;]+);/g)) if (name && value && !tokens.has(name)) tokens.set(name, value.trim());
+    const hex = (name: string): string => {
+      let value = tokens.get(name) ?? '';
+      while (value.startsWith('var(')) value = tokens.get(value.slice(4, -1)) ?? '';
+      return value;
+    };
+    for (const mode of ['dk', 'lt']) {
+      const card = hex(`--${mode}-surface-raised`);
+      // Strong is the text colour; Weak's own grey sits close to the card, so its outline carries it.
+      for (const shade of ['result-okay', 'result-weak-edge', 'result-missing']) {
+        const ratio = contrastRatio(hex(`--${mode}-${shade}`), card);
+        assert.ok(ratio >= 3, `${mode} ${shade}: ${ratio.toFixed(2)}`);
+      }
+    }
   });
 });

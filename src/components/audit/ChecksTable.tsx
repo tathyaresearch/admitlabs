@@ -1,11 +1,12 @@
-// All 17 checks, grouped by pillar. Each row: the check, its result, its points, and a
-// chevron to the detail panel. Each pillar group folds away.
+// All 17 checks, grouped by pillar. Each row: the check, its result (the bar of points earned
+// against possible, the numbers and the word), and a chevron to the detail panel. Each pillar
+// group folds away.
 
 import Link from 'next/link';
-import { pointsFraction, type AreaRow, type AuditView } from '@/audit/view';
+import type { AreaRow, AuditView } from '@/audit/view';
 import { Icon } from '@/components/ui/Icon';
 import { CheckIcon, PillarIcon } from '@/components/ui/Marks';
-import { ResultGauge } from '@/components/ui/Results';
+import { ResultBar } from '@/components/ui/Results';
 import { PILLAR_LABELS, RESULT_LABELS } from '@/domain/types';
 import { changedParts } from './Parts';
 import styles from './audit.module.css';
@@ -15,10 +16,9 @@ function CheckRow({ row }: { row: AreaRow }) {
   const moved = row.parts.length === 1 ? changedParts(row.parts)[0] : undefined;
   const resultWords =
     summary.kind === 'single' ? RESULT_LABELS[summary.result] : summary.kind === 'varies' ? 'varies by program' : 'not in this Audit';
-  const points = summary.kind === 'none' ? '' : pointsFraction(summary.points, summary.maxPoints);
   const spoken = summary.kind === 'none' ? '' : `, ${Math.round(summary.points)} of ${summary.maxPoints} points`;
   return (
-    <Link href={`?check=${row.key}`} scroll={false} className={styles.row} aria-label={`${row.name}: ${resultWords}${spoken}. Open the detail.`}>
+    <Link href={`?check=${row.key}`} scroll={false} className={`${styles.row} ${styles.checkRow}`} aria-label={`${row.name}: ${resultWords}${spoken}. Open the detail.`}>
       <span className={styles.rowName}>
         <span className={styles.rowTitle}>
           <CheckIcon check={row.key} size={16} />
@@ -26,20 +26,12 @@ function CheckRow({ row }: { row: AreaRow }) {
         </span>
         {moved?.previousResult ? <span className={styles.rowSub}>Was {RESULT_LABELS[moved.previousResult]}</span> : null}
       </span>
-      <span>
-        {summary.kind === 'single' ? (
-          <ResultGauge result={summary.result} size="sm" />
+      <span className={styles.checkResult}>
+        {summary.kind === 'none' ? (
+          <span className={styles.varies}>Not in this Audit</span>
         ) : (
-          <span className={styles.varies}>{summary.kind === 'varies' ? 'Varies by program' : 'Not in this Audit'}</span>
+          <ResultBar result={summary.kind === 'single' ? summary.result : 'varies'} points={summary.points} max={summary.maxPoints} />
         )}
-      </span>
-      <span className={styles.pointsCell}>
-        {summary.kind === 'none' ? null : (
-          <span className={styles.pointsBar} aria-hidden="true">
-            <span style={{ width: `${summary.maxPoints ? Math.min(100, (summary.points / summary.maxPoints) * 100) : 0}%` }} />
-          </span>
-        )}
-        <span className={`${styles.rowMeta} num`}>{points}</span>
       </span>
       <Icon name="chevronRight" size={16} className={styles.chevron} />
     </Link>

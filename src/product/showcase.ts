@@ -1,7 +1,9 @@
-// What the product page shows: one fictional institution, Eastgate University, in the month of the
-// sample report (August 2026), so every preview on the page agrees with the PDF it offers. Worked
-// out from the sample world in memory with the real scoring engine (src/sample/world.ts). No
-// database. Built once per server; the page is prerendered, so in practice once per build.
+// What the product page shows: one fictional institution in the month of the sample report
+// (August 2026), so every preview on the page agrees with the PDF it offers. Worked out from the
+// sample world in memory with the real scoring engine (src/sample/world.ts), then shown under the
+// website's names: the sample world's Eastgate University, Guwahati, is Larkmoor University,
+// Bangalore, here (./larkmoor.ts). No database. Built once per server; the page is prerendered, so
+// in practice once per build.
 
 import { overviewView, scoresByMonth, type AuditView, type ScoreSet } from '../audit/view.ts';
 import { DEMAND_RULES } from '../config/demand.ts';
@@ -18,6 +20,7 @@ import { DEMAND_MONTHS } from '../sample/demand.ts';
 import { SAMPLE_RIVALS } from '../sample/index.ts';
 import { SAMPLE_REPORT, sampleReportInput } from '../sample/report.ts';
 import { sampleDemand, sampleMoves, type SampleMoveRow } from '../sample/world.ts';
+import { asLarkmoor } from './larkmoor.ts';
 
 export interface Showcase {
   institution: { id: string; name: string; type: InstitutionType; city: string };
@@ -40,7 +43,7 @@ export interface Showcase {
     /** The fastest rise's searches in each month's pull, oldest first, as the Demand page draws them. */
     topHistory: Array<{ month: string; count: number }>;
   };
-  /** The sample report, for the page previews of it. */
+  /** The sample report, for the page previews of it and the PDF the page offers. */
   report: ReportData;
 }
 
@@ -62,7 +65,7 @@ async function build(): Promise<Showcase> {
   const rivalSlugs = SAMPLE_RIVALS.filter(([tracker]) => tracker === SAMPLE_REPORT.slug).map(([, rival]) => rival);
   const moves = sampleMoves(rivalSlugs, istDate(`${input.month}-01`), new Date(monthEnd(input.month).getTime() - 1));
 
-  return {
+  return asLarkmoor<Showcase>({
     institution: { id: institution.id, name: institution.name, type: institution.type, city: institution.city },
     audit: overviewView(audit, { institutionType: institution.type, programNames: input.programNames }),
     home: { checkedAt: audit.runAt, trend: scoresByMonth(input.history, (runAt) => monthKey(new Date(runAt))) },
@@ -86,7 +89,7 @@ async function build(): Promise<Showcase> {
       topHistory: demand.topTrend ? await sampleTopicHistory(demand.topTrend, input.month, input.demand.rows) : [],
     },
     report: buildReport(input),
-  };
+  });
 }
 
 let showcase: Promise<Showcase> | null = null;

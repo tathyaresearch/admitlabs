@@ -70,6 +70,13 @@
   --dk-field: var(--grey-975);
   --dk-chart-grid: var(--grey-920);
   --dk-chart-track: var(--grey-850);
+  /* Results as shades, for the small squares in compact grids. Strong is the text colour itself;
+     then two greys in even steps of lightness (they swap between the themes); Weak squares carry
+     a thin edge so they reach 3:1 against every surface; Missing is a dashed outline. */
+  --dk-result-okay: var(--grey-400);
+  --dk-result-weak: var(--grey-700);
+  --dk-result-weak-edge: var(--grey-500);
+  --dk-result-missing: var(--grey-500);
   /* One-colour brand logos, in the colours their owners allow (src/graphics/brands/SOURCES.md). */
   --dk-brand-x: #ffffff;
   --dk-brand-youtube: #ffffff;
@@ -97,6 +104,10 @@
   --lt-field: var(--ivory);
   --lt-chart-grid: var(--grey-175);
   --lt-chart-track: var(--grey-150);
+  --lt-result-okay: var(--grey-700);
+  --lt-result-weak: var(--grey-400);
+  --lt-result-weak-edge: var(--grey-600);
+  --lt-result-missing: var(--grey-600);
   --lt-brand-x: #000000;
   --lt-brand-youtube: #282828;
   --lt-brand-youtube-play: #ffffff;
@@ -259,6 +270,10 @@
   --field: var(--dk-field);
   --chart-grid: var(--dk-chart-grid);
   --chart-track: var(--dk-chart-track);
+  --result-okay: var(--dk-result-okay);
+  --result-weak: var(--dk-result-weak);
+  --result-weak-edge: var(--dk-result-weak-edge);
+  --result-missing: var(--dk-result-missing);
   --brand-x: var(--dk-brand-x);
   --brand-youtube: var(--dk-brand-youtube);
   --brand-youtube-play: var(--dk-brand-youtube-play);
@@ -284,6 +299,10 @@
   --inv-field: var(--lt-field);
   --inv-chart-grid: var(--lt-chart-grid);
   --inv-chart-track: var(--lt-chart-track);
+  --inv-result-okay: var(--lt-result-okay);
+  --inv-result-weak: var(--lt-result-weak);
+  --inv-result-weak-edge: var(--lt-result-weak-edge);
+  --inv-result-missing: var(--lt-result-missing);
   --inv-brand-x: var(--lt-brand-x);
   --inv-brand-youtube: var(--lt-brand-youtube);
   --inv-brand-youtube-play: var(--lt-brand-youtube-play);
@@ -312,6 +331,10 @@
   --field: var(--lt-field);
   --chart-grid: var(--lt-chart-grid);
   --chart-track: var(--lt-chart-track);
+  --result-okay: var(--lt-result-okay);
+  --result-weak: var(--lt-result-weak);
+  --result-weak-edge: var(--lt-result-weak-edge);
+  --result-missing: var(--lt-result-missing);
   --brand-x: var(--lt-brand-x);
   --brand-youtube: var(--lt-brand-youtube);
   --brand-youtube-play: var(--lt-brand-youtube-play);
@@ -337,6 +360,10 @@
   --inv-field: var(--dk-field);
   --inv-chart-grid: var(--dk-chart-grid);
   --inv-chart-track: var(--dk-chart-track);
+  --inv-result-okay: var(--dk-result-okay);
+  --inv-result-weak: var(--dk-result-weak);
+  --inv-result-weak-edge: var(--dk-result-weak-edge);
+  --inv-result-missing: var(--dk-result-missing);
   --inv-brand-x: var(--dk-brand-x);
   --inv-brand-youtube: var(--dk-brand-youtube);
   --inv-brand-youtube-play: var(--dk-brand-youtube-play);
@@ -366,6 +393,10 @@
     --field: var(--lt-field);
     --chart-grid: var(--lt-chart-grid);
     --chart-track: var(--lt-chart-track);
+    --result-okay: var(--lt-result-okay);
+    --result-weak: var(--lt-result-weak);
+    --result-weak-edge: var(--lt-result-weak-edge);
+    --result-missing: var(--lt-result-missing);
     --brand-x: var(--lt-brand-x);
     --brand-youtube: var(--lt-brand-youtube);
     --brand-youtube-play: var(--lt-brand-youtube-play);
@@ -391,6 +422,10 @@
     --inv-field: var(--dk-field);
     --inv-chart-grid: var(--dk-chart-grid);
     --inv-chart-track: var(--dk-chart-track);
+    --inv-result-okay: var(--dk-result-okay);
+    --inv-result-weak: var(--dk-result-weak);
+    --inv-result-weak-edge: var(--dk-result-weak-edge);
+    --inv-result-missing: var(--dk-result-missing);
     --inv-brand-x: var(--dk-brand-x);
     --inv-brand-youtube: var(--dk-brand-youtube);
     --inv-brand-youtube-play: var(--dk-brand-youtube-play);

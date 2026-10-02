@@ -1,30 +1,82 @@
-// How results and scores are shown without colour (spec section 14): a small half-circle gauge
-// plus the word, in one style for every result, labels always in words.
+// How results and scores are shown without colour (spec section 14). In rows and lists, a check's
+// result is a thin bar of the points it earns against the points it could, then the word. In
+// compact grids, a small square per check in one of four shades, with a key nearby. The word is
+// always there: beside the bar, on hover and read out for each square.
 
-import { scoreLabel, type ScoreLabel as ScoreLabelName } from '@/domain/scores';
-import { DIFFICULTY_LABELS, RESULT_LABELS, type CheckResult, type Difficulty as DifficultyValue } from '@/domain/types';
-import { RESULT_GAUGE, resultGauge } from '@/graphics/gauge';
+import type { CSSProperties } from 'react';
+import { resultShare, scoreLabel, type ScoreLabel as ScoreLabelName } from '@/domain/scores';
+import { DIFFICULTY_LABELS, RESULT_LABELS, RESULTS, type CheckResult, type Difficulty as DifficultyValue } from '@/domain/types';
 import { Icon } from './Icon';
 import styles from './Results.module.css';
 
-interface ResultGaugeProps {
-  result: CheckResult;
+interface ResultBarProps {
+  /** "varies" when a check's programs disagree: the bar shows their average points. */
+  result: CheckResult | 'varies';
+  /** Points earned and possible: the bar's length, and "18/30" after it unless `showPoints` is off. */
+  points?: number;
+  max?: number;
+  /** Points earned out of possible, 0 to 1, when only the share is known (a rival's check). */
+  share?: number;
+  showPoints?: boolean;
   size?: 'sm' | 'md' | 'lg';
-  /** Hide the word only when the word is already shown right next to it. */
-  hideWord?: boolean;
 }
 
-/** A check's result: the small half-circle gauge (three segments) and the word. */
-export function ResultGauge({ result, size = 'md', hideWord = false }: ResultGaugeProps) {
+/**
+ * A check's result in a row or a list: the bar of points earned against possible, the numbers
+ * when there is room, then the word. Missing is an empty dashed bar. The bar is always in the
+ * text colour: its length says the points, the word says the result.
+ */
+export function ResultBar({ result, points, max, share, showPoints = true, size = 'md' }: ResultBarProps) {
+  const filled = max ? Math.max(0, Math.min(1, (points ?? 0) / max)) : (share ?? (result === 'varies' ? 0 : resultShare(result)));
+  const word = result === 'varies' ? 'Varies by program' : RESULT_LABELS[result];
+  const rounded = Math.round(points ?? 0);
   return (
-    <span className={[styles.result, styles[size]].join(' ')} data-result={result}>
-      <svg className={styles.gauge} viewBox={`0 0 ${RESULT_GAUGE.width} ${RESULT_GAUGE.height}`} aria-hidden="true">
-        {resultGauge(result).map((segment, index) => (
-          <path key={index} d={segment.d} className={styles[`segment-${segment.state}`]} strokeWidth={RESULT_GAUGE.stroke} fill="none" />
-        ))}
-      </svg>
-      <span className={hideWord ? 'visually-hidden' : undefined}>{RESULT_LABELS[result]}</span>
+    <span className={[styles.bar, styles[size]].join(' ')} data-result={result} title={max ? `${word}, ${rounded} of ${max} points` : word}>
+      <span className={styles.track} aria-hidden="true">
+        <span className={styles.fill} style={{ '--share': filled } as CSSProperties} data-fill />
+      </span>
+      {showPoints && max ? (
+        <span className={styles.barPoints}>
+          <span className="num">
+            {rounded}/{max}
+          </span>
+          <span className="visually-hidden"> points,</span>
+        </span>
+      ) : null}
+      <span className={styles.barWord}>{word}</span>
     </span>
+  );
+}
+
+/**
+ * Every check at a glance, one small square each: Strong in the text colour, Okay and Weak in two
+ * greys, Missing a dashed outline. The check and its result are on hover and read out.
+ */
+export function ResultSquares({ checks, label }: { checks: ReadonlyArray<{ key: string; name: string; result: CheckResult }>; label: string }) {
+  return (
+    <ul className={styles.squares} aria-label={label}>
+      {checks.map((check) => (
+        <li key={check.key} className={styles.square} data-result={check.result} title={`${check.name}: ${RESULT_LABELS[check.result]}`}>
+          <span className="visually-hidden">
+            {check.name}: {RESULT_LABELS[check.result]}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** The key that sits near a grid of squares. Each square is read out with its own result. */
+export function ResultKey({ className }: { className?: string }) {
+  return (
+    <ul className={[styles.key, className].filter(Boolean).join(' ')} aria-hidden="true">
+      {RESULTS.map((result) => (
+        <li key={result}>
+          <span className={styles.keySquare} data-result={result} />
+          {RESULT_LABELS[result]}
+        </li>
+      ))}
+    </ul>
   );
 }
 

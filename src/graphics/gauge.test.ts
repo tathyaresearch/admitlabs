@@ -2,30 +2,9 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
 import { bandStarts, nextBandText } from '../domain/scores.ts';
-import { RESULTS } from '../domain/types.ts';
-import { arcPath, resultGauge, scoreGauge, SCORE_GAUGE } from './gauge.ts';
+import { arcPath, FIGURE_EM, scoreGauge, SCORE_GAUGE, SCORE_TEXT } from './gauge.ts';
 
-// The two gauges replace the 3-bar meter. Same shapes on screen and in the PDFs.
-
-describe('the result gauge', () => {
-  test('three segments: Strong fills three, Okay two, Weak one, Missing is dashed', () => {
-    const states = Object.fromEntries(RESULTS.map((result) => [result, resultGauge(result).map((segment) => segment.state)]));
-    assert.deepEqual(states, {
-      strong: ['on', 'on', 'on'],
-      okay: ['on', 'on', 'off'],
-      weak: ['on', 'off', 'off'],
-      missing: ['missing', 'missing', 'missing'],
-    });
-  });
-
-  test('the segments run left to right over the top, with gaps between them', () => {
-    const [first, second, third] = resultGauge('strong').map((segment) => segment.d);
-    assert.equal(first, arcPath(14, 14.5, 11, 180, 232));
-    assert.equal(second, arcPath(14, 14.5, 11, 244, 296));
-    assert.equal(third, arcPath(14, 14.5, 11, 308, 360));
-    assert.match(first as string, /^M 3 14\.5 A 11 11 0 0 1 /);
-  });
-});
+// The large score gauge. Same shape on screen and in the PDFs, with its number part of the drawing.
 
 describe('the score gauge', () => {
   test('filled to the score out of 100, with a notch where each band starts', () => {
@@ -37,6 +16,36 @@ describe('the score gauge', () => {
     // A full score sweeps the half circle; nothing is drawn for 0; scores never run past 100.
     assert.equal(scoreGauge(0, bandStarts()).value, null);
     assert.equal(scoreGauge(140, bandStarts()).value, scoreGauge(100, bandStarts()).value);
+  });
+
+  test('the number sits centred on the arc’s baseline, with “/100” after it on the same line', () => {
+    const { number } = scoreGauge(73, bandStarts());
+    assert.equal(number.x, SCORE_GAUGE.cx);
+    assert.equal(number.y, SCORE_GAUGE.cy);
+    assert.equal(number.size, SCORE_TEXT.number);
+    assert.equal(number.ofX, Number((SCORE_GAUGE.cx + FIGURE_EM * SCORE_TEXT.number + SCORE_TEXT.gap).toFixed(2)));
+    assert.equal(scoreGauge(100, bandStarts()).number.size, SCORE_TEXT.numberThree);
+  });
+
+  test('the number and “/100” never touch the arc, from one figure to three, on screen and in print', () => {
+    const inner = SCORE_GAUGE.r - SCORE_GAUGE.stroke / 2;
+    const ofWidth = (0.338 + 3 * FIGURE_EM) * SCORE_TEXT.of;
+    for (const score of [0, 7, 73, 99, 100]) {
+      for (const tracking of [0, -0.04]) {
+        const { number } = scoreGauge(score, bandStarts(), tracking);
+        const right = number.ofX + ofWidth - SCORE_GAUGE.cx;
+        assert.ok(right <= inner - 7, `score ${score}: "/100" ends ${right.toFixed(1)} from the centre, the arc at ${inner}`);
+        const half = (String(score).length * (FIGURE_EM + tracking) * number.size) / 2;
+        assert.ok(Math.hypot(half, 0.727 * number.size) <= inner - 7, `score ${score}: the number reaches the arc`);
+      }
+    }
+  });
+
+  test('“0” and “100” sit centred under the two ends, inside the drawing', () => {
+    const { ends } = scoreGauge(73, bandStarts());
+    assert.deepEqual(ends.zero, [SCORE_GAUGE.cx - SCORE_GAUGE.r, SCORE_GAUGE.cy + SCORE_TEXT.endDrop]);
+    assert.deepEqual(ends.hundred, [SCORE_GAUGE.cx + SCORE_GAUGE.r, SCORE_GAUGE.cy + SCORE_TEXT.endDrop]);
+    assert.ok(ends.zero[1] + 3 <= SCORE_GAUGE.height);
   });
 
   test('the line under the score: how far the next band is', () => {

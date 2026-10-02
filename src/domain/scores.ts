@@ -33,6 +33,11 @@ export function nextBandText(score: number, config: Pick<ScoringConfig, 'labels'
   return rounded === top.min ? `Right on the ${top.label} line` : `${points(rounded - top.min)} above the ${top.label} line`;
 }
 
+/** What a result earns of a check's points, 0 to 1: how far its bar fills when no points are given. */
+export function resultShare(result: CheckResult, config: Pick<ScoringConfig, 'resultShares'> = SCORING_V1): number {
+  return config.resultShares[result];
+}
+
 /** What a result earns of a check's points, in words: "Earns 60% of the points". */
 export function resultShareText(result: CheckResult, config: Pick<ScoringConfig, 'resultShares'> = SCORING_V1): string {
   const share = config.resultShares[result];

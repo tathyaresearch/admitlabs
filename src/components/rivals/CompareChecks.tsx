@@ -5,7 +5,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { CheckIcon, PillarIcon } from '@/components/ui/Marks';
-import { ResultGauge } from '@/components/ui/Results';
+import { ResultBar } from '@/components/ui/Results';
 import { checkName } from '@/domain/checks';
 import { PILLAR_LABELS, PILLARS, RESULT_LABELS, type InstitutionType } from '@/domain/types';
 import type { CheckComparison, SideSummary } from '@/rivals/compare';
@@ -23,11 +23,7 @@ export function Side({ side, label }: { side: SideSummary; label: string }) {
   return (
     <span className={styles.side}>
       <span className={styles.sideLabel}>{label}</span>
-      {side.kind === 'single' ? (
-        <ResultGauge result={side.result} size="sm" />
-      ) : (
-        <span className={audit.varies}>{side.kind === 'varies' ? 'Varies by program' : 'Not checked'}</span>
-      )}
+      {side.kind === 'none' ? <span className={audit.varies}>Not checked</span> : <ResultBar result={side.kind === 'single' ? side.result : 'varies'} share={side.share} size="sm" />}
     </span>
   );
 }

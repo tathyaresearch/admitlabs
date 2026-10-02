@@ -1,47 +1,135 @@
-.result {
+/* A result in a row or a list: the bar of points earned, the numbers, the word. ---------------- */
+
+.bar {
   display: inline-flex;
   align-items: center;
-  gap: 0.55em;
+  gap: 0.6em;
   font-weight: var(--weight-medium);
   line-height: 1;
   white-space: nowrap;
+  color: var(--text);
 }
 
-/* The small half-circle gauge: three segments in the text colour on a grey track. */
-.gauge {
+.track {
+  display: block;
   flex: none;
-  width: var(--gauge-width);
-  height: auto;
-  overflow: visible;
+  width: var(--bar-width);
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--chart-track);
 }
 
-.segment-on {
-  stroke: currentColor;
+.fill {
+  display: block;
+  width: calc(var(--share) * 100%);
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
 }
 
-.segment-off {
-  stroke: var(--line-medium);
+/* Missing: an empty bar, dashed. */
+.bar[data-result='missing'] .track {
+  height: 6px;
+  border: 1px dashed var(--result-missing);
+  background: transparent;
 }
 
-/* Missing: an empty, dashed arc. */
-.segment-missing {
-  stroke: var(--text-muted);
-  stroke-dasharray: 3 2;
+.bar[data-result='varies'] {
+  color: var(--text-muted);
+}
+
+.barPoints {
+  font: var(--type-num-caption);
+  color: var(--text-muted);
+}
+
+.barWord {
+  color: var(--text);
+}
+
+.bar[data-result='varies'] .barWord {
+  color: var(--text-muted);
 }
 
 .sm {
-  --gauge-width: 1.5rem;
+  --bar-width: 1.75rem;
   font-size: var(--size-caption);
 }
 
 .md {
-  --gauge-width: 1.75rem;
+  --bar-width: 3.25rem;
   font-size: var(--size-small);
 }
 
 .lg {
-  --gauge-width: 2.125rem;
+  --bar-width: 4.5rem;
   font-size: var(--size-body);
+}
+
+/* Every check at a glance: one square each, in four shades. ---------------------------------- */
+
+.squares {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+}
+
+.square,
+.keySquare {
+  flex: none;
+  border-radius: 2px;
+  background: var(--result-color);
+}
+
+.square {
+  width: 12px;
+  height: 12px;
+}
+
+.keySquare {
+  width: 9px;
+  height: 9px;
+}
+
+.square[data-result='strong'],
+.keySquare[data-result='strong'] {
+  --result-color: var(--text);
+}
+
+.square[data-result='okay'],
+.keySquare[data-result='okay'] {
+  --result-color: var(--result-okay);
+}
+
+/* Weak: the dim grey, with a thin edge that keeps 3:1 against the surface. */
+.square[data-result='weak'],
+.keySquare[data-result='weak'] {
+  --result-color: var(--result-weak);
+  box-shadow: inset 0 0 0 1px var(--result-weak-edge);
+}
+
+/* Missing: never a fill, a dashed outline. */
+.square[data-result='missing'],
+.keySquare[data-result='missing'] {
+  border: 1px dashed var(--result-missing);
+  background: transparent;
+}
+
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  list-style: none;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 .scoreLabel {

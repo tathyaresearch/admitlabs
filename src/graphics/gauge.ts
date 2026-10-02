@@ -1,12 +1,12 @@
-// The two gauges, as plain geometry, so the dashboard (SVG) and the PDFs (react-pdf) draw the same
-// shapes. Half circles over the top, left to right. Pure.
+// The large score gauge, as plain geometry, so the dashboard (SVG) and the PDFs (react-pdf) draw
+// the same shape. A half circle over the top, left to right, filled to the score out of 100, with
+// a notch where each score band starts (40 Needs work, 70 Strong, from the scoring config). The
+// number is part of the drawing: centred in the bowl with its baseline on the arc's baseline (the
+// line through its two ends), "/100" after it on the same baseline, and "0" and "100" centred
+// under the two ends, so every part scales together. Pure.
 //
-//   Result gauge (small): three arc segments, one per level. Strong fills three, Okay two, Weak
-//   one; Missing is an empty dashed arc. The word always sits beside it.
-//   Score gauge (large): a half circle filled to the score out of 100, with a notch where each
-//   score band starts (40 Needs work, 70 Strong, from the scoring config).
-
-import type { CheckResult } from '../domain/types.ts';
+// Results themselves are no longer gauges: a bar of the points earned with the word, or a small
+// square in compact grids (src/components/ui/Results.tsx).
 
 /** An arc of a circle from one angle to another, in degrees (0 is right, 90 is down, 270 is up). */
 export function arcPath(cx: number, cy: number, r: number, from: number, to: number): string {
@@ -25,29 +25,15 @@ export function pointOn(cx: number, cy: number, r: number, angle: number): [numb
   return [Number((cx + r * Math.cos(radians)).toFixed(2)), Number((cy + r * Math.sin(radians)).toFixed(2))];
 }
 
-// The small result gauge ------------------------------------------------------------------------
+/** The drawing's box (the "0" and "100" under the ends included) and the arc in it. */
+export const SCORE_GAUGE = { width: 220, height: 132, cx: 110, cy: 112, r: 92, stroke: 14 } as const;
 
-export const RESULT_GAUGE = { width: 28, height: 16, cx: 14, cy: 14.5, r: 11, stroke: 4, gap: 12 } as const;
+/** Inter's tabular figures are all this wide, so the number's width is known without measuring. */
+export const FIGURE_EM = 0.6446;
 
-const FILLED: Readonly<Record<CheckResult, number>> = { strong: 3, okay: 2, weak: 1, missing: 0 };
-
-export type SegmentState = 'on' | 'off' | 'missing';
-
-export function resultGauge(result: CheckResult): Array<{ d: string; state: SegmentState }> {
-  const { cx, cy, r, gap } = RESULT_GAUGE;
-  const span = (180 - 2 * gap) / 3;
-  return [0, 1, 2].map((index) => {
-    const from = 180 + index * (span + gap);
-    return {
-      d: arcPath(cx, cy, r, from, from + span),
-      state: result === 'missing' ? 'missing' : index < FILLED[result] ? 'on' : 'off',
-    };
-  });
-}
-
-// The large score gauge -------------------------------------------------------------------------
-
-export const SCORE_GAUGE = { width: 220, height: 124, cx: 110, cy: 112, r: 92, stroke: 14 } as const;
+/** Sizes in the drawing's units: the number (smaller with three figures, so "/100" clears the
+ *  arc), "/100", and the "0" and "100" under the ends. */
+export const SCORE_TEXT = { number: 52, numberThree: 44, of: 14, end: 10.5, gap: 3, endDrop: 17 } as const;
 
 export interface ScoreGaugeShape {
   track: string;
@@ -55,14 +41,23 @@ export interface ScoreGaugeShape {
   value: string | null;
   /** One notch outside the arc where each band starts. */
   notches: Array<{ x1: number; y1: number; x2: number; y2: number }>;
-  /** Where "0" and "100" sit, under the two ends. */
+  /** Where "0" and "100" sit: centred under the two ends, on their baseline. */
   ends: { zero: [number, number]; hundred: [number, number] };
+  /** The number: its size, centred at x on the arc's baseline y; "/100" starts at ofX. */
+  number: { size: number; x: number; y: number; ofX: number };
 }
 
-export function scoreGauge(score: number, bandStarts: readonly number[]): ScoreGaugeShape {
+/**
+ * The gauge for a score. `tracking` is the letter spacing the number is drawn with, in em: the
+ * dashboard tightens it a touch; the PDFs, which cannot, pass 0.
+ */
+export function scoreGauge(score: number, bandStarts: readonly number[], tracking = 0): ScoreGaugeShape {
   const { cx, cy, r, stroke } = SCORE_GAUGE;
   const value = Math.max(0, Math.min(100, score));
   const angle = (of: number) => 180 + (180 * of) / 100;
+  const digits = String(Math.round(value)).length;
+  const size = digits > 2 ? SCORE_TEXT.numberThree : SCORE_TEXT.number;
+  const half = (digits * (FIGURE_EM + tracking) * size) / 2;
   return {
     track: arcPath(cx, cy, r, 180, 360),
     value: value > 0 ? arcPath(cx, cy, r, 180, angle(value)) : null,
@@ -73,6 +68,7 @@ export function scoreGauge(score: number, bandStarts: readonly number[]): ScoreG
         const [x2, y2] = pointOn(cx, cy, r + stroke / 2 + 9, angle(start));
         return { x1, y1, x2, y2 };
       }),
-    ends: { zero: [cx - r, cy + 14], hundred: [cx + r, cy + 14] },
+    ends: { zero: [cx - r, cy + SCORE_TEXT.endDrop], hundred: [cx + r, cy + SCORE_TEXT.endDrop] },
+    number: { size, x: cx, y: cy, ofX: Number((cx + half + SCORE_TEXT.gap).toFixed(2)) },
   };
 }

@@ -27,7 +27,7 @@ import {
   PageHead,
   PillarIcon,
   PlatformIcon,
-  ResultGauge,
+  ResultBar,
   ScoreBar,
   ScoreGauge,
   SectionTitle,
@@ -230,7 +230,7 @@ export function SummaryPage({ data }: PageProps): ReactElement {
               item.programs ? h(Text, { style: { ...styles.caption, ...clamp(1) } }, item.programs) : null,
               item.finding ? h(Text, { style: { ...styles.small, color: COLORS.muted, marginTop: 3, ...clamp(2) } }, item.finding) : null,
             ),
-            h(View, { style: { width: 128, alignItems: 'flex-end', gap: 5 } }, h(ResultGauge, { result: item.result }), h(ValueText, { text: item.worth, style: { ...styles.caption, textAlign: 'right' } })),
+            h(View, { style: { width: 128, alignItems: 'flex-end', gap: 5 } }, h(ResultBar, { result: item.result }), h(ValueText, { text: item.worth, style: { ...styles.caption, textAlign: 'right' } })),
           ),
         ),
         ...(data.working.length === 0 ? [h(Text, { key: 'none', style: styles.small }, 'Your first strengths show here once a check reaches Okay.')] : []),
@@ -266,7 +266,7 @@ export function FixBlock({ fix, first, compact, maxPoints }: { fix: ReportFix; f
             { style: { flexDirection: 'row', alignItems: 'center', gap: 10 } },
             h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 6 } }, h(CheckIcon, { check: fix.key, size: 11 }), h(Text, { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: -0.1 } }, fix.name)),
             // An institution check has one result, shown beside its name.
-            single ? h(ResultGauge, { result: single.result, size: 'sm' }) : null,
+            single ? h(ResultBar, { result: single.result, size: 'sm' }) : null,
           ),
           // Program results name their programs; with too many to list, say how many.
           fix.resultsNote ? h(Text, { style: styles.caption }, fix.resultsNote) : null,
@@ -292,7 +292,7 @@ export function FixBlock({ fix, first, compact, maxPoints }: { fix: ReportFix; f
                 View,
                 { key: index, style: { flexDirection: 'row', alignItems: 'center', gap: 5 } },
                 part.program ? h(Text, { style: { fontSize: 7.5, color: COLORS.muted } }, part.program) : null,
-                h(ResultGauge, { result: part.result, size: 'sm' }),
+                h(ResultBar, { result: part.result, size: 'sm' }),
               ),
             ),
           )
@@ -710,7 +710,7 @@ export function DemandPage({ data, compact = false }: PageProps): ReactElement {
       h(
         View,
         { key: 'questions', style: styles.section },
-        h(SectionTitle, { title: 'Top questions', lead: 'What students ask most, grouped. Hindi and Assamese questions are shown in English.' }),
+        h(SectionTitle, { title: 'Top questions', lead: demand.questionsLead }),
         ...demand.questions.map((question, index) =>
           h(
             Keep,

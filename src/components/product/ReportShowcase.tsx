@@ -1,14 +1,15 @@
 // The sample report section: three of its pages drawn from the same data as the PDF (the black
-// cover, the score summary and the 3 things to do), and the download of the full sample PDF.
-// The drawn pages are decoration for sighted readers; the text beside them says what they show.
+// cover, the score summary and the 3 things to do), fanned out on the ivory, and the download of
+// the full sample PDF. The drawn pages are decoration for sighted readers; the words beside them
+// say what they show.
 
+import { ScoreGauge } from '@/components/charts/ScoreGauge';
 import { AnchorButton } from '@/components/ui/Button';
-import { bandStarts } from '@/domain/scores';
-import { SCORE_GAUGE, scoreGauge } from '@/graphics/gauge';
 import type { ReportData } from '@/report/data';
 import { THING_SOURCE_LABELS } from '@/report/things';
 import { REPORT } from '@/product/content';
-import { Eyebrow } from './Sections';
+import site from '@/components/site/site.module.css';
+import { Title } from './Sections';
 import papers from './papers.module.css';
 import styles from './product.module.css';
 
@@ -54,33 +55,15 @@ function Cover({ data }: { data: ReportData }) {
   );
 }
 
-/** The summary page's gauge, as the PDF draws it: the score on a half circle, the number inside. */
-function Gauge({ score }: { score: number }) {
-  const shape = scoreGauge(score, bandStarts());
-  return (
-    <span className={papers.gauge}>
-      <svg viewBox={`0 0 ${SCORE_GAUGE.width} ${SCORE_GAUGE.height}`}>
-        <path d={shape.track} className={papers.gaugeTrack} strokeWidth={SCORE_GAUGE.stroke} />
-        {shape.value ? <path d={shape.value} className={papers.gaugeValue} strokeWidth={SCORE_GAUGE.stroke} /> : null}
-        {shape.notches.map((notch) => (
-          <line key={`${notch.x1}-${notch.y1}`} {...notch} className={papers.gaugeNotch} />
-        ))}
-      </svg>
-      <span className={papers.gaugeNumber}>
-        <span className={`${papers.gaugeValueText} num`}>{score}</span>
-        <span className={`${papers.scoreOut} num`}>/100</span>
-      </span>
-    </span>
-  );
-}
-
 function Summary({ data }: { data: ReportData }) {
   return (
     <div className={`${papers.page} ${papers.summary}`} data-theme="light">
       <div className={papers.sheet}>
         <p className={papers.over}>Score summary</p>
         <p className={papers.title}>Your score in {data.monthLabel.split(' ')[0]}</p>
-        <Gauge score={data.summary.overall} />
+        <span className={papers.gauge}>
+          <ScoreGauge score={data.summary.overall} />
+        </span>
         <div className={papers.bars}>
           {data.summary.pillars.map((pillar) => (
             <div key={pillar.pillar} className={papers.bar}>
@@ -112,10 +95,10 @@ function Summary({ data }: { data: ReportData }) {
   );
 }
 
-/** The report's "3 things to do" page. `className` places it: in the stack below, or on its own. */
-export function ThingsPaper({ data, className = papers.things }: { data: ReportData; className?: string }) {
+/** The report's "3 things to do" page. */
+function Things({ data }: { data: ReportData }) {
   return (
-    <div className={`${papers.page} ${className}`} data-theme="light">
+    <div className={`${papers.page} ${papers.things}`} data-theme="light">
       <div className={papers.sheet}>
         <p className={papers.over}>This month</p>
         <p className={papers.title}>3 things to do this month</p>
@@ -150,25 +133,24 @@ export function ThingsPaper({ data, className = papers.things }: { data: ReportD
 
 export function ReportShowcase({ data }: { data: ReportData }) {
   return (
-    <section className={`${styles.section} ${styles.ruled}`} data-theme="dark" aria-labelledby="report-title">
-      <div className={`${styles.container} ${styles.reportGrid}`}>
-        <div className={styles.head}>
-          <Eyebrow>Sample report</Eyebrow>
-          <h2 id="report-title" className={styles.title}>
-            {REPORT.title}
-          </h2>
-          <p className={styles.lede}>{REPORT.lede}</p>
+    <section id="report" className={styles.report} data-theme="light" aria-labelledby="report-title">
+      <div className={site.container}>
+        <Title id="report-title" lines={REPORT.title} light={false} className={site.reveal} />
+      </div>
+      <div className={`${site.container} ${styles.reportGrid}`}>
+        <div className={`${styles.reportHead} ${site.reveal}`}>
+          <p className={site.lede}>{REPORT.lede}</p>
           <div className={styles.download}>
-            <AnchorButton href={SAMPLE_REPORT_PATH} download icon="download" variant="secondary">
+            <AnchorButton href={SAMPLE_REPORT_PATH} download icon="download" size="lg" className={site.ctaInk}>
               {REPORT.download}
             </AnchorButton>
-            <span className={`${styles.sampleNote} invert`}>{REPORT.note}</span>
+            <span className={styles.sampleNote}>{REPORT.note}</span>
           </div>
         </div>
-        <div className={`${papers.stack} ${styles.reveal}`} aria-hidden="true">
+        <div className={papers.stack} aria-hidden="true">
           <Cover data={data} />
           <Summary data={data} />
-          <ThingsPaper data={data} />
+          <Things data={data} />
         </div>
       </div>
     </section>

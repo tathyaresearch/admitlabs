@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import type { ItemPart, ListItem } from '@/audit/view';
 import { Icon } from '@/components/ui/Icon';
 import { CheckIcon } from '@/components/ui/Marks';
-import { Difficulty, PointsValue, ResultGauge } from '@/components/ui/Results';
+import { Difficulty, PointsValue, ResultBar } from '@/components/ui/Results';
 import { DIFFICULTY_LABELS, type CheckKey } from '@/domain/types';
 import { PartResults } from './Parts';
 import styles from './audit.module.css';
@@ -78,8 +78,9 @@ function Row({ to, check, rank, name, sub, result, meta }: { to: string; check: 
 }
 
 function ItemResult({ item }: { item: ListItem }) {
-  if (item.parts.length === 1 && item.parts[0]) return <ResultGauge result={item.parts[0].result} size="sm" />;
-  if (item.strength) return <ResultGauge result={item.strength} size="sm" />;
+  const [only] = item.parts;
+  if (item.parts.length === 1 && only) return <ResultBar result={only.result} points={only.points} max={only.maxPoints} showPoints={false} size="sm" />;
+  if (item.strength) return <ResultBar result={item.strength} size="sm" />;
   return <span className={styles.varies}>{item.parts.length} programs</span>;
 }
 

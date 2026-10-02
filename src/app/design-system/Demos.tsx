@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { ResultGauge } from '@/components/ui/Results';
+import { ResultBar } from '@/components/ui/Results';
 import { SourceLine } from '@/components/ui/Data';
 import { Difficulty } from '@/components/ui/Results';
 import { Dialog, SidePanel } from '@/components/ui/Overlay';
@@ -82,7 +82,7 @@ export function OverlayDemo() {
         }
       >
         <div className={styles.stack}>
-          <ResultGauge result="weak" size="lg" />
+          <ResultBar result="weak" size="lg" />
           <div className={styles.panelBlock}>
             <p className={styles.panelLabel}>What we found</p>
             <p>The BBA page says &quot;Contact us for fees&quot;. No amounts are shown anywhere on the site.</p>

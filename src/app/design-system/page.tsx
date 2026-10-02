@@ -26,7 +26,7 @@ import { Checkbox, RadioGroup, SelectField, TextAreaField, TextField } from '@/c
 import { Icon, ICON_NAMES } from '@/components/ui/Icon';
 import { Card, Eyebrow, FactList, Highlight, PageHeader, Section } from '@/components/ui/Layout';
 import { LockedPanel } from '@/components/ui/LockedPanel';
-import { Delta, Difficulty, ResultGauge, ScoreLabel } from '@/components/ui/Results';
+import { Delta, Difficulty, ResultBar, ResultKey, ResultSquares, ScoreLabel } from '@/components/ui/Results';
 import { contrastRatio } from '@/domain/contrast';
 import { RESULTS } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
@@ -108,7 +108,7 @@ const SAMPLE_ROWS: SampleRow[] = [
 const SAMPLE_COLUMNS: Column<SampleRow>[] = [
   { key: 'check', header: 'Check', render: (row) => row.check },
   { key: 'pillar', header: 'Pillar', render: (row) => row.pillar },
-  { key: 'result', header: 'Result', render: (row) => <ResultGauge result={row.result} size="sm" /> },
+  { key: 'result', header: 'Result', render: (row) => <ResultBar result={row.result} size="sm" /> },
   { key: 'points', header: 'Points', align: 'end', numeric: true, render: (row) => row.points },
 ];
 
@@ -309,7 +309,7 @@ function ThemePreview() {
       <ScoreHero score={73} change={1} />
       <div className={styles.row}>
         {RESULTS.map((result) => (
-          <ResultGauge key={result} result={result} />
+          <ResultBar key={result} result={result} />
         ))}
       </div>
       <div className={styles.row}>
@@ -641,7 +641,7 @@ export default async function DesignSystemPage() {
           <Section
             id="results"
             title="Results"
-            description="Strong, Okay, Weak, Missing: a 3-segment meter and the word, always together. Strong sits in an inverted block. Missing is a dashed outline."
+            description="Strong, Okay, Weak, Missing. In rows and lists: a thin bar of the points earned against possible, then the word. In compact grids: a small square in four shades, with a key nearby. Missing is a dashed outline; the word is always there, beside the bar or on hover and read out."
           >
             <Card>
               <div className={styles.resultsGrid}>
@@ -649,13 +649,22 @@ export default async function DesignSystemPage() {
                   <div key={size} className={styles.resultsRow}>
                     <span className={styles.caption}>{size}</span>
                     {RESULTS.map((result) => (
-                      <ResultGauge key={result} result={result} size={size} />
+                      <ResultBar key={result} result={result} size={size} />
                     ))}
                   </div>
                 ))}
                 <div className={styles.resultsRow}>
-                  <span className={styles.caption}>plain</span>
-                  <ResultGauge result="strong" />
+                  <span className={styles.caption}>points</span>
+                  <ResultBar result="okay" points={18} max={30} />
+                  <ResultBar result="varies" points={21} max={30} />
+                </div>
+                <div className={styles.resultsRow}>
+                  <span className={styles.caption}>grid</span>
+                  <ResultSquares
+                    label="Every check"
+                    checks={RESULTS.map((result) => ({ key: result, name: `A ${result} check`, result }))}
+                  />
+                  <ResultKey />
                 </div>
               </div>
             </Card>

@@ -420,7 +420,7 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 
 - One PDF per institution per month. Downloadable from `/reports`. Paid and Client only.
 - Stored in Supabase Storage.
-- Same brand as the dashboard (section 14): the overall score on its gauge, each result on the small gauge, check and pillar icons, and bars for what each fix could add, how fast a trend rises and how often a question is asked.
+- Same brand as the dashboard (section 14): the overall score on its gauge, each result as a thin bar of the points it earns with the word, check and pillar icons, and bars for what each fix could add, how fast a trend rises and how often a question is asked.
 
 **Contents, in order:**
 
@@ -494,7 +494,7 @@ Drishti uses the AdmitLabs brand. **No exceptions.**
 | Ivory | #F2E8D6 | Text on dark, main light surface |
 | Slate | #8A8D94 | Captions, metadata |
 
-Confirm these hex values against the AdmitLabs brand identity PDF before Phase 1 ends. Greys between black and ivory are allowed. **No accent colour. No green, amber or red. No gradients, no glow.** One exception: the AdmitLabs website (section 22) may use subtle monochrome gradients (black to graphite, soft ivory tones) for light, depth and section transitions. Never colour, neon or glow. The dashboard and `/drishti` keep no gradients.
+Confirm these hex values against the AdmitLabs brand identity PDF before Phase 1 ends. Greys between black and ivory are allowed. **No accent colour. No green, amber or red. No gradients, no glow.** One exception: the AdmitLabs website (section 22), the `/drishti` product page included (section 15), may use subtle monochrome gradients (black to graphite, soft ivory tones) for light, depth and section transitions. Never colour, neon or glow. The dashboard keeps no gradients.
 
 **Type**
 
@@ -510,10 +510,10 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 **Showing Strong, Okay, Weak, Missing without colour**
 
-- A small semi-circle gauge of three arc segments: Strong = 3 filled, Okay = 2 filled, Weak = 1 filled, Missing = an empty dashed arc.
-- One gauge style for every result, on screen and in the PDF, so a list reads evenly.
-- The word is always shown next to the gauge. Never rely on the gauge alone.
-- The overall score sits on a large gauge: filled to the score out of 100, with a notch where Needs work (40) and Strong (70) begin, and the number inside in Inter.
+- In rows and lists: a thin bar of the points earned against the points possible (for example 18/30), then the word. Missing is an empty dashed bar. One style for every result, on screen and in the PDF, so a list reads evenly.
+- In compact grids: one small square per check, in four shades: Strong solid (ivory on black, black on ivory), Okay mid grey, Weak dark grey with a thin outline (so it stands out from the surface at least 3 to 1), Missing a dashed outline. A small key sits nearby.
+- Readable on black and on ivory. The word is always available: beside the bar, on hover, and for screen readers. Never rely on the shape alone.
+- The overall score sits on a large gauge: filled to the score out of 100, with a notch where Needs work (40) and Strong (70) begin. The number, in Inter, sits centred inside the arc on its baseline, never touching it, with "/100" smaller on the same baseline; "0" and "100" line up under the arc's two ends (left out on a small gauge). The same drawing on screen and in the PDF.
 
 **Icons and logos**
 
@@ -543,19 +543,25 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 ## 15. Product page (`/drishti`)
 
-**Premium product landing page.** Same design system.
+**Premium product landing page, part of the AdmitLabs website** (section 22), rebuilt in its **Spotlight** style on 2026-10-02: the website's header and footer, its light, frames and buttons, and the product itself for pictures. Same design system, with the website's subtle monochrome gradients (section 14). No small labels above headings.
+
+**The pictures** are the dashboard's own components, filled from the sample world by the real scoring engine and shown under the website's made-up names: Larkmoor University, Bangalore, with Calderwood College, Brackenfield University and Thornbury College as its rivals (Karnataka, Kannada). Only the names change, never a number, so the website, this page and the sample report agree. They carry no caption. The dashboard's own sample keeps its names.
 
 **Sections, in order:**
 
-1. **Hero**: "See where you stand, who's ahead, and what students want." One button: "Get your free Audit". A large picture of the dashboard's Home in an app window (sample data)
-2. **The problem**: institutions guess what students see and what rivals do
-3. **What Drishti does**: one bento grid. The three features (Audit, Rivals, Demand) first and largest: ivory tiles, each with its icon, its place ("Feature 1 of 3") and a real-looking screen preview (sample data). Then three quieter tiles: the score (Discovered, Trusted, Chosen, explained simply); the monthly report; and public data only
-4. **How it works**: enter details, Drishti checks everything, see results, get a monthly report
-5. **Sample report**: preview of the monthly PDF
-6. **Plans**: Free and Paid (₹9,999 for 6 months, no auto-renew)
-7. **For AdmitLabs clients**: included free, with the team acting on it
-8. **FAQ**: data sources, privacy, what "public data only" means, renewal
-9. **Final call to action**: "Get your free Audit"
+1. **Hero**: the product's name, then "See where you stand, who's ahead, and what students want." with the last words in an ivory block. "Get your free Audit" and "See the sample report", the trust line and the proof line, then the dashboard's Home in an app window that settles flat as the page moves
+2. **The problem** (ivory): what most teams are left guessing (how they look, what rivals do, what students want), each with what Drishti answers
+3. **Three questions**: the Audit, Rivals and Demand, each laid out its own way around a real picture of the product: the Audit on a dark stage, Rivals on ivory, Demand centred
+4. **The score**: Discovered, Trusted and Chosen, each with its question and its checks by name, then what each result earns
+5. **Public data only**: the rules every result follows, in one framed band
+6. **How it works**: four steps on a line that fills as the page moves: enter details, Drishti checks everything, see results, get a monthly report
+7. **Sample report** (ivory): three of its pages fanned out, and the download of the full sample PDF, marked "Sample report. Fictional data." on every page
+8. **Plans**: Free and Paid (₹9,999 for 6 months, no auto-renew), Paid on ivory, then every feature compared
+9. **For AdmitLabs clients**: included free, with the team acting on it
+10. **FAQ**: data sources, privacy, what "public data only" means, renewal
+11. **Final call to action**: "Get your free Audit", under the same light as the top of the page
+
+**Motion**, calm and almost all CSS: sections and headings fade and rise in; the score counts up while its gauge draws; points bars fill; the rivals slide into rank order; Demand's bars grow; the report's pages fan out; buttons, cards and plans answer the pointer. With reduced motion, or no script, everything shows settled.
 
 "Get your free Audit" leads to `/login` then `/onboarding`.
 
@@ -688,24 +694,30 @@ Fictional only. No real institution names.
 
 - WhatsApp summary of the monthly report (later)
 - Email reminders for plan end (later)
-- Whet## 22. AdmitLabs website (admitlabs.in)
+- Whether AdmitLabs serves two direct rivals for the same program in the same city (services decision)
+- Moving thresholds from fixed rules to peer comparison (after enough Audits)
+- Final hex values, confirmed against the brand identity PDF
+
+---
+
+## 22. AdmitLabs website (admitlabs.in)
 
 The main AdmitLabs website, built in this app (section 4), in the **Spotlight** style chosen on 2026-10-02: premium and calm (think Linear, Vercel, Resend, Attio, Raycast). Black with soft light from above, ivory surfaces for the moments that matter, fine frames with small cross marks, a light grain where light falls, and crafted pictures of what students actually see. It turns a visitor into a free Audit or an enquiry.
 
 **What AdmitLabs is:** an education only content partner. Three services (content only, never ads) and two products: Drishti for institutions and Tathya for students.
 
-**Pages:** the home page (`/`), Work with us (`/work-with-us`) and the product page (`/drishti`, section 15, unchanged). One header on every page: Services, Drishti, How we work, FAQ, "Work with us" and "Get your free Audit" (a menu on a phone); clear over the light at the top, glass once the page moves. One footer: "© 2026 AdmitLabs" (the current year), the email, Drishti and Sign in.
+**Pages:** the home page (`/`), Work with us (`/work-with-us`) and the product page (`/drishti`, section 15, in the same style). One header on every page: Services, Products (a small menu: Drishti, and Tathya, which opens mytathya.in in a new tab), How we work, FAQ, "Work with us" and "Get your free Audit" (a menu on a phone, with both products); clear over the light at the top, glass once the page moves. The logo and the buttons keep clear of the frame's lines and crosses, on a desktop and on a phone. One footer: "© 2026 AdmitLabs" (the current year), the email, Drishti and Sign in.
 
 **Home page sections, in order:**
 
 1. **Hero**: "Get discovered, trusted, and chosen." in two lines (80px on a desktop), falling from ivory to warm grey, centred on black under a soft cone of light, inside a fine frame with small crosses. One short paragraph, two buttons ("Get your free Audit" and "Work with us"), and the quiet proof line "120+ education companies worked with." No picture, no labels
 2. **The system** (ivory): one dark stage where the three moments happen in the order a student lives them: a search where the institution is the answer (an AI answer and the top result), a review and its proof, and an enquiry that someone receives. Under each, its words set like a caption: Discovered, Trusted or Chosen, its line, and what Drishti checks. Then "Measure. Fix. Repeat." as one sentence on one track, with a dot that travels it. On a phone each moment gets its own small stage
 3. **Services**: three chapters, each laid out its own way around what that service makes: Program Growth beside a program's own page (a browser, and the phone in front; on a phone, the phone alone); Institution Branding on a stage of phones (the official page's posts, a reel, a YouTube film); Admit Campaign beside its season, planned week by week, with this week's posts. Instagram and YouTube appear only as their official one colour logos. Each links to the form with the service named. "We create content. We don't run ads." No prices
-4. **Drishti**: its three numbers (17 checks, 5 rivals, 1 report), its three questions as a short list beside the product itself, a made up institution's Home in an app window, then "Free to start." with "Get your free Audit" and "Explore Drishti"
+4. **Drishti**: under one small label, "Product", the only one on the page, its name; its three numbers (17 checks, 5 rivals, 1 report), its three questions as a short list beside the product itself, a made up institution's Home in an app window, then "Free to start." with "Get your free Audit" and "Explore Drishti"
 5. **Who we work with** (ivory): private colleges, private universities, and skilling and training institutes, set large as a staircase, for professional and career programs
 6. **Our work**: content samples. Hidden until there are samples (`src/site/work.ts`) and `SITE_SETTINGS.showWork` is on
 7. **How we work**: the promise held on the left; Audit, Blueprint, Run and Report on a line that fills as the page moves. No numbers
-8. **Tathya**: one line for students in a framed band. Its button shows once `SITE_SETTINGS.tathyaUrl` is set
+8. **Tathya**: its name with "For students" under it, one line, and "Explore Tathya", which opens mytathya.in in a new tab, in a framed band
 9. **FAQ**: ads, who we work with, who owns the content, whether Drishti is free, how to start
 10. **Final call**: "See where you stand this month." under the same light as the top of the page, with both buttons
 
@@ -713,10 +725,10 @@ The main AdmitLabs website, built in this app (section 4), in the **Spotlight** 
 
 - Say only who we work with, never who we don't.
 - No service prices on the website. No discounts.
-- No small labels above headings, no numbered steps, no icons in boxes, and no two sections built the same way.
+- No small labels above headings (the one exception: "Product" above Drishti by AdmitLabs), no numbered steps, no icons in boxes, and no two sections built the same way.
 - The pictures show a made up institution, Larkmoor University, in Bangalore, with made up neighbours (Calderwood College, Brackenfield University, Thornbury College): none is a real institution, and none of it is Drishti's own sample data (`src/site/scenes.ts`). They carry no caption.
-- Gradients: subtle and monochrome only (black to graphite, soft ivory tones), for light, depth and transitions. Never colour, neon or glow. The website only (section 14).
-- Motion is CSS only, with no animation library: the light and frame come in on load, the moments arrive as they scroll into view, a dot travels the loop. With reduced motion nothing moves and everything shows settled. Lighthouse near 90 on a phone.
+- Gradients: subtle and monochrome only (black to graphite, soft ivory tones), for light, depth and transitions. Never colour, neon or glow. The website and `/drishti` only (section 14).
+- Motion is CSS only, with no animation library: the light and frame come in on load, sections fade and rise in, the moments and pictures play their details as they scroll into view, a dot travels the loop, and buttons, cards and links answer the pointer calmly. With reduced motion nothing moves and everything shows settled. Lighthouse near 90 on a phone.
 - Works on a phone, with no stretched cards.
 
 **Work with us:** the same style (light from above, the frame), the words on the left and the form on an ivory card. Name, institution, role (Founder or director, Principal or dean, Admissions, Marketing, Other), email and phone are required; the program to grow and a message are optional. Then "Thanks. We'll reply within one working day." Each enquiry is saved to `enquiries` (section 16) and shows in the team's Enquiries list (section 13). No emails are sent. A hidden field turns bots away, and one email can send at most 3 a day.
