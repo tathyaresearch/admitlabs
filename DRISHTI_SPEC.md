@@ -430,7 +430,7 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 3. What's working (top 3)
 4. What to fix (ranked)
 5. By program (one short block each)
-6. Rivals: head to head, each pillar against every rival, key moves
+6. Rivals: head to head, each part ranked against every rival, key moves
 7. Demand: rising trends, top questions, content ideas
 8. **3 things to do this month**
 9. Sources and dates checked
@@ -453,14 +453,14 @@ Keep it short enough to read in 5 minutes.
 | Log in (`/login`) | The same email and code. "Welcome back", "Enter your email. We'll send you a code." Log in never says whether an email has an account, so nobody can check who uses Drishti: for any email it shows the same code step, "If this email has a Drishti account, we've sent a code. New here? Sign up." (Sign up carries the email over), and answers in about the same time. It sends a code only to an account that exists, or to someone invited by an owner or the AdmitLabs team, who comes in like any account and joins on first sign in. It never creates an account for anyone else. "New to Drishti? Sign up". Left side: the Drishti eye, big, in the middle, following the cursor, among four cards of the sample's dashboard that lean with the cursor and change in turn (the score counts up, the rivals change places, the questions come in, the searches grow); the eye watches each card as it changes and reads along the field while someone types |
 | Sign up and log in, both | The form first in reading order. On a wide screen the left side sits beside it; on a phone it is a small band above the form and plays on its own, as on any touch screen. With reduced motion the left side is still. The left side carries the logo and one line, "See where you stand. Every month." |
 | Onboarding | The input form from section 6, then program pick for Free. No left side; the Drishti logo, with its eye, at the top |
-| Home | Overall score on its gauge with the score month by month, how far the next band is, 3 pillars (each with its trend, how many of its checks are Strong and its weakest check), change, top 3 fixes, rival snapshot with the latest move, 1 demand highlight with its searches by month, 3 things to do |
+| Home | Overall score on its gauge with the score month by month, how far the next band is, 3 parts (each with the question it answers, how it moved in words, its checks as one bar split by result with the counts, and what to fix first), change, top 3 fixes, rival snapshot with the latest move, 1 demand highlight with its searches by month, 3 things to do |
 | Audit | Pillars, all checks with results and points earned against possible, what's working, what to fix, score history, program switcher |
 | Program detail | Same as Audit, for one program |
 | Check detail | Side panel: result, what was found, source link, date checked, how to fix, difficulty, details added by you |
-| Rivals | Rival list, head to head table, each pillar against every rival, overall score month by month, where you lead, moves, best content |
-| Rival detail | One rival's full view, pillar by pillar and month by month |
+| Rivals | Rival list, head to head table, part by part (each part ranked against every rival), overall score month by month as a table, where you lead, moves, best content |
+| Rival detail | One rival's full view, part by part and month by month |
 | Demand | Region switch (City, State, All India), 6 output sections from 9.4, the fastest rise by month, rising and falling as bars |
-| Reports | List of monthly PDFs, download, the score trend |
+| Reports | List of monthly PDFs, download, the score by month with every point's value |
 | Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans |
 | Settings | Institution details, programs, social links, users, details added by you (section 6) |
 | Notifications | Alerts list |
@@ -527,9 +527,12 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 **Showing Strong, Okay, Weak, Missing without colour**
 
 - In rows and lists: a thin bar of the points earned against the points possible (for example 18/30), then the word. Missing is an empty dashed bar. One style for every result, on screen and in the PDF, so a list reads evenly.
-- In compact grids: one small square per check, in four shades: Strong solid (ivory on black, black on ivory), Okay mid grey, Weak dark grey with a thin outline (so it stands out from the surface at least 3 to 1), Missing a dashed outline. A small key sits nearby.
+- A part's checks (Discovered, Trusted, Chosen), every one named (rule 11 in section 18; chosen in the product review of October 2026, replacing the squares with a key):
+  - Where there's room (the Audit, a program, the team's institution pages, a shared Audit): every check as a row, weakest first (the worst result, then the most to gain): its icon, its name, a thin bar and the word. A program check shows its weakest program. A row opens the check where the page has its panel.
+  - Where it's tight (Home, and the part cards in the `/drishti` hero and `/signup` pictures, and "Every check" in the `/drishti` Audit picture): one bar for the part, split by result in four shades (Strong solid, Okay mid grey, Weak dark grey with a thin outline so it stands out at least 3 to 1, Missing a dashed outline), with each count written under its own piece ("2 Strong"), then "Fix first" and the weakest check with its bar and word.
 - Readable on black and on ivory. The word is always available: beside the bar, on hover, and for screen readers. Never rely on the shape alone.
-- The overall score sits on a large gauge: filled to the score out of 100, with a notch where Needs work (40) and Strong (70) begin. The number, in Inter, sits centred inside the arc on its baseline, never touching it, with "/100" smaller on the same baseline; "0" and "100" line up under the arc's two ends (left out on a small gauge). The same drawing on screen and in the PDF.
+- The overall score sits on a large gauge: filled to the score out of 100, with a tick where Needs work (40) and Strong (70) begin, and over each tick what it means, on two lines: "Needs work" over "from 40", "Strong" over "from 70". The number, in Inter, sits centred inside the arc on its baseline, never touching it, with "/100" smaller on the same baseline; "0" and "100" line up under the arc's two ends. A small gauge leaves out the ends, the ticks and their words: the number says it all. The line under it says how far the next band is ("24 points to Strong", "3 points above where Strong starts"). The same drawing on screen and in the PDF.
+- Each part card names the question it answers ("Can students find you?", "Do they believe you?", "Is it easy to pick you?") and, with history, how it moved in words ("Up 17 since April"), not a small line.
 
 **Icons and logos**
 
@@ -540,7 +543,11 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 **Charts**
 
-- Hand-built, monochrome: you in the text colour, rivals in grey, each named on the chart. No legend to decode.
+- Hand-built, monochrome: you in the text colour, rivals in grey, each named on the chart. No legend to decode (rule 11).
+- Every mark has its number or name beside it: every month's score on the score by month, every month's count on its bar, every point of the Reports card's small line with its value and month. A chart with one point is words instead ("First Audit. The next one shows how the score moves").
+- You and your rivals part by part: each part as a ranked list with real names, the score and a thin bar, your row highlighted, and one plain line about the gap ("You lead Silverline College by 6", "3 behind Silverline College"). Three side by side when there is room, one under another on a phone. On screen, in the PDF and in the `/drishti` Rivals picture.
+- Month by month, you and your rivals: a table of numbers, your row first and marked, and one line about your place ("2nd of 4 in every month since April"). A phone keeps the last three months.
+- The admission year: its stages ahead as one strip, each piece named on its own months with when it runs, the one now in the text colour; one stage a line on a phone.
 - Numbers in Inter. Every chart can be read as text or a table too.
 
 **Copy rules**
@@ -569,8 +576,8 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 1. **Hero**: the product's name with the Drishti eye (its Rise reveal plays once as the intro, section 14), then "See where you stand, who's ahead, and what students want." (two lines on a wide screen) with the last words in an ivory block. "Get your free Audit" and "See the sample report", the trust line and the proof line, then the dashboard's Home in an app window that settles flat as the page moves
 2. **The problem** (ivory), one tight band with less space around it than the other sections: "Most teams guess. Drishti checks." with its line beside it (on a wide screen the headline left and the line right, their last lines level), then one wide Drishti card, dense like the dashboard. A top bar with the sample university and when it was last checked, then its answers to the three questions in three panels side by side (two, then the questions across, on a tablet or small laptop; stacked on a phone), each with where it came from: its score (number, thin bar and word) from the Audit's 17 checks of public pages; its place among its rivals, by name in thin rows, from each one's own Audit; the questions students ask most in its city, each on one line with its site and count small on the right ("Quora · 96"); and at the foot of that panel one short line with the search rising fastest and its numbers (Search trends)
-3. **The three features**, each in the same frame: a bar with its name (heavy and narrow, with the dashboard's icon), its question and its place ("1 of 3"), which stays under the header while its pictures pass, on a phone too; one short line; then the product across the full width on a dark stage. The Audit with its score gauge, what to fix first and every check; Rivals with the ladder, the latest move and each pillar; Demand with the fastest rise by month, what else is rising and the question asked most
-4. **The score**, inside the Audit (its label says so): "One score, from 17 checks." Beside the words, the sample's overall score; then a table of the three parts side by side (Discovered, Trusted, Chosen; stacked on a phone), each with its question and its score on a thin bar, and its checks, one to a row, each with its result. A table: every row one height, every bar one width in one place, the result words in one column; the rows line up across the parts, and Trusted, with one check fewer, ends in an empty slot ruled like the rest. A check made for each program shows its weakest program, as the Audit's grid does. The only numbers are the total and the three part scores, which average to it: no points per check. Then, compact, what each result earns
+3. **The three features**, each in the same frame: a bar with its name (heavy and narrow, with the dashboard's icon), its question and its place ("1 of 3"), which stays under the header while its pictures pass, on a phone too; one short line; then the product across the full width on a dark stage. The Audit with its score gauge, what to fix first and every check; Rivals with the ladder and the latest move, and under them each part ranked across the full width; Demand with the fastest rise by month, what else is rising and the question asked most
+4. **The score**, inside the Audit (its label says so): "One score, from 17 checks." Beside the words, the sample's overall score; then a table of the three parts side by side (Discovered, Trusted, Chosen; stacked on a phone), each with its question and its score on a thin bar, and its checks, one to a row, each with its result. A table: every row one height, every bar one width in one place, the result words in one column; the rows line up across the parts, and Trusted, with one check fewer, ends in an empty slot ruled like the rest. A check made for each program shows its weakest program, as the Audit's rows do. The only numbers are the total and the three part scores, which average to it: no points per check. Then, compact, what each result earns
 5. **Public data only**: the rules every result follows, in one framed band
 6. **How it works**: four steps on a line that fills as the page moves: enter details, Drishti checks everything, see results, get a monthly report
 7. **Sample report** (ivory): three of its pages fanned out, and the download of the full sample PDF, marked "Sample report. Fictional data." on every page
@@ -667,6 +674,10 @@ Each data source is a **provider** with one shared interface: it takes an instit
 8. **Monochrome. Bricolage Grotesque for words, Inter for numbers that stand on their own.** No em dashes or en dashes.
 9. **Opportunity, not shame** in every piece of copy.
 10. **No discounts** on any plan.
+11. **Readable at a glance**, everywhere: the dashboard, the PDFs, a shared Audit and the pictures of the product on `/drishti` and the website.
+    - No shape, dot, square or colour without a name or number right next to it.
+    - No chart that needs a key to understand.
+    - If a person can't understand it in 3 seconds, simplify it.
 
 ---
 

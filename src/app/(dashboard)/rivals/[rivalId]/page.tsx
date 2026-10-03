@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { SectionHead } from '@/components/audit/AuditHeader';
 import { HeadToHead } from '@/components/charts/HeadToHead';
-import { TrendLines } from '@/components/charts/TrendLines';
+import { MonthTable } from '@/components/charts/MonthTable';
 import { NextSteps, type NextStep } from '@/components/home/NextSteps';
 import { ActivityTabs } from '@/components/rivals/Activity';
 import { CompareChecks, sideText } from '@/components/rivals/CompareChecks';
@@ -118,7 +118,7 @@ export default async function RivalPage({ params }: { params: Promise<{ rivalId:
                 items={[
                   {
                     id: 'pillars',
-                    label: 'Pillar by pillar',
+                    label: 'Part by part',
                     content: (
                       <HeadToHead
                         rivalName={rival.name}
@@ -135,7 +135,7 @@ export default async function RivalPage({ params }: { params: Promise<{ rivalId:
                   {
                     id: 'months',
                     label: 'Month by month',
-                    content: <TrendLines trend={detail.trend} label={`Overall score by month, you and ${rival.name}`} height={220} />,
+                    content: <MonthTable trend={detail.trend} label={`Overall score by month, you and ${rival.name}`} />,
                   },
                 ]}
               />

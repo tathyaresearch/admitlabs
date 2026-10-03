@@ -125,6 +125,14 @@
   color: var(--text-muted);
 }
 
+/* After a first Audit: words where the chart will be. */
+.sideFirst {
+  max-width: 26rem;
+  font: var(--type-body);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
 /* What each result earns (a shared Audit has no history to show). */
 .earns {
   display: grid;
@@ -195,80 +203,38 @@
   }
 }
 
-.pillarMain {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: end;
-  gap: var(--space-5);
+/* The question the part answers, under its name: "Can students find you?" */
+.pillarQuestion {
+  margin-top: calc(-1 * var(--space-2));
+  font: var(--type-caption);
+  color: var(--text-muted);
 }
 
 .pillarNumber {
-  display: grid;
-  justify-items: start;
-  gap: var(--space-2);
-}
-
-.pillarChecks {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-2) var(--space-3);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--line-raised);
 }
 
-/* The key to the pillar cards' squares, just under them. */
-.resultKey {
-  margin-top: calc(-1 * var(--space-1));
-}
-
-.strongCount {
+/* "Up 17 since April": how the part moved, in words. */
+.pillarSince {
   font: var(--type-caption);
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
-/* On the name's line, so "Weakest" stays beside the name when its result wraps below it. */
-.weakest {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  min-height: 1.5rem;
-  font: var(--type-small);
-}
-
-.weakestLabel {
-  flex: none;
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-.weakestCheck {
-  display: flex;
-  flex: 1;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1) var(--space-3);
-  min-width: 0;
+.pillarSince :global(.num) {
   color: var(--text);
-  text-decoration: none;
-}
-
-.weakestName {
   font-weight: var(--weight-heading);
 }
 
-.weakestGo {
-  margin-left: auto;
-  color: var(--text-muted);
-  transition:
-    color var(--duration-fast) var(--ease-out),
-    transform var(--duration-fast) var(--ease-out);
-}
-
-a.weakestCheck:hover .weakestGo {
-  color: var(--text);
-  transform: translateX(2px);
+/* Where it's tight: the split bar, then what to fix first, under a line. */
+.pillarSplit {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-raised);
 }
 
 /* What to do next */

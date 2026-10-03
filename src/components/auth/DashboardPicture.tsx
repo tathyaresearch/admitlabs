@@ -52,7 +52,7 @@ export function DashboardPicture({ showcase }: { showcase: Showcase }) {
         <div className={home.home}>
           <PageHead title="Home" question="How are we doing this month?" titleAs="p" />
           <div data-zone="score">
-            <HomeSummary view={audit} checkedAt={picture.checkedAt} trend={picture.trend} />
+            <HomeSummary view={audit} checkedAt={picture.checkedAt} trend={picture.trend} checks="split" />
           </div>
           <div className={home.pair}>
             <div data-zone="rivals">

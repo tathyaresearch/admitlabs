@@ -8,10 +8,9 @@ import { createElement as h, type ReactElement } from 'react';
 import { Circle, Line, Link, Page, Polyline, Svg, Text, View } from '@react-pdf/renderer';
 import { ADDED_BY_YOU } from '../../domain/details.ts';
 import { ordinal } from '../../domain/format.ts';
-import { bandStarts, nextBandText } from '../../domain/scores.ts';
-import { PILLAR_LABELS, PILLARS } from '../../domain/types.ts';
-import { dotLanes } from '../../graphics/dots.ts';
-import { pillarSpread, type Scored } from '../../rivals/trend.ts';
+import { nextBandText } from '../../domain/scores.ts';
+import { PILLAR_LABELS, PILLAR_QUESTIONS, PILLARS } from '../../domain/types.ts';
+import { partGap, pillarSpread, type Scored } from '../../rivals/trend.ts';
 import { THING_SOURCE_LABELS, type Thing } from '../things.ts';
 import type { ReportData, ReportFix, ReportFixRow } from '../data.ts';
 import {
@@ -491,8 +490,11 @@ const RIVAL_COLUMNS = [
   { key: 'change', label: 'Change', width: 58 },
 ] as const;
 
-/** Each pillar on one line from 0 to 100: you filled with your score, each rival open, your place on the right. */
-function RivalPillars({ rows }: { rows: NonNullable<ReportData['rivals']>['rows'] }): ReactElement | null {
+/**
+ * Part by part: each part of the score ranked, side by side, as on the dashboard: real names, the
+ * score and a thin bar, your row in black, and one plain line about the gap (rule 11).
+ */
+function RivalRanks({ rows }: { rows: NonNullable<ReportData['rivals']>['rows'] }): ReactElement | null {
   const toScored = (row: (typeof rows)[number]): Scored => ({
     id: row.name,
     name: row.name,
@@ -504,68 +506,47 @@ function RivalPillars({ rows }: { rows: NonNullable<ReportData['rivals']>['rows'
     toScored(you),
     rows.filter((row) => !row.you).map(toScored),
   );
-  const label = 96;
-  const rank = 60;
-  const plot = CONTENT_WIDTH - label - rank - 16;
-  const pad = 6;
-  const x = (score: number) => pad + (Math.max(0, Math.min(100, score)) / 100) * (plot - pad * 2);
-  const radius = { you: 4.2, rival: 3.6, gap: 1 };
-  const mid = 15;
-  const lane = 7.5;
+  const bar = 18;
+  const gapLine = (row: (typeof spread)[number]): ReactElement | null => {
+    const gap = partGap(row);
+    if (!gap) return null;
+    const number = (value: number) => h(Text, { style: { ...NUM, fontWeight: 600 } }, String(value));
+    const words =
+      gap.kind === 'level' ? [`Level with ${gap.name}`] : gap.kind === 'lead' ? [`You lead ${gap.name} by `, number(gap.points)] : [number(gap.points), ` behind ${gap.name}`];
+    return h(Text, { style: { fontSize: 7.5, marginTop: 2, ...clamp(2) } }, ...words);
+  };
   return h(
     View,
-    { wrap: false, style: { marginTop: 4 } },
-    h(
-      View,
-      { style: { flexDirection: 'row', gap: 14, marginBottom: 4 } },
-      h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 4 } }, h(View, { style: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: COLORS.black } }), h(Text, { style: styles.caption }, 'You')),
+    { wrap: false, style: { flexDirection: 'row', gap: GRID_GAP, marginTop: 4 } },
+    ...spread.map((row) =>
       h(
         View,
-        { style: { flexDirection: 'row', alignItems: 'center', gap: 4 } },
-        h(View, { style: { width: 7, height: 7, borderRadius: 3.5, borderWidth: 0.9, borderColor: COLORS.muted } }),
-        h(Text, { style: styles.caption }, 'Your rivals'),
-      ),
-    ),
-    ...spread.map((row) => {
-      const at = row.entries.map((entry) => ({ ...entry, x: x(entry.score) }));
-      const lanes = dotLanes(at, radius);
-      const height = mid + Math.max(0, ...lanes) * lane + 7;
-      const mine = at.find((entry) => entry.you);
-      return h(
-        View,
-        { key: row.pillar, style: { flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 0.75, borderTopColor: COLORS.line } },
-        h(View, { style: { width: label, flexDirection: 'row', alignItems: 'center', gap: 5 } }, h(PillarIcon, { pillar: row.pillar, size: 9.5 }), h(Text, { style: { fontSize: 8.5, fontWeight: 600 } }, PILLAR_LABELS[row.pillar])),
+        { key: row.pillar, style: { width: THIRD, paddingHorizontal: 8, paddingVertical: 7, gap: 2.5, backgroundColor: COLORS.panel, borderRadius: 4 } },
         h(
           View,
-          { style: { width: plot, height, position: 'relative' } },
-          h(
-            Svg,
-            { width: plot, height },
-            h(Line, { x1: x(0), y1: mid, x2: x(100), y2: mid, stroke: COLORS.lineMedium, strokeWidth: 1.2 }),
-            ...bandStarts().map((start) => h(Line, { key: start, x1: x(start), y1: mid - 4.5, x2: x(start), y2: mid + 4.5, stroke: COLORS.muted, strokeWidth: 0.8 })),
-            ...at.flatMap((entry, index) =>
-              entry.you ? [] : [h(Circle, { key: entry.id, cx: entry.x, cy: mid + (lanes[index] ?? 0) * lane, r: radius.rival, fill: COLORS.ivory, stroke: COLORS.muted, strokeWidth: 0.9 })],
+          { style: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' } },
+          h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 4 } }, h(PillarIcon, { pillar: row.pillar, size: 9 }), h(Text, { style: { fontSize: 8.5, fontWeight: 600 } }, PILLAR_LABELS[row.pillar])),
+          row.rank ? h(Text, { style: { fontSize: 7.5, color: COLORS.muted } }, h(Text, { style: { ...NUM, fontWeight: 600, color: COLORS.black } }, ordinal(row.rank)), ` of ${row.of}`) : null,
+        ),
+        h(Text, { style: { fontSize: 7, color: COLORS.muted, marginBottom: 1 } }, PILLAR_QUESTIONS[row.pillar]),
+        ...row.entries.map((entry) => {
+          const place = 1 + row.entries.filter((other) => other.score > entry.score).length;
+          const ink = entry.you ? COLORS.ivory : COLORS.black;
+          const share = Math.max(0, Math.min(1, entry.score / 100));
+          return h(
+            View,
+            { key: entry.id, style: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 2.5, paddingHorizontal: 4, borderRadius: 2, backgroundColor: entry.you ? COLORS.black : undefined } },
+            h(Text, { style: { ...NUM, width: 7, fontSize: 7, color: entry.you ? COLORS.ivory : COLORS.muted } }, String(place)),
+            h(Text, { style: { flex: 1, fontSize: 7.2, fontWeight: entry.you ? 600 : 500, color: ink, ...clamp(1) } }, entry.you ? 'You' : entry.name),
+            h(
+              View,
+              { style: { width: bar, height: 2.5, borderRadius: 1.25, backgroundColor: entry.you ? COLORS.lineDark : COLORS.track } },
+              share > 0 ? h(View, { style: { width: bar * share, height: 2.5, borderRadius: 1.25, backgroundColor: entry.you ? COLORS.ivory : COLORS.muted } }) : null,
             ),
-            mine ? h(Circle, { cx: mine.x, cy: mid, r: radius.you, fill: COLORS.black, stroke: COLORS.ivory, strokeWidth: 1 }) : null,
-          ),
-          mine ? h(Text, { style: { ...NUM, position: 'absolute', left: mine.x - 12, width: 24, top: mid - 15, textAlign: 'center', fontSize: 7, fontWeight: 600 } }, String(Math.round(mine.score))) : null,
-        ),
-        h(
-          Text,
-          { style: { width: rank, textAlign: 'right', fontSize: 8, color: COLORS.muted } },
-          row.rank ? h(Text, { style: { ...NUM, fontWeight: 600, color: COLORS.black } }, ordinal(row.rank)) : '',
-          row.rank ? ` of ${row.of}` : '',
-        ),
-      );
-    }),
-    h(
-      View,
-      { style: { flexDirection: 'row', gap: 8, borderTopWidth: 0.75, borderTopColor: COLORS.line, paddingTop: 3 } },
-      h(View, { style: { width: label } }),
-      h(
-        View,
-        { style: { width: plot, height: 9, position: 'relative' } },
-        ...[0, ...bandStarts(), 100].map((tick) => h(Text, { key: tick, style: { ...NUM, position: 'absolute', left: x(tick) - 10, width: 20, textAlign: 'center', fontSize: 6.5, color: COLORS.muted } }, String(tick))),
+            h(Text, { style: { ...NUM, width: 13, textAlign: 'right', fontSize: 8, fontWeight: 600, color: ink } }, String(Math.round(entry.score))),
+          );
+        }),
+        gapLine(row),
       ),
     ),
   );
@@ -590,7 +571,7 @@ export function RivalsPage({ data, compact = false }: PageProps): ReactElement {
     data,
     children: [
       h(PageHead, { key: 'head', eyebrow: 'Rivals', title: 'You and your rivals', lead: rivals.verdict }),
-      h(SectionTitle, { key: 'table-title', title: 'Head to head', lead: 'Overall and pillar scores from the latest Audit of each. Highest first.' }),
+      h(SectionTitle, { key: 'table-title', title: 'Head to head', lead: 'Overall scores and the three parts, from the latest Audit of each. Highest first.' }),
       h(
         View,
         { key: 'table' },
@@ -639,8 +620,8 @@ export function RivalsPage({ data, compact = false }: PageProps): ReactElement {
             h(
               View,
               { key: 'pillars', style: styles.section, wrap: false },
-              h(SectionTitle, { title: 'Pillar by pillar', lead: 'Each pillar from 0 to 100, with where Needs work and Strong begin. Your place on the right.' }),
-              h(RivalPillars, { rows: rivals.rows }),
+              h(SectionTitle, { title: 'Part by part', lead: 'Each part of the score ranked, from the latest Audit of each. Your row is in black.' }),
+              h(RivalRanks, { rows: rivals.rows }),
             ),
           ]),
       h(

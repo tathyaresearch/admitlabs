@@ -44,6 +44,26 @@ export function pillarSpread(you: Scored, rivals: readonly Scored[]): PillarSpre
   });
 }
 
+/** The one plain line under a part's ranking: how far you lead, or how far behind you are. */
+export type PartGap = { kind: 'lead' | 'behind'; name: string; points: number } | { kind: 'level'; name: string };
+
+/**
+ * The gap on a part to the institution just above you, or, when nobody is above you, the one
+ * just below (level when someone has your score). Null without a score of yours or a rival's.
+ */
+export function partGap(row: PillarSpread): PartGap | null {
+  const you = row.entries.find((entry) => entry.you);
+  if (!you) return null;
+  const mine = Math.round(you.score);
+  const others = row.entries.filter((entry) => !entry.you).map((entry) => ({ name: entry.name, score: Math.round(entry.score) }));
+  const above = others.filter((entry) => entry.score > mine).sort((a, b) => a.score - b.score)[0];
+  if (above) return { kind: 'behind', name: above.name, points: above.score - mine };
+  const level = others.find((entry) => entry.score === mine);
+  if (level) return { kind: 'level', name: level.name };
+  const below = others.sort((a, b) => b.score - a.score)[0];
+  return below ? { kind: 'lead', name: below.name, points: mine - below.score } : null;
+}
+
 export interface ScorePoint {
   /** 'YYYY-MM' */
   month: string;
@@ -79,4 +99,14 @@ export function scoreTrend(lines: readonly ScoreLine[], count: number): ScoreTre
     .map((line) => ({ ...line, points: line.points.filter((point) => shown.has(point.month)).sort((a, b) => a.month.localeCompare(b.month)) }))
     .filter((line) => line.points.length > 0);
   return { months, lines: [...cut.filter((line) => line.you), ...cut.filter((line) => !line.you)] };
+}
+
+/** Your place among you and your rivals in a month of the chart, by overall score. Null when you have no score that month. */
+export function placeIn(trend: ScoreTrend, month: string): { place: number; of: number } | null {
+  const scores = trend.lines.flatMap((line) => {
+    const point = line.points.find((entry) => entry.month === month);
+    return point ? [{ you: line.you, score: point.score }] : [];
+  });
+  const mine = scores.find((entry) => entry.you);
+  return mine ? { place: 1 + scores.filter((entry) => entry.score > mine.score).length, of: scores.length } : null;
 }

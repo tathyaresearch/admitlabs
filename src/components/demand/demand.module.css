@@ -55,9 +55,10 @@
   color: var(--text-muted);
 }
 
-/* Season clock: the months ahead, with where the admission year is now and what comes next. */
+/* Season clock: the stages ahead, with where the admission year is now and what comes next. */
 
 .season {
+  container-type: inline-size;
   display: grid;
   align-content: start;
   gap: var(--space-4);
@@ -78,43 +79,62 @@
   color: var(--text-muted);
 }
 
-.months {
+/* The stages ahead, each piece named on its own months with when it runs; the one now in the text colour. */
+.stages {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: var(--stage-columns);
   gap: 3px;
+  list-style: none;
 }
 
-.month {
+.stage {
   display: grid;
+  align-content: start;
   gap: var(--space-1);
-  justify-items: center;
+  min-width: 0;
 }
 
-.monthLabel {
-  font: var(--type-caption);
-  font-size: var(--size-micro);
-  color: var(--text-muted);
-}
-
-.month[data-current='true'] .monthLabel {
-  color: var(--text);
-  font-weight: var(--weight-heading);
-}
-
-.monthBar {
+.stagePiece {
   display: block;
-  width: 100%;
-  height: 0.5rem;
-  border-radius: 2px;
-  background: var(--chart-track);
-}
-
-.monthBar[data-stage='later'] {
+  height: 6px;
+  border-radius: var(--radius-full);
   background: var(--line-strong);
 }
 
-.monthBar[data-stage='now'] {
+.stage[data-now='true'] .stagePiece {
   background: var(--text);
+}
+
+.stageName {
+  overflow: hidden;
+  padding-right: var(--space-2);
+  font: var(--type-caption-strong);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.stageWhen {
+  overflow: hidden;
+  padding-right: var(--space-2);
+  font: var(--type-caption);
+  font-size: var(--size-micro);
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* On a phone: one stage a line, its piece, its name and when it runs. */
+@container (max-width: 28rem) {
+  .stages {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .stages .stage {
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+  }
 }
 
 .seasonFacts {
@@ -136,18 +156,9 @@
   font: var(--type-small);
 }
 
-.seasonLater {
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
 @media (max-width: 30rem) {
   .season {
     padding: var(--space-4);
-  }
-
-  .monthLabel {
-    font-size: 0.625rem;
   }
 }
 

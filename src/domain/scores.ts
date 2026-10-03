@@ -14,14 +14,25 @@ export function scoreLabel(score: number, config: Pick<ScoringConfig, 'labels'> 
   return band.label;
 }
 
-/** Where each score band starts above 0 (40 and 70), for the notches on the score gauge. */
+/** Where each score band starts above 0 (40 and 70), for the ticks on the score gauge. */
 export function bandStarts(config: Pick<ScoringConfig, 'labels'> = SCORING_V1): number[] {
   return config.labels.map((band) => band.min).filter((min) => min > 0).sort((a, b) => a - b);
 }
 
 /**
+ * What each tick on the score gauge says, so it explains itself (rule 11): the band that starts
+ * there, then where, on two lines: "Needs work" over "from 40", "Strong" over "from 70".
+ */
+export function bandTicks(config: Pick<ScoringConfig, 'labels'> = SCORING_V1): Array<{ start: number; lines: [string, string] }> {
+  return [...config.labels]
+    .filter((band) => band.min > 0)
+    .sort((a, b) => a.min - b.min)
+    .map((band) => ({ start: band.min, lines: [band.label, `from ${band.min}`] }));
+}
+
+/**
  * The line under the score: how far the next band is ("24 points to Strong"), or, in the top
- * band, how far above its line the score sits ("3 points above the Strong line").
+ * band, how far above where it starts the score sits ("3 points above where Strong starts").
  */
 export function nextBandText(score: number, config: Pick<ScoringConfig, 'labels'> = SCORING_V1): string {
   const rounded = Math.round(score);
@@ -30,7 +41,7 @@ export function nextBandText(score: number, config: Pick<ScoringConfig, 'labels'
   if (above) return `${points(above.min - rounded)} to ${above.label}`;
   const top = [...config.labels].sort((a, b) => b.min - a.min)[0];
   if (!top) return '';
-  return rounded === top.min ? `Right on the ${top.label} line` : `${points(rounded - top.min)} above the ${top.label} line`;
+  return rounded === top.min ? `Right where ${top.label} starts` : `${points(rounded - top.min)} above where ${top.label} starts`;
 }
 
 /** What a result earns of a check's points, 0 to 1: how far its bar fills when no points are given. */

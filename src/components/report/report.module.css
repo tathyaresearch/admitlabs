@@ -81,21 +81,13 @@
 .trend {
   display: grid;
   gap: var(--space-1);
-  max-width: 11rem;
+  max-width: 12.25rem;
   margin: var(--space-2) 0 0;
 }
 
 .trend svg {
   width: 100%;
   height: auto;
-}
-
-.trendMonths {
-  display: flex;
-  justify-content: space-between;
-  font: var(--type-caption);
-  font-size: var(--size-micro);
-  color: var(--text-muted);
 }
 
 /* What's inside: the report's pages, in order. */

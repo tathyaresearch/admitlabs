@@ -104,6 +104,13 @@ export const PILLAR_LABELS: Readonly<Record<Pillar, string>> = {
   chosen: 'Chosen',
 };
 
+/** The question each part of the score answers, said under its name in plain words. */
+export const PILLAR_QUESTIONS: Readonly<Record<Pillar, string>> = {
+  discovered: 'Can students find you?',
+  trusted: 'Do they believe you?',
+  chosen: 'Is it easy to pick you?',
+};
+
 export const RESULT_LABELS: Readonly<Record<CheckResult, string>> = {
   strong: 'Strong',
   okay: 'Okay',

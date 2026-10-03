@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
-import { bandStarts, nextBandText } from '../domain/scores.ts';
-import { arcPath, FIGURE_EM, scoreGauge, SCORE_GAUGE, SCORE_TEXT } from './gauge.ts';
+import { bandStarts, bandTicks, nextBandText } from '../domain/scores.ts';
+import { arcPath, FIGURE_EM, GAUGE_HEADROOM, GAUGE_VIEWBOX, scoreGauge, SCORE_GAUGE, SCORE_TEXT } from './gauge.ts';
 
 // The large score gauge. Same shape on screen and in the PDFs, with its number part of the drawing.
 
 describe('the score gauge', () => {
-  test('filled to the score out of 100, with a notch where each band starts', () => {
+  test('filled to the score out of 100, with a tick where each band starts', () => {
     const shape = scoreGauge(73, bandStarts());
     assert.deepEqual(bandStarts(), [40, 70]);
     assert.equal(shape.notches.length, 2);
@@ -52,9 +52,28 @@ describe('the score gauge', () => {
     assert.equal(nextBandText(46), '24 points to Strong');
     assert.equal(nextBandText(27), '13 points to Needs work');
     assert.equal(nextBandText(39), '1 point to Needs work');
-    assert.equal(nextBandText(69.6), 'Right on the Strong line');
-    assert.equal(nextBandText(73), '3 points above the Strong line');
-    assert.equal(nextBandText(71), '1 point above the Strong line');
+    assert.equal(nextBandText(69.6), 'Right where Strong starts');
+    assert.equal(nextBandText(73), '3 points above where Strong starts');
+    assert.equal(nextBandText(71), '1 point above where Strong starts');
     for (let score = 0; score <= 100; score += 1) assert.equal(hasDashes(nextBandText(score)), false);
+  });
+
+  test('each tick says what it means, on two lines over it, inside the drawing (rule 11)', () => {
+    assert.deepEqual(bandTicks(), [
+      { start: 40, lines: ['Needs work', 'from 40'] },
+      { start: 70, lines: ['Strong', 'from 70'] },
+    ]);
+    const shape = scoreGauge(73, bandStarts());
+    assert.equal(shape.tickLabels.length, shape.notches.length);
+    shape.tickLabels.forEach((label, index) => {
+      const notch = shape.notches[index] as (typeof shape.notches)[number];
+      // Over the notch's outer end, centred on it, the second line closest.
+      assert.ok(label.y2 < notch.y2, `the words for ${label.start} sit above its notch`);
+      assert.equal(label.y2 - label.y1, SCORE_TEXT.tickLine);
+      assert.ok(Math.abs(label.x - notch.x2) < 6, `the words for ${label.start} are centred on it`);
+      // The top line's letters stay inside the drawing's headroom.
+      assert.ok(label.y1 - SCORE_TEXT.tick > -GAUGE_HEADROOM, `the words for ${label.start} fit the drawing`);
+    });
+    assert.equal(GAUGE_VIEWBOX, `0 ${-GAUGE_HEADROOM} ${SCORE_GAUGE.width} ${SCORE_GAUGE.height + GAUGE_HEADROOM}`);
   });
 });

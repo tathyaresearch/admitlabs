@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { rowSummary, type AuditView, type ItemPart, type ListItem } from '@/audit/view';
+import { rowSummary, type AuditView, type ItemPart, type ListItem, type PillarCheck } from '@/audit/view';
 import { ChecksTable } from '@/components/audit/ChecksTable';
 import { FixCards, WorkingRows } from '@/components/audit/Lists';
 import { ProgramTabs } from '@/components/audit/Programs';
@@ -11,10 +11,10 @@ import { CityPicker } from '@/components/institution/CityPicker';
 import { ProgramPicker } from '@/components/institution/ProgramPicker';
 import { HistoryLine } from '@/components/charts/HistoryLine';
 import { MonthBars } from '@/components/charts/MonthBars';
-import { PillarDots } from '@/components/charts/PillarDots';
+import { MonthTable } from '@/components/charts/MonthTable';
+import { PartRanks } from '@/components/charts/PartRanks';
 import { ScoreGauge } from '@/components/charts/ScoreGauge';
 import { Sparkline } from '@/components/charts/Sparkline';
-import { TrendLines } from '@/components/charts/TrendLines';
 import { ThemeToggle } from '@/components/shell/ThemeToggle';
 import { BrandMark, ProductLockup, Wordmark } from '@/components/ui/Brand';
 import { Button, ButtonLink, IconButton } from '@/components/ui/Button';
@@ -26,7 +26,8 @@ import { Checkbox, RadioGroup, SelectField, TextAreaField, TextField } from '@/c
 import { Icon, ICON_NAMES } from '@/components/ui/Icon';
 import { Card, Eyebrow, FactList, Highlight, PageHeader, Section } from '@/components/ui/Layout';
 import { LockedPanel } from '@/components/ui/LockedPanel';
-import { Delta, Difficulty, ResultBar, ResultKey, ResultSquares, ScoreLabel } from '@/components/ui/Results';
+import { CheckRows, FixFirst, SplitBar } from '@/components/ui/CheckSummary';
+import { Delta, Difficulty, ResultBar, ScoreLabel } from '@/components/ui/Results';
 import { contrastRatio } from '@/domain/contrast';
 import { RESULTS } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
@@ -293,6 +294,16 @@ const PILLAR_SPREAD = pillarSpread({ id: 'you', name: 'Eastgate University', sco
 ]);
 
 const SEARCHES = [199, 217, 243, 282, 350, 515].map((count, index) => ({ month: MONTHS[index] as string, count }));
+
+/** Eastgate's Discovered checks, weakest first, as the Audit shows them. */
+const SAMPLE_PART: PillarCheck[] = [
+  { key: 'ai_answers', name: 'AI answers', result: 'missing', points: 0, maxPoints: 10 },
+  { key: 'google_search', name: 'Google search', result: 'weak', points: 9, maxPoints: 30 },
+  { key: 'youtube', name: 'YouTube', result: 'okay', points: 6, maxPoints: 10 },
+  { key: 'other_socials', name: 'Other socials', result: 'okay', points: 3, maxPoints: 5 },
+  { key: 'instagram_activity', name: 'Instagram', result: 'strong', points: 25, maxPoints: 25 },
+  { key: 'google_profile', name: 'Google profile', result: 'strong', points: 20, maxPoints: 20 },
+];
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -654,7 +665,7 @@ export default async function DesignSystemPage() {
           <Section
             id="results"
             title="Results"
-            description="Strong, Okay, Weak, Missing. In rows and lists: a thin bar of the points earned against possible, then the word. In compact grids: a small square in four shades, with a key nearby. Missing is a dashed outline; the word is always there, beside the bar or on hover and read out."
+            description="Strong, Okay, Weak, Missing. A thin bar of the points earned against possible, then the word, always beside it. A part's checks: every one as a row, weakest first, where there is room; one bar split by result, each count under its piece, then what to fix first, where it is tight. Missing is a dashed outline."
           >
             <Card>
               <div className={styles.resultsGrid}>
@@ -671,16 +682,23 @@ export default async function DesignSystemPage() {
                   <ResultBar result="okay" points={18} max={30} />
                   <ResultBar result="varies" points={21} max={30} />
                 </div>
-                <div className={styles.resultsRow}>
-                  <span className={styles.caption}>grid</span>
-                  <ResultSquares
-                    label="Every check"
-                    checks={RESULTS.map((result) => ({ key: result, name: `A ${result} check`, result }))}
-                  />
-                  <ResultKey />
-                </div>
               </div>
             </Card>
+            <div className={styles.grid2}>
+              <Card>
+                <Specimen label="A part's checks, where there is room: every one named, weakest first">
+                  <CheckRows checks={SAMPLE_PART} />
+                </Specimen>
+              </Card>
+              <Card>
+                <Specimen label="Where it is tight: one bar split by result, each count under its piece, then what to fix first">
+                  <div className={styles.stack}>
+                    <SplitBar checks={SAMPLE_PART} label="Discovered checks" />
+                    <FixFirst check={SAMPLE_PART[0] ?? null} />
+                  </div>
+                </Specimen>
+              </Card>
+            </div>
             <div className={styles.grid3}>
               <Card>
                 <Specimen label="Score labels (70 to 100, 40 to 69, 0 to 39)">
@@ -815,33 +833,27 @@ export default async function DesignSystemPage() {
                 </Specimen>
               </Card>
               <Card>
-                <Specimen label="Sparklines">
+                <Specimen label="Sparklines (every point with its value and month, as on Reports)">
                   <div className={styles.stack}>
-                    <div className={styles.sparkRow}>
-                      <Sparkline values={[28, 33, 41, 52, 58, 63]} label="Brightpath overall score" />
-                      <span className={styles.caption}>Rising, 28 to 63</span>
-                    </div>
-                    <div className={styles.sparkRow}>
-                      <Sparkline values={[64, 66, 69, 70, 72, 73]} label="Eastgate overall score" />
-                      <span className={styles.caption}>Steady, 64 to 73</span>
-                    </div>
+                    <Sparkline values={[28, 33, 41, 52, 58, 63]} months={MONTHS} label="Brightpath overall score" width={196} height={72} />
+                    <Sparkline values={[64, 66, 69, 70, 72, 73]} months={MONTHS} label="Eastgate overall score" width={196} height={72} />
                   </div>
                 </Specimen>
               </Card>
             </div>
             <Card>
-              <Specimen label="Pillar by pillar (you filled with your score, each rival open, your place on the right)">
-                <PillarDots rows={PILLAR_SPREAD} />
+              <Specimen label="Part by part (each part ranked, real names, your row highlighted, the gap in words)">
+                <PartRanks rows={PILLAR_SPREAD} />
               </Specimen>
             </Card>
             <div className={styles.grid2}>
               <Card>
-                <Specimen label="Month by month (you in the text colour, rivals in grey, named at the end)">
-                  <TrendLines trend={RIVAL_TREND} label="Overall score by month, you and your rivals" />
+                <Specimen label="Month by month (every month a number; a phone keeps the last three)">
+                  <MonthTable trend={RIVAL_TREND} label="Overall score by month, you and your rivals" />
                 </Specimen>
               </Card>
               <Card>
-                <Specimen label="Counts by month (the newest in the text colour)">
+                <Specimen label="Counts by month (every month's count on its bar, the newest in the text colour)">
                   <MonthBars points={SEARCHES} title="Searches by month" valueLabel="Searches" />
                 </Specimen>
               </Card>

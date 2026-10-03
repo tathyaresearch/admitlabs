@@ -1,11 +1,10 @@
-// How results and scores are shown without colour (spec section 14). In rows and lists, a check's
-// result is a thin bar of the points it earns against the points it could, then the word. In
-// compact grids, a small square per check in one of four shades, with a key nearby. The word is
-// always there: beside the bar, on hover and read out for each square.
+// How results and scores are shown without colour (spec section 14). A check's result is a thin
+// bar of the points it earns against the points it could, then the word, always beside it. A
+// part's checks at a glance are named rows or a split bar with its counts (./CheckSummary.tsx).
 
 import type { CSSProperties } from 'react';
 import { resultShare, scoreLabel, type ScoreLabel as ScoreLabelName } from '@/domain/scores';
-import { DIFFICULTY_LABELS, RESULT_LABELS, RESULTS, type CheckResult, type Difficulty as DifficultyValue } from '@/domain/types';
+import { DIFFICULTY_LABELS, RESULT_LABELS, type CheckResult, type Difficulty as DifficultyValue } from '@/domain/types';
 import { Icon } from './Icon';
 import styles from './Results.module.css';
 
@@ -45,38 +44,6 @@ export function ResultBar({ result, points, max, share, showPoints = true, size 
       ) : null}
       <span className={styles.barWord}>{word}</span>
     </span>
-  );
-}
-
-/**
- * Every check at a glance, one small square each: Strong in the text colour, Okay and Weak in two
- * greys, Missing a dashed outline. The check and its result are on hover and read out.
- */
-export function ResultSquares({ checks, label }: { checks: ReadonlyArray<{ key: string; name: string; result: CheckResult }>; label: string }) {
-  return (
-    <ul className={styles.squares} aria-label={label}>
-      {checks.map((check) => (
-        <li key={check.key} className={styles.square} data-result={check.result} title={`${check.name}: ${RESULT_LABELS[check.result]}`}>
-          <span className="visually-hidden">
-            {check.name}: {RESULT_LABELS[check.result]}
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/** The key that sits near a grid of squares. Each square is read out with its own result. */
-export function ResultKey({ className }: { className?: string }) {
-  return (
-    <ul className={[styles.key, className].filter(Boolean).join(' ')} aria-hidden="true">
-      {RESULTS.map((result) => (
-        <li key={result}>
-          <span className={styles.keySquare} data-result={result} />
-          {RESULT_LABELS[result]}
-        </li>
-      ))}
-    </ul>
   );
 }
 

@@ -89,7 +89,7 @@ export default async function HomePage() {
       </div>
 
       {view && data.audit ? (
-        <HomeSummary view={view} checkedAt={data.audit.runAt} trend={trend} side="locked" note={note} auditHref="/audit" checkLinks="/audit?check=" />
+        <HomeSummary view={view} checkedAt={data.audit.runAt} trend={trend} side="locked" note={note} auditHref="/audit" checkLinks="/audit?check=" checks="split" />
       ) : (
         <EmptyState
           icon="audit"

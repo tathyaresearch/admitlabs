@@ -5,7 +5,7 @@
 // carry no caption.
 
 import { MonthBars } from '@/components/charts/MonthBars';
-import { PillarDots } from '@/components/charts/PillarDots';
+import { PartRanks } from '@/components/charts/PartRanks';
 import { ScoreGauge } from '@/components/charts/ScoreGauge';
 import { DemandCard, type DemandHighlightData } from '@/components/home/DemandCard';
 import { HomeSummary } from '@/components/home/HomeSummary';
@@ -16,7 +16,8 @@ import { Icon } from '@/components/ui/Icon';
 import { KpiNumber } from '@/components/ui/Kpi';
 import { PageHead } from '@/components/ui/Layout';
 import { CheckIcon, PillarIcon, PlatformMark } from '@/components/ui/Marks';
-import { Delta, ResultBar, ResultKey, ResultSquares, ScoreLabel } from '@/components/ui/Results';
+import { SplitBar } from '@/components/ui/CheckSummary';
+import { Delta, ResultBar, ScoreLabel } from '@/components/ui/Results';
 import { pillarChecks, type ListItem } from '@/audit/view';
 import { countWords } from '@/demand/text';
 import { formatDate, hostAndPath, ordinal } from '@/domain/format';
@@ -98,7 +99,7 @@ export function AppWindow({ showcase }: { showcase: Showcase }) {
           <div className={styles.windowPanel}>
             <div className={home.home}>
               <PageHead title="Home" question="How are we doing this month?" titleAs="p" />
-              <HomeSummary view={audit} checkedAt={picture.checkedAt} trend={picture.trend} />
+              <HomeSummary view={audit} checkedAt={picture.checkedAt} trend={picture.trend} checks="split" />
               <NextSteps id="picture-next" title="3 things to do this month" description="In order: the steps that could make the most difference this month." steps={steps} />
               <div className={home.pair}>
                 <RivalsCard ladder={pictureLadder(rivals.rows)} standings={null} verdict={rivals.verdict} rivalsHref={null} latestMove={latestMove} />
@@ -184,13 +185,15 @@ export function AuditPicture({ showcase }: { showcase: Showcase }) {
         </p>
         <ul className={styles.everyCheck}>
           {pillars.map((row) => (
-            <li key={row.pillar} className={styles.everyCheckPillar}>
-              <PillarIcon pillar={row.pillar} size={14} />
-              <ResultSquares checks={row.checks} label={`${PILLAR_LABELS[row.pillar]} checks`} />
+            <li key={row.pillar} className={styles.everyCheckPart}>
+              <span className={styles.everyCheckName}>
+                <PillarIcon pillar={row.pillar} size={14} />
+                {PILLAR_LABELS[row.pillar]}
+              </span>
+              <SplitBar checks={row.checks} label={`${PILLAR_LABELS[row.pillar]} checks`} />
             </li>
           ))}
         </ul>
-        <ResultKey className={styles.pictureKey} />
       </div>
     </div>
   );
@@ -203,7 +206,8 @@ function byName(rows: readonly LadderRow[]): Map<string, number> {
 
 /**
  * The Rivals tile: you and your rivals by overall score, sliding into rank order, and the latest
- * move with where it was found; beside them, pillar by pillar. Side by side once there is room.
+ * move with where it was found, side by side once there is room; under them, each part ranked
+ * across the full width, where its three lists have room to name everyone.
  */
 export function RivalsPicture({ showcase }: { showcase: Showcase }) {
   const rows = pictureLadder(showcase.rivals.rows);
@@ -211,8 +215,8 @@ export function RivalsPicture({ showcase }: { showcase: Showcase }) {
   const move = showcase.rivals.moves[0];
   const mover = move ? showcase.rivals.names.get(move.rivalId) : undefined;
   return (
-    <div className={`${styles.picture} ${styles.pictureWide}`} data-theme="dark" aria-hidden="true" inert>
-      <div className={styles.pictureColumn}>
+    <div className={styles.picture} data-theme="dark" aria-hidden="true" inert>
+      <div className={styles.pictureWide}>
         <div className={styles.pictureCard}>
           <p className={styles.pictureHead}>
             <span>Your rank by overall score</span>
@@ -239,9 +243,9 @@ export function RivalsPicture({ showcase }: { showcase: Showcase }) {
           </div>
         ) : null}
       </div>
-      <div className={`${styles.pictureCard} ${styles.pictureGrow}`}>
-        <p className={styles.pictureHead}>Pillar by pillar</p>
-        <PillarDots rows={showcase.rivals.spread} />
+      <div className={styles.pictureCard}>
+        <p className={styles.pictureHead}>Part by part</p>
+        <PartRanks rows={showcase.rivals.spread} />
       </div>
     </div>
   );

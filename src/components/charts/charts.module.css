@@ -52,9 +52,19 @@
   fill: var(--text-muted);
 }
 
-/* On a small gauge "0" and "100" would be too small to read: the number says it all. */
+/* What each tick means, in words: "Needs work" over "from 40". */
+.gaugeTick {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-medium);
+  fill: var(--text-muted);
+}
+
+/* On a small gauge "0", "100" and the ticks' words would be too small to read: the number says it
+   all, so they go, and the ticks with them (a tick never stands without its words). */
 @container (max-width: 11rem) {
-  .gaugeEnd {
+  .gaugeEnd,
+  .gaugeNotch,
+  .gaugeTick {
     display: none;
   }
 }
@@ -91,6 +101,25 @@
   fill: var(--text);
   stroke: var(--chart-surface, var(--surface-raised));
   stroke-width: 2;
+}
+
+/* A labelled sparkline: each value above its point, its month under it. */
+.sparkValue,
+.sparkValueLast {
+  font-size: var(--size-micro);
+  font-weight: var(--weight-medium);
+  fill: var(--text-muted);
+}
+
+.sparkValueLast {
+  font-weight: var(--weight-heading);
+  fill: var(--text);
+}
+
+.sparkMonth {
+  font-family: var(--font-sans);
+  font-size: var(--size-micro);
+  fill: var(--text-muted);
 }
 
 .history {
@@ -249,243 +278,223 @@
   fill: var(--surface-hover);
 }
 
-/* A key for charts with two kinds of mark: you filled, rivals open. */
-.key {
+/* Part by part: each part ranked, real names, the score and a thin bar, your row in the text colour,
+   and one plain line about the gap. Three side by side when there is room, else one under another. */
+.ranks {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--space-4);
+}
+
+@container (min-width: 46rem) {
+  .ranks {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+}
+
+.rank {
+  container-type: inline-size;
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-nested);
+}
+
+.rankHead {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-5);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font: var(--type-caption);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.rankTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-strong);
+}
+
+.rankTitle svg {
   color: var(--text-muted);
 }
 
-.keyItem {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.keyYou,
-.keyRival {
-  flex: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.keyYou {
-  background: var(--text);
-}
-
-.keyRival {
-  border: 1.5px solid var(--text-muted);
-}
-
-/* Pillar by pillar: one line per pillar from 0 to 100, your place on the right. It follows its own
-   width, so it fits a phone and a small card alike. */
-.dots {
-  container-type: inline-size;
-  display: grid;
-  gap: var(--space-1);
-}
-
-.dots .key {
-  margin-bottom: var(--space-3);
-}
-
-.dotsRow,
-.dotsScaleRow {
-  display: grid;
-  grid-template-columns: 9rem minmax(0, 1fr) 5.5rem;
-  grid-template-areas: 'label plot rank';
-  align-items: center;
-  column-gap: var(--space-5);
-}
-
-.dotsRow {
-  position: relative;
-  margin: 0 calc(var(--space-3) * -1);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-md);
-  touch-action: manipulation;
-}
-
-.dotsRow[data-active='true'] {
-  background: var(--surface-hover);
-}
-
-.dotsLabel {
-  grid-area: label;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  font: var(--type-label);
-  color: var(--text);
-}
-
-.dotsPlot,
-.dotsScale {
-  grid-area: plot;
-  min-width: 0;
-}
-
-.dotsPlot svg,
-.dotsScale svg {
-  display: block;
-  overflow: visible;
-}
-
-.dotsRank {
-  grid-area: rank;
-  justify-self: end;
-  font: var(--type-small);
+.rankPlace {
+  font: var(--type-caption);
   color: var(--text-muted);
   white-space: nowrap;
 }
 
-.dotsRank :global(.num) {
-  font: var(--type-num);
-  font-weight: var(--weight-heading);
+.rankPlace :global(.num) {
   color: var(--text);
-}
-
-.dotsTrack {
-  stroke: var(--line-medium);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
-.dotsBand {
-  stroke: var(--line-strong);
-  stroke-width: 1.5;
-}
-
-.youDot {
-  fill: var(--text);
-  stroke: var(--chart-surface, var(--surface-raised));
-  stroke-width: 2;
-}
-
-.rivalDot {
-  fill: var(--chart-surface, var(--surface-raised));
-  stroke: var(--text-muted);
-  stroke-width: 1.75;
-}
-
-.dotValue {
-  fill: var(--text);
-  font-size: var(--size-caption);
   font-weight: var(--weight-heading);
 }
 
-.dotsTooltip {
-  left: 50%;
-  top: 0;
+.rankQuestion {
+  margin-top: calc(-1 * var(--space-2));
+  font: var(--type-caption);
+  color: var(--text-muted);
 }
 
-.tooltipYou {
-  font-weight: var(--weight-heading);
+.rankRows {
+  display: grid;
+  gap: 2px;
+  list-style: none;
 }
 
-@container (max-width: 28rem) {
-  .dotsRow,
-  .dotsScaleRow {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      'label rank'
-      'plot plot';
-    row-gap: var(--space-1);
+.rankRow {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr) minmax(2.5rem, 30%) 1.75rem;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 2.25rem;
+  margin: 0 calc(-1 * var(--space-2));
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+/* A narrow list keeps the names whole: the bar gets shorter. */
+@container (max-width: 20rem) {
+  .rank .rankRow {
+    grid-template-columns: 1rem minmax(0, 1fr) 2.5rem 1.75rem;
   }
 }
 
-/* Overall score by month: you in the text colour, rivals in grey, named at the end. */
-.trendLine {
-  fill: none;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  transition: opacity var(--duration-fast) var(--ease-out);
+.rankRow[data-you='true'] {
+  background: var(--text);
+  color: var(--surface);
 }
 
-.trendYou .trendLine {
-  stroke: var(--text);
-  stroke-width: 2.5;
+.rankNumber {
+  font: var(--type-num-caption);
+  color: var(--text-muted);
 }
 
-.trendRival .trendLine {
-  stroke: var(--line-strong);
-  stroke-width: 1.5;
+.rankRow[data-you='true'] .rankNumber {
+  color: inherit;
 }
 
-.trendPoint {
-  stroke: var(--chart-surface, var(--surface-raised));
-  stroke-width: 1.5;
+.rankName {
+  overflow: hidden;
+  font: var(--type-small);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.trendYou .trendPoint {
-  fill: var(--text);
+.rankRow[data-you='true'] .rankName {
+  font-weight: var(--weight-heading);
 }
 
-.trendRival .trendPoint {
-  fill: var(--line-strong);
+.rankTrack {
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--chart-track);
 }
 
-.trendRival[data-focus='true'] .trendLine {
-  stroke: var(--text);
-  stroke-width: 2;
+.rankRow[data-you='true'] .rankTrack {
+  background: color-mix(in srgb, var(--surface) 25%, transparent);
 }
 
-.trendRival[data-focus='true'] .trendPoint {
-  fill: var(--text);
+.rankFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--text-muted);
 }
 
-.trendHit {
-  fill: none;
-  stroke: transparent;
-  stroke-width: 14;
-  pointer-events: stroke;
+.rankRow[data-you='true'] .rankFill {
+  background: var(--surface);
 }
 
-.trendYou[data-dim='true'],
-.trendRival[data-dim='true'],
-.trendLabel[data-dim='true'],
-.trendLabelYou[data-dim='true'] {
-  opacity: 0.25;
+.rankScore {
+  font: var(--type-num);
+  font-weight: var(--weight-heading);
+  text-align: right;
 }
 
-.trendLabel,
-.trendLabelYou {
-  font-size: var(--size-caption);
-  transition: opacity var(--duration-fast) var(--ease-out);
+.rankGap {
+  font: var(--type-small);
+  text-wrap: pretty;
 }
 
-.trendLabel text {
-  fill: var(--text-muted);
+.rankGap :global(.num) {
+  font-weight: var(--weight-heading);
+}
+
+/* Month by month: the overall score of you and each rival in every month, as numbers. On a phone
+   the last three months, so the newest is never out of sight. */
+.monthTableBlock {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.monthPlace {
+  font: var(--type-small);
+}
+
+.monthPlace :global(.num) {
+  font-weight: var(--weight-heading);
+}
+
+.monthTable {
+  container-type: inline-size;
+  overflow-x: auto;
+}
+
+.monthTable table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--type-small);
+}
+
+.monthTable th,
+.monthTable td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--line-raised);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.monthTable th:first-child {
+  padding-left: 0;
+  text-align: left;
   font-weight: var(--weight-medium);
 }
 
-.trendLabelYou text {
-  fill: var(--text);
+.monthTable thead th {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.monthTable tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.monthTable tr[data-you='true'] > * {
   font-weight: var(--weight-heading);
 }
 
-.trendLabelValue {
-  font-weight: var(--weight-heading);
+.youMark {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 0.2em 0.45em;
+  border-radius: var(--radius-xs);
+  background: var(--text);
+  color: var(--surface);
+  font: var(--type-caption-strong);
+  line-height: 1;
 }
 
-.trendLeader {
-  stroke: var(--chart-grid);
-  stroke-width: 1;
-}
-
-.trendTooltip[data-side='right'] {
-  transform: translateX(12px);
-}
-
-.trendTooltip[data-side='left'] {
-  transform: translateX(calc(-100% - 12px));
+@container (max-width: 30rem) {
+  .monthTable [data-older='true'] {
+    display: none;
+  }
 }
 
 /* Counts by month: small columns from zero, the newest in the text colour. */
@@ -582,38 +591,4 @@
 .monthBarsColumn[data-last='true'] .monthBarsMonth {
   color: var(--text);
   font-weight: var(--weight-heading);
-}
-
-/* A pillar's small trend, beside its score. */
-.pillarTrend {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-  margin: 0;
-}
-
-.pillarTrend svg {
-  display: block;
-  overflow: visible;
-}
-
-.pillarTrendBand {
-  stroke: var(--chart-grid);
-  stroke-width: 1;
-  stroke-dasharray: 2 3;
-}
-
-.pillarTrendStart {
-  fill: var(--text-muted);
-  font-size: var(--size-micro);
-  font-weight: var(--weight-medium);
-}
-
-.pillarTrendMonths {
-  display: flex;
-  justify-content: space-between;
-  padding-left: 22px;
-  font: var(--type-caption);
-  font-size: var(--size-micro);
-  color: var(--text-muted);
 }

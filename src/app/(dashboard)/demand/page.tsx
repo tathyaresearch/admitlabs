@@ -152,7 +152,7 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
                 <p className={styles.kpiTitle}>Nothing is rising sharply this month.</p>
               )}
             </KpiCard>
-            {view.season.length ? <SeasonClock clock={seasonClock(view.season, now)} stages={view.season} /> : null}
+            {view.season.length ? <SeasonClock clock={seasonClock(view.season, now)} stages={view.season} today={now} /> : null}
           </div>
         </section>
       ) : (

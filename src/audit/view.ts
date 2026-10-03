@@ -388,18 +388,24 @@ export interface PillarChecks {
   pillar: Pillar;
   /** Every check the Audit ran in this pillar, in check order. */
   checks: PillarCheck[];
+  /** The same checks weakest first: the worst result, then the one that could add the most points. */
+  weakestFirst: PillarCheck[];
   /** How many are Strong for every program they cover. */
   strong: number;
-  /** The worst result, then the one that could add the most points. Null when every check is Strong. */
+  /** The first of `weakestFirst` that is not Strong. Null when every check is Strong. */
   weakest: PillarCheck | null;
 }
 
 const RESULT_RANK = new Map<CheckResult, number>(RESULTS.map((result, index) => [result, index]));
 const worse = (a: CheckResult, b: CheckResult) => ((RESULT_RANK.get(b) ?? 0) > (RESULT_RANK.get(a) ?? 0) ? b : a);
 
-/** Each pillar's checks at a glance: one result per check, how many are Strong, and the weakest. */
+/**
+ * Each pillar's checks at a glance: one result per check (a program check shows its weakest
+ * program), the same checks weakest first, how many are Strong, and the weakest.
+ */
 export function pillarChecks(view: Pick<AuditView, 'areas' | 'fixes'>): PillarChecks[] {
   const gain = new Map(view.fixes.map((item) => [item.key, item.points]));
+  const order = new Map(CHECKS.map((check, index) => [check.key, index]));
   return view.areas.map((area) => {
     const checks = area.rows.flatMap((row): PillarCheck[] => {
       const [first] = row.parts;
@@ -408,11 +414,23 @@ export function pillarChecks(view: Pick<AuditView, 'areas' | 'fixes'>): PillarCh
       const weakest = row.parts.reduce((worst, item) => (worse(worst.result, item.result) !== worst.result || (item.result === worst.result && item.points < worst.points) ? item : worst), first);
       return [{ key: row.key, name: row.name, result: weakest.result, points: weakest.points, maxPoints: weakest.maxPoints }];
     });
-    const [weakest = null] = checks
-      .filter((check) => check.result !== 'strong')
-      .sort((a, b) => (RESULT_RANK.get(b.result) ?? 0) - (RESULT_RANK.get(a.result) ?? 0) || (gain.get(b.key) ?? 0) - (gain.get(a.key) ?? 0));
-    return { pillar: area.pillar, checks, strong: checks.filter((check) => check.result === 'strong').length, weakest };
+    const weakestFirst = [...checks].sort(
+      (a, b) =>
+        (RESULT_RANK.get(b.result) ?? 0) - (RESULT_RANK.get(a.result) ?? 0) ||
+        (gain.get(b.key) ?? 0) - (gain.get(a.key) ?? 0) ||
+        (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0),
+    );
+    const weakest = weakestFirst.find((check) => check.result !== 'strong') ?? null;
+    return { pillar: area.pillar, checks, weakestFirst, strong: checks.filter((check) => check.result === 'strong').length, weakest };
   });
+}
+
+/**
+ * How many checks have each result, in the results' order (Strong first), leaving out the results
+ * no check has: what a part's split bar shows, each count written under its piece.
+ */
+export function resultCounts(checks: ReadonlyArray<{ result: CheckResult }>): Array<{ result: CheckResult; count: number }> {
+  return RESULTS.map((result) => ({ result, count: checks.filter((check) => check.result === result).length })).filter((entry) => entry.count > 0);
 }
 
 /**

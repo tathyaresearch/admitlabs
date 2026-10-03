@@ -14,6 +14,7 @@ import {
   pointsFraction,
   pointsToGainText,
   programView,
+  resultCounts,
   rowSummary,
   scoresByMonth,
   type ItemPart,
@@ -138,6 +139,42 @@ describe('each pillar at a glance', () => {
     assert.equal(trusted?.checks.filter((check) => check.result === 'weak').length, 3);
     assert.equal(trusted?.weakest?.key, 'placement_proof');
     assert.equal(trusted?.strong, 0);
+  });
+
+  test('weakest first: the worst result, then the most to gain, the Strong ones last', async () => {
+    const { record, names, type } = await recordFor('eastgate-university', '2026-09-15');
+    const pillars = pillarChecks(overviewView(stored(record), { institutionType: type, programNames: names }));
+    const rank = (result: string) => ['strong', 'okay', 'weak', 'missing'].indexOf(result);
+    for (const pillar of pillars) {
+      // The same checks, the first one below Strong is the weakest, and no check is weaker than the one before it.
+      assert.deepEqual(new Set(pillar.weakestFirst.map((check) => check.key)), new Set(pillar.checks.map((check) => check.key)));
+      assert.equal(pillar.weakestFirst.find((check) => check.result !== 'strong'), pillar.weakest ?? undefined);
+      pillar.weakestFirst.forEach((check, index) => {
+        const before = pillar.weakestFirst[index - 1];
+        if (before) assert.ok(rank(before.result) >= rank(check.result), `${pillar.pillar}: ${before.name} before ${check.name}`);
+      });
+    }
+    assert.deepEqual(
+      pillars[0]?.weakestFirst.map((check) => [check.name, check.result]),
+      [
+        ['AI answers', 'missing'],
+        ['Google search', 'weak'],
+        ['YouTube', 'okay'],
+        ['Other socials', 'okay'],
+        ['Instagram', 'strong'],
+        ['Google profile', 'strong'],
+      ],
+    );
+  });
+
+  test('result counts: Strong first, only the results a check has', () => {
+    const checks = (['weak', 'strong', 'missing', 'strong', 'weak', 'weak'] as const).map((result) => ({ result }));
+    assert.deepEqual(resultCounts(checks), [
+      { result: 'strong', count: 2 },
+      { result: 'weak', count: 3 },
+      { result: 'missing', count: 1 },
+    ]);
+    assert.deepEqual(resultCounts([]), []);
   });
 
   test('every check Strong: no weakest', () => {

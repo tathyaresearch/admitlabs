@@ -8,7 +8,7 @@ import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { KpiNumber } from '@/components/ui/Kpi';
 import { Counted, Delta } from '@/components/ui/Results';
-import { formatDate, formatMonth, formatMonthShort } from '@/domain/format';
+import { formatDate, formatMonth } from '@/domain/format';
 import { reportFacts, type ReportRow } from '@/lib/reports/load';
 import audit from '@/components/audit/audit.module.css';
 import styles from './report.module.css';
@@ -90,11 +90,13 @@ export function LatestReport({
             {score.change !== null && score.since ? <Delta change={score.change} since={formatMonth(score.since)} size="sm" /> : null}
             {first && last && trend.length > 1 ? (
               <figure className={styles.trend}>
-                <Sparkline values={trend.map((point) => point.score)} label={`Overall score by month, ${formatMonth(first.month)} to ${formatMonth(last.month)}`} width={176} height={48} />
-                <figcaption className={styles.trendMonths} aria-hidden="true">
-                  <span>{formatMonthShort(first.month)}</span>
-                  <span>{formatMonthShort(last.month)}</span>
-                </figcaption>
+                <Sparkline
+                  values={trend.map((point) => point.score)}
+                  months={trend.map((point) => point.month)}
+                  label={`Overall score by month, ${formatMonth(first.month)} to ${formatMonth(last.month)}`}
+                  width={196}
+                  height={72}
+                />
               </figure>
             ) : null}
           </div>

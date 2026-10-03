@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { pillarSpread, scoreTrend, type ScoreLine } from './trend.ts';
+import { partGap, pillarSpread, placeIn, scoreTrend, type PillarSpread, type ScoreLine } from './trend.ts';
 
 const set = (overall: number, discovered: number, trusted: number, chosen: number) => ({ overall, discovered, trusted, chosen });
 
@@ -40,6 +40,21 @@ describe('each pillar with everyone on it', () => {
   test('without your score there is no place', () => {
     const none = pillarSpread({ id: 'you', name: 'You', scores: null }, [{ id: 'a', name: 'A', scores: set(50, 50, 50, 50) }]);
     assert.ok(none.every((row) => row.rank === null && row.of === 1));
+  });
+
+  test('the gap line: to the one just above you, or, leading, to the one just below', () => {
+    // Discovered: Highfield 84, you 80, Silverline 40: 4 behind Highfield.
+    assert.deepEqual(partGap(spread[0] as PillarSpread), { kind: 'behind', name: 'Highfield University', points: 4 });
+    // Trusted: Silverline 70, you and Highfield 66: behind Silverline, not level with Highfield.
+    assert.deepEqual(partGap(spread[1] as PillarSpread), { kind: 'behind', name: 'Silverline College', points: 4 });
+    // Chosen: you 70, Highfield 58, Silverline 45: you lead Highfield by 12.
+    assert.deepEqual(partGap(spread[2] as PillarSpread), { kind: 'lead', name: 'Highfield University', points: 12 });
+    // Level at the top.
+    const level = pillarSpread({ id: 'you', name: 'You', scores: set(60, 60, 60, 60) }, [{ id: 'a', name: 'Highfield University', scores: set(60, 60, 60, 60) }]);
+    assert.deepEqual(partGap(level[0] as PillarSpread), { kind: 'level', name: 'Highfield University' });
+    // No rival scored, or no score of yours: no line.
+    assert.equal(partGap(pillarSpread({ id: 'you', name: 'You', scores: set(60, 60, 60, 60) }, [])[0] as PillarSpread), null);
+    assert.equal(partGap(pillarSpread({ id: 'you', name: 'You', scores: null }, [{ id: 'a', name: 'A', scores: set(50, 50, 50, 50) }])[0] as PillarSpread), null);
   });
 });
 
@@ -91,5 +106,25 @@ describe('overall score by month', () => {
 
   test('no scores, no chart', () => {
     assert.deepEqual(scoreTrend([line('you', true, [])], 6), { months: [], lines: [] });
+  });
+
+  test('your place in a month: only those strictly higher count, of everyone scored that month', () => {
+    const trend = scoreTrend(
+      [
+        line('you', true, [
+          ['2026-08', 60],
+          ['2026-09', 70],
+        ]),
+        line('a', false, [
+          ['2026-08', 65],
+          ['2026-09', 70],
+        ]),
+        line('b', false, [['2026-09', 40]]),
+      ],
+      6,
+    );
+    assert.deepEqual(placeIn(trend, '2026-08'), { place: 2, of: 2 });
+    assert.deepEqual(placeIn(trend, '2026-09'), { place: 1, of: 3 });
+    assert.equal(placeIn(trend, '2026-07'), null);
   });
 });

@@ -5,14 +5,14 @@
 
 import { createElement as h, type ReactElement, type ReactNode } from 'react';
 import { Circle, Line, Path, Svg, Text, View, type Styles } from '@react-pdf/renderer';
-import { bandStarts, resultShare, type ScoreLabel } from '../../domain/scores.ts';
+import { bandStarts, bandTicks, resultShare, type ScoreLabel } from '../../domain/scores.ts';
 import { RESULT_LABELS, type CheckKey, type CheckResult, type Pillar } from '../../domain/types.ts';
 import { BRAND_INK, BRAND_MARKS, YOUTUBE_PLAY } from '../../graphics/brands.ts';
 import { EYE_EM, EYE_IRIS, EYE_LASHES, EYE_LIDS, eyeBox } from '../../graphics/eye.ts';
-import { SCORE_GAUGE, SCORE_TEXT, scoreGauge } from '../../graphics/gauge.ts';
+import { GAUGE_HEADROOM, GAUGE_VIEWBOX, SCORE_GAUGE, SCORE_TEXT, scoreGauge } from '../../graphics/gauge.ts';
 import { CHECK_ICONS, LINE_ICONS, PILLAR_ICONS, type IconRef } from '../../graphics/icons.ts';
 import { PLATFORM_ICONS, type Platform } from '../../graphics/platforms.ts';
-import { COLORS, FONT_NUMERIC, FONT_SEMI_CONDENSED, NUM, styles } from './theme.ts';
+import { COLORS, FONT, FONT_NUMERIC, FONT_SEMI_CONDENSED, NUM, styles } from './theme.ts';
 
 export type Style = Styles[string];
 
@@ -61,25 +61,33 @@ export function ResultBar({
 }
 
 /**
- * The overall score as the large half-circle gauge: filled to the score, with a notch where each
- * score band starts, and the number drawn with it, as on the dashboard: centred in the bowl on the
- * arc's baseline, "/100" after it on the same line, "0" and "100" under the two ends.
+ * The overall score as the large half-circle gauge: filled to the score, with a tick where each
+ * score band starts and over it what it means ("Needs work" over "from 40"), and the number drawn
+ * with it, as on the dashboard: centred in the bowl on the arc's baseline, "/100" after it on the
+ * same line, "0" and "100" under the two ends.
  */
 export function ScoreGauge({ score, width = 168, dark = false }: { score: number; width?: number; dark?: boolean }): ReactElement {
   const value = Math.max(0, Math.min(100, Math.round(score)));
   const shape = scoreGauge(value, bandStarts());
-  const height = (SCORE_GAUGE.height * width) / SCORE_GAUGE.width;
+  const words = new Map(bandTicks().map((tick) => [tick.start, tick.lines]));
+  const height = ((SCORE_GAUGE.height + GAUGE_HEADROOM) * width) / SCORE_GAUGE.width;
   const ink = dark ? COLORS.ivory : COLORS.black;
   const muted = dark ? COLORS.slate : COLORS.muted;
   const numeric = { fontFamily: FONT_NUMERIC, fontFeatureSettings: ['tnum'] };
   const end = (at: readonly [number, number], label: string) =>
     h(Text, { x: at[0], y: at[1], textAnchor: 'middle', style: { ...numeric, fontSize: SCORE_TEXT.end, fontWeight: 400 }, fill: muted }, label);
+  // Text inside a drawing does not take the page's font: name it, or the PDF falls back to Helvetica.
+  const tickWord = (x: number, y: number, text: string) => h(Text, { x, y, textAnchor: 'middle', style: { fontFamily: FONT, fontSize: SCORE_TEXT.tick, fontWeight: 500 }, fill: muted }, text);
   return h(
     Svg,
-    { width, height, viewBox: `0 0 ${SCORE_GAUGE.width} ${SCORE_GAUGE.height}` },
+    { width, height, viewBox: GAUGE_VIEWBOX },
     h(Path, { d: shape.track, fill: 'none', stroke: dark ? COLORS.lineDark : COLORS.track, strokeWidth: SCORE_GAUGE.stroke }),
     shape.value ? h(Path, { d: shape.value, fill: 'none', stroke: ink, strokeWidth: SCORE_GAUGE.stroke }) : null,
     ...shape.notches.map((notch, index) => h(Line, { key: index, ...notch, stroke: muted, strokeWidth: 1.5 })),
+    ...shape.tickLabels.flatMap((tick) => {
+      const lines = words.get(tick.start);
+      return lines ? [tickWord(tick.x, tick.y1, lines[0]), tickWord(tick.x, tick.y2, lines[1])] : [];
+    }),
     h(Text, { x: shape.number.x, y: shape.number.y, textAnchor: 'middle', style: { ...numeric, fontSize: shape.number.size, fontWeight: 600 }, fill: ink }, String(value)),
     h(Text, { x: shape.number.ofX, y: shape.number.y, style: { ...numeric, fontSize: SCORE_TEXT.of, fontWeight: 500 }, fill: muted }, '/100'),
     end(shape.ends.zero, '0'),

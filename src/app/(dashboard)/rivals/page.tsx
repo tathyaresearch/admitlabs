@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { SectionHead } from '@/components/audit/AuditHeader';
-import { PillarDots } from '@/components/charts/PillarDots';
-import { TrendLines } from '@/components/charts/TrendLines';
+import { MonthTable } from '@/components/charts/MonthTable';
+import { PartRanks } from '@/components/charts/PartRanks';
 import { NextSteps } from '@/components/home/NextSteps';
 import { RivalsCard } from '@/components/home/RivalsCard';
 import { ActivityTabs } from '@/components/rivals/Activity';
@@ -11,7 +11,6 @@ import { StandTable } from '@/components/rivals/StandTable';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
-import { Tabs } from '@/components/ui/Tabs';
 import { RIVAL_RULES } from '@/config/rivals';
 import { formatDate, plural } from '@/domain/format';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
@@ -123,20 +122,23 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
       )}
 
       {full.you ? (
-        <section className={audit.section} aria-labelledby="compare-title">
+        <section className={audit.section} aria-labelledby="parts-title">
+          <SectionHead id="parts-title" title="Part by part" help="Each part of the score ranked, from the latest Audit of each. Your row is highlighted." />
+          <div className={styles.pillarCard}>
+            <PartRanks rows={full.spread} />
+          </div>
+        </section>
+      ) : null}
+
+      {full.you && full.trend.months.length > 1 ? (
+        <section className={audit.section} aria-labelledby="months-title">
           <SectionHead
-            id="compare-title"
-            title="How you compare"
-            help={`Each pillar from 0 to 100, and the overall score over the last ${RIVAL_RULES.trendMonths} months. Rival scores come from Drishti's check on the 1st of each month.`}
+            id="months-title"
+            title="Month by month"
+            help={`Your overall score and your rivals', over the last ${RIVAL_RULES.trendMonths} months. Rivals are checked on the 1st of each month.`}
           />
           <div className={styles.pillarCard}>
-            <Tabs
-              label="How you compare"
-              items={[
-                { id: 'pillars', label: 'Pillar by pillar', content: <PillarDots rows={full.spread} /> },
-                { id: 'months', label: 'Month by month', content: <TrendLines trend={full.trend} label="Overall score by month, you and your rivals" /> },
-              ]}
-            />
+            <MonthTable trend={full.trend} label="Overall score by month, you and your rivals" />
           </div>
         </section>
       ) : null}

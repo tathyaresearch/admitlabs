@@ -1,5 +1,5 @@
-// Score history (Paid and Client): the month-by-month line with the 40 and 70 band lines; every
-// Audit sits folded below.
+// Score history (Paid and Client): the month-by-month line with every month's score written on
+// it and the 40 and 70 band lines; every Audit sits folded below.
 
 import { historyByMonth, type HistoryRow } from '@/audit/view';
 import { HistoryLine } from '@/components/charts/HistoryLine';
@@ -21,7 +21,7 @@ export function HistorySection({ rows, label }: { rows: readonly HistoryEntry[];
   const points = historyByMonth(rows, (runAt) => monthKey(new Date(runAt)));
   return (
     <div className={styles.history}>
-      <HistoryLine points={points} label={label} height={260} />
+      <HistoryLine points={points} label={label} height={260} labelEvery />
       <details className={styles.more}>
         <summary className={styles.moreSummary}>
           <span className={styles.moreClosed}>Show every Audit</span>
