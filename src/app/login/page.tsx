@@ -29,7 +29,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <AuthPage left={<WatchStage data={data} />}>
       {!APP_OPEN ? (
-        <OpensSoon />
+        <OpensSoon mode="login" />
       ) : configured ? (
         <AuthForm mode="login" next={safeNextPath(next)} mailpitUrl={process.env.NODE_ENV === 'development' ? mailpitUrl() : null} />
       ) : (

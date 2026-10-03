@@ -9,3 +9,8 @@ import { CTA } from './content.ts';
 export function wayIn(label: string, path: '/signup' | '/login' = '/signup', open: boolean = APP_OPEN): { href: string; label: string } {
   return open ? { href: appLink(path), label } : { href: '/signup', label: CTA.talk };
 }
+
+/** Sign in: the dashboard’s log in while it is open; /login on the website’s own address while it is closed. */
+export function signIn(open: boolean = APP_OPEN): { href: string; label: string } {
+  return { href: open ? appLink('/login') : '/login', label: CTA.signIn };
+}

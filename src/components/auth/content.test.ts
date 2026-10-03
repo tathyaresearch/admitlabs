@@ -23,7 +23,7 @@ describe('sign up and log in', () => {
   test('the words are as the user wrote them, with no dashes and curly apostrophes only', () => {
     assert.equal(AUTH_COPY.signup.title, 'Create your Drishti account');
     assert.equal(AUTH_COPY.signup.text, 'Free to start. Enter your email and we’ll send you a code.');
-    assert.equal(`${AUTH_COPY.signup.footText} ${AUTH_COPY.signup.footLink}`, 'Already have an account? Log in');
+    assert.equal(`${AUTH_COPY.signup.footText} ${AUTH_COPY.signup.footLink}`, 'Already have an account? Sign in');
     assert.equal(AUTH_COPY.login.title, 'Welcome back');
     assert.equal(AUTH_COPY.login.text, 'Enter your email. We’ll send you a code.');
     assert.equal(`${AUTH_COPY.login.footText} ${AUTH_COPY.login.footLink}`, 'New to Drishti? Sign up');
@@ -41,6 +41,11 @@ describe('sign up and log in', () => {
   test('each page links to the other', () => {
     assert.equal(AUTH_COPY.signup.footHref, '/login');
     assert.equal(AUTH_COPY.login.footHref, '/signup');
+    // While Drishti is not open yet.
+    assert.equal(`${SOON_COPY.foot.signup.text} ${SOON_COPY.foot.signup.link}`, 'Already with us? Sign in');
+    assert.equal(SOON_COPY.foot.signup.href, '/login');
+    assert.equal(`${SOON_COPY.foot.login.text} ${SOON_COPY.foot.login.link}`, 'New to Drishti? See how it works');
+    assert.equal(SOON_COPY.foot.login.href, '/signup');
   });
 
   test('every free Audit button on the website, /drishti and a shared Audit leads to sign up', () => {
@@ -57,7 +62,9 @@ describe('sign up and log in', () => {
     for (const file of ways) {
       const source = read(...file);
       assert.match(source, /wayIn\((CTA\.primary|card\.cta)\)/, file.join('/'));
-      assert.doesNotMatch(source, /\/login/, file.join('/'));
+      // Never to log in: that is Sign in's job (signIn(), in the header and the footer).
+      assert.doesNotMatch(source, /wayIn\([^)]*\/login/, file.join('/'));
+      assert.doesNotMatch(source, /href="\/login"|appLink\('\/login'\)/, file.join('/'));
     }
     assert.match(read('components', 'share', 'SharedAudit.tsx'), /\/signup/);
     for (const route of [['app', 'share', '[token]', 'pdf', 'route.ts'], ['app', 'team', 'institutions', '[id]', 'pdf', 'route.ts']]) {
@@ -66,7 +73,8 @@ describe('sign up and log in', () => {
   });
 
   test('the website’s sign-in link leads to log in', () => {
-    assert.match(read('components', 'site', 'Footer.tsx'), /wayIn\(CTA\.signIn, '\/login'\)/);
+    assert.match(read('components', 'site', 'Footer.tsx'), /signIn\(\)/);
+    assert.match(read('components', 'site', 'Header.tsx'), /signIn\(\)/);
   });
 
   test('log in tells an email with no account apart from other failures', () => {

@@ -2,15 +2,20 @@
 // left side (a motion picture for each page, hidden from screen readers) beside it on a wide screen
 // and in a small band above it on a phone. The left side carries the logo and one line.
 
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ProductLockup } from '@/components/ui/Brand';
 import { AnchorButton } from '@/components/ui/Button';
 import { Notice } from '@/components/ui/Feedback';
 import { SITE_SETTINGS } from '@/config/site';
+import { APP_OPEN, SITE_URL } from '@/lib/urls';
 import { CTA } from '@/site/content';
-import { CODE_COPY, SOON_COPY } from './content';
+import { CODE_COPY, SOON_COPY, type AuthMode } from './content';
 import styles from './auth.module.css';
 import stage from './stage.module.css';
+
+/** The logo goes to the website’s home page: this address while Drishti is closed, the website’s from the dashboard. */
+const HOME = APP_OPEN ? `${SITE_URL}/` : '/';
 
 export function AuthPage({ left, children }: { left: ReactNode; children: ReactNode }) {
   return (
@@ -21,9 +26,9 @@ export function AuthPage({ left, children }: { left: ReactNode; children: ReactN
       </main>
       <aside className={`${styles.stageArea} ${stage.stage}`} data-theme="dark" aria-label="Drishti by AdmitLabs">
         {left}
-        <div className={stage.brand}>
+        <a href={HOME} className={stage.brand} aria-label="AdmitLabs, home">
           <ProductLockup size="md" motion="blink" />
-        </div>
+        </a>
         <p className={stage.line}>{CODE_COPY.line}</p>
       </aside>
     </div>
@@ -34,7 +39,8 @@ export function AuthPage({ left, children }: { left: ReactNode; children: ReactN
  * Instead of the form while Drishti is not open yet (production, until it opens): one line and a
  * way to write to us, as everywhere on the website. No email field, no code, no database.
  */
-export function OpensSoon() {
+export function OpensSoon({ mode }: { mode: AuthMode }) {
+  const foot = SOON_COPY.foot[mode];
   return (
     <div className={styles.soon}>
       <div className={styles.formHead}>
@@ -44,6 +50,12 @@ export function OpensSoon() {
       <AnchorButton href={`mailto:${SITE_SETTINGS.email}`} size="lg" block icon="mail" className={styles.soonButton}>
         {CTA.talk}
       </AnchorButton>
+      <p className={styles.foot}>
+        {foot.text}{' '}
+        <Link href={foot.href} className={styles.footLink}>
+          {foot.link}
+        </Link>
+      </p>
     </div>
   );
 }

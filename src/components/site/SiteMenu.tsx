@@ -13,7 +13,17 @@ import styles from './site.module.css';
 
 const MENU_ID = 'site-menu';
 
-export function SiteMenu({ nav, products, work }: { nav: typeof NAV; products: typeof PRODUCTS; work: { href: string; label: string } }) {
+export function SiteMenu({
+  nav,
+  products,
+  work,
+  signIn,
+}: {
+  nav: typeof NAV;
+  products: typeof PRODUCTS;
+  work: { href: string; label: string };
+  signIn: { href: string; label: string };
+}) {
   const menu = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const close = () => menu.current?.hidePopover();
@@ -61,6 +71,9 @@ export function SiteMenu({ nav, products, work }: { nav: typeof NAV; products: t
           <ButtonLink href={work.href} variant="secondary" block onClick={close} className={styles.ghost}>
             {work.label}
           </ButtonLink>
+          <a href={signIn.href} className={styles.menuSignIn} onClick={close}>
+            {signIn.label}
+          </a>
         </div>
       </div>
     </>

@@ -473,6 +473,11 @@
   display: none;
 }
 
+/* Sign in: a quiet link before the buttons, from a tablet up. On a phone it is in the menu. */
+.headerActions .signInLink {
+  display: none;
+}
+
 /* The narrowest phones keep the wordmark and the menu; the main button waits in the hero. */
 @media (max-width: 22.49rem) {
   .headerActions .headerCta {
@@ -503,6 +508,11 @@
 
   .headerActions .workLink {
     display: inline-flex;
+  }
+
+  .headerActions .signInLink {
+    display: inline-block;
+    margin-right: var(--space-2);
   }
 }
 
@@ -602,7 +612,24 @@
 
 .menuActions {
   display: grid;
+  gap: var(--space-4);
   margin-top: var(--space-5);
+}
+
+/* Sign in, quiet under the button. */
+.menuSignIn {
+  justify-self: center;
+  padding-block: var(--space-1);
+  font: var(--type-label);
+  font-size: 0.9375rem;
+  color: var(--slate);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.menuSignIn:hover,
+.menuSignIn:focus-visible {
+  color: var(--ivory);
 }
 
 @media (prefers-reduced-motion: no-preference) {

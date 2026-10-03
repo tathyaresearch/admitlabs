@@ -35,7 +35,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
       }
     >
       {!APP_OPEN ? (
-        <OpensSoon />
+        <OpensSoon mode="signup" />
       ) : configured ? (
         <AuthForm mode="signup" next={safeNextPath(next)} mailpitUrl={process.env.NODE_ENV === 'development' ? mailpitUrl() : null} />
       ) : (

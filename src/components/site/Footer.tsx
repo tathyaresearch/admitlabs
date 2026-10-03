@@ -3,13 +3,13 @@
 
 import { Wordmark } from '@/components/ui/Brand';
 import { istParts } from '@/domain/dates';
-import { CTA, DRISHTI, FOOTER } from '@/site/content';
-import { wayIn } from '@/site/way-in';
+import { DRISHTI, FOOTER } from '@/site/content';
+import { signIn } from '@/site/way-in';
 import sections from './sections.module.css';
 import site from './site.module.css';
 
-/** Sign in, or while Drishti is not open yet, "Talk to us" (src/site/way-in.ts). */
-const SIGN_IN = wayIn(CTA.signIn, '/login');
+/** Sign in, to /login (src/site/way-in.ts). */
+const SIGN_IN = signIn();
 
 export function SiteFooter() {
   return (

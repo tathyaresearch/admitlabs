@@ -13,11 +13,11 @@ export const AUTH_COPY = {
     /** On the code step. The email may already have an account: then it simply signs in. */
     verify: 'Continue',
     footText: 'Already have an account?',
-    footLink: 'Log in',
+    footLink: 'Sign in',
     footHref: '/login',
   },
   login: {
-    page: 'Log in',
+    page: 'Sign in',
     title: 'Welcome back',
     text: 'Enter your email. We’ll send you a code.',
     verify: 'Sign in',
@@ -32,6 +32,11 @@ export const SOON_COPY = {
   page: 'Drishti opens soon',
   title: 'Drishti opens soon.',
   text: 'We’re opening Drishti to a few institutions first. Talk to us to be one of them.',
+  /** Under the button: each page links to the other. */
+  foot: {
+    signup: { text: 'Already with us?', link: 'Sign in', href: '/login' },
+    login: { text: 'New to Drishti?', link: 'See how it works', href: '/signup' },
+  },
 } as const;
 
 /** The same for both: the field, the code step and the checks. */
