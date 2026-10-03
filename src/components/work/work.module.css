@@ -1,0 +1,95 @@
+/* A Client's work log: the card on Home (sm) and the full list (md, rows in one card). */
+
+.list {
+  display: grid;
+  list-style: none;
+  min-width: 0;
+}
+
+.list[data-size='sm'] {
+  gap: var(--space-3);
+}
+
+.list[data-size='md'] {
+  padding: var(--space-1) var(--space-5);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-small);
+}
+
+.entry[data-size='md'] {
+  padding: var(--space-4) 0;
+  font: var(--type-body);
+}
+
+.entry[data-size='md'] + .entry[data-size='md'] {
+  border-top: 1px solid var(--line-raised);
+}
+
+/* Done: a filled tick. Next: an open ring. */
+.tick,
+.ring {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 1px;
+  border-radius: var(--radius-full);
+}
+
+.entry[data-size='md'] .tick,
+.entry[data-size='md'] .ring {
+  margin-top: 2px;
+}
+
+.tick {
+  background: var(--text);
+  color: var(--surface);
+}
+
+.ring {
+  border: 1px dashed var(--line-strong);
+}
+
+.text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.meta {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  min-width: 0;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.link {
+  min-width: 0;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+  overflow-wrap: anywhere;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.link:hover {
+  color: var(--text);
+}
+
+.link :global(svg) {
+  display: inline;
+  margin-left: 0.25em;
+  vertical-align: -0.125em;
+}

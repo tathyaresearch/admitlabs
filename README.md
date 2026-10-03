@@ -76,6 +76,13 @@ On the Audit, each check is either to fix or working (Strong everywhere), so the
 - The team's list opens with who needs attention, most urgent first, each row saying why (`src/team/attention.ts` and the `team_institutions` view).
 - The sample has Eastgate's and Brightpath's monthly reports from April to August.
 
+## Your AdmitLabs team (Clients)
+
+- A Client's Home has "Your AdmitLabs team": what the team did this month (or its latest work), what it does next, when the Audit last checked, and how to write to the team. "See all work" opens `/work`, the whole log by month.
+- The team keeps the log on the institution's page, in the Work log tab: Done or Next, one plain sentence, the day, and a link when there is one. Next can be marked as done.
+- The `team_work` table: the team writes, the Client's own people read while the service is active, and no other plan sees it (`supabase/tests/team_work.test.sql`). The rules for what can be saved are in `src/team/work.ts`.
+- The sample Client, Brightpath, has a log from August with two things next.
+
 ## Empty states
 
 Anything that can be empty says why, what to do, and when it fills: no rival suggestions yet (where suggestions come from, and how to add rivals), no alerts yet (what arrives in Notifications and when, `src/domain/alerts.ts`), Demand before its first update, a new prospect on the team side (run a team Audit, see what to fix, share it), no enquiries yet, no notes or share links. Tabs open on the first one with something in it.

@@ -104,6 +104,85 @@ export const SAMPLE_ADS: readonly SampleAd[] = [
   { slug: 'brightpath-skills', promise: 'Learn from trainers who work in the industry. Weekend batches open.', enteredAt: '2026-09-07' },
 ];
 
+/**
+ * The AdmitLabs team's work log for Brightpath, the sample Client: what the team did (dated the
+ * day it was done) and what it does next (dated the day it is due), added on `addedOn`. Brightpath
+ * sees it on Home and in its work list. Links point at its own site.
+ */
+export const SAMPLE_TEAM_WORK: ReadonlyArray<{
+  slug: string;
+  author: 'team' | 'admin';
+  kind: 'done' | 'next';
+  text: string;
+  on: string;
+  link: string | null;
+  addedOn: string;
+}> = [
+  {
+    slug: 'brightpath-skills',
+    author: 'team',
+    kind: 'done',
+    text: 'Added the Hotel Management fees and batch dates to the Google listing.',
+    on: '2026-08-12',
+    link: null,
+    addedOn: '2026-08-12',
+  },
+  {
+    slug: 'brightpath-skills',
+    author: 'team',
+    kind: 'done',
+    text: 'Ran a team Audit and went through the top three fixes with your team on a call.',
+    on: '2026-08-27',
+    link: null,
+    addedOn: '2026-08-27',
+  },
+  {
+    slug: 'brightpath-skills',
+    author: 'admin',
+    kind: 'done',
+    text: "Refreshed the Data Analytics course page with this year's syllabus and the next batch date.",
+    on: '2026-09-10',
+    link: 'https://brightpath-skills.example/courses/data-analytics',
+    addedOn: '2026-09-10',
+  },
+  {
+    slug: 'brightpath-skills',
+    author: 'team',
+    kind: 'done',
+    text: 'Added WhatsApp next to the enquiry form on every course page.',
+    on: '2026-09-22',
+    link: 'https://brightpath-skills.example/courses',
+    addedOn: '2026-09-22',
+  },
+  {
+    slug: 'brightpath-skills',
+    author: 'team',
+    kind: 'done',
+    text: 'Posted four reels with real students from the Hotel Management batch.',
+    on: '2026-09-29',
+    link: null,
+    addedOn: '2026-09-29',
+  },
+  {
+    slug: 'brightpath-skills',
+    author: 'team',
+    kind: 'next',
+    text: 'Publish the Data Analytics placement results, with company names and the year.',
+    on: '2026-10-15',
+    link: null,
+    addedOn: '2026-09-29',
+  },
+  {
+    slug: 'brightpath-skills',
+    author: 'team',
+    kind: 'next',
+    text: 'Ask the last two batches for Google reviews, with a short link on WhatsApp.',
+    on: '2026-10-20',
+    link: null,
+    addedOn: '2026-09-29',
+  },
+];
+
 /** Private team notes. Never visible to institution users. */
 export const SAMPLE_NOTES: ReadonlyArray<{ slug: string; author: 'team' | 'admin'; body: string; createdAt: string }> = [
   {

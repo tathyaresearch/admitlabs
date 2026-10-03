@@ -1688,6 +1688,54 @@ export type Database = {
         }
         Relationships: []
       }
+      team_work: {
+        Row: {
+          added_by: string | null
+          body: string
+          created_at: string
+          id: string
+          institution_id: string
+          kind: Database["public"]["Enums"]["team_work_kind"]
+          link: string | null
+          work_on: string
+        }
+        Insert: {
+          added_by?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          institution_id: string
+          kind?: Database["public"]["Enums"]["team_work_kind"]
+          link?: string | null
+          work_on: string
+        }
+        Update: {
+          added_by?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          institution_id?: string
+          kind?: Database["public"]["Enums"]["team_work_kind"]
+          link?: string | null
+          work_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_work_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_work_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       team_institutions: {
@@ -2021,6 +2069,7 @@ export type Database = {
         | "admission_dates"
       sentiment: "positive" | "negative"
       team_role: "team" | "admin"
+      team_work_kind: "done" | "next"
       tier: "free" | "paid" | "client"
     }
     CompositeTypes: {
@@ -2212,6 +2261,7 @@ export const Constants = {
       ],
       sentiment: ["positive", "negative"],
       team_role: ["team", "admin"],
+      team_work_kind: ["done", "next"],
       tier: ["free", "paid", "client"],
     },
   },

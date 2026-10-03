@@ -6,6 +6,7 @@ import { istDate } from '../domain/dates.ts';
 import { auditSchedule, latestScheduledRun } from '../domain/schedule.ts';
 import { paidPlanEndsAt } from '../domain/tiers.ts';
 import { CHECK_KEYS } from '../domain/types.ts';
+import { checkWork } from '../team/work.ts';
 import {
   ADMIN_EMAIL,
   DEMAND_FIXTURES,
@@ -21,6 +22,8 @@ import {
   SAMPLE_RIVALS,
   SAMPLE_RUNS,
   SAMPLE_SHARES,
+  SAMPLE_TEAM_WORK,
+  SAMPLE_TODAY,
   SAMPLE_USERS,
   TEAM_EMAIL,
   profileResult,
@@ -120,6 +123,20 @@ describe('sample rivals', () => {
 
   test('team notes are only about real sample institutions', () => {
     for (const note of SAMPLE_NOTES) assert.ok(bySlug.has(note.slug));
+  });
+
+  test('the work log is for a Client, and each entry is one the team could have added that day', () => {
+    assert.ok(SAMPLE_TEAM_WORK.length > 0);
+    for (const entry of SAMPLE_TEAM_WORK) {
+      assert.equal(bySlug.get(entry.slug)?.plan?.tier, 'client', entry.slug);
+      assert.ok(entry.addedOn <= SAMPLE_TODAY, entry.text);
+      const saved = checkWork({ kind: entry.kind, text: entry.text, on: entry.on, link: entry.link ?? '' }, istDate(entry.addedOn, 16));
+      assert.deepEqual(saved, { ok: true, value: { kind: entry.kind, text: entry.text, on: entry.on, link: entry.link } }, entry.text);
+      if (entry.link) assert.ok(new URL(entry.link).hostname.endsWith('.example'), entry.link);
+    }
+    // Something done and something next, so the card has both.
+    assert.ok(SAMPLE_TEAM_WORK.some((entry) => entry.kind === 'done' && entry.on <= SAMPLE_TODAY));
+    assert.ok(SAMPLE_TEAM_WORK.some((entry) => entry.kind === 'next' && entry.on > SAMPLE_TODAY));
   });
 
   test('sample share links are for prospects, made after their team Audit', () => {
@@ -247,6 +264,7 @@ describe('sample demand', () => {
       SAMPLE_CONTENT,
       SAMPLE_ADS,
       SAMPLE_NOTES,
+      SAMPLE_TEAM_WORK,
       DEMAND_FIXTURES,
       MENTION_FIXTURES,
     ]);

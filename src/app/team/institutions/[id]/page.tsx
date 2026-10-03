@@ -6,34 +6,38 @@ import { fixStep } from '@/components/audit/AuditScreen';
 import { AddedTag } from '@/components/details/Added';
 import { HomeSummary } from '@/components/home/HomeSummary';
 import { NextSteps } from '@/components/home/NextSteps';
-import { ActionButton, CopyLink, NoteForm, PaidStartForm } from '@/components/team/InstitutionPanels';
+import { ActionButton, CopyLink, NoteForm, PaidStartForm, WorkForm } from '@/components/team/InstitutionPanels';
 import { AnchorButton, Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/Feedback';
 import { KpiCard, KpiNote, KpiNumber, KpiWord } from '@/components/ui/Kpi';
 import { FactList, PageHead } from '@/components/ui/Layout';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { TEAM_RULES } from '@/config/team';
-import { monthKey } from '@/domain/dates';
+import { istParts, monthKey } from '@/domain/dates';
 import { EMPTY_PROGRAM_DETAILS as EMPTY_PROGRAM, institutionDetailLines, programDetailLines } from '@/domain/details';
-import { formatDate, formatDateTime, hostAndPath } from '@/domain/format';
+import { formatDate, formatDateTime, formatMonth, hostAndPath } from '@/domain/format';
 import { scoreLabel } from '@/domain/scores';
 import { effectiveTier, type PlanRecord } from '@/domain/tiers';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
 import { loadAddedDetails, type AddedDetails } from '@/lib/details/load';
-import { loadTeamInstitution, type LinkRow, type TeamInstitution } from '@/lib/team/load';
+import { loadTeamInstitution, type LinkRow, type TeamInstitution, type WorkRow } from '@/lib/team/load';
 import { APP_URL } from '@/lib/urls';
 import { TEAM_STATUS_LABELS, type TeamStatus } from '@/team/filters';
 import { planActions, planDetail } from '@/team/plans';
 import { linkState, linkStateText, sharePath } from '@/team/share';
+import { isOverdue, workByMonth } from '@/team/work';
 import { viewAsAction } from '../../view-as-actions';
 import {
   addNoteAction,
   auditNowAction,
   endPlanAction,
   makeClientAction,
+  markWorkDoneAction,
   removeNoteAction,
+  removeWorkAction,
+  addWorkAction,
   shareAuditAction,
   startPaidAction,
   stopLinkAction,
@@ -85,7 +89,12 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
   // A new prospect: nothing to look at until the first team Audit, so that comes first.
   const firstStep = !institution.claimed && !(view && latest);
 
+  // A Client's work log comes first: it is what the team does for them every month.
+  const client = tier === 'client';
   const tabs: TabItem[] = [
+    ...(client || institution.work.length
+      ? [{ id: 'work', label: 'Work log', count: institution.work.length, content: <WorkTab institution={institution} client={client} now={now} /> }]
+      : []),
     { id: 'audits', label: 'Audits', count: institution.teamAudits.length + Math.min(institution.history.length, OWN_AUDITS_SHOWN), content: <AuditsTab institution={institution} /> },
     { id: 'programs', label: 'Programs', count: institution.programs.length, content: <ProgramsTab institution={institution} /> },
     ...(institution.claimed
@@ -276,10 +285,91 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
 
       <section className={audit.section} aria-labelledby="record-title">
         <h2 id="record-title" className="visually-hidden">
-          Audits, programs, people, notes and share links
+          {client ? 'Work log, audits, programs, people, notes and share links' : 'Audits, programs, people, notes and share links'}
         </h2>
         <Tabs label={`About ${institution.name}`} items={tabs} />
       </section>
+    </div>
+  );
+}
+
+/** A Client's work log: add what the team did or does next, then the log as they see it, Next first. */
+function WorkTab({ institution, client, now }: { institution: TeamInstitution; client: boolean; now: Date }) {
+  const { next, months } = workByMonth(institution.work);
+  const { year, month, day } = istParts(now);
+  const today = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return (
+    <div className={styles.tabStack}>
+      <p className={styles.formNote}>
+        {client
+          ? 'They see this on their Home and in their work list, so write it for them, in plain words.'
+          : 'Their AdmitLabs service has ended, so they no longer see this log.'}
+      </p>
+      {client ? (
+        <div className={styles.noteCard}>
+          <WorkForm action={addWorkAction.bind(null, institution.id)} today={today} />
+        </div>
+      ) : null}
+      {institution.work.length ? (
+        <>
+          {next.length ? (
+            <div className={styles.workGroup}>
+              <h3 className={styles.workGroupTitle}>Next</h3>
+              <div className={styles.rows}>
+                {next.map((row) => (
+                  <WorkItem key={row.id} institutionId={institution.id} row={row} now={now} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {months.map((group) => (
+            <div key={group.month} className={styles.workGroup}>
+              <h3 className={styles.workGroupTitle}>Done in {formatMonth(group.month)}</h3>
+              <div className={styles.rows}>
+                {group.entries.map((row) => (
+                  <WorkItem key={row.id} institutionId={institution.id} row={row} now={now} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </>
+      ) : (
+        <p className={styles.empty}>Nothing logged yet. Add each piece of work as it is done, so they see what the service does for them.</p>
+      )}
+    </div>
+  );
+}
+
+function WorkItem({ institutionId, row, now }: { institutionId: string; row: WorkRow; now: Date }) {
+  return (
+    <div className={`${styles.item} ${styles.workItem}`}>
+      <div className={styles.workMain}>
+        <p className={styles.itemBody}>{row.text}</p>
+        <p className={styles.itemMeta}>
+          <span>{row.kind === 'done' ? `Done ${formatDate(row.on)}` : isOverdue(row, now) ? `Was due ${formatDate(row.on)}` : `By ${formatDate(row.on)}`}</span>
+          {row.link ? (
+            <a href={row.link} className={styles.link} target="_blank" rel="noreferrer">
+              {hostAndPath(row.link)}
+              <span className="visually-hidden"> (opens in a new tab)</span>
+            </a>
+          ) : null}
+          <span>Added by {row.addedBy}</span>
+        </p>
+      </div>
+      <div className={styles.workActions}>
+        {row.kind === 'next' ? (
+          <form action={markWorkDoneAction.bind(null, institutionId, row.id)}>
+            <Button type="submit" size="sm" variant="secondary" icon="check">
+              Mark as done
+            </Button>
+          </form>
+        ) : null}
+        <form action={removeWorkAction.bind(null, institutionId, row.id)}>
+          <Button type="submit" size="sm" variant="quiet">
+            Remove
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

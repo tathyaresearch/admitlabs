@@ -456,6 +456,52 @@ a.count:hover {
   gap: var(--space-3);
 }
 
+/* A Client's work log: the day and the link side by side where there is room; the log by month. */
+.workFields {
+  display: grid;
+  align-items: start;
+  gap: var(--space-3);
+}
+
+@media (min-width: 40rem) {
+  .workFields {
+    grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  }
+}
+
+.workGroup {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.workGroupTitle {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+/* An entry, with Mark as done and Remove beside it where there is room, under it on a phone. */
+.item.workItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.workMain {
+  display: grid;
+  flex: 1 1 22rem;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.workActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .noteCard {
   padding: var(--card-padding-sm);
   background: var(--surface-raised);

@@ -1,0 +1,24 @@
+/* A Client's work page: Next, then what was done by month. */
+
+.page {
+  display: grid;
+  gap: var(--page-gap);
+  max-width: 48rem;
+}
+
+.group {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.groupTitle {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.mail {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}

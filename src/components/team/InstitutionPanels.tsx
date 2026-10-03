@@ -6,8 +6,9 @@
 import { useActionState, useState } from 'react';
 import type { ActionState } from '@/app/team/institutions/[id]/actions';
 import { Button } from '@/components/ui/Button';
-import { TextAreaField, TextField } from '@/components/ui/Form';
+import { RadioGroup, TextAreaField, TextField } from '@/components/ui/Form';
 import { paidEndText, paidStartFrom, paidStartRange } from '@/team/plans';
+import { WORK_RULES } from '@/team/work';
 import styles from './team.module.css';
 
 type Action = (previous: ActionState, formData: FormData) => Promise<ActionState>;
@@ -31,6 +32,43 @@ export function NoteForm({ action }: { action: Action }) {
       <div className={styles.inlineForm}>
         <Button type="submit" size="sm" icon="plus" loading={pending}>
           Add note
+        </Button>
+      </div>
+      <Reply state={state} />
+    </form>
+  );
+}
+
+/** Adds to a Client's work log: Done or Next, what, the day, and a link to the work when there is one. */
+export function WorkForm({ action, today }: { action: Action; today: string }) {
+  const [state, submit, pending] = useActionState(action, IDLE);
+  return (
+    <form key={state.status === 'done' ? state.attempt : 'work'} action={submit} className={styles.facts}>
+      <RadioGroup
+        name="kind"
+        legend="Is it done?"
+        defaultValue="done"
+        options={[
+          { value: 'done', label: 'Done', hint: 'The team has done it.' },
+          { value: 'next', label: 'Next', hint: 'The team does it next, by the day below.' },
+        ]}
+      />
+      <TextAreaField
+        id="work-text"
+        name="text"
+        label="What the team did, or does next"
+        hint="One plain sentence they will read, like: Added WhatsApp to every course page."
+        rows={2}
+        maxLength={WORK_RULES.textMax}
+        required
+      />
+      <div className={styles.workFields}>
+        <TextField id="work-on" name="on" type="date" label="Day" hint="When it was done, or for Next, when it is due." defaultValue={today} required />
+        <TextField id="work-link" name="link" type="text" inputMode="url" label="Link (optional)" hint="The page, post or listing, so they can see it." placeholder="https://" />
+      </div>
+      <div className={styles.inlineForm}>
+        <Button type="submit" size="sm" icon="plus" loading={pending}>
+          Add to the log
         </Button>
       </div>
       <Reply state={state} />

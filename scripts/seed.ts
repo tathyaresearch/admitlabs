@@ -31,6 +31,7 @@ import {
   SAMPLE_RIVALS,
   SAMPLE_RUNS,
   SAMPLE_SHARES,
+  SAMPLE_TEAM_WORK,
   SAMPLE_TODAY,
   SAMPLE_USERS,
   SAMPLE_WEEKLY_CHECKS_FROM,
@@ -283,6 +284,20 @@ async function main(): Promise<void> {
       author_id: requireUser(note.author === 'admin' ? ADMIN_EMAIL : TEAM_EMAIL),
       body: note.body,
       created_at: at(note.createdAt, 15),
+    })),
+  );
+  // The Client's work log: what the AdmitLabs team did for Brightpath, and does next.
+  await insert(
+    'team_work',
+    SAMPLE_TEAM_WORK.map((entry, index) => ({
+      institution_id: institutionId(entry.slug),
+      kind: entry.kind,
+      body: entry.text,
+      work_on: entry.on,
+      link: entry.link,
+      added_by: requireUser(entry.author === 'admin' ? ADMIN_EMAIL : TEAM_EMAIL),
+      // Entries added the same day keep their order.
+      created_at: istDate(entry.addedOn, 16, index).toISOString(),
     })),
   );
 

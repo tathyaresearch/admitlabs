@@ -104,6 +104,55 @@
   color: var(--text);
 }
 
+/* A Client's team card: done, next, and the facts, in three columns where there is room. */
+.team {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@container (min-width: 52rem) {
+  .team {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.8fr);
+    gap: var(--space-8);
+  }
+}
+
+.teamCol {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.teamFacts {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.teamFact {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.teamFact dt {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.teamFact dd {
+  font: var(--type-small);
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.teamMail {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
 /* Free: one line on what Paid adds to the score, and the button that asks for it. */
 .scorePaid {
   display: flex;

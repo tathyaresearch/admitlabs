@@ -10,6 +10,7 @@ import { checkName } from '@/domain/checks';
 import { INSTITUTION_TYPES, type CheckKey, type InstitutionType, type MembershipRole, type TeamRole, type Tier } from '@/domain/types';
 import { createClient } from '@/lib/supabase/server';
 import { pageRange, scoreRange, searchPattern, type TeamFilters, type TeamStatus } from '@/team/filters';
+import type { WorkEntry } from '@/team/work';
 
 export interface TeamListRow {
   id: string;
@@ -140,6 +141,11 @@ export interface NoteRow {
   author: string;
 }
 
+/** An entry in a Client's work log, with who on the team added it. */
+export interface WorkRow extends WorkEntry {
+  addedBy: string;
+}
+
 export interface LinkRow {
   token: string;
   auditId: string;
@@ -173,6 +179,8 @@ export interface TeamInstitution {
   people: Array<{ email: string; role: MembershipRole; joinedAt: string }>;
   invites: string[];
   notes: NoteRow[];
+  /** The work log the Client sees, newest first. */
+  work: WorkRow[];
   links: LinkRow[];
   trackedBy: number;
 }
@@ -188,7 +196,7 @@ export async function loadTeamInstitution(id: string): Promise<TeamInstitution |
   if (!institution) return null;
   const claimed = Boolean(institution.institution_status?.claimed);
 
-  const [audit, teamAudit, rivalAudit, history, teamAudits, people, invites, notes, links, tracked, team] = await Promise.all([
+  const [audit, teamAudit, rivalAudit, history, teamAudits, people, invites, notes, work, links, tracked, team] = await Promise.all([
     claimed ? latestStoredAudit(supabase, id) : Promise.resolve(null),
     claimed ? Promise.resolve(null) : latestStoredAudit(supabase, id, undefined, ['team']),
     claimed ? Promise.resolve(null) : latestStoredAudit(supabase, id, undefined, ['rival']),
@@ -204,11 +212,17 @@ export async function loadTeamInstitution(id: string): Promise<TeamInstitution |
     claimed ? supabase.rpc('institution_people', { p_institution: id }) : Promise.resolve({ data: [], error: null }),
     supabase.from('invites').select('email').eq('institution_id', id).is('accepted_at', null).order('created_at'),
     supabase.from('notes').select('id, body, created_at, author_id').eq('institution_id', id).order('created_at', { ascending: false }),
+    supabase
+      .from('team_work')
+      .select('id, kind, body, work_on, link, added_by')
+      .eq('institution_id', id)
+      .order('work_on', { ascending: false })
+      .order('created_at', { ascending: false }),
     supabase.from('share_links').select('token, audit_id, created_at, expires_at, stopped_at, created_by').eq('institution_id', id).order('created_at', { ascending: false }),
     supabase.from('rivals').select('institution_id', { count: 'exact', head: true }).eq('rival_institution_id', id),
     loadTeamPeople(),
   ]);
-  for (const result of [teamAudits, invites, notes, links, tracked]) if (result.error) throw new Error(`Could not load the institution: ${result.error.message}`);
+  for (const result of [teamAudits, invites, notes, work, links, tracked]) if (result.error) throw new Error(`Could not load the institution: ${result.error.message}`);
   if (people.error) throw new Error(`Could not load people: ${people.error.message}`);
 
   const emails = new Map(team.flatMap((person) => (person.userId ? [[person.userId, person.email] as const] : [])));
@@ -252,6 +266,14 @@ export async function loadTeamInstitution(id: string): Promise<TeamInstitution |
       createdAt: row.created_at,
       authorId: row.author_id,
       author: row.author_id ? (emails.get(row.author_id) ?? 'A former team member') : 'A former team member',
+    })),
+    work: (work.data ?? []).map((row) => ({
+      id: row.id,
+      kind: row.kind,
+      text: row.body,
+      on: row.work_on,
+      link: row.link,
+      addedBy: row.added_by ? (emails.get(row.added_by) ?? 'A former team member') : 'A former team member',
     })),
     links: (links.data ?? []).map((row) => ({
       token: row.token,

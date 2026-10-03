@@ -8,12 +8,14 @@ import { PaidAction } from '@/components/plan/PaidAction';
 import { HomeThings, type HomeThing } from '@/components/home/HomeThings';
 import { RivalsCard } from '@/components/home/RivalsCard';
 import { StartGuide } from '@/components/home/StartGuide';
+import { TeamCard } from '@/components/home/TeamCard';
 import { WhatChanged, type CheckedMark } from '@/components/home/WhatChanged';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
 import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
 import { limitFor } from '@/config/entitlements';
+import { ADMITLABS_EMAIL } from '@/config/team';
 import { checkName } from '@/domain/checks';
 import { nextPullOn } from '@/demand/schedule';
 import { monthKey } from '@/domain/dates';
@@ -25,7 +27,9 @@ import { auditNote, loadAuditPage, nextAuditText, type AuditPageData } from '@/l
 import { loadCityIdeas, loadHighlight, loadHighlightHistory } from '@/lib/demand/load';
 import { loadGuideClosed, loadMarks, loadMovesSince, loadSpikes } from '@/lib/home/load';
 import { loadActions, loadRivalSnapshot } from '@/lib/rivals/load';
+import { loadWork } from '@/lib/team/work';
 import { byPoints, fixThing, threeThings, type Thing } from '@/report/things';
+import { workCard } from '@/team/work';
 import { closeStartGuideAction, markDoneAction } from './actions';
 import styles from '@/components/home/home.module.css';
 
@@ -90,16 +94,24 @@ export default async function HomePage() {
   // Paid and Client see the month's 3 things to do (the same three as the monthly report); Free
   // keeps its top 3 fixes.
   const full = viewer.tier !== 'free';
-  const [data, rivals, highlight, lessons, ideas, guideClosed] = await Promise.all([
+  // A Client's AdmitLabs team: what it did and does next (the database shows the log to Clients only).
+  const client = viewer.tier === 'client';
+  const [data, rivals, highlight, lessons, ideas, guideClosed, work] = await Promise.all([
     loadAuditPage(viewer),
     loadRivalSnapshot(viewer),
     loadHighlight(institution.id),
     full ? loadActions(institution.id) : Promise.resolve([]),
     full ? loadCityIdeas(viewer) : Promise.resolve([]),
     loadGuideClosed(viewer),
+    client ? loadWork(institution.id) : Promise.resolve(null),
   ]);
   const searches = await loadHighlightHistory(viewer, highlight);
   const reminder = planReminder(viewer.plan, new Date());
+  // Only an Audit on the current plan checks what was marked done (a Paid plan ending first does not).
+  const nextAudit = data.nextAudit && data.nextAudit.tier === viewer.tier ? formatDate(data.nextAudit.on) : null;
+  const teamCard = work ? (
+    <TeamCard card={workCard(work, new Date())} lastChecked={data.audit?.runAt ?? null} nextAudit={nextAudit} email={ADMITLABS_EMAIL} allHref="/work" />
+  ) : null;
   const view: AuditView | null = data.audit ? overviewView(data.audit, { institutionType: institution.type, programNames: data.names }) : null;
 
   const reminderNotice =
@@ -133,6 +145,7 @@ export default async function HomePage() {
         >
           {data.nextAudit ? `${nextAuditText(data)}.` : 'Your score and what to fix first will show here.'}
         </EmptyState>
+        {teamCard}
         <div className={styles.pair}>
           <RivalsCard
             ladder={rivals.ladder}
@@ -175,8 +188,6 @@ export default async function HomePage() {
       ? [{ key: mark.checkKey, name: checkName(mark.checkKey, institution.type), markedAt: mark.markedAt, outcome: markOutcome(mark.checkKey, audit, data.names) }]
       : [],
   );
-  // Only an Audit on the current plan checks what was marked done (a Paid plan ending first does not).
-  const nextAudit = data.nextAudit && data.nextAudit.tier === viewer.tier ? formatDate(data.nextAudit.on) : null;
   const firstFix = view.fixes[0];
   const showGuide = !guideClosed;
 
@@ -204,6 +215,8 @@ export default async function HomePage() {
           onClose={closeStartGuideAction}
         />
       ) : null}
+
+      {teamCard}
 
       <HomeThings
         id="things"

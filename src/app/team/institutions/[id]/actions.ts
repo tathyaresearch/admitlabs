@@ -8,6 +8,7 @@
 import { revalidatePath } from 'next/cache';
 import { AuditRunError, runAudit } from '@/audit/run';
 import { TEAM_RULES } from '@/config/team';
+import { istParts } from '@/domain/dates';
 import { effectiveTier, type PlanRecord } from '@/domain/tiers';
 import { tidyText } from '@/domain/onboarding';
 import { getViewer } from '@/lib/auth/viewer';
@@ -15,6 +16,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { writeRivalActions } from '@/rivals/jobs';
 import { paidStartFrom } from '@/team/plans';
+import { checkWork } from '@/team/work';
 
 export interface ActionState {
   status: 'idle' | 'done' | 'error';
@@ -62,6 +64,44 @@ export async function removeNoteAction(institutionId: string, noteId: string): P
   const supabase = await createClient();
   await supabase.from('notes').delete().eq('id', noteId);
   revalidatePath(pagePath(institutionId));
+}
+
+// Work log (a Client's) -----------------------------------------------------------------------------
+
+/** What the team did, or does next, for a Client. The Client sees it on Home and in their work list. */
+export async function addWorkAction(institutionId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
+  if (!(await teamUser())) return reply(previous, 'error', NOT_TEAM);
+  const field = (name: string) => String(formData.get(name) ?? '');
+  const work = checkWork({ kind: field('kind'), text: field('text'), on: field('on'), link: field('link') }, new Date());
+  if (!work.ok) return reply(previous, 'error', work.error);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('team_work')
+    .insert({ institution_id: institutionId, kind: work.value.kind, body: work.value.text, work_on: work.value.on, link: work.value.link });
+  // Row level security only lets the team add to a Client's log.
+  if (error) return reply(previous, 'error', error.code === '42501' ? 'Only a Client has a work log.' : 'It could not be saved. Try again.');
+  revalidatePath(pagePath(institutionId));
+  return reply(previous, 'done', work.value.kind === 'done' ? 'Added. They see it on their Home now.' : 'Added to Next. They see it on their Home now.');
+}
+
+/** Next is done: it moves to what was done, dated today (India time). */
+export async function markWorkDoneAction(institutionId: string, workId: string): Promise<void> {
+  if (!(await teamUser())) return;
+  const supabase = await createClient();
+  await supabase.from('team_work').update({ kind: 'done', work_on: todayInIndia() }).eq('id', workId).eq('kind', 'next');
+  revalidatePath(pagePath(institutionId));
+}
+
+export async function removeWorkAction(institutionId: string, workId: string): Promise<void> {
+  if (!(await teamUser())) return;
+  const supabase = await createClient();
+  await supabase.from('team_work').delete().eq('id', workId);
+  revalidatePath(pagePath(institutionId));
+}
+
+function todayInIndia(): string {
+  const { year, month, day } = istParts(new Date());
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 // Share links ------------------------------------------------------------------------------------
