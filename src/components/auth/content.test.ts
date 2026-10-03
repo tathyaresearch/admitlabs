@@ -52,7 +52,6 @@ describe('sign up and log in', () => {
     // The website and /drishti go through wayIn: sign up while the dashboard is open, "Talk to us"
     // to /signup while it is closed (src/site/way-in.test.ts).
     const ways = [
-      ['components', 'site', 'Header.tsx'],
       ['components', 'site', 'Hero.tsx'],
       ['components', 'site', 'Drishti.tsx'],
       ['components', 'site', 'Sections.tsx'],
@@ -74,7 +73,8 @@ describe('sign up and log in', () => {
 
   test('the website’s sign-in link leads to log in', () => {
     assert.match(read('components', 'site', 'Footer.tsx'), /signIn\(\)/);
-    assert.match(read('components', 'site', 'Header.tsx'), /signIn\(\)/);
+    // The header’s Sign in and main button come from headerButtons (src/site/way-in.test.ts).
+    assert.match(read('components', 'site', 'Header.tsx'), /headerButtons\(\)/);
   });
 
   test('log in tells an email with no account apart from other failures', () => {

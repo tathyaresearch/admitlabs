@@ -1,20 +1,19 @@
 // The website's header: the wordmark, links to the home page's sections with the Products menu,
-// Sign in, and the two buttons. Wide: everything in one row. Narrow: the wordmark, the main button
-// and a menu, with Sign in inside it. Sticky: clear over the light at the top of the page, glass once the page moves.
+// and two buttons: Sign in, and the main one. Wide: everything in one row. Narrow: the wordmark, the
+// main button and a menu, with both buttons inside it. Sticky: clear over the light at the top of
+// the page, glass once the page moves.
 
 import Link from 'next/link';
 import { Wordmark } from '@/components/ui/Brand';
-import { ButtonLink } from '@/components/ui/Button';
-import { CTA, NAV, PRODUCTS } from '@/site/content';
-import { signIn, wayIn } from '@/site/way-in';
+import { AnchorButton } from '@/components/ui/Button';
+import { NAV, PRODUCTS } from '@/site/content';
+import { headerButtons } from '@/site/way-in';
 import { ProductsMenu } from './ProductsMenu';
 import { SiteMenu } from './SiteMenu';
 import styles from './site.module.css';
 
-/** "Get your free Audit", or while Drishti is not open yet, "Talk to us" (src/site/way-in.ts). */
-const START = wayIn(CTA.primary);
-/** Sign in, to /login (src/site/way-in.ts). */
-const SIGN_IN = signIn();
+/** Sign in, and "Talk to us" (once Drishti opens, "Get your free Audit"): src/site/way-in.ts. */
+const BUTTONS = headerButtons();
 
 export function SiteHeader() {
   return (
@@ -36,16 +35,13 @@ export function SiteHeader() {
           )}
         </nav>
         <div className={styles.headerActions}>
-          <a href={SIGN_IN.href} className={`${styles.navLink} ${styles.signInLink}`}>
-            {SIGN_IN.label}
-          </a>
-          <ButtonLink href={CTA.enquiryPath} variant="secondary" size="sm" className={`${styles.workLink} ${styles.ghost}`}>
-            {CTA.secondary}
-          </ButtonLink>
-          <ButtonLink href={START.href} size="sm" className={`${styles.cta} ${styles.headerCta}`}>
-            {START.label}
-          </ButtonLink>
-          <SiteMenu nav={NAV} products={PRODUCTS} work={{ href: CTA.enquiryPath, label: CTA.secondary }} signIn={SIGN_IN} />
+          <AnchorButton href={BUTTONS.signIn.href} size="sm" className={`${styles.cta} ${styles.signInButton}`}>
+            {BUTTONS.signIn.label}
+          </AnchorButton>
+          <AnchorButton href={BUTTONS.talk.href} size="sm" className={`${styles.cta} ${styles.headerCta}`}>
+            {BUTTONS.talk.label}
+          </AnchorButton>
+          <SiteMenu nav={NAV} products={PRODUCTS} buttons={[BUTTONS.signIn, BUTTONS.talk]} />
         </div>
       </div>
     </header>

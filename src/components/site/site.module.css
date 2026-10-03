@@ -469,12 +469,8 @@
 }
 
 /* Scoped to the header so it wins over the button's own display, whatever order the styles load in. */
-.headerActions .workLink {
-  display: none;
-}
-
-/* Sign in: a quiet link before the buttons, from a tablet up. On a phone it is in the menu. */
-.headerActions .signInLink {
+/* Sign in waits in the menu on a phone. */
+.headerActions .signInButton {
   display: none;
 }
 
@@ -506,13 +502,8 @@
     gap: var(--space-3);
   }
 
-  .headerActions .workLink {
+  .headerActions .signInButton {
     display: inline-flex;
-  }
-
-  .headerActions .signInLink {
-    display: inline-block;
-    margin-right: var(--space-2);
   }
 }
 
@@ -610,26 +601,11 @@
   color: var(--slate);
 }
 
+/* The header’s two buttons, one under the other. */
 .menuActions {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-3);
   margin-top: var(--space-5);
-}
-
-/* Sign in, quiet under the button. */
-.menuSignIn {
-  justify-self: center;
-  padding-block: var(--space-1);
-  font: var(--type-label);
-  font-size: 0.9375rem;
-  color: var(--slate);
-  text-decoration: none;
-  transition: color var(--duration-fast) var(--ease-out);
-}
-
-.menuSignIn:hover,
-.menuSignIn:focus-visible {
-  color: var(--ivory);
 }
 
 @media (prefers-reduced-motion: no-preference) {

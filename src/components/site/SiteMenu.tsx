@@ -5,7 +5,7 @@
 // together under their own small label; Tathya opens in a new tab.
 
 import { useRef, useState } from 'react';
-import { ButtonLink } from '@/components/ui/Button';
+import { AnchorButton } from '@/components/ui/Button';
 import { EyeName } from '@/components/ui/Eye';
 import { Icon } from '@/components/ui/Icon';
 import type { NAV, PRODUCTS } from '@/site/content';
@@ -16,13 +16,12 @@ const MENU_ID = 'site-menu';
 export function SiteMenu({
   nav,
   products,
-  work,
-  signIn,
+  buttons,
 }: {
   nav: typeof NAV;
   products: typeof PRODUCTS;
-  work: { href: string; label: string };
-  signIn: { href: string; label: string };
+  /** The header’s two buttons: Sign in, and the main one. */
+  buttons: ReadonlyArray<{ href: string; label: string }>;
 }) {
   const menu = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -68,12 +67,11 @@ export function SiteMenu({
           )}
         </nav>
         <div className={styles.menuActions}>
-          <ButtonLink href={work.href} variant="secondary" block onClick={close} className={styles.ghost}>
-            {work.label}
-          </ButtonLink>
-          <a href={signIn.href} className={styles.menuSignIn} onClick={close}>
-            {signIn.label}
-          </a>
+          {buttons.map((button) => (
+            <AnchorButton key={button.label} href={button.href} block onClick={close} className={styles.cta}>
+              {button.label}
+            </AnchorButton>
+          ))}
         </div>
       </div>
     </>

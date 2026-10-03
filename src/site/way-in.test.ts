@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { APP_URL } from '../lib/urls.ts';
 import { CTA } from './content.ts';
-import { signIn, wayIn } from './way-in.ts';
+import { headerButtons, signIn, wayIn } from './way-in.ts';
 
 describe('the ways into Drishti from the website and the product page', () => {
   test('while the dashboard is open: each button as it is, into the dashboard', () => {
@@ -19,5 +19,10 @@ describe('the ways into Drishti from the website and the product page', () => {
   test('Sign in: the dashboard’s log in while it is open, /login on the website while it is closed', () => {
     assert.deepEqual(signIn(true), { href: `${APP_URL}/login`, label: 'Sign in' });
     assert.deepEqual(signIn(false), { href: '/login', label: 'Sign in' });
+  });
+
+  test('the header’s buttons: Sign in and Talk to us while closed, Sign in and Get your free Audit while open', () => {
+    assert.deepEqual(headerButtons(false), { signIn: { href: '/signup', label: 'Sign in' }, talk: { href: 'mailto:hello@admitlabs.in', label: 'Talk to us' } });
+    assert.deepEqual(headerButtons(true), { signIn: { href: `${APP_URL}/login`, label: 'Sign in' }, talk: { href: `${APP_URL}/signup`, label: 'Get your free Audit' } });
   });
 });
