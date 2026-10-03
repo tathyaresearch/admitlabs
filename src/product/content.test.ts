@@ -36,6 +36,12 @@ describe('the product page copy', () => {
     assert.match(content.CTA.paidNote, /AdmitLabs team switches Paid on/);
   });
 
+  test('while Drishti is not open yet, no line says people can sign up or start now', () => {
+    assert.equal(content.CLOSED.finalText, 'Drishti opens soon. Talk to us to be one of the first institutions.');
+    assert.match(content.CLOSED.paidNote, /AdmitLabs team switches Paid on/);
+    for (const text of Object.values(content.CLOSED)) assert.doesNotMatch(text, /two minutes|start free|start now|sign up|no payment/i, text);
+  });
+
   test('prices, plan length and reminders come from the plan settings', () => {
     const [free, paid] = content.PLANS.cards;
     assert.equal(free?.price, '₹0');

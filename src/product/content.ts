@@ -8,11 +8,25 @@ import { RIVAL_RULES } from '../config/rivals.ts';
 import { SCHEDULES } from '../config/schedules.ts';
 import { CHECKS, checksForPillar } from '../domain/checks.ts';
 import { formatInr } from '../domain/format.ts';
+import { APP_OPEN } from '../lib/urls.ts';
 import { PILLAR_LABELS, PILLARS, type Pillar } from '../domain/types.ts';
 import { SAMPLE_REPORT_NOTE } from '../report/data.ts';
 
 /** The one line of AdmitLabs proof, as the user worded it. No client names. */
 export const PROOF_LINE = 'From AdmitLabs. 120+ education companies worked with.';
+
+/**
+ * While Drishti is not open yet (production, until it opens: src/lib/urls.ts), the lines that would
+ * say people can sign up or start now say what fits today. The words for when it opens stay beside them.
+ */
+export const CLOSED = {
+  firstStep: 'Your name, city, programs and public links.',
+  plansTitle: 'Free to start.',
+  freeNote: 'Free when Drishti opens.',
+  paidNote: 'When Drishti opens, the AdmitLabs team switches Paid on for you.',
+  faqTitle: 'Questions, answered.',
+  finalText: 'Drishti opens soon. Talk to us to be one of the first institutions.',
+} as const;
 
 export const HERO = {
   /** The headline is the spec's; the last words sit in an inverted block. */
@@ -25,7 +39,7 @@ export const HERO = {
 export const CTA = {
   primary: 'Get your free Audit',
   paid: 'Start with a free Audit',
-  paidNote: 'For now, the AdmitLabs team switches Paid on for you.',
+  paidNote: APP_OPEN ? 'For now, the AdmitLabs team switches Paid on for you.' : CLOSED.paidNote,
   signIn: 'Sign in',
 } as const;
 
@@ -134,7 +148,7 @@ export const SCORE = {
 export const STEPS = {
   title: ['Four steps.', 'Then every month.'],
   items: [
-    { title: 'Tell us who you are', text: 'Your name, city, programs and public links. About two minutes.' },
+    { title: 'Tell us who you are', text: APP_OPEN ? 'Your name, city, programs and public links. About two minutes.' : CLOSED.firstStep },
     { title: 'Drishti checks everything', text: 'Google, your website, social media, reviews and AI answers. Public pages only.' },
     { title: 'See where you stand', text: 'Your score, what’s working, and what to fix first.' },
     { title: 'Get a report every month', text: 'With Paid, a short PDF on the 1st: your score, your rivals, what students want, and 3 things to do.' },
@@ -165,7 +179,7 @@ export interface PlanCard {
 
 export const PLANS: { title: readonly [string, string]; lede: string; cards: readonly PlanCard[]; fine: string } = {
   /** Two lines: the start, then the next step. */
-  title: ['Start free.', 'Go deeper with Paid.'],
+  title: [APP_OPEN ? 'Start free.' : CLOSED.plansTitle, 'Go deeper with Paid.'],
   lede: 'Free shows where you stand. Paid shows what’s changing, every month.',
   cards: [
     {
@@ -183,7 +197,7 @@ export const PLANS: { title: readonly [string, string]; lede: string; cards: rea
         `A new Audit every ${SCHEDULES.free.auditEveryMonths} months`,
       ],
       cta: CTA.primary,
-      note: 'No payment details needed.',
+      note: APP_OPEN ? 'No payment details needed.' : CLOSED.freeNote,
     },
     {
       key: 'paid',
@@ -219,7 +233,7 @@ export const CLIENTS = {
   email: 'hello@admitlabs.in',
 } as const;
 
-export const FAQ_TITLE = 'Before you start.';
+export const FAQ_TITLE = APP_OPEN ? 'Before you start.' : CLOSED.faqTitle;
 
 export const FAQ: ReadonlyArray<{ question: string; answer: string }> = [
   {
@@ -257,7 +271,7 @@ export const FAQ: ReadonlyArray<{ question: string; answer: string }> = [
 
 export const FINAL = {
   title: 'See where you stand this month.',
-  text: 'Your first Audit is free. Setting up takes about two minutes.',
+  text: APP_OPEN ? 'Your first Audit is free. Setting up takes about two minutes.' : CLOSED.finalText,
 } as const;
 
 export const FOOTER = {
