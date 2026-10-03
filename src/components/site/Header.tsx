@@ -1,7 +1,7 @@
 // The website's header: the wordmark, links to the home page's sections with the Products menu,
-// and two buttons: Sign in, and the main one. Wide: everything in one row. Narrow: the wordmark, the
-// main button and a menu, with both buttons inside it. Sticky: clear over the light at the top of
-// the page, glass once the page moves.
+// and two buttons: Talk to us, outlined, then Sign in, filled, last. Wide: everything in one row.
+// Narrow: the wordmark, Talk to us and a menu, with both buttons inside it. Sticky: clear over the
+// light at the top of the page, glass once the page moves.
 
 import Link from 'next/link';
 import { Wordmark } from '@/components/ui/Brand';
@@ -35,13 +35,13 @@ export function SiteHeader() {
           )}
         </nav>
         <div className={styles.headerActions}>
+          <AnchorButton href={BUTTONS.talk.href} variant="secondary" size="sm" className={`${styles.ghost} ${styles.headerCta}`}>
+            {BUTTONS.talk.label}
+          </AnchorButton>
           <AnchorButton href={BUTTONS.signIn.href} size="sm" className={`${styles.cta} ${styles.signInButton}`}>
             {BUTTONS.signIn.label}
           </AnchorButton>
-          <AnchorButton href={BUTTONS.talk.href} size="sm" className={`${styles.cta} ${styles.headerCta}`}>
-            {BUTTONS.talk.label}
-          </AnchorButton>
-          <SiteMenu nav={NAV} products={PRODUCTS} buttons={[BUTTONS.signIn, BUTTONS.talk]} />
+          <SiteMenu nav={NAV} products={PRODUCTS} buttons={[{ ...BUTTONS.talk, filled: false }, { ...BUTTONS.signIn, filled: true }]} />
         </div>
       </div>
     </header>

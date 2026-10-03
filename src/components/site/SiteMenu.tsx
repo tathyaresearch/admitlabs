@@ -20,8 +20,8 @@ export function SiteMenu({
 }: {
   nav: typeof NAV;
   products: typeof PRODUCTS;
-  /** The header’s two buttons: Sign in, and the main one. */
-  buttons: ReadonlyArray<{ href: string; label: string }>;
+  /** The header’s two buttons, in its order: Talk to us, outlined, then Sign in, filled. */
+  buttons: ReadonlyArray<{ href: string; label: string; filled: boolean }>;
 }) {
   const menu = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -68,7 +68,7 @@ export function SiteMenu({
         </nav>
         <div className={styles.menuActions}>
           {buttons.map((button) => (
-            <AnchorButton key={button.label} href={button.href} block onClick={close} className={styles.cta}>
+            <AnchorButton key={button.label} href={button.href} variant={button.filled ? 'primary' : 'secondary'} block onClick={close} className={button.filled ? styles.cta : styles.ghost}>
               {button.label}
             </AnchorButton>
           ))}
