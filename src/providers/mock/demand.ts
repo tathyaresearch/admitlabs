@@ -121,11 +121,11 @@ export function demandSignals(platform: DemandPlatform, target: Target, asOf: Da
       ['rising', fixture.rising],
       ['falling', fixture.falling],
     ] as const) {
-      for (const trend of trends) {
+      trends.forEach((trend, index) => {
         const text = localize(trend.text, words);
         const { changePct, growth } = trendThisMonth(trend, kind, target.programKey, month);
-        add(item({ kind, text, count: Math.round(trend.base * factor * growth), changePct }), topicUrl('trends', text, target.scope));
-      }
+        add(item({ kind, text, count: Math.round(trend.base * factor * growth), changePct, meta: kind === 'rising' ? { trendIndex: index } : {} }), topicUrl('trends', text, target.scope));
+      });
     }
     const season = isSkillsProgram(target.programKey) ? SEASON_SKILLS : SEASON_DEGREE;
     for (const stage of season) {

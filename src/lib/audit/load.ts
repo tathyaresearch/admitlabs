@@ -3,6 +3,7 @@
 // Client get everything). Nothing here widens what the database returns.
 
 import { cache } from 'react';
+import type { StoredResult } from '@/audit/progress';
 import { latestStoredAudit, ownHistory } from '@/audit/read';
 import type { HistoryRow, StoredAudit } from '@/audit/view';
 import type { ProgramEntry } from '@/components/audit/Programs';
@@ -59,6 +60,17 @@ export const loadProgramHistory = cache(async (programId: string): Promise<Array
     }))
     .sort((a, b) => a.runAt.localeCompare(b.runAt));
 });
+
+/** Each given Audit's check results, by Audit id: what moved month by month. Paid and Client (row level security). */
+export async function loadCheckResults(auditIds: readonly string[]): Promise<Map<string, StoredResult[]>> {
+  const byAudit = new Map<string, StoredResult[]>(auditIds.map((id) => [id, []]));
+  if (auditIds.length === 0) return byAudit;
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('audit_checks').select('audit_id, check_key, program_id, result').in('audit_id', [...auditIds]);
+  if (error) throw new Error(`Could not load the checks month by month: ${error.message}`);
+  for (const row of data ?? []) byAudit.get(row.audit_id)?.push({ key: row.check_key, programId: row.program_id, result: row.result });
+  return byAudit;
+}
 
 /** Programs for the switcher and the by-program list: scored, locked (Free) or in the next Audit. */
 export function programEntries(data: AuditPageData, tier: Tier, freeProgramId: string | null): ProgramEntry[] {

@@ -53,7 +53,7 @@ export default async function ChooseRivalsPage() {
   } else {
     body = (
       <RivalChooser
-        institution={{ type: institution.type, website: institution.website }}
+        institution={{ type: institution.type, website: institution.website, city: institution.city, state: institution.state }}
         current={rivals.map((rival) => ({ id: rival.id, name: rival.name, sub: `${INSTITUTION_TYPE_LABELS[rival.type]}, ${rival.city}` }))}
         suggestions={suggestions.map((rival) => ({
           id: rival.id,

@@ -23,13 +23,14 @@ export const mockAnalysis: AnalysisProvider = {
     return rngFor('why', institutionSlug, title).pick(GENERAL_REASONS);
   },
 
-  async contentIdeas({ programKey, questions, region }) {
+  async contentIdeas({ programKey, questions, rising, region }) {
     const fixture = demandFixture(programKey);
     if (!fixture) return [];
     const words = region ? placeWords(region.scope, region.region, region.state) : null;
     return fixture.ideas.flatMap((idea) => {
       const question = questions.find((candidate) => candidate.questionIndex === idea.question);
-      return question ? [{ text: words ? localize(idea.text, words) : idea.text, basedOn: question.text, sourceUrl: question.sourceUrl, format: idea.format, effort: idea.effort }] : [];
+      const trend = idea.trend === undefined ? null : (rising.find((candidate) => candidate.trendIndex === idea.trend)?.text ?? null);
+      return question ? [{ text: words ? localize(idea.text, words) : idea.text, basedOn: question.text, sourceUrl: question.sourceUrl, trend, format: idea.format, effort: idea.effort }] : [];
     });
   },
 

@@ -737,11 +737,204 @@ a.tab:hover {
   color: var(--text-muted);
 }
 
-/* Score history, small and calm. */
+/* Progress month by month (./ProgressSection.tsx): a table on a laptop, one card per month on a phone. */
 
-.history {
+.progressStack {
   display: grid;
+  gap: var(--space-3);
+}
+
+.progressWide {
+  display: none;
+  overflow-x: auto;
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+.progressWide table {
+  width: 100%;
+  min-width: 56rem;
+  border-collapse: collapse;
+}
+
+.progressWide th,
+.progressWide td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line-raised);
+  text-align: left;
+  vertical-align: top;
+}
+
+.progressWide thead th {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.progressWide tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.progressWide tr[data-latest='true'] > * {
+  background: var(--surface-nested);
+}
+
+.progressMonth {
+  font: var(--type-strong);
+  white-space: nowrap;
+}
+
+.progressScoreCell {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 7rem;
+}
+
+.progressScoreTop {
+  display: flex;
+  align-items: baseline;
   gap: var(--space-2);
+}
+
+.progressScore {
+  font: var(--type-num);
+  font-size: var(--size-body);
+  font-weight: var(--weight-heading);
+}
+
+.progressChange {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.progressBar {
+  display: block;
+  width: 100%;
+  max-width: 6rem;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--chart-track);
+  overflow: hidden;
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  background: var(--text);
+}
+
+.progressNumber {
+  font: var(--type-num);
+  white-space: nowrap;
+}
+
+.progressNumber :global(.num) {
+  font-weight: var(--weight-heading);
+}
+
+.progressQuiet {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.progressMoved {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 16rem;
+  list-style: none;
+}
+
+.progressMovedRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  font: var(--type-small);
+}
+
+.progressMovedName {
+  min-width: 0;
+  font-weight: var(--weight-medium);
+}
+
+.progressMovedPrograms {
+  font: var(--type-caption);
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+
+.progressMovedResults {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+}
+
+.progressCards {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+.progressCard {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+.progressCard[data-latest='true'] {
+  border-color: var(--line-medium);
+}
+
+.progressCardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.progressParts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.progressPart {
+  display: grid;
+  gap: 2px;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.progressPart :global(.num) {
+  font: var(--type-num);
+  font-weight: var(--weight-heading);
+  color: var(--text);
+}
+
+/* On a phone the moved checks stack: the name, then its results. */
+.progressCard .progressMoved {
+  min-width: 0;
+}
+
+.progressCard .progressMovedRow {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+
+@media (min-width: 48rem) {
+  .progressWide {
+    display: block;
+  }
+
+  .progressCards {
+    display: none;
+  }
 }
 
 /* The rival check panel (../rivals/RivalCheckPanel.tsx). The Audit's own check panel is in ./panel.module.css. */

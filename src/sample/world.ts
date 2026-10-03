@@ -336,7 +336,10 @@ export async function sampleDemand(slug: string, month: string): Promise<{ regio
         sourceUrl: entry.signal.sourceUrl,
         questionIndex: typeof entry.signal.value.meta.questionIndex === 'number' ? entry.signal.value.meta.questionIndex : null,
       }));
-    const ideas = await mockAnalysis.contentIdeas({ programKey: program.programKey, region: { scope: region.scope, region: region.region, state: region.state }, questions });
+    const rising = entries
+      .filter((entry) => entry.kind === 'rising')
+      .map((entry) => ({ text: entry.text, trendIndex: typeof entry.signal.value.meta.trendIndex === 'number' ? entry.signal.value.meta.trendIndex : null }));
+    const ideas = await mockAnalysis.contentIdeas({ programKey: program.programKey, region: { scope: region.scope, region: region.region, state: region.state }, questions, rising });
     ideas.forEach((idea, index) => {
       rows.push(
         row(`idea-${index}`, {
@@ -348,7 +351,7 @@ export async function sampleDemand(slug: string, month: string): Promise<{ regio
           changePct: null,
           sourceUrl: idea.sourceUrl,
           foundAt: pulledAt.toISOString(),
-          meta: { basedOn: idea.basedOn, format: idea.format, effort: idea.effort },
+          meta: { basedOn: idea.basedOn, trend: idea.trend, format: idea.format, effort: idea.effort },
         }),
       );
     });

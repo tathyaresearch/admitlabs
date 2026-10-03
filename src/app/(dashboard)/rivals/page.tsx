@@ -1,11 +1,14 @@
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 import { SectionHead } from '@/components/audit/AuditHeader';
 import { MonthTable } from '@/components/charts/MonthTable';
 import { PartRanks } from '@/components/charts/PartRanks';
 import { NextSteps } from '@/components/home/NextSteps';
 import { RivalsCard } from '@/components/home/RivalsCard';
+import { AcrossChecks } from '@/components/rivals/AcrossChecks';
 import { ActivityTabs } from '@/components/rivals/Activity';
 import { lessonSteps } from '@/components/rivals/Lessons';
+import { RivalCheckPanel } from '@/components/rivals/RivalCheckPanel';
 import { RivalUnlockCard } from '@/components/rivals/RivalUnlockCard';
 import { StandTable } from '@/components/rivals/StandTable';
 import { ButtonLink } from '@/components/ui/Button';
@@ -15,6 +18,7 @@ import { RIVAL_RULES } from '@/config/rivals';
 import { formatDate, plural } from '@/domain/format';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { loadRivalsPage } from '@/lib/rivals/load';
+import { checksAcross, type AcrossSide } from '@/rivals/across';
 import { freeRivalsVerdict, rivalsVerdict } from '@/rivals/verdict';
 import audit from '@/components/audit/audit.module.css';
 import styles from '@/components/rivals/rivals.module.css';
@@ -23,8 +27,8 @@ export const metadata = { title: 'Rivals' };
 
 const QUESTION = "Who's ahead of us?";
 
-// Rivals answers "Who's ahead of us?": the answer and where you stand, how you compare pillar by
-// pillar and month by month, what to learn from them, then what they are doing.
+// Rivals answers "Who's ahead of us?": the answer and where you stand, how you compare part by
+// part, check by check and month by month, what to learn from them, then what they are doing.
 export default async function RivalsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
@@ -94,6 +98,14 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
   if (!full) return null;
   const names = new Map(data.rivals.map((rival) => [rival.id, rival.name]));
   const scored = full.rows.flatMap((row) => (row.audit ? [{ name: row.rival.name, scores: row.audit.scores }] : []));
+  // Check by check: you, then each scored rival from the highest score down.
+  const youSide: AcrossSide = { id: institution.id, name: institution.name, you: true };
+  const compared = full.ladder.flatMap((entry) => {
+    const row = full.rows.find((candidate) => candidate.rival.id === entry.id && candidate.audit);
+    return row ? [{ side: { id: row.rival.id, name: row.rival.name, you: false }, comparisons: row.comparisons }] : [];
+  });
+  const sides = [youSide, ...compared.map((entry) => entry.side)];
+  const across = full.you && compared.length ? checksAcross(youSide, compared) : null;
   const caption = [
     plural(data.rivals.length, 'rival', 'rivals'),
     data.lastScored ? `Scores checked ${formatDate(data.lastScored)}` : 'Scores are being checked',
@@ -130,16 +142,31 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
         </section>
       ) : null}
 
-      {full.you && full.trend.months.length > 1 ? (
+      {across ? (
+        <section className={audit.section} aria-labelledby="checks-title">
+          <SectionHead
+            id="checks-title"
+            title="Check by check"
+            help="Every check, you and each rival side by side, and who leads. Open one to see what was found for each, and what to learn from the one ahead."
+          />
+          <AcrossChecks rows={across} sides={sides} institutionType={institution.type} />
+        </section>
+      ) : null}
+
+      {full.you ? (
         <section className={audit.section} aria-labelledby="months-title">
           <SectionHead
             id="months-title"
             title="Month by month"
             help={`Your overall score and your rivals', over the last ${RIVAL_RULES.trendMonths} months. Rivals are checked on the 1st of each month.`}
           />
-          <div className={styles.pillarCard}>
-            <MonthTable trend={full.trend} label="Overall score by month, you and your rivals" />
-          </div>
+          {full.trend.months.length > 1 ? (
+            <div className={styles.pillarCard}>
+              <MonthTable trend={full.trend} label="Overall score by month, you and your rivals" />
+            </div>
+          ) : (
+            <p className={audit.quietNote}>This starts next month, once there are two months to compare.</p>
+          )}
         </section>
       ) : null}
 
@@ -162,6 +189,12 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
           movesNote="New programs, fee changes, new pages and admission dates from the last 30 days. Drishti checks every Monday and alerts you when it finds one."
         />
       </section>
+
+      {across ? (
+        <Suspense fallback={null}>
+          <RivalCheckPanel rows={across} sides={sides} institutionType={institution.type} />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

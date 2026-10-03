@@ -39,7 +39,7 @@ const ROWS: DemandRow[] = [
   row('bba', 'worry', 'Hostel quality and cost', { count: 66, meta: { theme: 'hostel' } }),
   row('bca', 'worry', 'Outdated syllabus', { count: 33, meta: { theme: 'new', isNew: true } }),
   row('bba', 'idea', 'Show real placements', { rank: 1, meta: { basedOn: 'Which BBA college has placements?' } }),
-  row('bca', 'idea', 'Film a coding session', { rank: 1, meta: { basedOn: 'Which BCA college teaches coding?' } }),
+  row('bca', 'idea', 'Film a coding session', { rank: 1, meta: { basedOn: 'Which BCA college teaches coding?', trend: 'BCA with AI' } }),
   row('bca', 'idea', 'Three graduates without an MCA', { rank: 2, meta: { basedOn: 'Job after BCA without MCA?' } }),
   row('bba', 'season', 'Classes have started.', { meta: { stage: 'classes', from: '2026-08-01', to: '2026-10-15' } }),
   row('bca', 'season', 'New batches start every month.', { meta: { stage: 'batches', from: '2026-10-01', to: '2026-12-31' } }),
@@ -90,6 +90,19 @@ describe('the Demand page, all programs together', () => {
         ['Film a coding session', 79],
       ],
     );
+  });
+
+  test('an idea keeps the rising search behind it, from its own program, when there is one', () => {
+    const film = view.ideas.find((idea) => idea.text === 'Film a coding session');
+    assert.equal(film?.trend?.text, 'BCA with AI');
+    assert.equal(film?.trend?.changePct, 47);
+    assert.equal(view.ideas.find((idea) => idea.text === 'Show real placements')?.trend, null);
+    // A search of the same words from another program never stands behind it.
+    const other = demandView(
+      [...ROWS, row('bba', 'idea', 'Borrowed trend', { rank: 2, meta: { basedOn: 'Which BBA college has placements?', trend: 'BCA with AI' } })],
+      { singleProgram: false, skills: false },
+    );
+    assert.equal(other.ideas.find((idea) => idea.text === 'Borrowed trend')?.trend, null);
   });
 
   test('the season follows the institution type', () => {

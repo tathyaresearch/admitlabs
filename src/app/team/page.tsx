@@ -8,7 +8,7 @@ import { TEAM_RULES } from '@/config/team';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
 import { loadInstitutionList, loadListCounts, loadPlaces } from '@/lib/team/load';
-import { filtersQuery, NO_FILTERS, parseFilters } from '@/team/filters';
+import { filtersQuery, hasFilters, NO_FILTERS, parseFilters } from '@/team/filters';
 import audit from '@/components/audit/audit.module.css';
 import styles from '@/components/team/team.module.css';
 
@@ -66,9 +66,22 @@ export default async function TeamHomePage({ searchParams }: { searchParams: Pro
         <ResultLine filters={filters} total={total} />
         {rows.length ? (
           <InstitutionRows rows={rows} />
-        ) : (
+        ) : hasFilters(filters) || filters.page > 1 ? (
           <EmptyState icon="search" title="No institutions match" headingLevel={3}>
             Try fewer filters, or add prospects with a bulk Audit.
+          </EmptyState>
+        ) : (
+          <EmptyState
+            icon="institution"
+            title="No institutions yet"
+            headingLevel={3}
+            action={
+              <ButtonLink href="/team/bulk" size="sm" icon="plus">
+                Run a bulk Audit
+              </ButtonLink>
+            }
+          >
+            Institutions that sign up show here on their own. To add prospects, run a bulk Audit: paste a list or choose a CSV file, and each one gets a private team Audit.
           </EmptyState>
         )}
         <Pages filters={filters} total={total} perPage={TEAM_RULES.institutionsPerPage} />

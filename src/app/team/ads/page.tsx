@@ -74,7 +74,7 @@ export default async function RivalAdsPage() {
               ))}
             </ul>
           ) : (
-            <p className={styles.empty}>No ads entered yet.</p>
+            <p className={styles.empty}>No ads entered yet. When you see an ad from a tracked rival, add what it promises and where you saw it. It shows on the Rivals page of everyone who tracks that rival.</p>
           )}
         </Card>
       </Section>

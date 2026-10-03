@@ -34,6 +34,8 @@ export interface ContentIdeaInput {
   /** The region the questions come from, so ideas fit the place (and its languages). */
   region?: { scope: DemandScope; region: string; state: string | null };
   questions: ReadonlyArray<{ text: string; sourceUrl: string; questionIndex: number | null }>;
+  /** This month's rising searches, so an idea can say which one it rides on. */
+  rising: ReadonlyArray<{ text: string; trendIndex: number | null }>;
 }
 
 export interface ContentIdea {
@@ -42,6 +44,8 @@ export interface ContentIdea {
   basedOn: string;
   /** Where that question was found. */
   sourceUrl: string;
+  /** The rising search behind it, when there is one. */
+  trend: string | null;
   /** What to make: a post, a reel, a video, an FAQ or a web page. */
   format: IdeaFormat;
   /** How big a job it is. */

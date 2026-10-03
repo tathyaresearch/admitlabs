@@ -367,7 +367,7 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 3. **Top worries**: fees, placements, hostel, safety, recognition (and any new ones found).
 4. **What students say about you and your rivals**: public mentions, positive and negative.
 5. **Season clock**: where we are in the admission year (exams, results, counselling).
-6. **5 content ideas**: each built on a real student question, with its source.
+6. **5 content ideas**: each built on a real student question, with its source. Each says what to make (a post, a reel, a video, an FAQ or a web page), how big a job it is (Quick, Medium or Big) and the program, all stored with the idea, and the rising search behind it when there is one (also stored, never guessed from the words).
 
 ### 9.5 Rules
 
@@ -387,7 +387,7 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 | What's working | Top 3 | Full | Full |
 | What to fix | Top 3 | Full ranked list | Full ranked list |
 | Programs | 1 | All | All |
-| Score history | No | Yes | Yes |
+| Progress month by month | No | Yes | Yes |
 | **Rivals** | | | |
 | Suggested rivals | Yes | Yes | Yes |
 | Ahead or behind (overall only) | Yes | Yes | Yes |
@@ -458,16 +458,16 @@ Keep it short enough to read in 5 minutes.
 | Sign up and log in, both | The form first in reading order. On a wide screen the left side sits beside it; on a phone it is a small band above the form and plays on its own, as on any touch screen. With reduced motion the left side is still. The left side carries the logo and one line, "See where you stand. Every month." |
 | Onboarding | The input form from section 6, then program pick for Free with what happens next. No left side; the Drishti logo, with its eye, at the top. After the first Audit, Home |
 | Home | What to do first. The one-line answer; Start here on a first visit (three steps: your score, your first fix, your rivals; ticks as each is done; closed for good with "Got it, hide this", per person); "Do these 3 things this month" (Paid and Client: one from the Audit, one from rivals, one from what students ask, ordered by the points each could add) or "Fix these first" (Free: the top 3 fixes), each with where it comes from, the check as a small label, its programs, the points it could add (or how often students asked, for a content idea, with its format), the effort in Home's words (Quick, Medium, Big) and Mark as done; What changed since the last Audit (the score, each check that moved with its result before and after, the fixes marked done that this Audit checked, and for Paid and Client the rivals' moves and big jumps in searches; Free sees what Paid adds); then the score: the gauge, its band and change, "Up 14 since April", how far the next band is, and the 3 parts (each with the question it answers, its checks as one bar split by result with the counts, and what to fix first); rival snapshot with the latest move; 1 demand highlight with its searches by month. The score month by month and every check by name stay on the Audit |
-| Audit | The three parts with "What do these mean?" (the parts and their questions, the four results and what each earns, the score's bands), every fix named as on Home with its check as a small label and its effort, all checks with results and points earned against possible (each part with its question; a check whose programs differ shows its weakest program), what to fix and what's working (each check in one of them, so the counts add up to all checks; Free's To fix points up to its 3 fixes instead of repeating them), score history, program switcher |
+| Audit | The three parts with "What do these mean?" (the parts and their questions, the four results and what each earns, the score's bands), every fix named as on Home with its check as a small label and its effort, all checks with results and points earned against possible (each part with its question; a check whose programs differ shows its weakest program), what to fix and what's working (each check in one of them, so the counts add up to all checks; Free's To fix points up to its 3 fixes instead of repeating them), progress month by month (Paid and Client: a table of each month's score and its 3 parts, the change since the month before, your place among your rivals, and the checks that moved, with every Audit folded below), program switcher |
 | Program detail | Same as Audit, for one program |
 | Check detail | Side panel, in one order: the fix it is about (its name as on Home, the points it could add, the effort, the programs); 1. what we found, program by program, with the source link and the date checked; 2. why it matters to a student; 3. how to fix it, in numbered steps, with the effort for each program; details added by you; Mark as done in the footer (the owner; others see that it was marked) |
-| Rivals | Rival list, head to head table, part by part (each part ranked against every rival), overall score month by month as a table, where you lead, moves, best content |
-| Rival detail | One rival's full view, part by part and month by month, when their admissions open, and every check side by side (a side whose programs differ shows its weakest program) |
+| Rivals | Rival list, head to head table, part by part (each part ranked against every rival), check by check (every check, you and each rival with the result and who leads; tabs for where a rival leads, where you lead and all checks, opening on the first with something in it; each check opens what was found for each side, with the source and date, and what to learn from the one ahead, never to copy), overall score month by month as a table, moves, best content |
+| Rival detail | One rival's full view, part by part and month by month, when their admissions open, their Google rating and its trend, and every check side by side (a side whose programs differ shows its weakest program). Every set of tabs opens on one with something in it: "Where they lead" shows only when they lead |
 | Demand | Region switch (City, State, All India), when it was updated and the next update, where it was found by name ("From Reddit, Quora and Search trends, in English, Hindi and Assamese"), 6 output sections from 9.4, the fastest rise by month, rising and falling as bars |
 | Reports | List of monthly PDFs, download, the score by month with every point's value |
 | Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans |
 | Settings | Institution details, programs, social links, users, details added by you (section 6) |
-| Notifications | Alerts list |
+| Notifications | Alerts list. Empty, or still short: what arrives here and when, for the plan |
 
 **Team screens (`/team`)**
 
@@ -684,6 +684,7 @@ Each data source is a **provider** with one shared interface: it takes an instit
     - No shape, dot, square or colour without a name or number right next to it.
     - No chart that needs a key to understand.
     - If a person can't understand it in 3 seconds, simplify it.
+12. **Empty states that help.** Anything that can be empty says why it is empty, what to do about it, and when it fills: no rival suggestions yet says where suggestions come from and how to add rivals; no alerts yet says what arrives and when; a new prospect on the team side says what to do first. A set of tabs opens on one with something in it.
 
 ---
 

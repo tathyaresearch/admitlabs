@@ -2,12 +2,12 @@ import { SectionHead } from '@/components/audit/AuditHeader';
 import { MonthBars } from '@/components/charts/MonthBars';
 import { AskTabs } from '@/components/demand/AskTabs';
 import { DemandUnlockCard } from '@/components/demand/DemandUnlockCard';
+import { IdeaList } from '@/components/demand/IdeaList';
 import { MentionsTable } from '@/components/demand/MentionsTable';
 import { DemandProgramTabs, RegionSwitch } from '@/components/demand/Nav';
 import { SeasonClock } from '@/components/demand/SeasonClock';
 import { Source } from '@/components/demand/Source';
 import { DemandCard } from '@/components/home/DemandCard';
-import { NextSteps, type NextStep } from '@/components/home/NextSteps';
 import { EmptyState } from '@/components/ui/Feedback';
 import { Icon } from '@/components/ui/Icon';
 import { KpiCard, KpiNumber } from '@/components/ui/Kpi';
@@ -16,8 +16,8 @@ import { DEMAND_RULES } from '@/config/demand';
 import { parseScope, regionLabel, regionPlace } from '@/demand/regions';
 import { nextPullOn } from '@/demand/schedule';
 import { seasonClock } from '@/demand/season';
-import { countWords, LANGUAGE_TAGS, PLATFORM_LABELS, sourcesCaption, worrySentence } from '@/demand/text';
-import { demandView, type IdeaRow } from '@/demand/view';
+import { countWords, sourcesCaption, worrySentence } from '@/demand/text';
+import { demandView } from '@/demand/view';
 import { formatDate, formatMonth, joinNames } from '@/domain/format';
 import { INSTITUTION_TYPE_LABELS } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
@@ -33,24 +33,6 @@ const QUESTION = 'What do students want?';
 const IDEAS_SHOWN = 3;
 
 const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
-
-/** A content idea as a row of the "what to do next" list, with the real question it is built on. */
-function ideaStep(idea: IdeaRow, showProgram: boolean): NextStep {
-  const question = idea.question;
-  const platform = typeof question?.meta.platform === 'string' ? question.meta.platform : null;
-  const language = question ? LANGUAGE_TAGS[question.language] : null;
-  const asked = question
-    ? `Built on a real question: “${question.text}” ${countWords('question', question.count)}${platform ? ` on ${PLATFORM_LABELS[platform] ?? platform}` : ''}.${language ? ` ${language}.` : ''}`
-    : '';
-  return {
-    key: idea.key,
-    kicker: showProgram ? idea.programName : 'Content idea',
-    title: idea.text,
-    detail: asked,
-    href: idea.sourceUrl,
-    external: 'Where it was asked',
-  };
-}
 
 // Demand answers "What do students want?": the answer and the fastest rise with the admission
 // year, the content ideas to make, then everything students ask in tabs.
@@ -72,7 +54,7 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
           question={QUESTION}
           caption={[institution.city, highlight ? formatMonth(highlight.month) : 'Updated once a month', 'Grouped, never personal']}
         />
-        <DemandCard highlight={highlight} demandHref={null} place={institution.city} />
+        <DemandCard highlight={highlight} demandHref={null} place={institution.city} nextUpdate={nextPullOn(now).toISOString()} />
         <DemandUnlockCard teaser={data.free.teaser} />
       </div>
     );
@@ -161,31 +143,31 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
         </EmptyState>
       )}
 
-      {ideas.length ? (
-        <div className={styles.moreIdeas}>
-          <NextSteps
-            id="ideas"
+      {rows.length ? (
+        <section className={audit.section} aria-labelledby="ideas-title">
+          <SectionHead
+            id="ideas-title"
             icon="demand"
             title="Content ideas"
-            description={`Each one is built on a real student question from ${place}, with where it was asked.`}
-            steps={ideas.slice(0, IDEAS_SHOWN).map((idea) => ideaStep(idea, !single))}
+            help={`What to make this month. Each one answers a real question students in ${place} asked, with where they asked it.`}
           />
-          {ideas.length > IDEAS_SHOWN ? (
-            <details className={styles.moreIdeas}>
-              <summary className={audit.headLink}>
-                Show {ideas.length - IDEAS_SHOWN} more {ideas.length - IDEAS_SHOWN === 1 ? 'idea' : 'ideas'}
-                <Icon name="chevronDown" size={16} />
-              </summary>
-              <NextSteps
-                id="more-ideas"
-                title="More content ideas"
-                description="The rest of this month's ideas."
-                start={IDEAS_SHOWN + 1}
-                steps={ideas.slice(IDEAS_SHOWN).map((idea) => ideaStep(idea, !single))}
-              />
-            </details>
-          ) : null}
-        </div>
+          {ideas.length ? (
+            <div className={styles.moreIdeas}>
+              <IdeaList ideas={ideas.slice(0, IDEAS_SHOWN)} place={place} showProgram={!single} />
+              {ideas.length > IDEAS_SHOWN ? (
+                <details className={styles.moreIdeas}>
+                  <summary className={audit.headLink}>
+                    Show {ideas.length - IDEAS_SHOWN} more {ideas.length - IDEAS_SHOWN === 1 ? 'idea' : 'ideas'}
+                    <Icon name="chevronDown" size={16} />
+                  </summary>
+                  <IdeaList ideas={ideas.slice(IDEAS_SHOWN)} start={IDEAS_SHOWN + 1} place={place} showProgram={!single} />
+                </details>
+              ) : null}
+            </div>
+          ) : (
+            <p className={audit.quietNote}>Ideas are written from the questions students ask. This month’s arrive with the next update, on {formatDate(nextPullOn(now))}.</p>
+          )}
+        </section>
       ) : null}
 
       {rows.length ? (

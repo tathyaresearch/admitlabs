@@ -25,7 +25,7 @@ export interface ChooserRival {
 type Picked = { key: string; name: string; sub: string } & ({ kind: 'existing'; id: string } | { kind: 'new'; entry: RivalEntry });
 
 interface RivalChooserProps {
-  institution: { type: InstitutionType; website: string };
+  institution: { type: InstitutionType; website: string; city: string; state: string };
   current: readonly ChooserRival[];
   suggestions: ReadonlyArray<ChooserRival & { reason: string }>;
   programs: ReadonlyArray<{ id: string; name: string }>;
@@ -105,7 +105,7 @@ export function RivalChooser({ institution, current, suggestions, programs, save
             ))}
           </ul>
         ) : (
-          <p className={audit.quietNote}>None yet. Start with the suggestions below.</p>
+          <p className={audit.quietNote}>{suggestions.length ? 'None yet. Start with the suggestions below.' : 'None yet. Add the ones you compete with below.'}</p>
         )}
       </section>
 
@@ -130,7 +130,11 @@ export function RivalChooser({ institution, current, suggestions, programs, save
             })}
           </ul>
         ) : (
-          <p className={audit.quietNote}>No suggestions right now. Add the rivals you have in mind below.</p>
+          // Why there are none, and what to do instead.
+          <p className={audit.quietNote}>
+            No suggestions for {institution.city} yet. Drishti suggests institutions it already checks: the same type as you, with programs in common, in {institution.city} first, then the rest of{' '}
+            {institution.state}. Add the ones you compete with below. A name and a website are enough.
+          </p>
         )}
       </section>
 

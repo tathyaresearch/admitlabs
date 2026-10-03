@@ -7,6 +7,7 @@ import { monthKey } from '@/domain/dates';
 import { formatDate } from '@/domain/format';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { auditNote, loadAuditPage, programEntries } from '@/lib/audit/load';
+import { loadProgress } from '@/lib/audit/progress';
 import { loadAddedDetails } from '@/lib/details/load';
 import { loadMarkState } from '@/lib/home/load';
 import { markDoneAction } from '../actions';
@@ -24,8 +25,11 @@ export default async function AuditPage() {
 
   const view = overviewView(data.audit, { institutionType: institution.type, programNames: data.names });
   const free = viewer.tier === 'free';
-  const marking = await loadMarkState(viewer, data);
   const history = canSee('audit_score_history', viewer.tier) ? data.history : null;
+  const [marking, months] = await Promise.all([
+    loadMarkState(viewer, data),
+    history ? loadProgress({ history, names: data.names, type: institution.type, institutionId: institution.id }) : Promise.resolve(null),
+  ]);
 
   return (
     <AuditScreen
@@ -39,7 +43,7 @@ export default async function AuditPage() {
       checkedAt={data.audit.runAt}
       trend={history ? scoresByMonth(history, (runAt) => monthKey(new Date(runAt))) : null}
       note={auditNote(data, viewer.tier)}
-      history={history}
+      progress={history && months ? { months, history, scoreLabel: 'Overall' } : null}
       historyLabel="Overall score by month"
       details={details}
       institutionType={institution.type}

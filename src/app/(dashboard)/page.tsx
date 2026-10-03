@@ -14,6 +14,7 @@ import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
 import { limitFor } from '@/config/entitlements';
 import { checkName } from '@/domain/checks';
+import { nextPullOn } from '@/demand/schedule';
 import { monthKey } from '@/domain/dates';
 import { formatCount, formatDate } from '@/domain/format';
 import { planReminder } from '@/domain/tiers';
@@ -144,7 +145,7 @@ export default async function HomePage() {
             chooseHref={role === 'owner' ? '/rivals/choose' : null}
             latestMove={rivals.latestMove}
           />
-          <DemandCard highlight={highlight} demandHref="/demand" place={institution.city} history={searches} />
+          <DemandCard highlight={highlight} demandHref="/demand" place={institution.city} history={searches} nextUpdate={nextPullOn(new Date()).toISOString()} />
         </div>
       </div>
     );
@@ -255,7 +256,7 @@ export default async function HomePage() {
           chooseHref={role === 'owner' ? '/rivals/choose' : null}
           latestMove={rivals.latestMove}
         />
-        <DemandCard highlight={highlight} demandHref="/demand" place={institution.city} history={searches} />
+        <DemandCard highlight={highlight} demandHref="/demand" place={institution.city} history={searches} nextUpdate={nextPullOn(new Date()).toISOString()} />
       </div>
     </div>
   );

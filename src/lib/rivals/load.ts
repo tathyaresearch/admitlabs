@@ -252,6 +252,14 @@ async function loadScores(institutionId: string, rivals: readonly RivalInfo[]): 
   };
 }
 
+/** Each rival's overall score at each of its rival Audits, oldest first: your place month by month. Paid and Client. */
+export async function loadRivalScores(institutionId: string): Promise<Array<Array<{ runAt: string; overall: number }>>> {
+  const rivals = await loadRivalList(institutionId);
+  if (rivals.length === 0) return [];
+  const history = await rivalAuditHistory(await createClient(), rivals.map((rival) => rival.id));
+  return rivals.map((rival) => (history.get(rival.id) ?? []).map((audit) => ({ runAt: audit.runAt, overall: audit.scores.overall })));
+}
+
 /** Your overall score and each rival's, month by month. Rival scores come from rival Audits only. */
 async function loadTrend(institutionId: string, institutionName: string, rivals: readonly RivalInfo[]): Promise<ScoreTrend> {
   const supabase = await createClient();

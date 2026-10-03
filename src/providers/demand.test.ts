@@ -70,9 +70,15 @@ describe('every listed program has Demand, not only the sample ones', () => {
     const questions = found
       .filter((item) => item.kind === 'question')
       .map((item) => ({ text: item.text, sourceUrl: item.sourceUrl, questionIndex: Number(item.meta.questionIndex) }));
-    const ideas = await getAnalysisProvider({}).contentIdeas({ programKey: 'pgdm', region: { scope: 'city', region: 'Jorhat', state: 'Assam' }, questions });
+    const rising = found
+      .filter((item) => item.kind === 'rising')
+      .map((item) => ({ text: item.text, trendIndex: typeof item.meta.trendIndex === 'number' ? item.meta.trendIndex : null }));
+    const ideas = await getAnalysisProvider({}).contentIdeas({ programKey: 'pgdm', region: { scope: 'city', region: 'Jorhat', state: 'Assam' }, questions, rising });
     assert.equal(ideas.length, 5);
     assert.ok(ideas.every((idea) => questions.some((question) => question.text === idea.basedOn)));
+    // The rising search behind an idea is one found in the same pull.
+    assert.ok(ideas.some((idea) => idea.trend !== null));
+    assert.ok(ideas.every((idea) => idea.trend === null || rising.some((trend) => trend.text === idea.trend)));
   });
 });
 

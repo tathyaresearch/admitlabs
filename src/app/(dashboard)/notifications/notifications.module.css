@@ -102,3 +102,21 @@
     gap: var(--space-3);
   }
 }
+
+/* What arrives here, and when: in the empty state, and under a short list. */
+.ahead {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding-left: 1.1em;
+  list-style: disc outside;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.aheadCard {
+  margin-top: 0;
+  padding: var(--space-4) var(--space-5) var(--space-4) calc(var(--space-5) + 1.1em);
+  border: 1px dashed var(--line-medium);
+  border-radius: var(--card-radius);
+}

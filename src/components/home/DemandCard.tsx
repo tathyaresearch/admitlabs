@@ -8,7 +8,7 @@ import { Source } from '@/components/demand/Source';
 import { Icon } from '@/components/ui/Icon';
 import { KpiNumber } from '@/components/ui/Kpi';
 import { countWords } from '@/demand/text';
-import { formatMonth } from '@/domain/format';
+import { formatDate, formatMonth } from '@/domain/format';
 import styles from './home.module.css';
 
 export interface DemandHighlightData {
@@ -27,12 +27,15 @@ export function DemandCard({
   demandHref,
   place,
   history = [],
+  nextUpdate = null,
 }: {
   highlight: DemandHighlightData | null;
   demandHref: string | null;
   place: string;
   /** The trend's searches by month (Paid and Client). */
   history?: readonly MonthCount[];
+  /** Before the first update: when it comes. */
+  nextUpdate?: string | null;
 }) {
   const rounded = highlight?.changePct === null || highlight?.changePct === undefined ? null : Math.round(highlight.changePct);
   return (
@@ -72,7 +75,9 @@ export function DemandCard({
           <MonthBars points={history} title="Searches by month" valueLabel="Searches" grow />
         </>
       ) : (
-        <p className={styles.cardText}>Your first Demand pull is on its way. It shows here once it is ready.</p>
+        <p className={styles.cardText}>
+          What students in {place} search for and ask shows here after {nextUpdate ? `the next update, on ${formatDate(nextUpdate)}` : 'the next update'}. It is grouped, never personal.
+        </p>
       )}
     </section>
   );

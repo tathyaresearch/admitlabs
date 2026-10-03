@@ -82,6 +82,8 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
     (runAt) => monthKey(new Date(runAt)),
   );
   const scoreName = !latest ? '' : latest.kind === 'team' ? 'Team Audit score' : latest.kind === 'rival' ? 'Rival Audit score' : 'Their score';
+  // A new prospect: nothing to look at until the first team Audit, so that comes first.
+  const firstStep = !institution.claimed && !(view && latest);
 
   const tabs: TabItem[] = [
     { id: 'audits', label: 'Audits', count: institution.teamAudits.length + Math.min(institution.history.length, OWN_AUDITS_SHOWN), content: <AuditsTab institution={institution} /> },
@@ -121,7 +123,9 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
                 </div>
               ))}
             </div>
-          ) : null}
+          ) : (
+            <p className={styles.empty}>No notes yet. Add what you hear on calls and in emails, so the whole team knows.</p>
+          )}
         </div>
       ),
     },
@@ -136,7 +140,13 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
               ? 'Links made before they signed up. Each one works until it expires or you stop it.'
               : `Each link opens the team Audit for ${TEAM_RULES.shareLinkDays} days, until it expires or you stop it.`}
           </p>
-          {institution.links.length ? <ShareLinks institutionId={institution.id} links={institution.links} now={now} /> : <p className={styles.empty}>No links yet.</p>}
+          {institution.links.length ? (
+            <ShareLinks institutionId={institution.id} links={institution.links} now={now} />
+          ) : (
+            <p className={styles.empty}>
+              {institution.claimed ? 'No links were made before they signed up.' : teamAudit ? 'No links yet. Create one in Share this Audit, above.' : 'No links yet. Run a team Audit first, then create one in Share this Audit.'}
+            </p>
+          )}
         </div>
       ),
     },
@@ -165,7 +175,7 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
                 </Button>
               </form>
             ) : null}
-            <ActionButton action={auditNowAction.bind(null, institution.id)} label={tier === 'client' ? 'Refresh their Audit' : 'Run a team Audit'} icon="refresh" size="md" />
+            {firstStep ? null : <ActionButton action={auditNowAction.bind(null, institution.id)} label={tier === 'client' ? 'Refresh their Audit' : 'Run a team Audit'} icon="refresh" size="md" />}
           </>
         }
       />
@@ -173,8 +183,21 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
       {view && latest ? (
         <HomeSummary view={view} checkedAt={latest.runAt} trend={trend} scoreLabel={scoreName} historyLabel={`${scoreName} by month`} verdict={false} />
       ) : (
-        <EmptyState icon="audit" title="No Audit yet" headingLevel={2}>
-          {institution.claimed ? 'Their first Audit runs when they pick a program.' : 'Run a team Audit to see where they stand. It stays private until you share it.'}
+        <EmptyState
+          icon="audit"
+          title={institution.claimed ? 'No Audit yet' : 'Start with a team Audit'}
+          headingLevel={2}
+          action={firstStep ? <ActionButton action={auditNowAction.bind(null, institution.id)} label="Run a team Audit" icon="refresh" size="md" /> : undefined}
+        >
+          {institution.claimed ? (
+            'Their first Audit runs when they pick a program.'
+          ) : (
+            <ol className={styles.firstSteps}>
+              <li>Run a team Audit. Drishti checks their public pages and scores them. It stays private.</li>
+              <li>See what they should fix first, here on this page.</li>
+              <li>Share it with them: a private link for {TEAM_RULES.shareLinkDays} days, or the PDF.</li>
+            </ol>
+          )}
         </EmptyState>
       )}
 
@@ -318,7 +341,10 @@ function ProgramsTab({ institution }: { institution: TeamInstitution }) {
   const latest = institution.audit;
   return (
     <div className={styles.tabStack}>
-      <p className={styles.formNote}>{latest ? 'With their score in the latest Audit.' : 'Audited in the next Audit.'}</p>
+      {institution.programs.length ? <p className={styles.formNote}>{latest ? 'With their score in the latest Audit.' : 'Audited in the next Audit.'}</p> : null}
+      {institution.programs.length ? null : (
+        <p className={styles.empty}>{institution.claimed ? 'No programs added yet. They add them in Settings.' : 'No programs on record yet. They come from a bulk Audit list, or from their own sign-up.'}</p>
+      )}
       <div className={styles.rows}>
         {institution.programs.map((program) => {
           const score = latest?.programs.find((entry) => entry.programId === program.id);

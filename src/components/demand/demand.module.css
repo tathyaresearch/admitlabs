@@ -412,6 +412,144 @@
   gap: var(--space-3);
 }
 
+/* Content ideas (./IdeaList.tsx): numbered rows in one card, as Home's things to do. */
+
+.ideas {
+  display: grid;
+  list-style: none;
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+
+.ideas > li + li {
+  border-top: 1px solid var(--line-raised);
+}
+
+.idea {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-5) var(--card-padding-sm);
+}
+
+@media (min-width: 48rem) {
+  .idea {
+    padding: var(--space-5) var(--card-padding);
+  }
+}
+
+.ideaNumber {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-nested);
+  font: var(--type-num);
+  font-weight: var(--weight-heading);
+}
+
+.ideaMain {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+@container (min-width: 44rem) {
+  .ideaMain {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--space-6);
+  }
+}
+
+.ideaBody {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ideaKicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+/* What to make: a post, a reel, a video, an FAQ or a web page. */
+.format {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.3em 0.55em;
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-xs);
+  font: var(--type-caption-strong);
+  line-height: 1;
+  color: var(--text);
+}
+
+.ideaTitle {
+  font: var(--type-card);
+  font-size: 1rem;
+  letter-spacing: var(--tracking-section);
+  text-wrap: pretty;
+}
+
+/* The real question it answers, set off by a line on its left. */
+.ideaQuestion {
+  display: grid;
+  gap: 2px;
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--line-medium);
+}
+
+.ideaQuote {
+  font: var(--type-small);
+  text-wrap: pretty;
+}
+
+.ideaMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* The rising search behind it. */
+.ideaTrend {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  font: var(--type-caption-strong);
+}
+
+.ideaTrend svg {
+  flex: none;
+  margin-top: 0.1em;
+}
+
+.ideaEffort {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  font: var(--type-strong);
+  font-size: var(--size-small);
+  white-space: nowrap;
+}
+
+.ideaEffortLabel {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
 .moreIdeas > summary {
   width: fit-content;
   cursor: pointer;

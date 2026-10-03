@@ -46,21 +46,20 @@ export function moveNotice(rivalName: string, description: string): string {
   return `${rivalName} ${lowerFirst(description.trim())}`;
 }
 
-/** "Getting better. Rated 4.4 from 212 reviews, up from 4.3." */
-export function reviewTrendText(trend: ReviewTrend): string {
+/** Under a rival's Google rating: which way it is going. "Getting better, up from 4.3." */
+export function reviewTrendNote(trend: ReviewTrend): string {
   const { latest, previous } = trend;
-  if (!latest || latest.rating === null) return 'No Google reviews found yet.';
-  const now = `Rated ${latest.rating.toFixed(1)} from ${latest.reviewCount} ${latest.reviewCount === 1 ? 'review' : 'reviews'}`;
+  if (!latest || latest.rating === null) return 'Drishti looks at their Google profile at every monthly check.';
   const before = previous?.rating?.toFixed(1);
   switch (trend.direction) {
     case 'better':
-      return `Getting better. ${now}, up from ${before}.`;
+      return `Getting better, up from ${before}.`;
     case 'worse':
-      return `Getting worse. ${now}, down from ${before}.`;
+      return `Getting worse, down from ${before}.`;
     case 'steady':
-      return `Steady. ${now}, the same as last month.`;
+      return 'Steady, the same as last month.';
     default:
-      return `${now}. The trend shows after next month's check.`;
+      return "The trend shows after next month's check.";
   }
 }
 

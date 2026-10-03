@@ -140,9 +140,21 @@ export async function pullDemand(
       sourceUrl: entry.signal.sourceUrl,
       questionIndex: typeof entry.signal.value.meta.questionIndex === 'number' ? entry.signal.value.meta.questionIndex : null,
     }));
-  const ideas = await getAnalysisProvider(env).contentIdeas({ programKey: pull.programKey, region: { scope: pull.scope, region: pull.region, state: pull.state }, questions });
+  const rising = found
+    .filter((entry) => entry.kind === 'rising')
+    .map((entry) => ({ text: entry.text, trendIndex: typeof entry.signal.value.meta.trendIndex === 'number' ? entry.signal.value.meta.trendIndex : null }));
+  const ideas = await getAnalysisProvider(env).contentIdeas({ programKey: pull.programKey, region: { scope: pull.scope, region: pull.region, state: pull.state }, questions, rising });
   ideas.forEach((idea, index) => {
-    items.push({ kind: 'idea', text: idea.text, language: 'en', count: 0, rank: index + 1, source_url: idea.sourceUrl, found_at: pulledAt.toISOString(), meta: { basedOn: idea.basedOn, format: idea.format, effort: idea.effort } });
+    items.push({
+      kind: 'idea',
+      text: idea.text,
+      language: 'en',
+      count: 0,
+      rank: index + 1,
+      source_url: idea.sourceUrl,
+      found_at: pulledAt.toISOString(),
+      meta: { basedOn: idea.basedOn, trend: idea.trend, format: idea.format, effort: idea.effort },
+    });
   });
 
   const spikes =

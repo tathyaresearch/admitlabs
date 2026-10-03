@@ -107,7 +107,8 @@ function share(check: CheckScore): number {
   return check.maxPoints > 0 ? check.points / check.maxPoints : 0;
 }
 
-function summarize(parts: readonly CheckScore[]): SideSummary {
+/** One side's result on a check: one result, or the programs' average share and the weakest program. */
+export function summarize(parts: readonly CheckScore[]): SideSummary {
   const first = parts[0];
   if (!first) return { kind: 'none' };
   const average = parts.reduce((sum, part) => sum + share(part), 0) / parts.length;

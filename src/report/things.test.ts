@@ -33,6 +33,7 @@ function idea(text: string, question: Partial<DemandRow> | null = { text: 'What 
     format: 'post',
     effort: 'easy',
     question: question ? ({ id: 'q', programKey: 'bba', programName: 'BBA', month: '2026-09', kind: 'question', rank: 1, changePct: null, sourceUrl: 'https://quora.example/q', foundAt: '', meta: {}, text: '', count: 0, language: 'en', ...question } as DemandRow) : null,
+    trend: null,
     sourceUrl: 'https://quora.example/q',
   };
 }

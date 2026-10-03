@@ -3,7 +3,7 @@ import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
 import { istDate } from '../domain/dates.ts';
 import { SAMPLE_MOVES } from '../sample/rivals.ts';
-import { admissionPushText, LEAD_WORDS, MOVE_KIND_LABELS, moveNotice, reviewTrendText, STANDING_LABELS, suggestionReason } from './text.ts';
+import { admissionPushText, LEAD_WORDS, MOVE_KIND_LABELS, moveNotice, reviewTrendNote, STANDING_LABELS, suggestionReason } from './text.ts';
 
 describe('why a rival is suggested', () => {
   test('city first, then state, with the shared programs', () => {
@@ -39,11 +39,11 @@ describe('the review trend and the admission push, in words', () => {
   const point = (rating: number | null, reviewCount: number) => ({ checkedAt: '2026-09-01T04:30:00.000Z', rating, reviewCount });
 
   test('better, worse, steady and not yet a trend', () => {
-    assert.equal(reviewTrendText({ direction: 'better', latest: point(4.4, 212), previous: point(4.3, 200) }), 'Getting better. Rated 4.4 from 212 reviews, up from 4.3.');
-    assert.equal(reviewTrendText({ direction: 'worse', latest: point(4, 90), previous: point(4.2, 88) }), 'Getting worse. Rated 4.0 from 90 reviews, down from 4.2.');
-    assert.equal(reviewTrendText({ direction: 'steady', latest: point(4.3, 69), previous: point(4.3, 66) }), 'Steady. Rated 4.3 from 69 reviews, the same as last month.');
-    assert.equal(reviewTrendText({ direction: 'unknown', latest: point(4.1, 1), previous: null }), "Rated 4.1 from 1 review. The trend shows after next month's check.");
-    assert.equal(reviewTrendText({ direction: 'unknown', latest: null, previous: null }), 'No Google reviews found yet.');
+    assert.equal(reviewTrendNote({ direction: 'better', latest: point(4.4, 212), previous: point(4.3, 200) }), 'Getting better, up from 4.3.');
+    assert.equal(reviewTrendNote({ direction: 'worse', latest: point(4, 90), previous: point(4.2, 88) }), 'Getting worse, down from 4.2.');
+    assert.equal(reviewTrendNote({ direction: 'steady', latest: point(4.3, 69), previous: point(4.3, 66) }), 'Steady, the same as last month.');
+    assert.equal(reviewTrendNote({ direction: 'unknown', latest: point(4.1, 1), previous: null }), "The trend shows after next month's check.");
+    assert.equal(reviewTrendNote({ direction: 'unknown', latest: null, previous: null }), 'Drishti looks at their Google profile at every monthly check.');
   });
 
   test('admission push', () => {

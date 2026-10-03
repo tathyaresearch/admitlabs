@@ -1,7 +1,8 @@
 'use client';
 
-// One check, you against a rival: what Drishti found for them, where and when, and your own
-// result with a link to it on your Audit page. Opens from ?check=<key>.
+// One check, you against your rivals (or one rival, on its page): who leads, what to learn from
+// the one ahead (the idea, never a copy), then what Drishti found for each of them and for you,
+// where and when, with a link to your own check on the Audit page. Opens from ?check=<key>.
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -11,17 +12,60 @@ import { CheckIcon } from '@/components/ui/Marks';
 import { SidePanel } from '@/components/ui/Overlay';
 import { ResultBar } from '@/components/ui/Results';
 import { checkLooksAt, checkName } from '@/domain/checks';
-import { PILLAR_LABELS, type InstitutionType } from '@/domain/types';
-import type { CheckComparison } from '@/rivals/compare';
-import { LEAD_WORDS } from '@/rivals/text';
-import audit from '@/components/audit/audit.module.css';
+import { PILLAR_LABELS, PILLAR_QUESTIONS, type InstitutionType } from '@/domain/types';
+import { leadSentence, type AcrossCell, type AcrossRow, type AcrossSide } from '@/rivals/across';
+import panel from '@/components/audit/panel.module.css';
+import styles from './rivals.module.css';
 
-export function RivalCheckPanel({ comparisons, rivalName, institutionType }: { comparisons: readonly CheckComparison[]; rivalName: string; institutionType: InstitutionType }) {
+const share = (cell: AcrossCell | null | undefined) => (!cell || cell.summary.kind === 'none' ? -1 : cell.summary.share);
+
+/** What the one ahead teaches, or where you stand when nobody is ahead. */
+function learnText(row: AcrossRow): string {
+  switch (row.lead) {
+    case 'rival':
+      return 'Learn from what works for them, then do it your own way, with your own students and numbers. Never copy their words or photos.';
+    case 'you':
+      return 'Keep it going: no rival is ahead of you on this check.';
+    case 'level':
+      return 'One step up puts you ahead.';
+    default:
+      return '';
+  }
+}
+
+function Side({ side, cell, leads }: { side: AcrossSide; cell: AcrossCell | null | undefined; leads: boolean }) {
+  return (
+    <li className={styles.panelSide}>
+      <p className={styles.panelSideHead}>
+        <span className={styles.panelSideName}>{side.you ? 'You' : side.name}</span>
+        {leads ? <span className={styles.panelSideTag}>Leads</span> : null}
+      </p>
+      {cell && cell.parts.length ? (
+        <ul className={panel.found}>
+          {cell.parts.map((part) => (
+            <li key={part.checkId} className={panel.foundItem}>
+              <div className={panel.foundHead}>
+                {part.programName ? <span className={panel.foundProgram}>{part.programName}</span> : null}
+                <ResultBar result={part.result} size="sm" />
+              </div>
+              {part.finding ? <p className={panel.foundText}>{part.finding}</p> : null}
+              {part.sourceUrl ? <SourceLine url={part.sourceUrl} checkedAt={part.checkedAt} /> : null}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={panel.summaryNote}>{side.you ? 'Not in your latest Audit.' : 'Not checked for them yet.'}</p>
+      )}
+    </li>
+  );
+}
+
+export function RivalCheckPanel({ rows, sides, institutionType }: { rows: readonly AcrossRow[]; sides: readonly AcrossSide[]; institutionType: InstitutionType }) {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const key = params.get('check');
-  const item = comparisons.find((candidate) => candidate.key === key) ?? null;
+  const row = rows.find((candidate) => candidate.key === key) ?? null;
 
   const close = () => {
     if (!params.has('check')) return;
@@ -31,69 +75,49 @@ export function RivalCheckPanel({ comparisons, rivalName, institutionType }: { c
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
+  const you = sides.find((side) => side.you);
+  // The one ahead first, then the rest by how they did, then you.
+  const rivals = row ? sides.filter((side) => !side.you).sort((a, b) => share(row.cells[b.id]) - share(row.cells[a.id])) : [];
+  const yours = you && row ? row.cells[you.id] : null;
+  const strong = Boolean(yours?.parts.length) && (yours?.parts.every((part) => part.result === 'strong') ?? false);
+
   return (
     <SidePanel
-      open={item !== null}
+      open={row !== null}
       onClose={close}
       title={
-        item ? (
-          <span className={audit.panelTitle}>
-            <CheckIcon check={item.key} size={20} />
-            {checkName(item.key, institutionType)}
+        row ? (
+          <span className={panel.title}>
+            <CheckIcon check={row.key} size={20} />
+            {checkName(row.key, institutionType)}
           </span>
         ) : (
           ''
         )
       }
-      description={item ? `${PILLAR_LABELS[item.pillar]}. ${checkLooksAt(item.key, institutionType)}. ${LEAD_WORDS[item.lead]}.` : undefined}
+      description={row ? `${PILLAR_LABELS[row.pillar]}: ${PILLAR_QUESTIONS[row.pillar]} ${checkLooksAt(row.key, institutionType)}.` : undefined}
     >
-      {item ? (
-        <div className={audit.panelStack}>
-          <div className={audit.panelBlock}>
-            <p className={audit.panelLabel}>{rivalName}</p>
-          </div>
-          {item.theirParts.length ? (
-            item.theirParts.map((part) => (
-              <div key={part.checkId} className={audit.panelPart}>
-                <div className={audit.panelPartHead}>
-                  {part.programName ? <p className={audit.panelProgram}>{part.programName}</p> : null}
-                  <ResultBar result={part.result} size="lg" />
-                </div>
-                {part.finding ? (
-                  <div className={audit.panelBlock}>
-                    <p className={audit.panelLabel}>What Drishti found</p>
-                    <p>{part.finding}</p>
-                  </div>
-                ) : null}
-                {part.sourceUrl ? <SourceLine url={part.sourceUrl} checkedAt={part.checkedAt} /> : null}
-              </div>
-            ))
-          ) : (
-            <p className={audit.strongNote}>Not checked for them yet.</p>
-          )}
-
-          <div className={audit.panelPart}>
-            <div className={audit.panelBlock}>
-              <p className={audit.panelLabel}>You</p>
-              {item.yourParts.length ? (
-                <div className={audit.parts}>
-                  {item.yourParts.map((part) => (
-                    <span key={part.checkId} className={audit.partResult}>
-                      {part.programName ? <span className={audit.partName}>{part.programName}</span> : null}
-                      <ResultBar result={part.result} size="sm" />
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className={audit.strongNote}>Not in your latest Audit.</p>
-              )}
-            </div>
-            <p className={audit.strongNote}>Learn from what works for them, then do it your own way.</p>
-            <Link href={`/audit?check=${item.key}`} className={audit.lockedLink}>
-              See your check and how to fix it
+      {row ? (
+        <div className={panel.stack}>
+          <div className={panel.summary}>
+            <p className={panel.summaryTitle}>{leadSentence(row, sides)}</p>
+            {learnText(row) ? <p className={panel.summaryNote}>{learnText(row)}</p> : null}
+            {row.programs.length ? <p className={panel.summaryNote}>Compared on {row.programs.join(', ')}.</p> : null}
+            <Link href={`/audit?check=${row.key}`} className={styles.panelLink}>
+              {strong ? 'See your check' : 'See your check and how to fix it'}
               <Icon name="arrowRight" size={14} />
             </Link>
           </div>
+
+          <section className={panel.block} aria-label="What was found for each">
+            <p className={panel.label}>What was found for each</p>
+            <ul className={styles.panelSides}>
+              {rivals.map((side) => (
+                <Side key={side.id} side={side} cell={row.cells[side.id]} leads={row.lead === 'rival' && row.leaders.includes(side.id)} />
+              ))}
+              {you ? <Side side={you} cell={yours} leads={false} /> : null}
+            </ul>
+          </section>
         </div>
       ) : null}
     </SidePanel>

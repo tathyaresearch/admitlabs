@@ -2,12 +2,13 @@
 //   1. The title and the question, then the program tabs.
 //   2. The summary: the verdict, the score with its trend, and the three pillars (as on Home).
 //   3. What to do next: the top 3 fixes as one numbered list.
-//   4. The details in tabs: every fix, what's working, all 17 checks and the score history.
+//   4. The details in tabs: every fix, what's working, all 17 checks and progress month by month.
 //      Each check is either to fix or working, so the first two counts add up to the third.
 // Free gets one "Paid shows the full picture" card instead of locked areas across the page, and
 // its 3 fixes once: the To fix tab points up to them instead of listing them again.
 
 import { Suspense, type ReactNode } from 'react';
+import type { ProgressMonth } from '@/audit/progress';
 import { workingTop, type AuditView, type ListItem } from '@/audit/view';
 import { addedByYou, type AddedByYou } from '@/domain/details';
 import type { AddedDetails } from '@/lib/details/load';
@@ -25,7 +26,7 @@ import { fixThing } from '@/report/things';
 import { SectionHead } from './AuditHeader';
 import { CheckPanel, type PanelFix, type PanelMarking } from './CheckPanel';
 import { ChecksTable } from './ChecksTable';
-import { HistorySection, type HistoryEntry } from './HistorySection';
+import { ProgressSection, type HistoryEntry } from './ProgressSection';
 import { FixRows, WorkingRows } from './Lists';
 import { PartResults } from './Parts';
 import { ProgramTabs, type ProgramEntry } from './Programs';
@@ -52,8 +53,8 @@ interface AuditScreenProps {
   trend: MonthScores | null;
   /** One quiet line under the score, like "Next free Audit on 10 Dec 2026". */
   note?: string | null;
-  /** Every Audit, for the history tab. Null when the plan has no score history. */
-  history: readonly HistoryEntry[] | null;
+  /** Progress month by month, and every Audit under it. Null when the plan has no score history. */
+  progress: { months: readonly ProgressMonth[]; history: readonly HistoryEntry[]; scoreLabel: string } | null;
   historyLabel: string;
   /** What the institution added in Settings, shown as added by you on the checks it relates to. */
   details?: AddedDetails | null;
@@ -177,7 +178,12 @@ export function AuditScreen(props: AuditScreenProps) {
       {tier === 'free' ? <UnlockCard moreFixes={hiddenFixes} moreStrengths={hiddenStrengths} lockedPrograms={lockedPrograms} /> : null}
 
       <section id="details" className={styles.section} aria-labelledby="details-title">
-        <SectionHead id="details-title" icon="audit" title="The full Audit" help="Every fix, what's working and every check. Open one to see what was found, the source and how to fix it." />
+        <SectionHead
+          id="details-title"
+          icon="audit"
+          title="The full Audit"
+          help={`Every fix, what's working and every check${props.progress ? ', and your progress month by month' : ''}. Open a check to see what was found, the source and how to fix it.`}
+        />
         <Tabs
           label="The full Audit"
           items={[
@@ -223,7 +229,23 @@ export function AuditScreen(props: AuditScreenProps) {
               ),
             },
             { id: 'checks', label: 'All checks', count: checks, content: <ChecksTable view={view} /> },
-            ...(props.history ? [{ id: 'history', label: 'Score history', content: <HistorySection rows={props.history} label={props.historyLabel} /> }] : []),
+            ...(props.progress
+              ? [
+                  {
+                    id: 'progress',
+                    label: 'Progress',
+                    content: (
+                      <ProgressSection
+                        months={props.progress.months}
+                        history={props.progress.history}
+                        scoreLabel={props.progress.scoreLabel}
+                        showPlace={props.progress.months.some((month) => month.place !== null)}
+                        label={props.historyLabel}
+                      />
+                    ),
+                  },
+                ]
+              : []),
           ]}
         />
       </section>

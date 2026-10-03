@@ -107,7 +107,7 @@ describe('mock providers', () => {
     assert.ok(program);
     await assert.rejects(collect({ kind: 'program', institution: eastgateRef, program }, asOf, env), ProviderNotConnectedError);
     assert.equal(getProvider('search', env).mode, 'real');
-    await assert.rejects(getAnalysisProvider({ DRISHTI_PROVIDER_ANALYSIS: 'real' }).contentIdeas({ programKey: 'bba', questions: [] }));
+    await assert.rejects(getAnalysisProvider({ DRISHTI_PROVIDER_ANALYSIS: 'real' }).contentIdeas({ programKey: 'bba', questions: [], rising: [] }));
   });
 });
 
@@ -206,13 +206,21 @@ describe('mock demand', () => {
         ? [{ text: signal.value.text, sourceUrl: signal.sourceUrl, questionIndex: Number(signal.value.meta.questionIndex) }]
         : [],
     );
-    const ideas = await getAnalysisProvider({}).contentIdeas({ programKey: 'bca', questions });
+    const rising = signals.flatMap((signal) =>
+      signal.key === 'demand_item' && signal.value.kind === 'rising'
+        ? [{ text: signal.value.text, trendIndex: typeof signal.value.meta.trendIndex === 'number' ? signal.value.meta.trendIndex : null }]
+        : [],
+    );
+    const ideas = await getAnalysisProvider({}).contentIdeas({ programKey: 'bca', questions, rising });
     assert.equal(ideas.length, 5);
     for (const idea of ideas) {
       const question = questions.find((candidate) => candidate.text === idea.basedOn);
       assert.ok(question, idea.text);
       assert.equal(idea.sourceUrl, question.sourceUrl);
     }
+    // Only where a rising search really stands behind it: the AI project rides on BCA with AI.
+    assert.equal(ideas[0]?.trend, 'BCA with AI and Machine Learning');
+    assert.equal(ideas[1]?.trend, null);
   });
 });
 

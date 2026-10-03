@@ -299,6 +299,146 @@
   }
 }
 
+/* Check by check across all your rivals (./AcrossChecks.tsx): you and each rival in columns
+   (--sides of them), then who leads. On a phone each check is a card with the sides two by two. */
+
+.acrossScroll {
+  overflow-x: auto;
+}
+
+.acrossHead,
+.acrossRow {
+  display: grid;
+  grid-template-columns: minmax(11rem, 1.3fr) repeat(var(--sides), minmax(6.75rem, 1fr)) minmax(8.5rem, 1fr) 1rem;
+  gap: var(--space-2) var(--space-5);
+  min-width: calc(11rem + var(--sides) * 6.75rem + 9.5rem + (var(--sides) + 2) * var(--space-5));
+}
+
+.acrossHead {
+  padding: 0 var(--space-3) var(--space-1);
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.acrossHead > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.acrossYou {
+  color: var(--text);
+}
+
+.acrossRow {
+  align-items: center;
+  min-height: 3rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.acrossRow:hover {
+  background: var(--surface-hover);
+}
+
+.acrossRow + .acrossRow {
+  box-shadow: 0 -1px 0 var(--line);
+}
+
+/* A side's name over its result, and "Who leads": shown on a phone only. */
+.acrossLabel {
+  display: none;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.acrossLead {
+  display: grid;
+  gap: 2px;
+  font: var(--type-caption-strong);
+}
+
+.acrossLead[data-lead='level'],
+.acrossLead[data-lead='unknown'] {
+  color: var(--text-muted);
+  font-weight: var(--weight-regular);
+}
+
+@media (max-width: 48rem) {
+  .acrossHead {
+    display: none;
+  }
+
+  .acrossRow {
+    position: relative;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-3) var(--space-6) var(--space-3) 0;
+    border-radius: 0;
+  }
+
+  .acrossRow > :first-child,
+  .acrossLead {
+    grid-column: 1 / -1;
+  }
+
+  .acrossChevron {
+    position: absolute;
+    top: var(--space-3);
+    right: 0;
+  }
+
+  .acrossLabel {
+    display: block;
+  }
+}
+
+/* The check panel on the Rivals pages (./RivalCheckPanel.tsx): each side and what was found for it. */
+
+.panelSides {
+  display: grid;
+  gap: var(--space-5);
+  list-style: none;
+}
+
+.panelSide {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.panelSideHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.panelSideName {
+  font: var(--type-strong);
+}
+
+/* "Leads", in an inverted chip beside the one ahead. */
+.panelSideTag {
+  padding: 0.25em 0.5em;
+  border-radius: var(--radius-xs);
+  background: var(--text);
+  color: var(--surface);
+  font: var(--type-caption-strong);
+  line-height: 1;
+}
+
+.panelLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  width: fit-content;
+  margin-top: var(--space-1);
+  font: var(--type-caption-strong);
+  color: var(--text);
+}
+
 /* Picking rivals. */
 
 .chooser {
@@ -598,18 +738,24 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* Two across, the counts and the admission push each get a row, so no card waits on a longer neighbour. */
-.kpiWide {
+/* Two across, the lead, the admission dates and the reviews each get a row, so no card waits on a longer neighbour. */
+.kpiWide,
+.kpiHalf {
   grid-column: 1 / -1;
 }
 
+/* On a laptop: the two scores and the lead in one row, then admissions and reviews in halves. */
 @container (min-width: 52rem) {
   .rivalKpis {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
-  .kpiWide {
-    grid-column: auto;
+  .rivalKpis > * {
+    grid-column: span 2;
+  }
+
+  .rivalKpis > .kpiHalf {
+    grid-column: span 3;
   }
 }
 
@@ -619,11 +765,6 @@
   align-items: center;
   gap: var(--space-2) var(--space-3);
   margin-top: auto;
-}
-
-.factQuiet {
-  font: var(--type-caption);
-  color: var(--text-muted);
 }
 
 .pillarCard {
@@ -639,14 +780,6 @@
   .pillarCard {
     padding: var(--space-5) var(--card-padding);
   }
-}
-
-.pillarCardHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-4);
 }
 
 /* A number card that holds words, like when a rival's admission push started. */

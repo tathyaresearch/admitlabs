@@ -38,6 +38,8 @@ export interface IdeaFixture {
   text: string;
   /** Index of the student question the idea is built on. */
   question: number;
+  /** Index of the rising search behind it, when there is one. */
+  trend?: number;
   /** What to make, and how big a job it is. */
   format: IdeaFormat;
   effort: Difficulty;
@@ -89,7 +91,7 @@ export const DEMAND_FIXTURES: Readonly<Record<string, ProgramDemandFixture>> = {
       { text: "Show last year's BBA placements: company, role and salary, one student per reel.", question: 0, format: 'reel', effort: 'medium' },
       { text: 'Post one clear BBA fee breakdown: tuition, exams and hostel, in a single image.', question: 1, format: 'post', effort: 'easy' },
       { text: 'Answer "which college is good for BBA" in Assamese, with a real day in class.', question: 2, format: 'reel', effort: 'medium' },
-      { text: 'A student who took commerce in Class 12 explains why BBA worked for them.', question: 3, format: 'video', effort: 'medium' },
+      { text: 'A BBA in Business Analytics student who took commerce in Class 12 shows a week of classes.', question: 3, trend: 0, format: 'video', effort: 'medium' },
       { text: 'A faculty member explains BBA and B.Com side by side in 30 seconds.', question: 4, format: 'reel', effort: 'easy' },
     ],
   },
@@ -115,9 +117,9 @@ export const DEMAND_FIXTURES: Readonly<Record<string, ProgramDemandFixture>> = {
     ideas: [
       { text: 'Share real MBA placement numbers for the last batch, with company names and the year.', question: 0, format: 'post', effort: 'medium' },
       { text: 'Explain every entrance route you accept, CAT and others, in one carousel.', question: 1, format: 'post', effort: 'easy' },
-      { text: 'A working professional in the evening batch shows their weekly routine.', question: 2, format: 'reel', effort: 'medium' },
+      { text: 'A working professional in the evening batch shows their weekly routine.', question: 2, trend: 2, format: 'reel', effort: 'medium' },
       { text: 'An alumnus shares their first salary and what it took to get there.', question: 3, format: 'video', effort: 'medium' },
-      { text: 'Compare a general MBA and an analytics MBA in a short faculty video.', question: 4, format: 'video', effort: 'medium' },
+      { text: 'Compare a general MBA and an analytics MBA in a short faculty video.', question: 4, trend: 0, format: 'video', effort: 'medium' },
     ],
   },
 
@@ -140,7 +142,7 @@ export const DEMAND_FIXTURES: Readonly<Record<string, ProgramDemandFixture>> = {
     ],
     worries: worries([92, 117, 38, 27, 35], { text: 'Outdated syllabus', base: 33 }),
     ideas: [
-      { text: 'Film a student coding session from start to finish, ending on the working project.', question: 0, format: 'video', effort: 'medium' },
+      { text: 'Film a student building a small AI project from start to finish, ending on the working result.', question: 0, trend: 0, format: 'video', effort: 'medium' },
       { text: 'Show three BCA graduates who got jobs without an MCA, and what they do now.', question: 1, format: 'post', effort: 'medium' },
       { text: 'Explain the Class 12 subjects BCA needs, in Assamese, in under a minute.', question: 2, format: 'reel', effort: 'easy' },
       { text: 'A faculty member compares BCA and B.Tech honestly: time, cost and jobs.', question: 3, format: 'video', effort: 'medium' },
@@ -167,11 +169,11 @@ export const DEMAND_FIXTURES: Readonly<Record<string, ProgramDemandFixture>> = {
     ],
     worries: worries([76, 88, 31, 25, 22], { text: 'Weak link to CA or jobs', base: 29 }),
     ideas: [
-      { text: 'Show how your B.Com timetable leaves room for CA classes.', question: 0, format: 'post', effort: 'easy' },
+      { text: 'Show how your B.Com timetable leaves room for CA or ACCA classes.', question: 0, trend: 0, format: 'post', effort: 'easy' },
       { text: 'Five real jobs your B.Com graduates hold, one per slide.', question: 1, format: 'post', effort: 'easy' },
       { text: 'Explain honours and regular B.Com in Assamese, with the subjects side by side.', question: 2, format: 'faq', effort: 'easy' },
       { text: 'A student who works part time walks through their week.', question: 3, format: 'reel', effort: 'medium' },
-      { text: 'A teacher files a sample GST return in class, on camera.', question: 4, format: 'video', effort: 'medium' },
+      { text: 'A teacher files a sample GST return in class, on camera.', question: 4, trend: 2, format: 'video', effort: 'medium' },
     ],
   },
 
@@ -197,7 +199,7 @@ export const DEMAND_FIXTURES: Readonly<Record<string, ProgramDemandFixture>> = {
       { text: 'Show your nursing council recognition, with a link to the official list.', question: 0, format: 'page', effort: 'easy' },
       { text: 'Post the full B.Sc Nursing fee, year by year, in one image.', question: 1, format: 'post', effort: 'easy' },
       { text: 'The hostel warden gives a tour of the girls hostel, in Assamese.', question: 2, format: 'video', effort: 'medium' },
-      { text: 'A graduate now working abroad explains the steps they took.', question: 3, format: 'video', effort: 'medium' },
+      { text: 'A graduate now working abroad explains the steps they took.', question: 3, trend: 0, format: 'video', effort: 'medium' },
       { text: 'Share the entrance pattern with three sample questions.', question: 4, format: 'faq', effort: 'easy' },
     ],
   },
@@ -221,8 +223,8 @@ export const DEMAND_FIXTURES: Readonly<Record<string, ProgramDemandFixture>> = {
     ],
     worries: worries([64, 71, 39, 28, 24], { text: 'Long working hours in the industry', base: 31 }),
     ideas: [
-      { text: "Show where this year's students did their internships, hotel by hotel.", question: 0, format: 'post', effort: 'medium' },
-      { text: 'An alumnus working on a cruise line answers questions in a live session.', question: 1, format: 'video', effort: 'medium' },
+      { text: "Show where this year's students did their internships, hotel by hotel.", question: 0, trend: 2, format: 'post', effort: 'medium' },
+      { text: 'An alumnus working on a cruise line answers questions in a live session.', question: 1, trend: 0, format: 'video', effort: 'medium' },
       { text: 'Post the full course cost in Assamese, including uniform and kit.', question: 2, format: 'post', effort: 'easy' },
       { text: 'Compare the diploma and degree paths in a 30 second reel.', question: 3, format: 'reel', effort: 'easy' },
       { text: 'Share real starting salaries from last year, with the hotel names.', question: 4, format: 'post', effort: 'medium' },
@@ -251,8 +253,8 @@ export const DEMAND_FIXTURES: Readonly<Record<string, ProgramDemandFixture>> = {
       { text: "Show the certificate and the companies that hired last batch's learners.", question: 0, format: 'post', effort: 'easy' },
       { text: 'Follow one learner from day one to a first job over 3 months, one reel a week.', question: 1, format: 'reel', effort: 'hard' },
       { text: 'Announce weekend batch timings in Assamese, with the start date.', question: 2, format: 'post', effort: 'easy' },
-      { text: 'Share a live client project your learners ran, with the results.', question: 3, format: 'video', effort: 'medium' },
-      { text: 'A past learner explains how they found their first freelance client.', question: 4, format: 'video', effort: 'medium' },
+      { text: 'Share a live performance marketing project your learners ran, with the results.', question: 3, trend: 0, format: 'video', effort: 'medium' },
+      { text: 'A past learner explains how they found their first freelance client.', question: 4, trend: 1, format: 'video', effort: 'medium' },
     ],
   },
 
@@ -276,9 +278,9 @@ export const DEMAND_FIXTURES: Readonly<Record<string, ProgramDemandFixture>> = {
     worries: worries([61, 83, 14, 11, 43], { text: 'Too much theory, not enough projects', base: 41 }),
     ideas: [
       { text: 'Share placement support in numbers: learners, interviews and offers from the last batch.', question: 0, format: 'post', effort: 'medium' },
-      { text: 'Teach one no-code dashboard in a 60 second reel.', question: 1, format: 'reel', effort: 'easy' },
-      { text: 'A B.Com graduate who became an analyst explains the switch, in Assamese.', question: 2, format: 'video', effort: 'medium' },
-      { text: 'Post a simple learning path: Excel, then SQL, then Python, with the weeks for each.', question: 3, format: 'post', effort: 'easy' },
+      { text: 'Teach one no-code dashboard in a 60 second reel.', question: 1, trend: 0, format: 'reel', effort: 'easy' },
+      { text: 'A B.Com graduate who became an analyst explains the switch, in Assamese.', question: 2, trend: 1, format: 'video', effort: 'medium' },
+      { text: 'Post a simple learning path: Excel, then SQL, then Python, with the weeks for each.', question: 3, trend: 2, format: 'post', effort: 'easy' },
       { text: 'Show real fresher salary ranges from your last batch.', question: 4, format: 'post', effort: 'easy' },
     ],
   },

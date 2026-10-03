@@ -87,8 +87,13 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
           ))}
         </div>
       ) : (
-        <EmptyState icon="enquiry" title={showAll ? 'No enquiries yet' : 'Nothing new'}>
-          <p>{showAll ? 'They arrive here from the website’s Work with us form.' : 'Every enquiry has been handled. See them all under All.'}</p>
+        // None at all reads as none yet under either filter; only handled ones read as nothing new.
+        <EmptyState icon="enquiry" title={all.length === 0 ? 'No enquiries yet' : 'Nothing new'}>
+          <p>
+            {all.length === 0
+              ? 'They arrive here when someone sends the Work with us form on the website. Each one shows who wrote, how to reach them and what they need.'
+              : 'Every enquiry has been handled. See them all under All.'}
+          </p>
         </EmptyState>
       )}
     </div>

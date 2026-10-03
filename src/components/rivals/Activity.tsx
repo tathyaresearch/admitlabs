@@ -1,6 +1,6 @@
 // What rivals are doing, in three tabs so the page stays short: moves found on their websites,
 // their best posts and why they worked (to learn from, never to copy), and what they promise
-// in ads. Every item shows its source and date.
+// in ads. Every item shows its source and date. The tabs open on the first one with something in it.
 
 import { Tabs } from '@/components/ui/Tabs';
 import { Icon } from '@/components/ui/Icon';
@@ -126,6 +126,8 @@ export function ActivityTabs({
 }) {
   const posts = postLimit ? activity.posts.slice(0, postLimit) : activity.posts;
   const month = activity.postsMonth ? formatMonth(activity.postsMonth.slice(0, 7)) : null;
+  const counts = { moves: moves.length, content: posts.length, ads: activity.ads.length };
+  const opening = (['moves', 'content', 'ads'] as const).find((id) => counts[id] > 0) ?? 'moves';
   const postsNote = [
     month ? (postLimit ? `The top posts across your rivals in ${month}. Each rival's page has its top 5.` : `Their best posts from ${month}.`) : null,
     'Learn from the idea, never copy the post.',
@@ -135,11 +137,12 @@ export function ActivityTabs({
   return (
     <Tabs
       label="What your rivals are doing"
+      defaultTab={opening}
       items={[
         {
           id: 'moves',
           label: 'Moves',
-          count: moves.length,
+          count: counts.moves,
           content: (
             <>
               <p className={styles.tabNote}>{movesNote}</p>
@@ -150,7 +153,7 @@ export function ActivityTabs({
         {
           id: 'content',
           label: 'Best content',
-          count: posts.length,
+          count: counts.content,
           content: (
             <>
               <p className={styles.tabNote}>{postsNote}</p>
@@ -161,7 +164,7 @@ export function ActivityTabs({
         {
           id: 'ads',
           label: 'Ads',
-          count: activity.ads.length,
+          count: counts.ads,
           content: (
             <>
               <p className={styles.tabNote}>What they promise in their ads, entered by the AdmitLabs team.</p>

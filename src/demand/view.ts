@@ -43,6 +43,8 @@ export interface IdeaRow {
   month: string;
   /** The real student question the idea is built on. */
   question: DemandRow | null;
+  /** The rising search behind it, from the same pull, when there is one. */
+  trend: DemandRow | null;
   sourceUrl: string;
   /** What to make and how big a job it is, as the analysis provider wrote them. Null on older pulls. */
   format: IdeaFormat | null;
@@ -93,18 +95,21 @@ function worries(rows: readonly DemandRow[]): WorryRow[] {
   return [...known.values(), ...fresh].sort((a, b) => b.count - a.count || byText(a, b));
 }
 
-function ideas(rows: readonly DemandRow[], questions: readonly DemandRow[], singleProgram: boolean): IdeaRow[] {
+function ideas(rows: readonly DemandRow[], questions: readonly DemandRow[], rising: readonly DemandRow[], singleProgram: boolean): IdeaRow[] {
   const all = rows
     .filter((row) => row.kind === 'idea')
     .map((row): IdeaRow => {
       const basedOn = typeof row.meta.basedOn === 'string' ? row.meta.basedOn : null;
       const question = questions.find((candidate) => candidate.programKey === row.programKey && candidate.text === basedOn) ?? null;
+      const trendText = typeof row.meta.trend === 'string' ? row.meta.trend : null;
+      const trend = trendText ? (rising.find((candidate) => candidate.programKey === row.programKey && candidate.text === trendText) ?? null) : null;
       return {
         key: row.id,
         text: row.text,
         programName: row.programName,
         month: row.month,
         question,
+        trend,
         sourceUrl: row.sourceUrl,
         format: oneOf(IDEA_FORMATS, row.meta.format),
         effort: oneOf(DIFFICULTIES, row.meta.effort),
@@ -155,7 +160,7 @@ export function demandView(rows: readonly DemandRow[], options: { singleProgram:
     falling,
     questions,
     worries: worryRows,
-    ideas: ideas(rows, questions, options.singleProgram),
+    ideas: ideas(rows, questions, rising, options.singleProgram),
     season: season(rows, options.skills),
     asksMost: worryRows.filter((row) => row.theme !== 'new').slice(0, 2).map((row) => row.theme),
     platforms: [...new Set(listed.flatMap((row) => (typeof row.meta.platform === 'string' ? [row.meta.platform] : [])))].sort(),
