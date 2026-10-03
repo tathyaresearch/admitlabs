@@ -4,6 +4,7 @@
 // (src/site/content.test.ts checks). What the website's pictures show lives in ./scenes.ts.
 
 import { SITE_SETTINGS } from '../config/site.ts';
+import { APP_OPEN } from '../lib/urls.ts';
 import { RIVAL_RULES } from '../config/rivals.ts';
 import { CHECKS } from '../domain/checks.ts';
 import { PILLAR_LABELS, PILLARS, type Pillar } from '../domain/types.ts';
@@ -17,6 +18,15 @@ export const CTA = {
   signIn: 'Sign in',
   /** While Drishti is not open yet, every way into it says this and opens /signup (src/site/way-in.ts). */
   talk: 'Talk to us',
+} as const;
+
+/**
+ * While Drishti is not open yet (production, until it opens: src/lib/urls.ts), the two lines on the
+ * home page that would send people to get their free Audit themselves say to talk to us instead.
+ */
+export const CLOSED = {
+  howToStart: 'Talk to us. Tell us about your institution, and we’ll get back to you.',
+  finalLine: 'Your first Audit is free. Talk to us to get started.',
 } as const;
 
 /** The products, in the header's Products menu and in the phone menu. Tathya opens in a new tab. */
@@ -146,13 +156,16 @@ export const FAQ = {
     { question: 'Who do you work with?', answer: 'Private colleges, private universities, and skilling and training institutes, for professional and career programs.' },
     { question: 'Do we own the pages and content?', answer: 'Yes. The pages we build and everything on them are yours.' },
     { question: 'Is Drishti free?', answer: 'Yes, to start. Your first Audit is free, and Free stays free. Paid adds every check, your rivals in full, what students want and a report every month.' },
-    { question: 'How do we start?', answer: 'Get your free Audit. It takes about two minutes. Or tell us about your institution, and we’ll get back to you.' },
+    {
+      question: 'How do we start?',
+      answer: APP_OPEN ? 'Get your free Audit. It takes about two minutes. Or tell us about your institution, and we’ll get back to you.' : CLOSED.howToStart,
+    },
   ],
 } as const;
 
 export const FINAL = {
   title: 'See where you stand this month.',
-  line: 'Your first Audit is free. It takes about two minutes.',
+  line: APP_OPEN ? 'Your first Audit is free. It takes about two minutes.' : CLOSED.finalLine,
 } as const;
 
 export const FOOTER = {

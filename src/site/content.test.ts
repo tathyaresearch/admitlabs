@@ -71,6 +71,11 @@ describe('the website copy', () => {
     assert.match(content.FAQ.items[2]?.answer ?? '', /^Yes\./);
   });
 
+  test('while Drishti is not open yet, the lines that would send people to sign up say to talk to us', () => {
+    assert.equal(content.CLOSED.howToStart, 'Talk to us. Tell us about your institution, and we’ll get back to you.');
+    assert.equal(content.CLOSED.finalLine, 'Your first Audit is free. Talk to us to get started.');
+  });
+
   test('our work stays hidden until the user sets it; Tathya links to its own site', async () => {
     const { SITE_SETTINGS } = await import('../config/site.ts');
     const { WORK_SAMPLES } = await import('./work.ts');
