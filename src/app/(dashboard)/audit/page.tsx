@@ -8,6 +8,8 @@ import { formatDate } from '@/domain/format';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { auditNote, loadAuditPage, programEntries } from '@/lib/audit/load';
 import { loadAddedDetails } from '@/lib/details/load';
+import { loadMarkState } from '@/lib/home/load';
+import { markDoneAction } from '../actions';
 
 export const metadata = { title: 'Audit' };
 
@@ -22,6 +24,7 @@ export default async function AuditPage() {
 
   const view = overviewView(data.audit, { institutionType: institution.type, programNames: data.names });
   const free = viewer.tier === 'free';
+  const marking = await loadMarkState(viewer, data);
   const history = canSee('audit_score_history', viewer.tier) ? data.history : null;
 
   return (
@@ -40,6 +43,7 @@ export default async function AuditPage() {
       historyLabel="Overall score by month"
       details={details}
       institutionType={institution.type}
+      marking={{ ...marking, onMark: markDoneAction }}
     />
   );
 }

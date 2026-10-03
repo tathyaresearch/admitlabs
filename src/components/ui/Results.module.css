@@ -35,10 +35,6 @@
   background: transparent;
 }
 
-.bar[data-result='varies'] {
-  color: var(--text-muted);
-}
-
 .barPoints {
   font: var(--type-num-caption);
   color: var(--text-muted);
@@ -46,10 +42,6 @@
 
 .barWord {
   color: var(--text);
-}
-
-.bar[data-result='varies'] .barWord {
-  color: var(--text-muted);
 }
 
 .sm {

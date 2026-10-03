@@ -293,9 +293,9 @@ Fixed rules for now **[ADJUSTABLE]**. Later these move to comparison with peers 
 What the user sees after an Audit:
 
 1. **The score**: overall and Discovered, Trusted, Chosen, with change since last Audit.
-2. **Area by area**: every check with its result (Strong, Okay, Weak, Missing), what Drishti found, where it found it (source link) and the date checked.
+2. **Every check**: its result (Strong, Okay, Weak, Missing) as "18 of 30 points" with the word, what Drishti found, where it found it (source link) and the date checked. A check whose programs differ shows its weakest program by name.
 3. **What's working**: the checks that are Strong everywhere they apply, ranked by the points they earn (Free: the top 3). Shown first.
-4. **What to fix**: every check below Strong anywhere, ranked by impact (points that could be gained). Each shows what's wrong, why it matters to a student, and how hard it is to fix (Easy, Medium, Hard).
+4. **What to fix**: every check below Strong anywhere, ranked by impact (points that could be gained). Each is named by what to do ("Publish your BBA placement results", the same name on Home, the Audit and a shared Audit), with the check as a small label, what's wrong, why it matters to a student, how to fix it in short numbered steps, and the effort in plain words: Quick, Medium or Big (stored as easy, medium, hard). A title fits what was found: with no reviews yet, "Get your first Google reviews".
 
 Each check is in exactly one of the two, so their counts add up to the checks the Audit ran (13 to fix and 4 working make 17). A short what's working (the top 3 in the monthly report and on a shared Audit) fills in with the best checks that are at least Okay everywhere when fewer than 3 are Strong.
 
@@ -382,8 +382,8 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 | | Free | Paid | Client |
 |---|---|---|---|
 | **Audit** | | | |
-| Overall score and 3 pillar scores | Yes | Yes | Yes |
-| Area by area | Results only, details blurred | Full, with sources | Full, with sources |
+| Overall score and its 3 parts | Yes | Yes | Yes |
+| Every check | The result of each | What was found, with sources | What was found, with sources |
 | What's working | Top 3 | Full | Full |
 | What to fix | Top 3 | Full ranked list | Full ranked list |
 | Programs | 1 | All | All |
@@ -391,11 +391,11 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 | **Rivals** | | | |
 | Suggested rivals | Yes | Yes | Yes |
 | Ahead or behind (overall only) | Yes | Yes | Yes |
-| Full comparison, best content, moves, ads | Blurred | Yes | Yes |
+| Full comparison, best content, moves, ads | A preview | Yes | Yes |
 | Change rivals | No | Once a month | Anytime |
 | **Demand** | | | |
 | 1 rising trend | Yes | Yes | Yes |
-| Everything else | Blurred | Yes | Yes |
+| Everything else | A preview | Yes | Yes |
 | Mentions of you and rivals | No | Yes | Yes |
 | **Other** | | | |
 | Alerts (rival moves, demand spikes) | No | Yes | Yes |
@@ -458,12 +458,12 @@ Keep it short enough to read in 5 minutes.
 | Sign up and log in, both | The form first in reading order. On a wide screen the left side sits beside it; on a phone it is a small band above the form and plays on its own, as on any touch screen. With reduced motion the left side is still. The left side carries the logo and one line, "See where you stand. Every month." |
 | Onboarding | The input form from section 6, then program pick for Free with what happens next. No left side; the Drishti logo, with its eye, at the top. After the first Audit, Home |
 | Home | What to do first. The one-line answer; Start here on a first visit (three steps: your score, your first fix, your rivals; ticks as each is done; closed for good with "Got it, hide this", per person); "Do these 3 things this month" (Paid and Client: one from the Audit, one from rivals, one from what students ask, ordered by the points each could add) or "Fix these first" (Free: the top 3 fixes), each with where it comes from, the check as a small label, its programs, the points it could add (or how often students asked, for a content idea, with its format), the effort in Home's words (Quick, Medium, Big) and Mark as done; What changed since the last Audit (the score, each check that moved with its result before and after, the fixes marked done that this Audit checked, and for Paid and Client the rivals' moves and big jumps in searches; Free sees what Paid adds); then the score: the gauge, its band and change, "Up 14 since April", how far the next band is, and the 3 parts (each with the question it answers, its checks as one bar split by result with the counts, and what to fix first); rival snapshot with the latest move; 1 demand highlight with its searches by month. The score month by month and every check by name stay on the Audit |
-| Audit | Pillars, all checks with results and points earned against possible, what to fix and what's working (each check in one of them, so the counts add up to all checks; Free's To fix points up to its 3 fixes instead of repeating them), score history, program switcher |
+| Audit | The three parts with "What do these mean?" (the parts and their questions, the four results and what each earns, the score's bands), every fix named as on Home with its check as a small label and its effort, all checks with results and points earned against possible (each part with its question; a check whose programs differ shows its weakest program), what to fix and what's working (each check in one of them, so the counts add up to all checks; Free's To fix points up to its 3 fixes instead of repeating them), score history, program switcher |
 | Program detail | Same as Audit, for one program |
-| Check detail | Side panel: result, what was found, source link, date checked, how to fix, difficulty, details added by you |
+| Check detail | Side panel, in one order: the fix it is about (its name as on Home, the points it could add, the effort, the programs); 1. what we found, program by program, with the source link and the date checked; 2. why it matters to a student; 3. how to fix it, in numbered steps, with the effort for each program; details added by you; Mark as done in the footer (the owner; others see that it was marked) |
 | Rivals | Rival list, head to head table, part by part (each part ranked against every rival), overall score month by month as a table, where you lead, moves, best content |
-| Rival detail | One rival's full view, part by part and month by month |
-| Demand | Region switch (City, State, All India), 6 output sections from 9.4, the fastest rise by month, rising and falling as bars |
+| Rival detail | One rival's full view, part by part and month by month, when their admissions open, and every check side by side (a side whose programs differ shows its weakest program) |
+| Demand | Region switch (City, State, All India), when it was updated and the next update, where it was found by name ("From Reddit, Quora and Search trends, in English, Hindi and Assamese"), 6 output sections from 9.4, the fastest rise by month, rising and falling as bars |
 | Reports | List of monthly PDFs, download, the score by month with every point's value |
 | Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans |
 | Settings | Institution details, programs, social links, users, details added by you (section 6) |
@@ -477,7 +477,7 @@ Keep it short enough to read in 5 minutes.
 | Bulk Audit | Add many institutions at once (paste list or CSV), run Audits, see results in a table |
 | Institution detail | Everything the institution sees, plus private notes, tier control (Admin), manual refresh |
 | Share | Create a share link or PDF of a prospect's Audit |
-| Manual entry | Enter rival ads and any data a provider can't collect yet |
+| Rival ads | Enter what rivals promise in their ads, by hand until Drishti can collect it |
 | Enquiries | Everyone who wrote in through the website's Work with us form, newest first: name, role, institution, email, phone, program and message. New or All. Mark as handled, or back to new. Every team user sees them. No emails are sent |
 
 **Team rules**
@@ -610,7 +610,7 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 | `signals` | id, institution_id, program_id (nullable), provider, check_key, value (jsonb), source_url, fetched_at |
 | `audits` | id, institution_id, run_at, kind (free, paid, client, team), overall, discovered, trusted, chosen, config_version |
 | `audit_program_scores` | audit_id, program_id, overall, discovered, trusted, chosen |
-| `audit_checks` | audit_id, program_id (nullable), pillar, check_key, result, points_awarded, points_max, finding, how_to_fix, difficulty, source_url, checked_at |
+| `audit_checks` | audit_id, program_id (nullable), pillar, check_key, result, points_awarded, points_max, finding, how_to_fix (and the same as fix_steps, one thing each), difficulty, source_url, checked_at |
 | `rivals` | institution_id, rival_institution_id, suggested (bool), added_at |
 | `rival_moves` | id, rival_institution_id, kind, description, source_url, detected_at |
 | `rival_content` | id, rival_institution_id, platform, url, metrics (jsonb), why_it_worked, month |

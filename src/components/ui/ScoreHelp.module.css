@@ -1,0 +1,99 @@
+/* "What do these mean?": one quiet line that opens into three short explanations. */
+
+.help {
+  min-width: 0;
+}
+
+.summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: fit-content;
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  list-style: none;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary:hover {
+  color: var(--text);
+}
+
+.chevron {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.help[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.body {
+  container-type: inline-size;
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-nested);
+}
+
+.groups {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* Room for all three side by side. */
+@container (min-width: 46rem) {
+  .groups {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+}
+
+.group {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.lead,
+.bands {
+  font: var(--type-small);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.list {
+  display: grid;
+  gap: var(--space-1);
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, auto) minmax(0, 1fr);
+  gap: var(--space-3);
+  font: var(--type-small);
+}
+
+.name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: var(--weight-medium);
+}
+
+.name svg {
+  flex: none;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

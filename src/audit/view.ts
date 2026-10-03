@@ -26,7 +26,10 @@ import {
 export interface CheckDetail {
   finding: string;
   whyItMatters: string | null;
+  /** How to fix, as one paragraph. */
   howToFix: string | null;
+  /** The same advice in short steps. Empty when Strong, or for an Audit saved before steps (then the paragraph is the one step). */
+  fixSteps: string[];
   difficulty: Difficulty | null;
   sourceUrl: string;
 }
@@ -360,19 +363,22 @@ export function panelLines(parts: readonly ItemPart[]): PanelLine[] {
   return lines;
 }
 
-/** How to fix a check: said once when every program needs the same, otherwise per program. The hardest difficulty counts. */
-export function fixAdvice(parts: readonly ItemPart[]): Array<{ programs: string[]; text: string; difficulty: Difficulty | null }> {
-  const byText = new Map<string, { programs: string[]; difficulty: Difficulty | null }>();
+/**
+ * How to fix a check, in short steps: said once when every program needs the same, otherwise per
+ * program. The hardest effort counts. An Audit saved before steps has its paragraph as the one step.
+ */
+export function fixAdvice(parts: readonly ItemPart[]): Array<{ programs: string[]; steps: string[]; difficulty: Difficulty | null }> {
+  const byText = new Map<string, { programs: string[]; steps: string[]; difficulty: Difficulty | null }>();
   for (const part of parts) {
     const text = part.detail?.howToFix;
     if (!text) continue;
-    const entry = byText.get(text) ?? { programs: [], difficulty: null };
+    const entry = byText.get(text) ?? { programs: [], steps: part.detail?.fixSteps.length ? [...part.detail.fixSteps] : [text], difficulty: null };
     if (part.programName) entry.programs.push(part.programName);
     const difficulty = part.detail?.difficulty ?? null;
     if (difficulty && (!entry.difficulty || DIFFICULTIES.indexOf(difficulty) > DIFFICULTIES.indexOf(entry.difficulty))) entry.difficulty = difficulty;
     byText.set(text, entry);
   }
-  return [...byText.entries()].map(([text, entry]) => ({ text, programs: byText.size > 1 ? entry.programs : [], difficulty: entry.difficulty }));
+  return [...byText.values()].map((entry) => ({ programs: byText.size > 1 ? entry.programs : [], steps: entry.steps, difficulty: entry.difficulty }));
 }
 
 export interface HistoryRow {
@@ -426,6 +432,13 @@ export interface PillarChecks {
 const RESULT_RANK = new Map<CheckResult, number>(RESULTS.map((result, index) => [result, index]));
 const worse = (a: CheckResult, b: CheckResult) => ((RESULT_RANK.get(b) ?? 0) > (RESULT_RANK.get(a) ?? 0) ? b : a);
 
+/** A check's weakest program: the worst result, then the fewest points. Null when it has no parts. */
+export function weakestPart<T extends Pick<ItemPart, 'result' | 'points'>>(parts: readonly T[]): T | null {
+  const [first] = parts;
+  if (!first) return null;
+  return parts.reduce((worst, item) => (worse(worst.result, item.result) !== worst.result || (item.result === worst.result && item.points < worst.points) ? item : worst), first);
+}
+
 /**
  * Each pillar's checks at a glance: one result per check (a program check shows its weakest
  * program), the same checks weakest first, how many are Strong, and the weakest.
@@ -435,10 +448,8 @@ export function pillarChecks(view: Pick<AuditView, 'areas' | 'fixes'>): PillarCh
   const order = new Map(CHECKS.map((check, index) => [check.key, index]));
   return view.areas.map((area) => {
     const checks = area.rows.flatMap((row): PillarCheck[] => {
-      const [first] = row.parts;
-      if (!first) return [];
-      // The weakest program: the worst result, then the fewest points.
-      const weakest = row.parts.reduce((worst, item) => (worse(worst.result, item.result) !== worst.result || (item.result === worst.result && item.points < worst.points) ? item : worst), first);
+      const weakest = weakestPart(row.parts);
+      if (!weakest) return [];
       return [{ key: row.key, name: row.name, result: weakest.result, points: weakest.points, maxPoints: weakest.maxPoints }];
     });
     const weakestFirst = [...checks].sort(

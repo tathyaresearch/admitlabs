@@ -70,7 +70,7 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
         <PageHead
           title="Demand"
           question={QUESTION}
-          caption={[institution.city, highlight ? formatMonth(highlight.month) : 'Pulled once a month', 'Grouped, never personal']}
+          caption={[institution.city, highlight ? formatMonth(highlight.month) : 'Updated once a month', 'Grouped, never personal']}
         />
         <DemandCard highlight={highlight} demandHref={null} place={institution.city} />
         <DemandUnlockCard teaser={data.free.teaser} />
@@ -106,9 +106,9 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
 
   const caption = [
     view.month ? `${regionLabel(data.region)}, ${formatMonth(view.month)}` : regionLabel(data.region),
-    data.pulledAt ? `Pulled ${formatDate(data.pulledAt)}` : 'Being pulled now',
-    `Next pull ${formatDate(nextPullOn(now))}`,
-    view.platforms.length ? sourcesCaption(view.platforms.length, Math.max(1, view.languages.length)) : null,
+    data.pulledAt ? `Updated ${formatDate(data.pulledAt)}` : 'Being updated now',
+    `Next update ${formatDate(nextPullOn(now))}`,
+    view.platforms.length ? sourcesCaption(view.platforms, view.languages) : null,
   ];
 
   return (
@@ -156,8 +156,8 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
           </div>
         </section>
       ) : (
-        <EmptyState icon="demand" title="This pull is on its way">
-          Demand for {program?.name ?? 'your programs'} in {place} shows here after the next pull, on {formatDate(nextPullOn(now))}.
+        <EmptyState icon="demand" title="This update is on its way">
+          Demand for {program?.name ?? 'your programs'} in {place} shows here after the next update, on {formatDate(nextPullOn(now))}.
         </EmptyState>
       )}
 

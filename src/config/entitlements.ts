@@ -51,19 +51,19 @@ export type EntitlementKey = (typeof ENTITLEMENT_KEYS)[number];
 
 const YES: EntitlementCell = { access: 'full', text: 'Yes' };
 const NO: EntitlementCell = { access: 'none', text: 'No' };
-const BLURRED: EntitlementCell = { access: 'placeholder', text: 'Blurred' };
+const BLURRED: EntitlementCell = { access: 'placeholder', text: 'A preview' };
 const all = (cell: EntitlementCell) => ({ free: cell, paid: cell, client: cell });
 
 export const ENTITLEMENTS: readonly EntitlementRow[] = [
-  { key: 'audit_scores', group: 'Audit', label: 'Overall score and 3 pillar scores', cells: all(YES) },
+  { key: 'audit_scores', group: 'Audit', label: 'Overall score and its 3 parts', cells: all(YES) },
   {
     key: 'audit_area_by_area',
     group: 'Audit',
-    label: 'Area by area',
+    label: 'Every check',
     cells: {
-      free: { access: 'partial', text: 'Results only, details blurred' },
-      paid: { access: 'full', text: 'Full, with sources' },
-      client: { access: 'full', text: 'Full, with sources' },
+      free: { access: 'partial', text: 'The result of each' },
+      paid: { access: 'full', text: 'What was found, with sources' },
+      client: { access: 'full', text: 'What was found, with sources' },
     },
   },
   {

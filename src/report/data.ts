@@ -29,7 +29,7 @@ import { monthKey } from '../domain/dates.ts';
 import { formatDate, formatMonth, formatMonthShort, hostAndPath, joinNames } from '../domain/format.ts';
 import { scoreLabel, type ScoreLabel } from '../domain/scores.ts';
 import {
-  DIFFICULTY_LABELS,
+  EFFORT_LABELS,
   INSTITUTION_TYPE_LABELS,
   LANGUAGE_LABELS,
   LANGUAGES,
@@ -48,7 +48,7 @@ import { platformFromUrl, type Platform } from '../graphics/platforms.ts';
 import { ladder } from '../rivals/compare.ts';
 import { MOVE_KIND_LABELS } from '../rivals/text.ts';
 import { rivalsVerdict } from '../rivals/verdict.ts';
-import { threeThings, type RivalLesson, type Thing } from './things.ts';
+import { fixThing, threeThings, type RivalLesson, type Thing } from './things.ts';
 
 export const REPORT_LIMITS = {
   working: 3,
@@ -133,6 +133,9 @@ export interface ReportFixRow {
   rank: number;
   /** For the check's icon. */
   key: CheckKey;
+  /** What to do, the same name as on Home and the Audit. */
+  title: string;
+  /** The check it is about, as a small label. */
   name: string;
   /** Short enough for one line: "BBA and MBA", or "5 programs". */
   programs: string | null;
@@ -145,6 +148,9 @@ export interface ReportFixRow {
 export interface ReportFix {
   rank: number;
   key: CheckKey;
+  /** What to do, the same name as on Home and the Audit. */
+  title: string;
+  /** The check it is about, as a small label. */
   name: string;
   /** The same fix as one short row. */
   row: ReportFixRow;
@@ -288,15 +294,16 @@ export function compactLinks(urls: readonly string[]): string[] {
 
 // The build ---------------------------------------------------------------------------------------
 
-function fixRow(item: ListItem): ReportFixRow {
+function fixRow(item: ListItem, type: InstitutionType): ReportFixRow {
   return {
     rank: item.rank,
     key: item.key,
+    title: fixThing(item, type).title,
     name: item.name,
     programs: shortPrograms(item),
     gain: pointsToGainText(item.points).replace('Could add up to', 'Up to').replace('Could add less than', 'Less than'),
     points: item.points,
-    difficulty: item.difficulty ? DIFFICULTY_LABELS[item.difficulty] : null,
+    difficulty: item.difficulty ? `Effort ${EFFORT_LABELS[item.difficulty]}` : null,
   };
 }
 
@@ -348,21 +355,22 @@ export function programRows(
 /** What was added that relates to a fix's main part, if anything. */
 type AddedFor = (item: ListItem, part: ListItem['parts'][number]) => AddedByYou | null;
 
-export function fixOf(item: ListItem, addedFor?: AddedFor): ReportFix {
+export function fixOf(item: ListItem, type: InstitutionType, addedFor?: AddedFor): ReportFix {
   const most = [...item.parts].sort((a, b) => share(a) - share(b))[0];
   const tooMany = item.parts.length > REPORT_LIMITS.partsShown;
   return {
     rank: item.rank,
     key: item.key,
+    title: fixThing(item, type).title,
     name: item.name,
-    row: fixRow(item),
+    row: fixRow(item, type),
     results: tooMany ? [] : item.parts.map((part) => ({ program: part.programName, result: part.result })),
     resultsNote: tooMany ? `Varies across ${item.parts.length} programs` : null,
     finding: most?.detail?.finding ?? null,
     howToFix: most?.detail?.howToFix ?? null,
     gain: pointsToGainText(item.points),
     points: item.points,
-    difficulty: item.difficulty ? `${DIFFICULTY_LABELS[item.difficulty]} to fix` : null,
+    difficulty: item.difficulty ? `Effort ${EFFORT_LABELS[item.difficulty]}` : null,
     added: addedFor && most ? addedFor(item, most) : null,
   };
 }
@@ -456,9 +464,11 @@ export function buildReport(input: ReportInput): ReportData {
     notes.push({ label: 'Rivals', text: checks.join(' ') });
   }
   if (demand.month) {
-    const pulled = input.demand.pulledAt ? `, pulled ${formatDate(input.demand.pulledAt)}` : '';
+    const pulled = input.demand.pulledAt ? `, updated ${formatDate(input.demand.pulledAt)}` : '';
     const from = platforms.length ? `, from ${joinNames(platforms)}` : '';
-    const languages = demand.languages.length ? `, in ${joinNames(demand.languages.map((language) => LANGUAGE_LABELS[language]))}` : '';
+    // English first, then Hindi and Assamese.
+    const spoken = LANGUAGES.filter((language) => demand.languages.includes(language));
+    const languages = spoken.length ? `, in ${joinNames(spoken.map((language) => LANGUAGE_LABELS[language]))}` : '';
     notes.push({ label: 'Demand', text: `${place}${pulled}${from}${languages}.` });
   }
 
@@ -490,8 +500,8 @@ export function buildReport(input: ReportInput): ReportData {
       note: view.programsChanged ? 'Your programs changed since the last Audit, so each program shows its own change.' : null,
     },
     working: workingTop(view, REPORT_LIMITS.working).map(workingRow),
-    fixes: fixes.slice(0, REPORT_LIMITS.fixesInDetail).map((item) => fixOf(item, addedFor)),
-    moreFixes: fixes.slice(REPORT_LIMITS.fixesInDetail).map(fixRow),
+    fixes: fixes.slice(0, REPORT_LIMITS.fixesInDetail).map((item) => fixOf(item, institution.type, addedFor)),
+    moreFixes: fixes.slice(REPORT_LIMITS.fixesInDetail).map((item) => fixRow(item, institution.type)),
     programs: programRows(audit, options, input.added),
     morePrograms: Math.max(0, audit.programs.length - REPORT_LIMITS.programs),
     rivals: input.rivals.length
@@ -527,7 +537,7 @@ export function buildReport(input: ReportInput): ReportData {
           questionsLead: questionsLead(demand.languages),
           ideas: demand.ideas.slice(0, REPORT_LIMITS.ideas).map((idea) => ({ text: idea.text, program: idea.programName, basedOn: idea.question?.text ?? null })),
           pulledOn: input.demand.pulledAt ? formatDate(input.demand.pulledAt) : null,
-          caption: sourcesCaption(demand.platforms.length, demand.languages.length),
+          caption: sourcesCaption(demand.platforms, demand.languages),
         }
       : null,
     things: threeThings({ institutionType: institution.type, place, fixes, lessons: input.lessons, ideas: demand.ideas }),

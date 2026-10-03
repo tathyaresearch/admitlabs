@@ -79,7 +79,7 @@ export default async function PlanPage() {
   const lead = paidEnded
     ? `Your Paid plan ended on ${formatDate(plan.endsAt as Date)}. You're on Free now, and you still see your last Audit score.`
     : tier === 'free'
-      ? 'You see your overall score, your three pillar scores, and the top 3 things working and to fix, for one program. A new free Audit is ready every 3 months.'
+      ? 'You see your overall score and its three parts, and the top 3 things working and to fix, for one program. A new free Audit is ready every 3 months.'
       : tier === 'paid'
         ? 'You see everything Drishti finds: every check with its source, all your programs, your rivals, what students want, and a monthly report.'
         : 'You are an AdmitLabs client: everything in Paid, and the AdmitLabs team acts on it with you.';

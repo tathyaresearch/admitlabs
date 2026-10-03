@@ -28,7 +28,7 @@ function check(key: StoredCheck['key'], programId: string | null, previousResult
     fixRank: null,
     previousResult,
     checkedAt: '2026-09-15T04:30:00.000Z',
-    detail: { finding: `Found for ${programId ?? 'everyone'}.`, whyItMatters: null, howToFix: null, difficulty: 'medium', sourceUrl: 'https://site.example' },
+    detail: { finding: `Found for ${programId ?? 'everyone'}.`, whyItMatters: null, howToFix: null, fixSteps: [], difficulty: 'medium', sourceUrl: 'https://site.example' },
   };
 }
 

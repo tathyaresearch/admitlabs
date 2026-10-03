@@ -1,8 +1,8 @@
 'use server';
 
-// Home's two actions. Mark as done (owner only) and taking it back: checked here and again in
-// mark_done() and undo_done(), which also check the plan's latest Audit. Closing Start here:
-// anyone at the institution, for themselves.
+// Mark as done (owner only, on Home and in the Audit's check panel) and taking it back: checked
+// here and again in mark_done() and undo_done(), which also check the latest own Audit. Closing
+// Start here: anyone at the institution, for themselves.
 
 import { revalidatePath } from 'next/cache';
 import { CHECK_KEYS, type CheckKey } from '@/domain/types';
@@ -42,7 +42,8 @@ export async function markDoneAction(input: MarkInput): Promise<MarkResult> {
     if (error.message.includes('nothing_to_fix')) return { ok: false, error: 'Your latest Audit already finds this Strong.' };
     return { ok: false, error: 'That did not save. Try again.' };
   }
-  revalidatePath('/');
+  // Home, the Audit and each program show it.
+  revalidatePath('/', 'layout');
   return { ok: true, error: null };
 }
 

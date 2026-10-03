@@ -18,7 +18,7 @@ import { CheckIcon, Mark, PillarIcon } from '@/components/ui/Marks';
 import { PointsValue, ResultBar } from '@/components/ui/Results';
 import { ADMITLABS_EMAIL } from '@/config/team';
 import { formatDate, hostAndPath, plural } from '@/domain/format';
-import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS } from '@/domain/types';
+import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS, type InstitutionType } from '@/domain/types';
 import { PLATFORM_ICONS, platformFromUrl } from '@/graphics/platforms';
 import { ADMITLABS_CAN_FIX, sharedView, type SharedAudit } from '@/team/share';
 import styles from './share.module.css';
@@ -49,10 +49,10 @@ function Source({ part }: { part: ItemPart }) {
 }
 
 /** One of the top 3 fixes: what was found, how to fix it and where it was found. */
-function topStep(item: ListItem): NextStep {
+function topStep(item: ListItem, institutionType: InstitutionType): NextStep {
   const part = mainPart(item);
   return {
-    ...fixStep(item, null),
+    ...fixStep(item, institutionType, null),
     detail: part?.detail?.finding ?? '',
     extra: part ? (
       <>
@@ -122,7 +122,7 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
             icon="wrench"
             title="What to fix first"
             description="The three changes that could add the most to the score, with how to make them."
-            steps={topFixes.map(topStep)}
+            steps={topFixes.map((item) => topStep(item, institution.type))}
           />
         ) : null}
 

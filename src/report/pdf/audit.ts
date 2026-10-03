@@ -61,7 +61,7 @@ function AuditSummaryPage({ data }: { data: AuditPdfData }): ReactElement {
   return h(ContentPage, {
     data,
     children: [
-      h(PageHead, { key: 'head', eyebrow: 'Audit', title: 'Where you stand', lead: 'Overall, and the three pillars: how easily students find you, trust you and choose you.' }),
+      h(PageHead, { key: 'head', eyebrow: 'Audit', title: 'Where you stand', lead: 'Overall, and its three parts: can students find you, do they believe you, is it easy to pick you.' }),
       h(
         View,
         { key: 'overall', style: { flexDirection: 'row', alignItems: 'flex-end', gap: 18 } },
@@ -119,28 +119,27 @@ function MoreFix({ fix, first }: { fix: ReportFix; first: boolean }): ReactEleme
       h(
         View,
         { style: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' } },
-        h(
-          View,
-          { style: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, paddingRight: 12 } },
-          h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 5 } }, h(CheckIcon, { check: fix.key, size: 10 }), h(Text, { style: { fontSize: 10, fontWeight: 600 } }, fix.name)),
-          single ? h(ResultBar, { result: single.result, size: 'sm' }) : fix.resultsNote ? h(Text, { style: styles.caption }, fix.resultsNote) : null,
-        ),
+        // What to do, named as on Home and the Audit.
+        h(Text, { style: { fontSize: 10, fontWeight: 600, flex: 1, paddingRight: 12, ...clamp(2) } }, fix.title),
         h(ValueText, { text: fix.gain, style: { ...styles.caption, color: COLORS.black } }),
       ),
-      !single && fix.results.length
-        ? h(
-            View,
-            { style: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 } },
-            ...fix.results.map((part, index) =>
+      // The check as a small label, and its results.
+      h(
+        View,
+        { style: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 10, rowGap: 3, marginTop: 4 } },
+        h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 4 } }, h(CheckIcon, { check: fix.key, size: 8.5 }), h(Text, { style: { fontSize: 8, fontWeight: 600 } }, fix.name)),
+        ...(single
+          ? [h(ResultBar, { key: 'one', result: single.result, size: 'sm' })]
+          : fix.results.map((part, index) =>
               h(
                 View,
                 { key: index, style: { flexDirection: 'row', alignItems: 'center', gap: 5 } },
                 part.program ? h(Text, { style: { fontSize: 7.5, color: COLORS.muted } }, part.program) : null,
                 h(ResultBar, { result: part.result, size: 'sm' }),
               ),
-            ),
-          )
-        : null,
+            )),
+        fix.resultsNote ? h(Text, { key: 'note', style: styles.caption }, fix.resultsNote) : null,
+      ),
       fix.finding ? h(Text, { style: { ...styles.small, color: COLORS.muted, marginTop: 4, ...clamp(2) } }, h(Text, { style: { fontWeight: 600, color: COLORS.black } }, 'Found  '), fix.finding) : null,
     ),
   );

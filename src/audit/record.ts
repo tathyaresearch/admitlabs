@@ -60,6 +60,8 @@ export interface CheckRecord {
   finding: string;
   why_it_matters: string;
   how_to_fix: string | null;
+  /** How to fix, in short steps (how_to_fix is the same as one paragraph). */
+  fix_steps: string[];
   difficulty: Difficulty | null;
   source_url: string;
 }
@@ -152,6 +154,7 @@ export async function prepareAudit(input: PrepareInput, analysis: Pick<AnalysisP
       }),
       why_it_matters: tip.whyItMatters,
       how_to_fix: tip.howToFix,
+      fix_steps: tip.steps,
       difficulty: tip.difficulty,
       source_url: source.sourceUrl,
     };

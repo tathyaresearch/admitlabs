@@ -246,7 +246,7 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
           icon="wrench"
           title="What to fix first"
           description={`The biggest gains first. A shared Audit explains the top ${TEAM_RULES.sharedFixesInFull} and says AdmitLabs can fix the rest.`}
-          steps={view.fixes.slice(0, 5).map((item) => fixStep(item, null))}
+          steps={view.fixes.slice(0, 5).map((item) => fixStep(item, institution.type, null))}
           empty={<p className={audit.quietNote}>Every check is Strong.</p>}
         />
       ) : null}

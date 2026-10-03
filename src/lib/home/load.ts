@@ -1,10 +1,13 @@
-// What Home reads beyond the Audit, Rivals and Demand loaders: the things marked done, the rival
-// moves since the last Audit, this month's big jumps in searches, and whether this person closed
-// Start here. Read as the signed-in user, so row level security decides what comes back.
+// What Home and the Audit read beyond the Audit, Rivals and Demand loaders: the things marked
+// done, the rival moves since the last Audit, this month's big jumps in searches, and whether this
+// person closed Start here. Read as the signed-in user, so row level security decides what comes back.
 
 import type { DoneMark } from '@/audit/marks';
 import { DEMAND_RULES } from '@/config/demand';
 import { demandView } from '@/demand/view';
+import { formatDate } from '@/domain/format';
+import type { CheckKey } from '@/domain/types';
+import type { AuditPageData } from '@/lib/audit/load';
 import type { InstitutionViewer } from '@/lib/auth/guards';
 import { loadDemandPage } from '@/lib/demand/load';
 import { loadRivalList, type MoveRow } from '@/lib/rivals/load';
@@ -25,6 +28,19 @@ export async function loadMarks(institutionId: string, checkedBy: string | null)
     markedAt: row.marked_at,
     checkedBy: row.checked_by_audit,
   }));
+}
+
+/**
+ * What the check panel needs for Mark as done: whether this person can mark (the owner, as
+ * themselves), the checks waiting for the next Audit, and when it runs on this plan.
+ */
+export async function loadMarkState(viewer: InstitutionViewer, data: Pick<AuditPageData, 'nextAudit'>): Promise<{ canMark: boolean; marked: CheckKey[]; nextAudit: string | null }> {
+  const marks = await loadMarks(viewer.membership.institution.id, null);
+  return {
+    canMark: viewer.membership.role === 'owner' && !viewer.viewingAs,
+    marked: marks.flatMap((mark) => (mark.checkKey ? [mark.checkKey] : [])),
+    nextAudit: data.nextAudit && data.nextAudit.tier === viewer.tier ? formatDate(data.nextAudit.on) : null,
+  };
 }
 
 export type RivalMove = MoveRow & { rivalName: string };

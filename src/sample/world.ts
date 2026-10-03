@@ -134,7 +134,7 @@ export function storedAudit(record: AuditRecord, options: { id?: string; previou
         previousResult: check.previous_result,
         checkedAt: check.checked_at,
         detail: open
-          ? { finding: check.finding, whyItMatters: check.why_it_matters, howToFix: check.how_to_fix, difficulty: check.difficulty, sourceUrl: check.source_url }
+          ? { finding: check.finding, whyItMatters: check.why_it_matters, howToFix: check.how_to_fix, fixSteps: check.fix_steps, difficulty: check.difficulty, sourceUrl: check.source_url }
           : null,
       };
     }),

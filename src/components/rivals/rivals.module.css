@@ -241,6 +241,12 @@
   color: var(--text-muted);
 }
 
+/* "Weakest: BCA", under a side whose programs differ. */
+.sideNote {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
 .leadWord {
   font: var(--type-caption-strong);
   white-space: nowrap;

@@ -27,8 +27,10 @@ describe('Demand in words', () => {
     assert.equal(countWords('worry', 140), 'Raised about 140 times');
     assert.equal(countWords('rising', 1240), 'About 1,240 searches');
     assert.equal(countWords('mention', 14), '14 mentions');
-    assert.equal(sourcesCaption(6, 3), '6 sources in 3 languages');
-    assert.equal(sourcesCaption(1, 1), '1 source in 1 language');
+    assert.equal(sourcesCaption(['reddit', 'quora', 'trends'], ['en', 'hi', 'as']), 'From Reddit, Quora and Search trends, in English, Hindi and Assamese');
+    assert.equal(sourcesCaption(['youtube'], []), 'From YouTube');
+    // English first, then Hindi and Assamese, however they were found.
+    assert.equal(sourcesCaption(['x'], ['as', 'en']), 'From X, in English and Assamese');
   });
 
   test('the platform behind a source link', () => {

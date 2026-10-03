@@ -10,6 +10,8 @@ import { monthKey } from '@/domain/dates';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { auditNote, loadAuditPage, loadProgramHistory, loadPrograms, nextAuditText, programEntries } from '@/lib/audit/load';
 import { loadAddedDetails } from '@/lib/details/load';
+import { loadMarkState } from '@/lib/home/load';
+import { markDoneAction } from '../../actions';
 import styles from '@/components/audit/audit.module.css';
 
 interface Props {
@@ -76,7 +78,7 @@ export default async function ProgramAuditPage({ params }: Props) {
     );
   }
 
-  const [history, details] = await Promise.all([loadProgramHistory(programId), loadAddedDetails(institution.id)]);
+  const [history, details, marking] = await Promise.all([loadProgramHistory(programId), loadAddedDetails(institution.id), loadMarkState(viewer, data)]);
   return (
     <AuditScreen
       view={view}
@@ -92,6 +94,7 @@ export default async function ProgramAuditPage({ params }: Props) {
       historyLabel={`${program.name} score by month`}
       details={details}
       institutionType={institution.type}
+      marking={{ ...marking, onMark: markDoneAction }}
     />
   );
 }

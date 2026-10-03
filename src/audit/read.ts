@@ -41,7 +41,7 @@ export async function latestStoredAudit(db: Db, institutionId: string, before?: 
     db
       .from('audit_checks')
       .select(
-        'id, program_id, pillar, check_key, result, points_awarded, points_max, strength_rank, fix_rank, previous_result, checked_at, audit_check_details(finding, why_it_matters, how_to_fix, difficulty, source_url)',
+        'id, program_id, pillar, check_key, result, points_awarded, points_max, strength_rank, fix_rank, previous_result, checked_at, audit_check_details(finding, why_it_matters, how_to_fix, fix_steps, difficulty, source_url)',
       )
       .eq('audit_id', audit.id),
   ]);
@@ -77,7 +77,7 @@ export async function latestStoredAudit(db: Db, institutionId: string, before?: 
         previousResult: row.previous_result,
         checkedAt: row.checked_at,
         detail: detail
-          ? { finding: detail.finding, whyItMatters: detail.why_it_matters, howToFix: detail.how_to_fix, difficulty: detail.difficulty, sourceUrl: detail.source_url }
+          ? { finding: detail.finding, whyItMatters: detail.why_it_matters, howToFix: detail.how_to_fix, fixSteps: detail.fix_steps ?? [], difficulty: detail.difficulty, sourceUrl: detail.source_url }
           : null,
       };
     }),

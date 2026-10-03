@@ -111,7 +111,7 @@ export function RivalsCard({
 
       {!hasRivals ? (
         <div className={styles.cardEmpty}>
-          <p className={styles.cardText}>Pick 3 to 5 rivals to see who&apos;s ahead, pillar by pillar. Rivals never know who tracks them.</p>
+          <p className={styles.cardText}>Pick 3 to 5 rivals to see who&apos;s ahead, part by part. Rivals never know who tracks them.</p>
           {chooseHref ? (
             <div>
               <ButtonLink href={chooseHref} size="sm" icon="rivals">

@@ -87,6 +87,7 @@ export type Database = {
           audit_check_id: string
           difficulty: Database["public"]["Enums"]["difficulty"] | null
           finding: string
+          fix_steps: string[] | null
           how_to_fix: string | null
           source_url: string
           why_it_matters: string | null
@@ -95,6 +96,7 @@ export type Database = {
           audit_check_id: string
           difficulty?: Database["public"]["Enums"]["difficulty"] | null
           finding: string
+          fix_steps?: string[] | null
           how_to_fix?: string | null
           source_url: string
           why_it_matters?: string | null
@@ -103,6 +105,7 @@ export type Database = {
           audit_check_id?: string
           difficulty?: Database["public"]["Enums"]["difficulty"] | null
           finding?: string
+          fix_steps?: string[] | null
           how_to_fix?: string | null
           source_url?: string
           why_it_matters?: string | null

@@ -60,6 +60,13 @@ Home answers "How are we doing this month?" with what to do first (`src/app/(das
 
 On the Audit, each check is either to fix or working (Strong everywhere), so the two tab counts add up to all checks. A score from 0 to 39 is labelled Getting started.
 
+## The Audit's checks
+
+- Every fix has one name everywhere: what to do (`checkAction` in `src/domain/checks.ts`), with the check as a small label and the effort in plain words: Quick, Medium or Big.
+- A check opens in its panel (`src/components/audit/CheckPanel.tsx`): the fix it is about, with the points it could add, the effort and the programs; then 1. what we found, program by program, with the source and the date; 2. why it matters to a student; 3. how to fix it, in numbered steps; what was added in Settings; and Mark as done for the owner.
+- How to fix is written as short steps by the analysis provider (`src/providers/mock/fix-advice.ts`) and stored in `audit_check_details.fix_steps`; `how_to_fix` keeps the same steps as one paragraph for the PDFs, a shared Audit and Home.
+- Plain words: "What do these mean?" under the parts explains the parts, the results and the bands; a result reads "18 of 30 points"; a check whose programs differ shows its weakest program; Demand says when it was updated and names its sources; a rival's page says when their admissions open.
+
 ## Try the Audit on each tier
 
 The sample covers Free (Northbank, Silverline), Paid (Eastgate) and Client (Brightpath). To see one institution on every tier, sign up with a new email, then switch its tier here (in the product an Admin does this on the institution's page in the team area):
@@ -109,7 +116,7 @@ npm run rivals -- --actions --institution eastgate-university
 
 - `--due` runs everything due that day: a rival Audit for every tracked rival without one since the 1st of the month; the weekly check (moves and best content) for every rival not checked this week, with an alert to each Paid and Client institution tracking it for every new move; and what to learn from rivals for every Paid and Client institution without this month's list.
 - `--check` runs one weekly check now. `--actions` rebuilds one institution's list of what to learn from its rivals (it also follows each Paid or Client Audit).
-- Rival ads are entered by the team under Manual entry, at `/team/ads`.
+- Rival ads are entered by the team under Rival ads, at `/team/ads`.
 
 ## Demand
 
@@ -179,7 +186,7 @@ The AdmitLabs team area at `/team` (spec section 13), for `team@admitlabs.exampl
 - **Institution page** (`/team/institutions/<id>`): the latest score and pillars; the plan, with an Admin's plan controls (or, before they sign up, sharing the Audit); what to fix first for a prospect; then Audits, Programs, People, Notes (team only) and Share links in tabs. **Run a team Audit** runs a private team Audit; for a Client, **Refresh their Audit** runs their own Audit, which they see. **Open their dashboard** shows a signed-up institution's dashboard exactly as they see it, read only, under a bar that says so.
 - **Plans** (Admin only, on the institution page): start Paid from the day of payment (today, or up to 6 months back; always 6 months), make them a Client, or end the plan now. The first Audit of a new plan runs straight away. The database refuses these for anyone but an Admin (`set_plan`, `end_plan`).
 - **Sharing** (prospects and rival records only): **Create a link** makes a private link to the latest team Audit. It works for 90 days unless the team stops it sooner. It opens without signing in, at `/share/<token>`, and is never indexed: the score and pillars, the top 3 fixes with how to fix them, then "Want AdmitLabs to fix this for you? hello@admitlabs.in" and "Get your free Audit". Below, folded: what's working, the rest of the fixes under one line saying "AdmitLabs can fix any of these.", and every check with its result, what was found, the source and the date. How to fix is sent for the top 3 fixes only. **Download PDF** gives the same content as a PDF, on the team page and on the shared page. An expired or stopped link says so and offers the free Audit. A link keeps working after the prospect signs up; their team Audits and notes stay invisible to them.
-- **Manual entry** (`/team/ads`): rival ads, entered by hand until a provider can collect them.
+- **Rival ads** (`/team/ads`): what rivals promise in their ads, entered by hand until Drishti can collect it.
 - **Enquiries** (`/team/enquiries`): everyone who wrote in through the website's Work with us form, newest first, with their role, institution, email, phone, program and message. New shows the ones nobody has handled yet; All shows every one. **Mark as handled** moves one out of New (and **Mark as new** brings it back). Every team user sees them. No emails are sent.
 - **Team users** (`/team/users`): an Admin adds someone by email as Team or Admin (someone who has signed in before joins at once, anyone else at first sign in), changes roles and removes people. There is always at least one Admin.
 - **On a phone**, the five team pages sit in the bottom bar.

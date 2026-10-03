@@ -7,7 +7,8 @@ import type { ItemPart, ListItem } from '@/audit/view';
 import { Icon } from '@/components/ui/Icon';
 import { CheckIcon } from '@/components/ui/Marks';
 import { Difficulty, PointsValue, ResultBar } from '@/components/ui/Results';
-import { DIFFICULTY_LABELS, type CheckKey } from '@/domain/types';
+import { EFFORT_LABELS, type CheckKey, type InstitutionType } from '@/domain/types';
+import { fixThing } from '@/report/things';
 import { PartResults } from './Parts';
 import styles from './audit.module.css';
 
@@ -84,21 +85,26 @@ function ItemResult({ item }: { item: ListItem }) {
   return <span className={styles.varies}>{item.parts.length} programs</span>;
 }
 
-/** Fixes after the top three, as quiet ranked rows. */
-export function FixRows({ items }: { items: readonly ListItem[] }) {
+/**
+ * Every fix as a quiet ranked row, named as on Home: what to do, then the check it is about (its
+ * programs, when the name does not say them) and the effort.
+ */
+export function FixRows({ items, institutionType }: { items: readonly ListItem[]; institutionType: InstitutionType }) {
   return (
     <div className={styles.rows}>
       {items.map((item) => {
-        const names = programNames(item.parts);
-        const difficulty = item.difficulty ? `${DIFFICULTY_LABELS[item.difficulty]} to fix` : null;
+        const programs = [...new Set(item.parts.flatMap((part) => (part.programName ? [part.programName] : [])))];
+        // The name says up to three programs; more read as "your programs", so the line under it names them.
+        const names = programs.length > 3 ? programs.join(', ') : null;
+        const effort = item.difficulty ? `Effort ${EFFORT_LABELS[item.difficulty]}` : null;
         return (
           <Row
             key={item.rank}
             to={href('', item)}
             check={item.key}
             rank={item.rank}
-            name={item.name}
-            sub={[names, difficulty].filter(Boolean).join('. ') || null}
+            name={fixThing(item, institutionType).title}
+            sub={[item.name, names, effort].filter(Boolean).join('. ')}
             result={<ItemResult item={item} />}
             meta={<PointsValue kind="gain" points={item.points} />}
           />

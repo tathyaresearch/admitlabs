@@ -4,14 +4,13 @@
 
 import type { CSSProperties } from 'react';
 import { resultShare, scoreLabel, type ScoreLabel as ScoreLabelName } from '@/domain/scores';
-import { DIFFICULTY_LABELS, RESULT_LABELS, type CheckResult, type Difficulty as DifficultyValue } from '@/domain/types';
+import { EFFORT_LABELS, RESULT_LABELS, type CheckResult, type Difficulty as DifficultyValue } from '@/domain/types';
 import { Icon } from './Icon';
 import styles from './Results.module.css';
 
 interface ResultBarProps {
-  /** "varies" when a check's programs disagree: the bar shows their average points. */
-  result: CheckResult | 'varies';
-  /** Points earned and possible: the bar's length, and "18/30" after it unless `showPoints` is off. */
+  result: CheckResult;
+  /** Points earned and possible: the bar's length, and "18 of 30 points" after it unless `showPoints` is off. */
   points?: number;
   max?: number;
   /** Points earned out of possible, 0 to 1, when only the share is known (a rival's check). */
@@ -26,8 +25,8 @@ interface ResultBarProps {
  * text colour: its length says the points, the word says the result.
  */
 export function ResultBar({ result, points, max, share, showPoints = true, size = 'md' }: ResultBarProps) {
-  const filled = max ? Math.max(0, Math.min(1, (points ?? 0) / max)) : (share ?? (result === 'varies' ? 0 : resultShare(result)));
-  const word = result === 'varies' ? 'Varies by program' : RESULT_LABELS[result];
+  const filled = max ? Math.max(0, Math.min(1, (points ?? 0) / max)) : (share ?? resultShare(result));
+  const word = RESULT_LABELS[result];
   const rounded = Math.round(points ?? 0);
   return (
     <span className={[styles.bar, styles[size]].join(' ')} data-result={result} title={max ? `${word}, ${rounded} of ${max} points` : word}>
@@ -36,10 +35,8 @@ export function ResultBar({ result, points, max, share, showPoints = true, size 
       </span>
       {showPoints && max ? (
         <span className={styles.barPoints}>
-          <span className="num">
-            {rounded}/{max}
-          </span>
-          <span className="visually-hidden"> points,</span>
+          <span className="num">{rounded}</span> of <span className="num">{max}</span> points
+          <span className="visually-hidden">,</span>
         </span>
       ) : null}
       <span className={styles.barWord}>{word}</span>
@@ -149,12 +146,12 @@ export function CellText({ text }: { text: string }) {
   return /^[\d.,]+$/.test(text) ? <span className="num">{text}</span> : <>{text}</>;
 }
 
-/** How hard a fix is. */
+/** How big a job a fix is, in the product's words: Quick, Medium or Big. */
 export function Difficulty({ value }: { value: DifficultyValue }) {
   return (
     <span className={styles.difficulty}>
-      <span className={styles.difficultyLabel}>To fix</span>
-      {DIFFICULTY_LABELS[value]}
+      <span className={styles.difficultyLabel}>Effort</span>
+      {EFFORT_LABELS[value]}
     </span>
   );
 }

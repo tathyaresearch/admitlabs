@@ -11,6 +11,7 @@ import { FixFirst, SplitBar } from '@/components/ui/CheckSummary';
 import { Icon } from '@/components/ui/Icon';
 import { PillarIcon } from '@/components/ui/Marks';
 import { Change, Delta, ScoreLabel } from '@/components/ui/Results';
+import { ScoreHelp } from '@/components/ui/ScoreHelp';
 import { formatDate, formatMonthName } from '@/domain/format';
 import { nextBandText } from '@/domain/scores';
 import { PILLAR_LABELS, PILLAR_QUESTIONS, PILLARS } from '@/domain/types';
@@ -104,6 +105,7 @@ export function HomeScore({
           })}
         </ul>
       </div>
+      <ScoreHelp />
       {upsell ? (
         <Link href={upsell.href} className={styles.quietLink}>
           {upsell.text}

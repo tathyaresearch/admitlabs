@@ -19,6 +19,7 @@ import { KpiCard, KpiNumber } from '@/components/ui/Kpi';
 import { LockedPanel } from '@/components/ui/LockedPanel';
 import { PillarIcon } from '@/components/ui/Marks';
 import { Change, Delta, ResultBar, ScoreLabel } from '@/components/ui/Results';
+import { ScoreHelp } from '@/components/ui/ScoreHelp';
 import { CHECKS } from '@/domain/checks';
 import { formatDate, formatMonthName } from '@/domain/format';
 import { nextBandText, resultShareText } from '@/domain/scores';
@@ -132,6 +133,7 @@ export function HomeSummary({
   showChange = true,
   historyLabel = 'Overall score by month',
   verdict = true,
+  help = false,
 }: {
   view: AuditView;
   checkedAt: string;
@@ -154,6 +156,8 @@ export function HomeSummary({
   historyLabel?: string;
   /** Off where the sentence, written to the institution, would be read by someone else (the team). */
   verdict?: boolean;
+  /** "What do these mean?" under the parts (the Audit). */
+  help?: boolean;
 }) {
   // Same rules as the Audit page: no change on a first Audit, or when the programs changed.
   const quiet = view.firstAudit || view.programsChanged || !showChange;
@@ -219,6 +223,7 @@ export function HomeSummary({
           })}
         </div>
       </div>
+      {help ? <ScoreHelp /> : null}
     </section>
   );
 }

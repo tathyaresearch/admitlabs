@@ -2,7 +2,7 @@
 // Grouped only: a topic, a count and a source, never a person.
 
 import { formatCount, joinNames, plural } from '../domain/format.ts';
-import type { DemandKind, Language } from '../domain/types.ts';
+import { LANGUAGE_LABELS, LANGUAGES, type DemandKind, type Language } from '../domain/types.ts';
 import type { WorryTheme } from '../sample/demand.ts';
 
 /** "Up 38%", "Down 12%", "No change". */
@@ -75,7 +75,9 @@ export function countWords(kind: DemandKind, count: number): string {
   }
 }
 
-/** "6 sources in 3 languages". */
-export function sourcesCaption(platforms: number, languages: number): string {
-  return `${plural(platforms, 'source', 'sources')} in ${plural(languages, 'language', 'languages')}`;
+/** Where it was found, by name: "From Reddit, Quora and Search trends, in English and Hindi". */
+export function sourcesCaption(platforms: readonly string[], languages: readonly Language[]): string {
+  const from = `From ${joinNames(platforms.map((platform) => PLATFORM_LABELS[platform] ?? platform))}`;
+  const spoken = LANGUAGES.filter((language) => languages.includes(language));
+  return spoken.length ? `${from}, in ${joinNames(spoken.map((language) => LANGUAGE_LABELS[language]))}` : from;
 }

@@ -173,7 +173,7 @@ export function SummaryPage({ data }: PageProps): ReactElement {
         key: 'head',
         eyebrow: 'Score summary',
         title: `Your score in ${data.monthLabel.split(' ')[0]}`,
-        lead: 'Overall, and the three pillars: how easily students find you, trust you and choose you.',
+        lead: 'Overall, and its three parts: can students find you, do they believe you, is it easy to pick you.',
       }),
       h(
         View,
@@ -249,7 +249,7 @@ export function FixBlock({ fix, first, compact, maxPoints }: { fix: ReportFix; f
   const single = fix.results.length === 1 && fix.results[0]?.program === null ? fix.results[0] : null;
   return h(
     Keep,
-    { style: { flexDirection: 'row', paddingTop: first ? 2 : 10, paddingBottom: 10, borderTopWidth: first ? 0 : 0.75, borderTopColor: COLORS.line } },
+    { style: { flexDirection: 'row', paddingTop: first ? 2 : 7, paddingBottom: 7, borderTopWidth: first ? 0 : 0.75, borderTopColor: COLORS.line } },
     h(View, { style: { width: 34 } }, h(BigNumber, { value: fix.rank, size: 24 })),
     h(
       View,
@@ -260,15 +260,26 @@ export function FixBlock({ fix, first, compact, maxPoints }: { fix: ReportFix; f
         h(
           View,
           { style: { flex: 1, paddingRight: 12 } },
+          // What to do, named as on Home and the Audit.
+          h(Text, { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: -0.1, ...clamp(2) } }, fix.title),
+          // The check it is about, as a small label, and its result: one for an institution check, each
+          // program's for a program check, or how many programs when there are too many to list.
           h(
             View,
-            { style: { flexDirection: 'row', alignItems: 'center', gap: 10 } },
-            h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 6 } }, h(CheckIcon, { check: fix.key, size: 11 }), h(Text, { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: -0.1 } }, fix.name)),
-            // An institution check has one result, shown beside its name.
-            single ? h(ResultBar, { result: single.result, size: 'sm' }) : null,
+            { style: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 10, rowGap: 3, marginTop: 3 } },
+            h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 4 } }, h(CheckIcon, { check: fix.key, size: 8.5 }), h(Text, { style: { fontSize: 8, fontWeight: 600 } }, fix.name)),
+            ...(single
+              ? [h(ResultBar, { key: 'one', result: single.result, size: 'sm' })]
+              : fix.results.map((part, index) =>
+                  h(
+                    View,
+                    { key: index, style: { flexDirection: 'row', alignItems: 'center', gap: 5 } },
+                    part.program ? h(Text, { style: { fontSize: 7.5, color: COLORS.muted } }, part.program) : null,
+                    h(ResultBar, { result: part.result, size: 'sm' }),
+                  ),
+                )),
+            fix.resultsNote ? h(Text, { key: 'note', style: styles.caption }, fix.resultsNote) : null,
           ),
-          // Program results name their programs; with too many to list, say how many.
-          fix.resultsNote ? h(Text, { style: styles.caption }, fix.resultsNote) : null,
         ),
         h(
           View,
@@ -282,22 +293,8 @@ export function FixBlock({ fix, first, compact, maxPoints }: { fix: ReportFix; f
           fix.difficulty ? h(Text, { style: styles.caption }, fix.difficulty) : null,
         ),
       ),
-      fix.results.length && !single
-        ? h(
-            View,
-            { style: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 5, alignItems: 'center' } },
-            ...fix.results.map((part, index) =>
-              h(
-                View,
-                { key: index, style: { flexDirection: 'row', alignItems: 'center', gap: 5 } },
-                part.program ? h(Text, { style: { fontSize: 7.5, color: COLORS.muted } }, part.program) : null,
-                h(ResultBar, { result: part.result, size: 'sm' }),
-              ),
-            ),
-          )
-        : null,
       fix.finding
-        ? h(Text, { style: { ...styles.small, marginTop: 6, color: COLORS.muted, ...clamp(compact ? 1 : 2) } }, h(Text, { style: { fontWeight: 600, color: COLORS.black } }, 'Found  '), fix.finding)
+        ? h(Text, { style: { ...styles.small, marginTop: 5, color: COLORS.muted, ...clamp(compact ? 1 : 2) } }, h(Text, { style: { fontWeight: 600, color: COLORS.black } }, 'Found  '), fix.finding)
         : null,
       fix.howToFix
         ? h(Text, { style: { ...styles.small, marginTop: 3, ...clamp(compact ? 2 : 3) } }, h(Text, { style: { fontWeight: 600 } }, 'How to fix  '), fix.howToFix)
@@ -334,7 +331,7 @@ export function FixesPage({ data, compact = false }: PageProps): ReactElement {
         ? [
             h(
               View,
-              { key: 'more', style: { marginTop: 12 }, wrap: false },
+              { key: 'more', style: { marginTop: 6 }, wrap: false },
               h(SectionTitle, { title: 'Also worth fixing' }),
               h(
                 View,
@@ -344,22 +341,23 @@ export function FixesPage({ data, compact = false }: PageProps): ReactElement {
                     View,
                     { key: index, style: { width: HALF } },
                     ...column.map((item) =>
+                      // What to do, named as on Home; under it the check, its programs and the effort.
                       h(
                         View,
-                        { key: item.rank, style: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingVertical: 5, borderTopWidth: 0.75, borderTopColor: COLORS.line } },
+                        { key: item.rank, style: { flexDirection: 'row', alignItems: 'flex-start', gap: 5, paddingVertical: 3, borderTopWidth: 0.75, borderTopColor: COLORS.line } },
+                        h(Text, { style: { ...NUM, fontSize: 8, fontWeight: 500, width: 13 } }, `${item.rank}.`),
                         h(
                           View,
-                          { style: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5, paddingRight: 8 } },
-                          h(Text, { style: { ...NUM, fontSize: 8.5, fontWeight: 500 } }, `${item.rank}.`),
-                          h(CheckIcon, { check: item.key, size: 8.5 }),
+                          { style: { flex: 1 } },
+                          h(Text, { style: { fontSize: 8, fontWeight: 500, ...clamp(2) } }, item.title),
                           h(
-                            Text,
-                            { style: { flex: 1, fontSize: 8.5, fontWeight: 500, ...clamp(1) } },
-                            item.name,
-                            item.programs ? h(Text, { style: { fontSize: 7, fontWeight: 400, color: COLORS.muted } }, `   ${item.programs}`) : null,
+                            View,
+                            { style: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 } },
+                            h(CheckIcon, { check: item.key, size: 7.5 }),
+                            h(Text, { style: { flex: 1, fontSize: 7, color: COLORS.muted, ...clamp(1) } }, [item.name, item.programs, item.difficulty].filter(Boolean).join('  ·  ')),
+                            h(ValueText, { text: item.gain, style: { ...styles.caption, textAlign: 'right' } }),
                           ),
                         ),
-                        h(Text, { style: { ...styles.caption, textAlign: 'right' } }, h(ValueText, { text: item.gain }), item.difficulty ? `  ·  ${item.difficulty}` : ''),
                       ),
                     ),
                   ),
@@ -665,7 +663,7 @@ export function DemandPage({ data, compact = false }: PageProps): ReactElement {
       ],
     });
   }
-  const lead = [demand.caption, demand.pulledOn ? `Pulled ${demand.pulledOn}` : null, 'Grouped only, never one student'].filter(Boolean).join('.  ');
+  const lead = [demand.caption, demand.pulledOn ? `Updated ${demand.pulledOn}` : null, 'Grouped only, never one student'].filter(Boolean).join('.  ');
   const fastest = Math.max(0, ...demand.rising.map((trend) => trend.changePct ?? 0));
   const mostAsked = Math.max(0, ...demand.questions.map((question) => question.asked));
   return h(ContentPage, {

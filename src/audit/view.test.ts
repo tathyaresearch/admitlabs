@@ -323,20 +323,22 @@ describe('the check panel', () => {
     assert.deepEqual(panelLines([part(null, 'okay', 15)]).map((line) => [line.programs, line.result]), [[[], 'okay']]);
   });
 
-  test('how to fix is said once when every program needs the same', () => {
-    const detail = (howToFix: string | null, difficulty: 'easy' | 'medium' | 'hard' | null) => ({ finding: 'Found', whyItMatters: null, howToFix, difficulty, sourceUrl: 'https://example.edu' });
-    assert.deepEqual(fixAdvice([part('BBA', 'weak', 9, { detail: detail('Add the fees.', 'easy') }), part('MBA', 'weak', 9, { detail: detail('Add the fees.', 'medium') })]), [
-      { text: 'Add the fees.', programs: [], difficulty: 'medium' },
+  test('how to fix, in steps, is said once when every program needs the same', () => {
+    const detail = (howToFix: string | null, difficulty: 'easy' | 'medium' | 'hard' | null, fixSteps: string[] = []) => ({ finding: 'Found', whyItMatters: null, howToFix, fixSteps, difficulty, sourceUrl: 'https://example.edu' });
+    const fees = ['Add the fee to the page.', 'List any other charges.'];
+    assert.deepEqual(fixAdvice([part('BBA', 'weak', 9, { detail: detail(fees.join(' '), 'easy', fees) }), part('MBA', 'weak', 9, { detail: detail(fees.join(' '), 'medium', fees) })]), [
+      { programs: [], steps: fees, difficulty: 'medium' },
     ]);
     assert.deepEqual(
       fixAdvice([
-        part('BBA', 'weak', 9, { detail: detail('Add the BBA fees.', 'easy') }),
+        part('BBA', 'weak', 9, { detail: detail('Add the BBA fees.', 'easy', ['Add the BBA fees.']) }),
         part('MBA', 'okay', 20, { detail: detail('Add the MBA placements.', 'hard') }),
         part('BCA', 'strong', 30, { detail: detail(null, null) }),
       ]),
       [
-        { text: 'Add the BBA fees.', programs: ['BBA'], difficulty: 'easy' },
-        { text: 'Add the MBA placements.', programs: ['MBA'], difficulty: 'hard' },
+        { programs: ['BBA'], steps: ['Add the BBA fees.'], difficulty: 'easy' },
+        // Saved before steps: the paragraph is the one step.
+        { programs: ['MBA'], steps: ['Add the MBA placements.'], difficulty: 'hard' },
       ],
     );
     assert.deepEqual(fixAdvice([part('BBA', 'strong', 30)]), []);

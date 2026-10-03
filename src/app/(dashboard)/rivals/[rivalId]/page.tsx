@@ -102,7 +102,7 @@ export default async function RivalPage({ params }: { params: Promise<{ rivalId:
               <KpiNumber value={theyLead.length} suffix={theyLead.length === 1 ? 'check' : 'checks'} />
               <KpiNote>You lead on {youLead.length}. Level on the rest.</KpiNote>
             </KpiCard>
-            <KpiCard label="Admission push" className={styles.kpiWide}>
+            <KpiCard label="Admissions open" className={styles.kpiWide}>
               <p className={styles.kpiText}>{admissionPushText(push?.detectedAt ?? null)}</p>
               {push?.description ? <KpiNote>{push.description}</KpiNote> : null}
             </KpiCard>

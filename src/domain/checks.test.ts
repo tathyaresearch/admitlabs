@@ -59,6 +59,8 @@ describe('check catalogue (spec 7.2)', () => {
     assert.equal(checkAction('fees_shown', ['BBA', 'MBA'], 'college'), 'Show your full BBA and MBA fees');
     assert.equal(checkAction('fees_shown', [], 'college'), 'Show your full fees');
     assert.equal(checkAction('program_page', [], 'college'), 'Give each program a page of its own');
+    assert.equal(checkAction('program_page', ['BBA'], 'college'), 'Give BBA a page of its own');
+    assert.equal(checkAction('program_page', ['BBA', 'MBA'], 'college'), 'Give BBA and MBA each a page of its own');
     assert.equal(checkAction('google_search', ['BBA', 'BCA', 'MBA'], 'college'), 'Get found when students search for BBA, BCA and MBA');
     assert.equal(checkAction('approvals', [], 'skilling'), 'Show your skilling recognition on your website');
     for (const key of CHECK_KEYS) {

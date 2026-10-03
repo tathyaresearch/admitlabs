@@ -144,7 +144,7 @@ const SAMPLE_WORKING: ListItem[] = [
         programName: 'BBA',
         points: 18,
         maxPoints: 30,
-        detail: { finding: 'Position 8 on Google for “BBA in Guwahati”.', whyItMatters: null, howToFix: null, difficulty: null, sourceUrl: 'https://search.example' },
+        detail: { finding: 'Position 8 on Google for “BBA in Guwahati”.', whyItMatters: null, howToFix: null, fixSteps: [], difficulty: null, sourceUrl: 'https://search.example' },
       }),
     ],
   },
@@ -160,7 +160,7 @@ const SAMPLE_WORKING: ListItem[] = [
       samplePart({
         checkId: 'w2',
         previousResult: 'weak',
-        detail: { finding: 'About 2.1 posts a week over the last 4 weeks. 47% of them are reels.', whyItMatters: null, howToFix: null, difficulty: null, sourceUrl: 'https://instagram.example' },
+        detail: { finding: 'About 2.1 posts a week over the last 4 weeks. 47% of them are reels.', whyItMatters: null, howToFix: null, fixSteps: [], difficulty: null, sourceUrl: 'https://instagram.example' },
       }),
     ],
   },
@@ -184,7 +184,8 @@ const SAMPLE_FIXES: ListItem[] = [
         detail: {
           finding: 'Only general claims about placements for BBA, with no numbers.',
           whyItMatters: 'Placements and results are the biggest worry for most students and parents.',
-          howToFix: 'Replace general claims with real numbers for BBA.',
+          howToFix: 'Collect real numbers for BBA: how many were placed, where, and in which year. Replace the general claims on your website with those numbers.',
+          fixSteps: ['Collect real numbers for BBA: how many were placed, where, and in which year.', 'Replace the general claims on your website with those numbers.'],
           difficulty: 'medium',
           sourceUrl: 'https://northbank-college.example/placements',
         },
@@ -220,7 +221,7 @@ SAMPLE_FIXES.push({
       result: 'weak',
       points: 6,
       maxPoints: 20,
-      detail: { finding: 'A Google profile with 4 reviews.', whyItMatters: null, howToFix: null, difficulty: 'medium', sourceUrl: 'https://maps.example' },
+      detail: { finding: 'A Google profile with 4 reviews.', whyItMatters: null, howToFix: null, fixSteps: [], difficulty: 'medium', sourceUrl: 'https://maps.example' },
     }),
   ],
 });
@@ -682,7 +683,7 @@ export default async function DesignSystemPage() {
                 <div className={styles.resultsRow}>
                   <span className={styles.caption}>points</span>
                   <ResultBar result="okay" points={18} max={30} />
-                  <ResultBar result="varies" points={21} max={30} />
+                  <ResultBar result="missing" points={0} max={30} />
                 </div>
               </div>
             </Card>
@@ -755,7 +756,7 @@ export default async function DesignSystemPage() {
               <Specimen label="What's working">
                 <WorkingRows items={SAMPLE_WORKING} />
               </Specimen>
-              <Specimen label="Checks, one row each: a program check that varies shows the average points">
+              <Specimen label="Checks, one row each: a program check whose programs differ shows its weakest program">
                 <ChecksTable view={SAMPLE_VIEW} />
               </Specimen>
             </div>

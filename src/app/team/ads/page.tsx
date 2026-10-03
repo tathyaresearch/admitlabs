@@ -13,10 +13,10 @@ import styles from './ads.module.css';
 // The title only names the page for the team, so the team area stays invisible to everyone else.
 export async function generateMetadata(): Promise<Metadata> {
   const viewer = await getViewer();
-  return { title: viewer?.teamRole ? 'Manual entry' : 'Page not found' };
+  return { title: viewer?.teamRole ? 'Rival ads' : 'Page not found' };
 }
 
-// Manual entry: what rivals promise in their ads, added by hand, then the latest entries.
+// Rival ads: what rivals promise in their ads, added by hand, then the latest entries.
 export default async function RivalAdsPage() {
   await requireTeamViewer();
   const supabase = await createClient();
@@ -36,8 +36,8 @@ export default async function RivalAdsPage() {
   return (
     <div className={styles.page}>
       <PageHead
-        title="Manual entry"
-        question="What a provider cannot collect yet, entered by hand."
+        title="Rival ads"
+        question="What your rivals promise in their ads, entered by hand until Drishti can collect it."
         caption={['For now, what rivals promise in their ads', 'Paid and Client institutions tracking the rival see each one with its link and date']}
       />
 

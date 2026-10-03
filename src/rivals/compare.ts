@@ -5,6 +5,7 @@
 // share of their points each side earned, so a college and a skilling institute (whose weights
 // differ) still compare fairly. Program checks compare the programs both sides offer.
 
+import { weakestPart } from '../audit/view.ts';
 import { CHECKS, compareChecks as byCheckOrder } from '../domain/checks.ts';
 import type { CheckKey, CheckResult, Pillar } from '../domain/types.ts';
 
@@ -80,7 +81,8 @@ export interface CheckScore {
 
 export type SideSummary =
   | { kind: 'single'; result: CheckResult; share: number }
-  | { kind: 'varies'; share: number }
+  /** Programs that differ: their average share, and the weakest program by name. */
+  | { kind: 'varies'; share: number; weakest: { result: CheckResult; share: number; programName: string | null } }
   | { kind: 'none' };
 
 export type Lead = 'them' | 'you' | 'level' | 'unknown';
@@ -109,7 +111,9 @@ function summarize(parts: readonly CheckScore[]): SideSummary {
   const first = parts[0];
   if (!first) return { kind: 'none' };
   const average = parts.reduce((sum, part) => sum + share(part), 0) / parts.length;
-  return parts.every((part) => part.result === first.result) ? { kind: 'single', result: first.result, share: average } : { kind: 'varies', share: average };
+  if (parts.every((part) => part.result === first.result)) return { kind: 'single', result: first.result, share: average };
+  const weakest = weakestPart(parts) ?? first;
+  return { kind: 'varies', share: average, weakest: { result: weakest.result, share: share(weakest), programName: weakest.programName } };
 }
 
 function averageMax(parts: readonly CheckScore[]): number {

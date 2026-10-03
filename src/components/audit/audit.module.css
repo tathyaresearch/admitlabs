@@ -406,12 +406,6 @@ a.tab:hover {
   color: var(--text-muted);
 }
 
-.was {
-  font: var(--type-caption);
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
 /* Quiet rows: the rest of the fixes, and what's working. */
 
 /* A list of rows sits in one card. */
@@ -616,13 +610,21 @@ a.tab:hover {
 
 .groupTitle {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1) var(--space-2);
   font: var(--type-card);
   letter-spacing: var(--tracking-section);
 }
 
 .groupTitle > svg {
+  color: var(--text-muted);
+}
+
+/* The question a part answers, beside its name. */
+.groupQuestion {
+  font: var(--type-caption);
+  letter-spacing: normal;
   color: var(--text-muted);
 }
 
@@ -742,7 +744,7 @@ a.tab:hover {
   gap: var(--space-2);
 }
 
-/* Check detail panel */
+/* The rival check panel (../rivals/RivalCheckPanel.tsx). The Audit's own check panel is in ./panel.module.css. */
 
 .panelStack {
   display: grid;
@@ -757,39 +759,6 @@ a.tab:hover {
 .panelLabel {
   font: var(--type-caption-strong);
   color: var(--text-muted);
-}
-
-.panelLines {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.panelLine {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1) var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface-nested);
-  border-radius: var(--radius-md);
-}
-
-.panelLineName {
-  flex: 1 1 100%;
-  font: var(--type-strong);
-}
-
-.panelAdvice,
-.panelFound {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.panelAdvice + .panelAdvice,
-.panelFound + .panelFound {
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--line-raised);
 }
 
 .panelPart {
@@ -817,41 +786,7 @@ a.tab:hover {
   letter-spacing: var(--tracking-section);
 }
 
-.points {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-/* "each", after the points when one line covers several programs. */
-.each {
-  font: var(--type-caption);
-}
-
 .strongNote {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-.lockedDetail {
-  display: grid;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  background: var(--surface-sunken);
-  border-radius: var(--radius-md);
-}
-
-.lockedShapes {
-  filter: blur(5px);
-  opacity: 0.55;
-  user-select: none;
-  pointer-events: none;
-}
-
-.lockedText {
   font: var(--type-small);
   color: var(--text-muted);
 }
@@ -877,13 +812,25 @@ a.tab:hover {
   background: var(--line-medium);
 }
 
-/* Fix these first, as a list: the pillar and results above the name, points and effort on the right. */
+/* Fix these first, as a list: the check and its results above what to do, points and effort on the right. */
 
 .fixKicker {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-1) var(--space-3);
+}
+
+/* The check a fix is about, as a small label. */
+.fixCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text);
+}
+
+.fixCheck svg {
+  flex: none;
 }
 
 .fixAside {

@@ -188,11 +188,15 @@ describe('fix advice bank', () => {
           const advice = await mockAnalysis.fixAdvice({ checkKey: key, result, facts: facts as never, institutionType, programName: isProgramCheck(key) ? 'BBA' : null });
           assert.ok(advice.whyItMatters.length > 20, key);
           assert.equal(hasDashes(advice.whyItMatters + (advice.howToFix ?? '')), false, `${key} ${result}`);
-          if (result === 'strong') assert.deepEqual([advice.howToFix, advice.difficulty], [null, null]);
+          if (result === 'strong') assert.deepEqual([advice.howToFix, advice.steps, advice.difficulty], [null, [], null]);
           else {
             assert.ok(advice.howToFix && advice.howToFix.length > 20, `${key} ${result}`);
             assert.ok(advice.difficulty, `${key} ${result}`);
             assert.doesNotMatch(advice.howToFix ?? '', /this program/, 'program checks name the program');
+            // Short numbered steps, one thing each, that read as the same advice in one paragraph.
+            assert.ok(advice.steps.length >= 2 && advice.steps.length <= 4, `${key} ${result}: ${advice.steps.length} steps`);
+            for (const step of advice.steps) assert.match(step, /^[A-Z“].{8,140}[.?]$/, `${key} ${result}: ${step}`);
+            assert.equal(advice.howToFix, advice.steps.join(' '), `${key} ${result}`);
           }
         }
       }
@@ -208,6 +212,7 @@ describe('fix advice bank', () => {
       programName: null,
     });
     assert.match(advice.whyItMatters, /skilling recognition/);
-    assert.match(advice.howToFix ?? '', /You hold Skill India but do not show it/);
+    assert.deepEqual(advice.steps, ['Add Skill India to your website. You hold it but do not show it yet.', 'Add the certificate or an official link for each one you show.']);
+    assert.equal(advice.howToFix, advice.steps.join(' '));
   });
 });

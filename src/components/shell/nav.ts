@@ -39,7 +39,7 @@ export const TEAM_NAV: readonly NavSection[] = [
     items: [
       { href: '/team', label: 'Institutions', icon: 'institution' },
       { href: '/team/bulk', label: 'Bulk Audit', icon: 'grid' },
-      { href: '/team/ads', label: 'Manual entry', icon: 'rivals' },
+      { href: '/team/ads', label: 'Rival ads', icon: 'rivals' },
       { href: '/team/enquiries', label: 'Enquiries', icon: 'enquiry' },
       { href: '/team/users', label: 'Team users', icon: 'team' },
     ],

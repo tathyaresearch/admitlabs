@@ -168,6 +168,8 @@ describe('check by check', () => {
     );
     const page = find(items, 'program_page');
     assert.equal(page.you.kind, 'varies');
+    // The weakest program speaks for a side whose programs differ.
+    assert.deepEqual(page.you.kind === 'varies' ? page.you.weakest : null, { result: 'weak', share: 0.3, programName: 'BCA' });
     assert.deepEqual(page.programs, ['BCA', 'MBA']);
     // Yours average 0.65 of the points, theirs 0.6.
     assert.equal(page.lead, 'you');

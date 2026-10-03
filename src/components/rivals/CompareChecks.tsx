@@ -13,17 +13,28 @@ import { LEAD_WORDS } from '@/rivals/text';
 import audit from '@/components/audit/audit.module.css';
 import styles from './rivals.module.css';
 
-/** A side's result in words: "Strong", "Varies by program", "Not checked". */
+/** A side's result in words: "Strong", "Weak (weakest: BCA)", "Not checked". */
 export function sideText(side: SideSummary): string {
   if (side.kind === 'single') return RESULT_LABELS[side.result];
-  return side.kind === 'varies' ? 'Varies by program' : 'Not checked';
+  if (side.kind === 'varies') return `${RESULT_LABELS[side.weakest.result]}${side.weakest.programName ? ` (weakest: ${side.weakest.programName})` : ''}`;
+  return 'Not checked';
 }
 
+/** A side's result: its bar and word. When its programs differ, the weakest program's, named under it. */
 export function Side({ side, label }: { side: SideSummary; label: string }) {
   return (
     <span className={styles.side}>
       <span className={styles.sideLabel}>{label}</span>
-      {side.kind === 'none' ? <span className={audit.varies}>Not checked</span> : <ResultBar result={side.kind === 'single' ? side.result : 'varies'} share={side.share} size="sm" />}
+      {side.kind === 'none' ? (
+        <span className={audit.varies}>Not checked</span>
+      ) : side.kind === 'single' ? (
+        <ResultBar result={side.result} share={side.share} size="sm" />
+      ) : (
+        <>
+          <ResultBar result={side.weakest.result} share={side.weakest.share} size="sm" />
+          {side.weakest.programName ? <span className={styles.sideNote}>Weakest: {side.weakest.programName}</span> : null}
+        </>
+      )}
     </span>
   );
 }

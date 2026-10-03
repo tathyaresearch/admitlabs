@@ -122,13 +122,7 @@ export const RESULT_LABELS: Readonly<Record<CheckResult, string>> = {
   missing: 'Missing',
 };
 
-export const DIFFICULTY_LABELS: Readonly<Record<Difficulty, string>> = {
-  easy: 'Easy',
-  medium: 'Medium',
-  hard: 'Hard',
-};
-
-/** How big a job something is, in Home's words: Quick, Medium, Big. */
+/** How big a job a fix is, in the product's words: Quick, Medium, Big (stored as easy, medium, hard). */
 export const EFFORT_LABELS: Readonly<Record<Difficulty, string>> = {
   easy: 'Quick',
   medium: 'Medium',

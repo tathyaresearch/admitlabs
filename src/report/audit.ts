@@ -70,8 +70,8 @@ export function buildAuditPdf(shared: SharedAudit, options: { madeAt: Date; free
     cover: { score: shared.audit.scores.overall, label: view.label, verdict: auditVerdict(shared.audit.scores) },
     pillars: PILLARS.map((pillar) => ({ pillar, name: PILLAR_LABELS[pillar], score: shared.audit.scores[pillar], label: scoreLabel(shared.audit.scores[pillar]) })),
     working: working.map(workingRow),
-    topFixes: topFixes.map((item) => fixOf(item)),
-    moreFixes: moreFixes.map((item) => ({ ...fixOf(item), howToFix: null, difficulty: null })),
+    topFixes: topFixes.map((item) => fixOf(item, type)),
+    moreFixes: moreFixes.map((item) => ({ ...fixOf(item, type), howToFix: null, difficulty: null })),
     programs: programRows(shared.audit, { institutionType: type, programNames: shared.programNames }),
     morePrograms: Math.max(0, shared.audit.programs.length - REPORT_LIMITS.programs),
     checks: view.areas.map((area) => ({

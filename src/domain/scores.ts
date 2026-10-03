@@ -56,3 +56,10 @@ export function resultShareText(result: CheckResult, config: Pick<ScoringConfig,
   if (share <= 0) return 'Earns no points yet';
   return `Earns ${Math.round(share * 100)}% of the points`;
 }
+
+/** The score's bands in words, top first: "Strong from 70, Needs work from 40, Getting started below 40". */
+export function bandsText(config: Pick<ScoringConfig, 'labels'> = SCORING_V1): string {
+  const bands = [...config.labels].sort((a, b) => b.min - a.min);
+  const next = (index: number) => bands[index - 1]?.min ?? 0;
+  return bands.map((band, index) => (band.min > 0 ? `${band.label} from ${band.min}` : `${band.label} below ${next(index)}`)).join(', ');
+}

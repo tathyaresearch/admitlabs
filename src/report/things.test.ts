@@ -16,7 +16,7 @@ function part(programName: string | null, result: CheckResult, points: number, m
     points,
     maxPoints,
     checkedAt: '2026-09-15T04:30:00.000Z',
-    detail: { finding: 'Found.', whyItMatters: 'It matters.', howToFix, difficulty: 'medium', sourceUrl: 'https://site.example/page' },
+    detail: { finding: 'Found.', whyItMatters: 'It matters.', howToFix, fixSteps: [howToFix], difficulty: 'medium', sourceUrl: 'https://site.example/page' },
   };
 }
 
@@ -127,7 +127,7 @@ describe('3 things to do this month', () => {
     const many = fix(1, 'google_search', 5, ['BBA', 'BCA', 'MBA', 'B.Com'].map((name) => part(name, 'weak', 5, 25)));
     assert.equal(threeThings({ ...base, fixes: [many] })[0]?.title, 'Get found when students search for your programs');
     const three = fix(1, 'program_page', 5, ['BBA', 'BCA', 'MBA'].map((name) => part(name, 'weak', 5, 15)));
-    assert.equal(threeThings({ ...base, fixes: [three] })[0]?.title, 'Give BBA, BCA and MBA a page of its own');
+    assert.equal(threeThings({ ...base, fixes: [three] })[0]?.title, 'Give BBA, BCA and MBA each a page of its own');
   });
 
   test('each thing carries what Home shows beside it', () => {

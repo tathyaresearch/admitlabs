@@ -115,7 +115,7 @@ export function parseSharedLink(value: unknown): SharedLink | null {
       checkedAt,
       detail:
         finding && sourceUrl
-          ? { finding, whyItMatters: null, howToFix: text(entry.howToFix), difficulty: oneOf(entry.difficulty, DIFFICULTIES), sourceUrl }
+          ? { finding, whyItMatters: null, howToFix: text(entry.howToFix), fixSteps: [], difficulty: oneOf(entry.difficulty, DIFFICULTIES), sourceUrl }
           : null,
     });
   }

@@ -21,7 +21,9 @@ export interface FixAdviceInput<K extends CheckKey = CheckKey> {
 export interface FixAdvice {
   /** Why this matters to a student, in one or two plain sentences. */
   whyItMatters: string;
-  /** What to do next. Null when the result is already Strong. */
+  /** What to do next, in short steps, one thing each. Empty when the result is already Strong. */
+  steps: string[];
+  /** The same steps as one paragraph. Null when the result is already Strong. */
   howToFix: string | null;
   /** How hard the fix is. Null when the result is already Strong. */
   difficulty: Difficulty | null;

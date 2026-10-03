@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
-import { bandStarts, bandTicks, nextBandText } from '../domain/scores.ts';
+import { bandStarts, bandsText, bandTicks, nextBandText } from '../domain/scores.ts';
 import { arcPath, FIGURE_EM, GAUGE_HEADROOM, GAUGE_VIEWBOX, scoreGauge, SCORE_GAUGE, SCORE_TEXT } from './gauge.ts';
 
 // The large score gauge. Same shape on screen and in the PDFs, with its number part of the drawing.
@@ -63,6 +63,8 @@ describe('the score gauge', () => {
       { start: 40, lines: ['Needs work', 'from 40'] },
       { start: 70, lines: ['Strong', 'from 70'] },
     ]);
+    // The same bands in one line, for "What do these mean?".
+    assert.equal(bandsText(), 'Strong from 70, Needs work from 40, Getting started below 40');
     const shape = scoreGauge(73, bandStarts());
     assert.equal(shape.tickLabels.length, shape.notches.length);
     shape.tickLabels.forEach((label, index) => {

@@ -20,9 +20,10 @@ import { PointsValue } from '@/components/ui/Results';
 import { Tabs } from '@/components/ui/Tabs';
 import { limitFor } from '@/config/entitlements';
 import { plural } from '@/domain/format';
-import { DIFFICULTY_LABELS, PILLAR_LABELS, type InstitutionType, type Tier } from '@/domain/types';
+import { EFFORT_LABELS, type CheckKey, type InstitutionType, type Tier } from '@/domain/types';
+import { fixThing } from '@/report/things';
 import { SectionHead } from './AuditHeader';
-import { CheckPanel } from './CheckPanel';
+import { CheckPanel, type PanelFix, type PanelMarking } from './CheckPanel';
 import { ChecksTable } from './ChecksTable';
 import { HistorySection, type HistoryEntry } from './HistorySection';
 import { FixRows, WorkingRows } from './Lists';
@@ -57,6 +58,8 @@ interface AuditScreenProps {
   /** What the institution added in Settings, shown as added by you on the checks it relates to. */
   details?: AddedDetails | null;
   institutionType: InstitutionType;
+  /** Mark as done in the check panel. */
+  marking?: PanelMarking | null;
 }
 
 /** What was added that relates to each part of each check, by the part's check id. */
@@ -78,30 +81,48 @@ function addedByPart(view: AuditView, details: AddedDetails | null | undefined, 
 }
 
 /**
- * A fix as a row of the "what to do next" list: its pillar and results, what was found, and the
- * points it could add. It opens the check, or nothing where a page has no check panel.
+ * A fix as a row of the "what to do next" list, named as on Home: what to do as the title, with the
+ * check and its results above it, what was found, the points it could add and the effort. It opens
+ * the check, or nothing where a page has no check panel.
  */
-export function fixStep(item: ListItem, href: string | null = `?check=${item.key}`): NextStep {
+export function fixStep(item: ListItem, institutionType: InstitutionType, href: string | null = `?check=${item.key}`): NextStep {
   const finding = item.parts.find((part) => part.detail)?.detail?.finding ?? '';
   return {
     key: item.key,
     kicker: (
       <span className={styles.fixKicker}>
-        <span>{PILLAR_LABELS[item.pillar]}</span>
+        <span className={styles.fixCheck}>
+          <CheckIcon check={item.key} size={14} />
+          {item.name}
+        </span>
         <PartResults parts={item.parts} showNames={item.parts.length > 1} />
       </span>
     ),
-    icon: <CheckIcon check={item.key} size={16} />,
-    title: item.name,
+    title: fixThing(item, institutionType).title,
     detail: finding,
     aside: (
       <span className={styles.fixAside}>
         <PointsValue kind="gain" points={item.points} />
-        {item.difficulty ? <span className={styles.fixDifficulty}>{DIFFICULTY_LABELS[item.difficulty]} to fix</span> : null}
+        {item.difficulty ? <span className={styles.fixDifficulty}>Effort {EFFORT_LABELS[item.difficulty]}</span> : null}
       </span>
     ),
     href,
   };
+}
+
+/** Each fix as the check panel shows it: its name as on Home, the points, the effort and the programs. */
+function panelFixes(view: AuditView, institutionType: InstitutionType): Partial<Record<CheckKey, PanelFix>> {
+  return Object.fromEntries(
+    view.fixes.map((item) => [
+      item.key,
+      {
+        title: fixThing(item, institutionType).title,
+        points: item.points,
+        difficulty: item.difficulty,
+        programs: [...new Set(item.parts.flatMap((part) => (part.programName ? [part.programName] : [])))],
+      },
+    ]),
+  );
 }
 
 export function AuditScreen(props: AuditScreenProps) {
@@ -131,6 +152,7 @@ export function AuditScreen(props: AuditScreenProps) {
         side="locked"
         note={props.note}
         checkLinks="?check="
+        help
         scoreLabel={props.scoreCaption}
         historyLabel={props.historyLabel}
       />
@@ -140,7 +162,7 @@ export function AuditScreen(props: AuditScreenProps) {
         icon="wrench"
         title="Fix these first"
         description="The changes that could add the most to your score. Open one to see how."
-        steps={fixes.slice(0, TOP_FIXES).map((item) => fixStep(item))}
+        steps={fixes.slice(0, TOP_FIXES).map((item) => fixStep(item, props.institutionType))}
         action={
           fixes.length > TOP_FIXES ? (
             <a href="#details" className={styles.headLink}>
@@ -174,7 +196,7 @@ export function AuditScreen(props: AuditScreenProps) {
                       {hiddenFixes > 0 ? ` ${plural(hiddenFixes, 'more fix', 'more fixes')}, ranked, come with Paid.` : ''}
                     </p>
                   ) : (
-                    <FixRows items={fixes} />
+                    <FixRows items={fixes} institutionType={props.institutionType} />
                   )}
                 </div>
               ),
@@ -207,7 +229,12 @@ export function AuditScreen(props: AuditScreenProps) {
       </section>
 
       <Suspense fallback={null}>
-        <CheckPanel rows={view.areas.flatMap((area) => area.rows)} added={addedByPart(view, props.details, props.institutionType)} />
+        <CheckPanel
+          rows={view.areas.flatMap((area) => area.rows)}
+          added={addedByPart(view, props.details, props.institutionType)}
+          fixes={panelFixes(view, props.institutionType)}
+          marking={props.marking ?? null}
+        />
       </Suspense>
     </div>
   );
