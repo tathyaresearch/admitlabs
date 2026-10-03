@@ -3,7 +3,7 @@
 // trends and questions ranked together, the usual five worries added up across programs, and
 // the content ideas built on the most asked questions.
 
-import type { DemandKind, Language } from '../domain/types.ts';
+import { DIFFICULTIES, IDEA_FORMATS, type DemandKind, type Difficulty, type IdeaFormat, type Language } from '../domain/types.ts';
 import type { WorryTheme } from '../sample/demand.ts';
 import type { SeasonStage, SeasonStageKey } from './season.ts';
 
@@ -39,9 +39,14 @@ export interface IdeaRow {
   key: string;
   text: string;
   programName: string;
+  /** The pull's month, 'YYYY-MM'. */
+  month: string;
   /** The real student question the idea is built on. */
   question: DemandRow | null;
   sourceUrl: string;
+  /** What to make and how big a job it is, as the analysis provider wrote them. Null on older pulls. */
+  format: IdeaFormat | null;
+  effort: Difficulty | null;
 }
 
 export interface DemandView {
@@ -61,6 +66,9 @@ export interface DemandView {
 }
 
 const byText = (a: { text: string }, b: { text: string }) => a.text.localeCompare(b.text);
+
+/** A stored word, when it is one of the known ones. */
+const oneOf = <T extends string>(known: readonly T[], value: unknown): T | null => (known.includes(value as T) ? (value as T) : null);
 
 function worries(rows: readonly DemandRow[]): WorryRow[] {
   const known = new Map<WorryTheme, WorryRow>();
@@ -91,7 +99,16 @@ function ideas(rows: readonly DemandRow[], questions: readonly DemandRow[], sing
     .map((row): IdeaRow => {
       const basedOn = typeof row.meta.basedOn === 'string' ? row.meta.basedOn : null;
       const question = questions.find((candidate) => candidate.programKey === row.programKey && candidate.text === basedOn) ?? null;
-      return { key: row.id, text: row.text, programName: row.programName, question, sourceUrl: row.sourceUrl };
+      return {
+        key: row.id,
+        text: row.text,
+        programName: row.programName,
+        month: row.month,
+        question,
+        sourceUrl: row.sourceUrl,
+        format: oneOf(IDEA_FORMATS, row.meta.format),
+        effort: oneOf(DIFFICULTIES, row.meta.effort),
+      };
     });
   if (singleProgram) {
     const rank = new Map(rows.filter((row) => row.kind === 'idea').map((row) => [row.id, row.rank ?? 99]));

@@ -6,7 +6,7 @@ import type { CheckKey, CheckResult, Pillar, ScoringFamily } from './types.ts';
 export type PillarWeights = Readonly<Partial<Record<CheckKey, number>>>;
 
 export interface ScoreLabelBand {
-  label: 'Strong' | 'Needs work' | 'At risk';
+  label: 'Strong' | 'Needs work' | 'Getting started';
   min: number;
   max: number;
 }

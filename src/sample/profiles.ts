@@ -5,11 +5,11 @@
 // letters cover April to September 2026 in order.
 //
 // Target bands for September 2026 under scoring v1:
-//   Strong:     Eastgate University (about 73), Silverline College (about 74)
-//   Needs work: Northbank College BBA (about 46, up from 41 in June), Brightpath Skills
-//               (about 63, up from about 28 in April), Highfield University (about 51),
-//               Cedar Skill Institute (about 50)
-//   At risk:    Loomcraft Skills Institute (about 32), Riverbend College (about 27)
+//   Strong:          Eastgate University (about 73), Silverline College (about 74)
+//   Needs work:      Northbank College BBA (about 46, up from 41 in June), Brightpath Skills
+//                    (about 63, up from about 28 in April), Highfield University (about 51),
+//                    Cedar Skill Institute (about 50)
+//   Getting started: Loomcraft Skills Institute (about 32), Riverbend College (about 27)
 
 import { isProgramCheck, type InstitutionCheckKey, type ProgramCheckKey } from '../domain/checks.ts';
 import type { CheckKey, CheckResult } from '../domain/types.ts';
@@ -51,7 +51,7 @@ export const SAMPLE_PROFILES: Readonly<Record<string, SampleProfile>> = {
     },
   },
 
-  // Client. Starts At risk in April and climbs as the AdmitLabs team fixes things.
+  // Client. Starts in Getting started in April and climbs as the AdmitLabs team fixes things.
   'brightpath-skills': {
     institution: {
       instagram_activity: 'WWOOOO',

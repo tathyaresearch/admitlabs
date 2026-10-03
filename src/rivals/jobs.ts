@@ -254,6 +254,7 @@ export async function writeRivalActions(db: Db, institutionId: string, asOf: Dat
     detail: texts[index]?.detail ?? null,
     rival_institution_id: item.type === 'gap' ? (item.rivals[0]?.id ?? null) : item.rival.id,
     check_key: item.type === 'gap' ? item.key : null,
+    effort: texts[index]?.effort ?? null,
   }));
 
   const saved = await db.rpc('record_actions', { p_institution: institutionId, p_month: monthColumn(asOf), p_feature: 'rivals', p_items: json(items) });

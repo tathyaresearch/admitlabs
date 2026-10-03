@@ -46,7 +46,19 @@ Log in with any sample email:
 | team@admitlabs.example | AdmitLabs team |
 | admin@admitlabs.example | AdmitLabs admin |
 
-Any other email signs up at `/signup` and goes to onboarding: the institution's details, then the one program a free Audit covers, then the first Audit runs. Onboarding shows the Drishti logo, with its eye, at the top.
+Any other email signs up at `/signup` and goes to onboarding: the institution's details, then the one program a free Audit covers with what happens next, then the first Audit runs and Home opens with Start here. Onboarding shows the Drishti logo, with its eye, at the top.
+
+## Home
+
+Home answers "How are we doing this month?" with what to do first (`src/app/(dashboard)/page.tsx`, `src/components/home`):
+
+- The one-line answer, then **Start here** on a first visit: your score, your first fix and your rivals, each ticked when done, until the person closes it ("Got it, hide this", saved per person in `memberships.guide_closed_at`). Northbank's and Silverline's owners still see it in the sample.
+- **Do these 3 things this month** (Paid and Client: one from the Audit, one from rivals, one from what students ask) or **Fix these first** (Free: the top 3 fixes), ordered by the points each could add. Each says where it comes from, the check (a small label), the programs, the points (or how often students asked, for a content idea, with its format: post, reel, video, FAQ or web page) and the effort: Quick, Medium or Big.
+- **Mark as done** (owner only, `mark_done` and `undo_done`): a fix waits for the next own Audit, which checks it (`record_audit` links the mark to that Audit; `src/audit/marks.ts` reads what it found). Any other thing is kept with its month. In the sample, Northbank marked two fixes done in August: its September Audit confirmed one (Easy enquiry, Weak to Okay, 2 points added) and did not find the other yet (its BBA fees). Eastgate's placement results are marked done and waiting.
+- **What changed** since the last Audit (`/#changed`, where "See what changed" lands): the score, each check that moved with its result before and after, the fixes marked done that the Audit checked, and for Paid and Client the rivals' moves and the big jumps in searches.
+- Then the score (the gauge, the band, "Up 14 since April", how far the next band is, and the three parts as split bars with what to fix first), the rival snapshot and the demand highlight. The score month by month and every check by name are on the Audit.
+
+On the Audit, each check is either to fix or working (Strong everywhere), so the two tab counts add up to all checks. A score from 0 to 39 is labelled Getting started.
 
 ## Try the Audit on each tier
 
@@ -127,7 +139,7 @@ One PDF a month (spec section 12), readable in 5 minutes: 7 pages, never more th
 
 - **Who gets one:** Paid and Client, made on the 1st for the month just ended, from what was known at the end of that month. Making a month again replaces it. After a Paid plan ends, past reports stay downloadable; no new ones are made.
 - **Where it lives:** a private storage bucket (`reports`). `/reports` lists them; a download asks for a link that works for one minute, as the signed-in person, so the database checks membership every time. Free sees one "Paid gets a monthly report" card, with a link to the sample report.
-- **3 things to do this month:** the biggest Audit fix, the top Rivals lesson on another check, and the top content idea from Demand (`src/report/things.ts`). The same list shows on Home for Paid and Client.
+- **3 things to do this month:** the biggest Audit fix, the top Rivals lesson on another check, and the top content idea from Demand (`src/report/things.ts`). The same three show on Home for Paid and Client, there ordered by the points each could add, with Mark as done.
 - **The page cap:** every list has a limit and every long sentence a line limit. A report that would still pass 8 pages is made again in its compact form (3 fixes in detail instead of 5, and no pillar chart on the rivals page).
 - **Charts and icons, as on the dashboard:** the overall score on its gauge, each result as a thin bar of the points it earns with the word, check and pillar icons, a bar for what each fix could add, each pillar against every rival, bars for how fast trends rise and how often questions are asked, and each source's platform mark.
 - A new report adds "Your September report is ready." to Notifications.

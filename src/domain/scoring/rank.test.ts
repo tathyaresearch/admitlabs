@@ -3,7 +3,7 @@ import { describe, test } from 'node:test';
 import { SCORING_V1 } from '../../config/scoring.v1.ts';
 import { INSTITUTION_CHECK_KEYS, PROGRAM_CHECK_KEYS, type InstitutionCheckKey, type ProgramCheckKey } from '../checks.ts';
 import type { CheckKey, CheckResult, Difficulty } from '../types.ts';
-import { itemPoints, outcomeRanks, rankFixes, rankWorking } from './rank.ts';
+import { itemPoints, outcomeRanks, rankFixes, rankOkay, rankWorking, topWorking } from './rank.ts';
 import { scoreAudit, type CheckOutcome } from './score.ts';
 
 type InstitutionResults = Record<InstitutionCheckKey, CheckResult>;
@@ -44,27 +44,22 @@ const NORTHBANK = outcomes(
 );
 
 describe("what's working", () => {
-  test('Northbank has nothing Strong, so the best Okay results fill in: Google search, Instagram, Review rating', () => {
-    const working = rankWorking(NORTHBANK, 1);
-    assert.deepEqual(keys(working.slice(0, 3)), ['google_search', 'instagram_activity', 'review_rating']);
-    assert.ok(working.every((item) => item.strength === 'okay'));
-    assert.deepEqual(
-      working.map((item) => item.rank),
-      working.map((_, index) => index + 1),
-    );
-    assert.equal(itemPoints(working[0] as never, 1), 6); // 18 points in Discovered is 6 on the overall score
-  });
-
-  test('Strong results come first, ranked by the points they earn; Okay results follow', () => {
+  test('only checks that are Strong, ranked by the points they earn', () => {
     const working = rankWorking(
       outcomes(everyInstitution('weak', { review_rating: 'strong', other_socials: 'strong', instagram_activity: 'okay' }), everyProgram('weak', { fees_shown: 'strong' })),
       1,
     );
-    assert.deepEqual(keys(working), ['review_rating', 'fees_shown', 'other_socials', 'instagram_activity']);
+    assert.deepEqual(keys(working), ['review_rating', 'fees_shown', 'other_socials']);
+    assert.ok(working.every((item) => item.strength === 'strong'));
     assert.deepEqual(
-      working.map((item) => item.strength),
-      ['strong', 'strong', 'strong', 'okay'],
+      working.map((item) => item.rank),
+      [1, 2, 3],
     );
+    assert.equal(itemPoints(working[0] as never, 1), 25 / 3); // 25 points in Trusted is about 8 on the overall score
+  });
+
+  test('Northbank has nothing Strong yet, so its list is empty', () => {
+    assert.deepEqual(rankWorking(NORTHBANK, 1), []);
   });
 
   test('ties keep the spec order: Discovered before Trusted before Chosen', () => {
@@ -73,20 +68,92 @@ describe("what's working", () => {
     assert.deepEqual(keys(working), ['instagram_activity', 'review_rating']);
   });
 
-  test('nothing Strong or Okay means an empty list', () => {
-    assert.deepEqual(rankWorking(outcomes(everyInstitution('weak'), everyProgram('missing')), 1), []);
+  test('across programs, a program check is working only when it is Strong in every program', () => {
+    const list = outcomes(
+      everyInstitution('missing'),
+      everyProgram('missing', { google_search: 'strong', fees_shown: 'strong' }),
+      everyProgram('missing', { google_search: 'strong', fees_shown: 'strong' }),
+      everyProgram('missing', { google_search: 'okay', fees_shown: 'strong' }),
+    );
+    const working = rankWorking(list, 3);
+    assert.deepEqual(
+      working.map((item) => [item.key, item.outcomes.map((outcome) => outcome.programId)]),
+      [['fees_shown', ['program-1', 'program-2', 'program-3']]],
+    );
+    assert.equal(itemPoints(working[0] as never, 3), 25 / 3); // 25 points in Chosen in every program
+    // Google search is Okay in one program, so it is something to fix, never something working.
+    assert.ok(keys(rankFixes(list, 3, medium)).includes('google_search'));
   });
 
-  test('across programs, a program check groups the programs where it is Strong', () => {
-    const working = rankWorking(outcomes(everyInstitution('missing'), everyProgram('missing', { google_search: 'strong' }), everyProgram('missing', { google_search: 'strong' }), everyProgram('missing', { google_search: 'okay' })), 3);
+  test('each check is in exactly one list, so working and to fix add up to every check', () => {
+    const lists = [
+      NORTHBANK,
+      outcomes(everyInstitution('strong'), everyProgram('strong')),
+      outcomes(everyInstitution('missing'), everyProgram('missing')),
+      outcomes(everyInstitution('okay', { youtube: 'strong', page_speed: 'strong' }), everyProgram('strong', { fees_shown: 'weak' }), everyProgram('strong')),
+      outcomes(everyInstitution('strong', { review_rating: 'missing' }), everyProgram('strong'), everyProgram('okay'), everyProgram('strong', { ai_answers: 'weak' })),
+    ];
+    for (const list of lists) {
+      const count = new Set(list.map((outcome) => outcome.programId)).size;
+      const working = keys(rankWorking(list, count));
+      const fixes = keys(rankFixes(list, count, medium));
+      assert.equal(working.length + fixes.length, 17);
+      assert.deepEqual([...working, ...fixes].sort(), [...new Set(list.map((outcome) => outcome.key))].sort());
+    }
+  });
+});
+
+describe("a short what's working (the top 3)", () => {
+  test('Northbank has nothing Strong, so the best Okay checks fill it: Google search, Instagram, Review rating', () => {
+    const top = topWorking(NORTHBANK, 1, 3);
+    assert.deepEqual(keys(top), ['google_search', 'instagram_activity', 'review_rating']);
+    assert.ok(top.every((item) => item.strength === 'okay'));
     assert.deepEqual(
-      working.map((item) => [item.key, item.strength, item.outcomes.map((outcome) => outcome.programId)]),
+      top.map((item) => item.rank),
+      [1, 2, 3],
+    );
+    assert.equal(itemPoints(top[0] as never, 1), 6); // 18 points in Discovered is 6 on the overall score
+  });
+
+  test('Strong checks come first; Okay ones fill only the places left', () => {
+    const list = outcomes(everyInstitution('weak', { review_rating: 'strong', other_socials: 'strong', instagram_activity: 'okay' }), everyProgram('weak', { fees_shown: 'okay' }));
+    assert.deepEqual(
+      topWorking(list, 1, 3).map((item) => [item.key, item.strength]),
       [
-        ['google_search', 'strong', ['program-1', 'program-2']],
-        ['google_search', 'okay', ['program-3']],
+        ['review_rating', 'strong'],
+        ['other_socials', 'strong'],
+        ['instagram_activity', 'okay'],
       ],
     );
-    assert.equal(itemPoints(working[0] as never, 3), 60 / 9); // 30 points in two of three programs
+    const strongOnly = outcomes(everyInstitution('strong'), everyProgram('okay'));
+    assert.ok(topWorking(strongOnly, 1, 3).every((item) => item.strength === 'strong'));
+  });
+
+  test('an Okay check fills in only when it is at least Okay everywhere', () => {
+    const list = outcomes(
+      everyInstitution('missing'),
+      everyProgram('missing', { google_search: 'strong', placement_proof: 'okay' }),
+      everyProgram('missing', { google_search: 'okay', placement_proof: 'weak' }),
+    );
+    const okay = rankOkay(list, 2);
+    assert.deepEqual(
+      okay.map((item) => [item.key, item.outcomes.map((outcome) => [outcome.programId, outcome.result])]),
+      [
+        [
+          'google_search',
+          [
+            ['program-1', 'strong'],
+            ['program-2', 'okay'],
+          ],
+        ],
+      ],
+    );
+    // 30 + 18 points in Discovered across two programs: 8 on the overall score.
+    assert.equal(itemPoints(okay[0] as never, 2), 8);
+  });
+
+  test('nothing Strong or Okay means an empty list', () => {
+    assert.deepEqual(topWorking(outcomes(everyInstitution('weak'), everyProgram('missing')), 1, 3), []);
   });
 });
 

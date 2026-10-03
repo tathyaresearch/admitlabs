@@ -243,8 +243,10 @@ const SAMPLE_VIEW: AuditView = {
   label: 'Needs work',
   firstAudit: false,
   programsChanged: false,
-  working: SAMPLE_WORKING,
+  // Nothing Strong yet: the Okay checks only fill a short what's working.
+  working: [],
   fixes: SAMPLE_FIXES,
+  okay: SAMPLE_WORKING,
   areas: [
     {
       pillar: 'chosen',

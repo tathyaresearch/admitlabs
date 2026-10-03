@@ -57,8 +57,8 @@ describe('score labels from config', () => {
     assert.equal(scoreLabel(70), 'Strong');
     assert.equal(scoreLabel(69), 'Needs work');
     assert.equal(scoreLabel(40), 'Needs work');
-    assert.equal(scoreLabel(39), 'At risk');
-    assert.equal(scoreLabel(0), 'At risk');
+    assert.equal(scoreLabel(39), 'Getting started');
+    assert.equal(scoreLabel(0), 'Getting started');
     assert.equal(scoreLabel(69.5), 'Strong');
   });
 

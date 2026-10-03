@@ -73,8 +73,8 @@ export async function sampleReportInput(overrides: Partial<ReportInput> = {}): P
     rivals,
     moves,
     lessons: [
-      { text: "Learn from Silverline College's top post", detail: 'It reached 48,200 views.', checkKey: null, rivalId: 'silverline' },
-      { text: 'Reply to every Google review', detail: 'Highfield University is ahead of you here.', checkKey: 'review_rating', rivalId: 'highfield' },
+      { text: "Learn from Silverline College's top post", detail: 'It reached 48,200 views.', checkKey: null, rivalId: 'silverline', effort: 'medium', month: '2026-09' },
+      { text: 'Reply to every Google review', detail: 'Highfield University is ahead of you here.', checkKey: 'review_rating', rivalId: 'highfield', effort: null, month: '2026-09' },
     ],
     lastRivalCheck: istDate('2026-09-28', 9).toISOString(),
     demand: { region: regionsFor(institution).city, rows: DEMAND, pulledAt: istDate('2026-09-28', 6).toISOString() },

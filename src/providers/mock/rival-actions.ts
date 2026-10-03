@@ -4,7 +4,7 @@
 
 import { checkAction } from '../../domain/checks.ts';
 import { formatCount, joinNames } from '../../domain/format.ts';
-import type { CheckKey, InstitutionType } from '../../domain/types.ts';
+import type { CheckKey, Difficulty, InstitutionType, RivalMoveKind } from '../../domain/types.ts';
 import type { Opportunity } from '../../rivals/opportunities.ts';
 import { moveNotice } from '../../rivals/text.ts';
 import type { RivalActionText } from '../analysis.ts';
@@ -30,12 +30,12 @@ const GAP_WHY: Readonly<Record<CheckKey, string>> = {
   page_speed: 'Students leave a slow page before it finishes loading.',
 };
 
-const MOVE_ACTIONS = {
-  admission_dates: { text: 'Plan your admission push early', next: 'Share your own dates and steps before students decide.' },
-  fee_change: { text: 'See how your fees compare', next: 'Students compare fees side by side, so make yours easy to find.' },
-  new_program: { text: 'Look at the new program they started', next: 'Check whether your programs already answer the same need, and say so clearly.' },
-  new_page: { text: 'See what they added to their website', next: 'Ask whether your own site answers the same student question.' },
-} as const;
+const MOVE_ACTIONS: Readonly<Record<RivalMoveKind, { text: string; next: string; effort: Difficulty }>> = {
+  admission_dates: { text: 'Plan your admission push early', next: 'Share your own dates and steps before students decide.', effort: 'easy' },
+  fee_change: { text: 'See how your fees compare', next: 'Students compare fees side by side, so make yours easy to find.', effort: 'easy' },
+  new_program: { text: 'Look at the new program they started', next: 'Check whether your programs already answer the same need, and say so clearly.', effort: 'medium' },
+  new_page: { text: 'See what they added to their website', next: 'Ask whether your own site answers the same student question.', effort: 'medium' },
+};
 
 export function writeRivalAction(item: Opportunity, type: InstitutionType): RivalActionText {
   switch (item.type) {
@@ -45,6 +45,7 @@ export function writeRivalAction(item: Opportunity, type: InstitutionType): Riva
       return {
         text: checkAction(item.key, item.programs, type),
         detail: `${joinNames(leaders)} ${verb} ahead of you here. ${GAP_WHY[item.key]}`,
+        effort: null,
       };
     }
     case 'content': {
@@ -52,11 +53,12 @@ export function writeRivalAction(item: Opportunity, type: InstitutionType): Riva
       return {
         text: `Learn from ${item.rival.name}'s top post`,
         detail: `"${item.title}" reached ${formatCount(item.views)} views.${why} Take the idea, not the post: tell it with your own students.`,
+        effort: 'medium',
       };
     }
     case 'move': {
       const action = MOVE_ACTIONS[item.kind];
-      return { text: action.text, detail: `${moveNotice(item.rival.name, item.description)} ${action.next}` };
+      return { text: action.text, detail: `${moveNotice(item.rival.name, item.description)} ${action.next}`, effort: action.effort };
     }
   }
 }

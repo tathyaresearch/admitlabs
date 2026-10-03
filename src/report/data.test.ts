@@ -154,7 +154,7 @@ describe('what goes into the monthly report', () => {
     const base = await input();
     const data = buildReport({
       ...base,
-      lessons: [{ text: "Learn from Silverline College's top post", detail: '"A student\x27s first day" reached 48,200 views.', checkKey: null, rivalId: 'silverline' }],
+      lessons: [{ text: "Learn from Silverline College's top post", detail: '"A student\x27s first day" reached 48,200 views.', checkKey: null, rivalId: 'silverline', effort: 'medium', month: '2026-09' }],
       moves: [{ rivalId: 'highfield', kind: 'fee_change', description: 'Replaced MBA fee amounts with "Contact us for fees".', detectedAt: base.moves[0]?.detectedAt ?? '' }],
     });
     assert.equal(data.things[1]?.title, 'Learn from Silverline College’s top post');

@@ -1,0 +1,715 @@
+/*
+  The new Home's own parts: the things to do with Mark as done, what changed since the last Audit,
+  the score with its three parts, and Start here. Monochrome, no gradients; every shape has its
+  word or number beside it. Each card measures itself (container queries), so it reads the same
+  wherever it sits.
+*/
+
+/* A titled block (the things to do sit in their own list card, under the title) ------------- */
+
+.block {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.blockHead {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.blockTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-section);
+  letter-spacing: var(--tracking-section);
+}
+
+.blockIcon {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.blockText {
+  font: var(--type-body);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.error {
+  font: var(--type-small);
+  font-weight: var(--weight-medium);
+}
+
+/* Cards */
+
+.card {
+  container-type: inline-size;
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+@media (min-width: 48rem) {
+  .card {
+    padding: var(--card-padding);
+  }
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-section);
+  font-size: 1rem;
+  letter-spacing: var(--tracking-section);
+}
+
+.cardAside {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.quiet {
+  font: var(--type-small);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.quietLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  justify-self: start;
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.quietLink:hover {
+  color: var(--text);
+}
+
+/* The things to do: a numbered list in one card, each with its points, effort and actions ---- */
+
+.things {
+  display: grid;
+  list-style: none;
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+
+.things > li + li {
+  border-top: 1px solid var(--line-raised);
+}
+
+.thing {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-5) var(--card-padding-sm);
+}
+
+@media (min-width: 48rem) {
+  .thing {
+    padding: var(--space-5) var(--card-padding);
+  }
+}
+
+.thingNumber {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-nested);
+  font: var(--type-num);
+  font-weight: var(--weight-heading);
+}
+
+.thing[data-done='true'] .thingNumber {
+  background: var(--text);
+  color: var(--surface);
+}
+
+.thingMain {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+@container (min-width: 44rem) {
+  .thingMain {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--space-6);
+  }
+}
+
+.thingBody {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.thingSource {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.thingSource svg {
+  flex: none;
+}
+
+.thingCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text);
+}
+
+.dot {
+  flex: none;
+  width: 3px;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--line-strong);
+}
+
+.format {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3em 0.55em;
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-xs);
+  font: var(--type-caption-strong);
+  line-height: 1;
+  color: var(--text);
+}
+
+.thingTitle {
+  font: var(--type-card);
+  font-size: 1rem;
+  letter-spacing: var(--tracking-section);
+  text-wrap: pretty;
+}
+
+.thing[data-done='true'] .thingTitle {
+  color: var(--text-muted);
+}
+
+.thingDetail {
+  max-width: 46rem;
+  font: var(--type-body);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.thingActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.goLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-strong);
+  font-size: var(--size-small);
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.goLink:hover {
+  color: var(--text);
+}
+
+.doneButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: var(--type-strong);
+  font-size: var(--size-small);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.doneButton:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-nested);
+}
+
+.doneBox {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xs);
+}
+
+.doneButton[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--surface-nested);
+}
+
+.doneButton[aria-pressed='true'] .doneBox {
+  border-color: transparent;
+  background: var(--text);
+  color: var(--surface);
+}
+
+.doneTag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-caption-strong);
+}
+
+.doneNote {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.thingSide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+@container (min-width: 44rem) {
+  .thingSide {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    min-width: 9.5rem;
+    text-align: right;
+  }
+}
+
+.thingPoints {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.thingPoints :global(.num) {
+  color: var(--text);
+  font-weight: var(--weight-heading);
+}
+
+.effort {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  font: var(--type-strong);
+  font-size: var(--size-small);
+  white-space: nowrap;
+}
+
+.effortLabel {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* What changed since the last Audit ------------------------------------------------------- */
+
+.changes {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.changeGroup {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.changeGroup + .changeGroup {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-raised);
+}
+
+/* A wide card: the groups side by side, a line between them. */
+@container (min-width: 52rem) {
+  .changes {
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: var(--space-6);
+  }
+
+  .changeGroup + .changeGroup {
+    padding-top: 0;
+    padding-left: var(--space-6);
+    border-top: 0;
+    border-left: 1px solid var(--line-raised);
+  }
+}
+
+.changeLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.changeLine {
+  font: var(--type-small);
+  text-wrap: pretty;
+}
+
+.changeLine :global(.num) {
+  font-weight: var(--weight-heading);
+}
+
+.moved {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.movedRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  font: var(--type-small);
+}
+
+.movedName {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-weight: var(--weight-medium);
+}
+
+.movedPrograms {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.movedMark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.movedMark svg {
+  flex: none;
+  color: var(--text);
+}
+
+.movedResults {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+}
+
+/* On a narrow card the results go under the name. */
+@container (max-width: 24rem) {
+  .movedRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}
+
+.notYet {
+  display: grid;
+  gap: 2px;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line-raised);
+  font: var(--type-small);
+}
+
+.notYetText,
+.notYetFound {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.changeList {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.changeItem {
+  display: grid;
+  gap: 2px;
+  font: var(--type-small);
+  text-wrap: pretty;
+}
+
+.changeItem :global(.num) {
+  font-weight: var(--weight-heading);
+}
+
+.changeMeta {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* The score: the gauge, then the three parts in rows; side by side in a wide card ---------- */
+
+.scoreLayout {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@container (min-width: 52rem) {
+  .scoreLayout {
+    grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-10);
+  }
+
+  .scoreLayout .scoreTop {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+  }
+
+  .scoreLayout .partRow:first-child {
+    padding-top: 0;
+  }
+}
+
+.scoreTop {
+  display: grid;
+  grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.scoreTop > :first-child {
+  width: 100%;
+  max-width: 15rem;
+}
+
+@container (max-width: 24rem) {
+  .scoreTop {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.scoreFacts {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.scoreChips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.scoreFact {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.scoreFact :global(.num) {
+  color: var(--text);
+  font-weight: var(--weight-heading);
+}
+
+.partRows {
+  display: grid;
+  list-style: none;
+}
+
+.partRow {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+}
+
+.partRow + .partRow {
+  border-top: 1px solid var(--line-raised);
+}
+
+.partRow:last-child {
+  padding-bottom: 0;
+}
+
+.partRowHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.partRowName {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+  font: var(--type-strong);
+}
+
+.partRowName svg {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.partQuestion {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* On a narrow card the part's question takes its own line under the name. */
+@container (max-width: 26rem) {
+  .partRowName .partQuestion {
+    flex-basis: 100%;
+    padding-left: calc(16px + var(--space-2));
+  }
+}
+
+.partRowScore {
+  display: inline-flex;
+  flex: none;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.partRowNumber {
+  font: var(--type-num);
+  font-size: var(--size-body);
+  font-weight: var(--weight-heading);
+}
+
+.partChange {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Start here ------------------------------------------------------------------------------- */
+
+.hideButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.hideButton:hover {
+  color: var(--text);
+}
+
+.guideSteps {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+@container (min-width: 44rem) {
+  .guideSteps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.guideStep {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-nested);
+}
+
+.guideStepHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-strong);
+}
+
+.guideStepNumber {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-raised);
+  font: var(--type-num-caption);
+  font-weight: var(--weight-heading);
+}
+
+.guideStep[data-done='true'] .guideStepNumber {
+  background: var(--text);
+  color: var(--surface);
+}
+
+.guideText {
+  font: var(--type-small);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.guideLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-strong);
+  font-size: var(--size-small);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.guideLink:hover svg {
+  transform: translateX(2px);
+}
+
+.guideLink svg {
+  transition: transform var(--duration-fast) var(--ease-out);
+}

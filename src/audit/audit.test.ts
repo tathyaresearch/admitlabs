@@ -85,8 +85,8 @@ describe('sample scores in September 2026 (golden values)', () => {
     ['brightpath-skills', 63, 'Needs work', [55, 61, 72]],
     ['highfield-university', 51, 'Needs work', [44, 66, 43]],
     ['cedar-skill-institute', 51, 'Needs work', [62, 48, 42]],
-    ['loomcraft-skills', 32, 'At risk', [35, 29, 34]],
-    ['riverbend-college', 27, 'At risk', [28, 29, 24]],
+    ['loomcraft-skills', 32, 'Getting started', [35, 29, 34]],
+    ['riverbend-college', 27, 'Getting started', [28, 29, 24]],
   ];
 
   for (const [slug, overall, label, [discovered, trusted, chosen]] of golden) {
@@ -146,16 +146,19 @@ describe('the stored record', () => {
     }
   });
 
-  test('Free: the top 3 working and top 3 to fix are ranked 1 to 3', async () => {
+  test('Free: the top 3 to fix are ranked 1 to 3; only a check Strong everywhere is ranked as working', async () => {
     const { record } = await auditOf('northbank-college', '2026-09-10', { programKeys: ['bba'] });
     const byRank = (field: 'strength_rank' | 'fix_rank') =>
       record.checks
         .filter((check) => (check[field] ?? 99) <= 3)
         .sort((a, b) => (a[field] ?? 0) - (b[field] ?? 0))
         .map((check) => check.check_key);
-    assert.deepEqual(byRank('strength_rank'), ['google_search', 'instagram_activity', 'review_rating']);
+    // Nothing is Strong yet, so nothing is ranked as working, and Free sees details for its top 3 fixes only.
+    assert.deepEqual(byRank('strength_rank'), []);
     assert.deepEqual(byRank('fix_rank'), ['placement_proof', 'fees_shown', 'google_profile']);
     assert.equal(record.checks.find((check) => check.check_key === 'fees_shown')?.points_awarded, 7.5);
+    // Every check carries exactly one of the two ranks.
+    for (const check of record.checks) assert.equal((check.strength_rank === null) !== (check.fix_rank === null), true, check.check_key);
   });
 
   test('when a check has no data, nothing is saved', async () => {

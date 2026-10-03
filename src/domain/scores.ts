@@ -1,4 +1,4 @@
-// Score labels (spec 7.4): 70 to 100 Strong, 40 to 69 Needs work, 0 to 39 At risk.
+// Score labels (spec 7.4): 70 to 100 Strong, 40 to 69 Needs work, 0 to 39 Getting started.
 // The bands come from the scoring config, never from code.
 
 import { SCORING_V1 } from '../config/scoring.v1.ts';

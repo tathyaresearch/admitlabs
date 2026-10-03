@@ -94,7 +94,7 @@ export async function loadReportInput(
     monthMoves(db, rivalIds, istDate(monthStart), cut),
     db
       .from('actions')
-      .select('rank, text, detail, check_key, rival_institution_id, month')
+      .select('rank, text, detail, check_key, rival_institution_id, month, effort')
       .eq('institution_id', institutionId)
       .eq('feature', 'rivals')
       .lte('month', monthStart)
@@ -114,7 +114,7 @@ export async function loadReportInput(
   const actionMonth = actionRows[0]?.month;
   const lessons: RivalLesson[] = actionRows
     .filter((row) => row.month === actionMonth)
-    .map((row) => ({ text: row.text, detail: row.detail, checkKey: row.check_key, rivalId: row.rival_institution_id }));
+    .map((row) => ({ text: row.text, detail: row.detail, checkKey: row.check_key, rivalId: row.rival_institution_id, effort: row.effort, month: row.month.slice(0, 7) }));
 
   return {
     institution,

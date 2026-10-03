@@ -16,6 +16,7 @@ export type Database = {
           check_key: Database["public"]["Enums"]["check_key"] | null
           created_at: string
           detail: string | null
+          effort: Database["public"]["Enums"]["difficulty"] | null
           feature: Database["public"]["Enums"]["feature"]
           id: string
           institution_id: string
@@ -28,6 +29,7 @@ export type Database = {
           check_key?: Database["public"]["Enums"]["check_key"] | null
           created_at?: string
           detail?: string | null
+          effort?: Database["public"]["Enums"]["difficulty"] | null
           feature: Database["public"]["Enums"]["feature"]
           id?: string
           institution_id: string
@@ -40,6 +42,7 @@ export type Database = {
           check_key?: Database["public"]["Enums"]["check_key"] | null
           created_at?: string
           detail?: string | null
+          effort?: Database["public"]["Enums"]["difficulty"] | null
           feature?: Database["public"]["Enums"]["feature"]
           id?: string
           institution_id?: string
@@ -549,6 +552,68 @@ export type Database = {
         }
         Relationships: []
       }
+      done_marks: {
+        Row: {
+          check_key: Database["public"]["Enums"]["check_key"] | null
+          checked_by_audit: string | null
+          id: string
+          institution_id: string
+          marked_at: string
+          marked_by: string | null
+          month: string | null
+          thing: string | null
+        }
+        Insert: {
+          check_key?: Database["public"]["Enums"]["check_key"] | null
+          checked_by_audit?: string | null
+          id?: string
+          institution_id: string
+          marked_at?: string
+          marked_by?: string | null
+          month?: string | null
+          thing?: string | null
+        }
+        Update: {
+          check_key?: Database["public"]["Enums"]["check_key"] | null
+          checked_by_audit?: string | null
+          id?: string
+          institution_id?: string
+          marked_at?: string
+          marked_by?: string | null
+          month?: string | null
+          thing?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "done_marks_checked_by_audit_fkey"
+            columns: ["checked_by_audit"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "done_marks_checked_by_audit_fkey"
+            columns: ["checked_by_audit"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["audit_id"]
+          },
+          {
+            foreignKeyName: "done_marks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "done_marks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enquiries: {
         Row: {
           created_at: string
@@ -803,18 +868,21 @@ export type Database = {
       memberships: {
         Row: {
           created_at: string
+          guide_closed_at: string | null
           institution_id: string
           role: Database["public"]["Enums"]["membership_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
+          guide_closed_at?: string | null
           institution_id: string
           role: Database["public"]["Enums"]["membership_role"]
           user_id: string
         }
         Update: {
           created_at?: string
+          guide_closed_at?: string | null
           institution_id?: string
           role?: Database["public"]["Enums"]["membership_role"]
           user_id?: string
@@ -1654,6 +1722,7 @@ export type Database = {
         Returns: string
       }
       archive_program: { Args: { p_program: string }; Returns: undefined }
+      close_start_guide: { Args: { p_institution: string }; Returns: undefined }
       create_share_link: {
         Args: { p_audit: string; p_days: number }
         Returns: string
@@ -1698,6 +1767,15 @@ export type Database = {
         }[]
       }
       invite_member: { Args: { p_email: string }; Returns: string }
+      mark_done: {
+        Args: {
+          p_check?: Database["public"]["Enums"]["check_key"]
+          p_institution: string
+          p_month?: string
+          p_thing?: string
+        }
+        Returns: string
+      }
       mark_notifications_read: { Args: { p_ids?: string[] }; Returns: number }
       onboard_institution: {
         Args: {
@@ -1819,6 +1897,15 @@ export type Database = {
           since: string
           user_id: string
         }[]
+      }
+      undo_done: {
+        Args: {
+          p_check?: Database["public"]["Enums"]["check_key"]
+          p_institution: string
+          p_month?: string
+          p_thing?: string
+        }
+        Returns: undefined
       }
       update_institution: {
         Args: {

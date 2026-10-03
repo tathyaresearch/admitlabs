@@ -1,12 +1,16 @@
-// What's working and what to fix (spec 7.6), ranked by effect on the score.
+// What's working and what to fix (spec 7.6), ranked by effect on the score. Each check is in
+// exactly one of the two lists, so their counts add up to the checks the Audit ran.
 //
-// What's working: Strong results ranked by the points they earn. When fewer than 3 are
-// Strong, the best Okay results fill the list (Free shows the top 3; Paid shows every Strong
-// and Okay result, Strong first).
+// What's working: the checks that are Strong everywhere they apply (in every program, for a
+// program check), ranked by the points they earn.
 //
-// What to fix: every result below Strong, ranked by the points it could add to the score.
-// Ties go to the easier fix. A program check that needs work in several programs is one
+// What to fix: every check below Strong anywhere, ranked by the points it could add to the
+// score. Ties go to the easier fix. A program check that needs work in several programs is one
 // item naming them.
+//
+// A short "what's working" (the top 3 in the monthly report and on a shared Audit) is filled in
+// by the best checks that are at least Okay everywhere when fewer than 3 are Strong. Those
+// checks stay in what to fix too; they only fill the short list (topWorking).
 //
 // Effect on the score is counted exactly. An institution check moves every program's pillar,
 // so it moves the overall score by earned / 3. A program check moves one program's pillar, so
@@ -28,7 +32,7 @@ export interface RankedItem {
 }
 
 export interface WorkingItem extends RankedItem {
-  /** Strong items come first; Okay items fill in after them. */
+  /** Strong everywhere, or (only to fill a short list) at least Okay everywhere. */
   strength: 'strong' | 'okay';
 }
 
@@ -66,23 +70,48 @@ function byValueThenCheck(a: RankedItem, b: RankedItem): number {
   return b.value - a.value || compareChecks(a.key, b.key);
 }
 
-export function rankWorking(outcomes: readonly CheckOutcome[], programCount: number): WorkingItem[] {
-  const build = (strength: 'strong' | 'okay'): WorkingItem[] =>
-    group(outcomes.filter((outcome) => outcome.result === strength))
-      .map((items) => {
-        const first = items[0] as CheckOutcome;
-        return {
-          rank: 0,
-          key: first.key,
-          pillar: first.pillar,
-          outcomes: items,
-          value: items.reduce((sum, item) => sum + effect(item, item.earned, programCount), 0),
-          strength,
-        };
-      })
-      .sort(byValueThenCheck);
+const AT_LEAST_OKAY: ReadonlySet<CheckResult> = new Set(['strong', 'okay']);
 
-  return [...build('strong'), ...build('okay')].map((item, index) => ({ ...item, rank: index + 1 }));
+/** Strong: every outcome Strong. Okay: every outcome at least Okay, and one or more only Okay. */
+function workingItems(outcomes: readonly CheckOutcome[], programCount: number, strength: 'strong' | 'okay'): WorkingItem[] {
+  return group(outcomes)
+    .filter((items) =>
+      strength === 'strong'
+        ? items.every((item) => item.result === 'strong')
+        : items.every((item) => AT_LEAST_OKAY.has(item.result)) && items.some((item) => item.result === 'okay'),
+    )
+    .map((items) => {
+      const first = items[0] as CheckOutcome;
+      return {
+        rank: 0,
+        key: first.key,
+        pillar: first.pillar,
+        outcomes: items,
+        value: items.reduce((sum, item) => sum + effect(item, item.earned, programCount), 0),
+        strength,
+      };
+    })
+    .sort(byValueThenCheck);
+}
+
+const ranked = <T extends RankedItem>(items: readonly T[]): T[] => items.map((item, index) => ({ ...item, rank: index + 1 }));
+
+/** What's working: the checks Strong everywhere they apply, ranked by the points they earn. */
+export function rankWorking(outcomes: readonly CheckOutcome[], programCount: number): WorkingItem[] {
+  return ranked(workingItems(outcomes, programCount, 'strong'));
+}
+
+/**
+ * The checks at least Okay everywhere they apply but not Strong everywhere, ranked by the points
+ * they earn. They are in what to fix; a short what's working only uses them to fill in.
+ */
+export function rankOkay(outcomes: readonly CheckOutcome[], programCount: number): WorkingItem[] {
+  return ranked(workingItems(outcomes, programCount, 'okay'));
+}
+
+/** A short what's working: the Strong checks first, then the best Okay ones when fewer than `limit` are Strong. */
+export function topWorking(outcomes: readonly CheckOutcome[], programCount: number, limit: number): WorkingItem[] {
+  return ranked([...rankWorking(outcomes, programCount), ...rankOkay(outcomes, programCount)].slice(0, limit));
 }
 
 export function rankFixes(outcomes: readonly CheckOutcome[], programCount: number, difficultyOf: DifficultyOf): FixItem[] {

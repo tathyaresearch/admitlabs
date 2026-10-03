@@ -139,7 +139,7 @@ export function AmountBar({ value, max, width, height = 3 }: { value: number; ma
   );
 }
 
-/** Strong, Needs work or At risk. Strong is inverted. */
+/** Strong, Needs work or Getting started. Strong is inverted. */
 export function LabelChip({ label, dark = false }: { label: ScoreLabel; dark?: boolean }): ReactElement {
   const inverted = label === 'Strong';
   const ink = dark ? COLORS.ivory : COLORS.black;

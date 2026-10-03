@@ -69,6 +69,17 @@ describe('check catalogue (spec 7.2)', () => {
     }
   });
 
+  test('when nothing was found, the action is the first step', () => {
+    assert.equal(checkAction('review_rating', [], 'college', 'missing'), 'Get your first Google reviews');
+    assert.equal(checkAction('review_rating', [], 'college', 'okay'), 'Reply to every Google review');
+    assert.equal(checkAction('google_profile', [], 'skilling', 'missing'), 'Set up your Google profile');
+    assert.equal(checkAction('youtube', [], 'college', 'missing'), 'Start a YouTube channel');
+    assert.equal(checkAction('youtube', [], 'college', 'weak'), 'Post a short YouTube video each month');
+    // Where the usual action already fits a first step, it stays.
+    assert.equal(checkAction('fees_shown', ['BBA'], 'college', 'missing'), 'Show your full BBA fees');
+    assert.equal(checkAction('approvals', [], 'skilling', 'missing'), 'Show your skilling recognition on your website');
+  });
+
   test('unknown keys throw', () => {
     assert.throws(() => getCheck('not_a_check' as never));
   });

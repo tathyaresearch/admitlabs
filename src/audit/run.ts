@@ -233,7 +233,8 @@ export async function runAudit(db: Db, options: RunAuditOptions): Promise<RunAud
     getAnalysisProvider(env),
   );
 
-  const notification = own ? { text: previous ? AUDIT_READY_TEXT.next : AUDIT_READY_TEXT.first, link: '/audit' } : null;
+  // A new Audit lands on Home's What changed; the first one on the Audit.
+  const notification = own ? (previous ? { text: AUDIT_READY_TEXT.next, link: '/#changed' } : { text: AUDIT_READY_TEXT.first, link: '/audit' }) : null;
   const saved = await db.rpc('record_audit', { payload: JSON.parse(JSON.stringify({ ...record, notification })) as Json });
   if (saved.error) {
     if (saved.error.message.includes('refresh_used')) throw new RefreshUsedError();

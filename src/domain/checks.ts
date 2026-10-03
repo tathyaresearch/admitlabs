@@ -1,7 +1,7 @@
 // The 17 Audit checks (spec section 7.2). Program checks are scored per program;
 // institution checks are scored once and shared by every program.
 
-import { CHECK_KEYS, PILLARS, type CheckKey, type InstitutionType, type Pillar } from './types.ts';
+import { CHECK_KEYS, PILLARS, type CheckKey, type CheckResult, type InstitutionType, type Pillar } from './types.ts';
 
 export type CheckLevel = 'program' | 'institution';
 
@@ -104,9 +104,23 @@ const CHECK_ACTIONS: Readonly<Record<CheckKey, (programs: string | null) => stri
   page_speed: () => 'Make your website load faster',
 };
 
-/** "Show your full BBA and MBA fees", or "Show your full fees" when no program is named. */
-export function checkAction(key: CheckKey, programs: readonly string[], type: InstitutionType): string {
+/** When nothing was found at all, the first step is a different one: there is no review to reply to yet. */
+const FIRST_STEP_ACTIONS: Partial<Readonly<Record<CheckKey, string>>> = {
+  instagram_activity: 'Start an Instagram account',
+  google_profile: 'Set up your Google profile',
+  youtube: 'Start a YouTube channel',
+  other_socials: 'Start a Facebook or LinkedIn page',
+  review_rating: 'Get your first Google reviews',
+};
+
+/**
+ * "Show your full BBA and MBA fees", or "Show your full fees" when no program is named. When the
+ * check found nothing at all (`result` Missing), the title says the first step instead.
+ */
+export function checkAction(key: CheckKey, programs: readonly string[], type: InstitutionType, result?: CheckResult): string {
   if (key === 'approvals' && type === 'skilling') return 'Show your skilling recognition on your website';
+  const first = result === 'missing' ? FIRST_STEP_ACTIONS[key] : undefined;
+  if (first) return first;
   const names = programs.length <= 1 ? (programs[0] ?? null) : `${programs.slice(0, -1).join(', ')} and ${programs[programs.length - 1]}`;
   return CHECK_ACTIONS[key](names);
 }

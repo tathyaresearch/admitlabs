@@ -142,7 +142,7 @@ export async function pullDemand(
     }));
   const ideas = await getAnalysisProvider(env).contentIdeas({ programKey: pull.programKey, region: { scope: pull.scope, region: pull.region, state: pull.state }, questions });
   ideas.forEach((idea, index) => {
-    items.push({ kind: 'idea', text: idea.text, language: 'en', count: 0, rank: index + 1, source_url: idea.sourceUrl, found_at: pulledAt.toISOString(), meta: { basedOn: idea.basedOn } });
+    items.push({ kind: 'idea', text: idea.text, language: 'en', count: 0, rank: index + 1, source_url: idea.sourceUrl, found_at: pulledAt.toISOString(), meta: { basedOn: idea.basedOn, format: idea.format, effort: idea.effort } });
   });
 
   const spikes =

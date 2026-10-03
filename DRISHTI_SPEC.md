@@ -140,7 +140,7 @@ The institution enters:
 7. YouTube (optional)
 8. Other social links: Facebook, LinkedIn (optional)
 
-After onboarding, Free users pick the **one program** their Free Audit covers.
+After onboarding, Free users pick the **one program** their Free Audit covers. The last step says what happens next: Drishti checks what a student would see (about a minute), shows a score out of 100 and the first things to fix, and the next free Audit comes in 3 months. Then Home opens, with Start here (section 13).
 
 **Details added by you (Settings, every plan).** All optional and short.
 
@@ -247,7 +247,7 @@ Each pillar is out of 100. Weights **[ADJUSTABLE]**:
 |---|---|
 | 70 to 100 | Strong |
 | 40 to 69 | Needs work |
-| 0 to 39 | At risk |
+| 0 to 39 | Getting started |
 
 The engine must be one pure function (plus helpers) that takes check results and config and returns all scores. Fully covered by tests.
 
@@ -294,8 +294,12 @@ What the user sees after an Audit:
 
 1. **The score**: overall and Discovered, Trusted, Chosen, with change since last Audit.
 2. **Area by area**: every check with its result (Strong, Okay, Weak, Missing), what Drishti found, where it found it (source link) and the date checked.
-3. **What's working**: top 3 strengths. Shown first.
-4. **What to fix**: gaps ranked by impact (points that could be gained). Each shows what's wrong, why it matters to a student, and how hard it is to fix (Easy, Medium, Hard).
+3. **What's working**: the checks that are Strong everywhere they apply, ranked by the points they earn (Free: the top 3). Shown first.
+4. **What to fix**: every check below Strong anywhere, ranked by impact (points that could be gained). Each shows what's wrong, why it matters to a student, and how hard it is to fix (Easy, Medium, Hard).
+
+Each check is in exactly one of the two, so their counts add up to the checks the Audit ran (13 to fix and 4 working make 17). A short what's working (the top 3 in the monthly report and on a shared Audit) fills in with the best checks that are at least Okay everywhere when fewer than 3 are Strong.
+
+**Mark as done.** The owner marks one of Home's things done (section 13). A fix, or a rival lesson about a check, waits for the next own Audit, which checks it: it moved up ("Confirmed, 2 points added") or it did not yet (with what the Audit still found). Any other thing (a rival's post to learn from, a content idea) is kept with its month. People at the institution and the AdmitLabs team see what was marked; only the owner marks or takes a mark back.
 5. **By program**: the same view for each program.
 
 ### 7.7 Tone
@@ -412,7 +416,7 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 | Demand | Monthly | Monthly, alert on big spikes | Monthly, alert on big spikes |
 
 - Monthly run date = same day of the month as the signup (or plan start) date.
-- Free users get a nudge when a new free Audit is available: "Your new Audit is ready. See what changed."
+- Free users get a nudge when a new free Audit is available: "Your new Audit is ready. See what changed." It opens What changed on Home (section 13), for every plan.
 - In this build, schedules run against mock providers. Build a way to trigger any scheduled run by hand for testing.
 
 ---
@@ -427,7 +431,7 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 
 1. Cover: institution name, month, overall score and label
 2. Score summary: overall, three pillars, change since last month
-3. What's working (top 3)
+3. What's working (top 3: Strong first, the best Okay filling in)
 4. What to fix (ranked)
 5. By program (one short block each)
 6. Rivals: head to head, each part ranked against every rival, key moves
@@ -452,9 +456,9 @@ Keep it short enough to read in 5 minutes.
 | Sign up (`/signup`) | Email, then a 6-digit code. "Create your Drishti account", "Free to start. Enter your email and we'll send you a code." An email that already has an account is simply signed in. "Already have an account? Log in". Left side: Home for the sample university in the dark, under a soft light that follows the cursor; where it falls, the score counts up and the bars grow |
 | Log in (`/login`) | The same email and code. "Welcome back", "Enter your email. We'll send you a code." Log in never says whether an email has an account, so nobody can check who uses Drishti: for any email it shows the same code step, "If this email has a Drishti account, we've sent a code. New here? Sign up." (Sign up carries the email over), and answers in about the same time. It sends a code only to an account that exists, or to someone invited by an owner or the AdmitLabs team, who comes in like any account and joins on first sign in. It never creates an account for anyone else. "New to Drishti? Sign up". Left side: the Drishti eye, big, in the middle, following the cursor, among four cards of the sample's dashboard that lean with the cursor and change in turn (the score counts up, the rivals change places, the questions come in, the searches grow); the eye watches each card as it changes and reads along the field while someone types |
 | Sign up and log in, both | The form first in reading order. On a wide screen the left side sits beside it; on a phone it is a small band above the form and plays on its own, as on any touch screen. With reduced motion the left side is still. The left side carries the logo and one line, "See where you stand. Every month." |
-| Onboarding | The input form from section 6, then program pick for Free. No left side; the Drishti logo, with its eye, at the top |
-| Home | Overall score on its gauge with the score month by month, how far the next band is, 3 parts (each with the question it answers, how it moved in words, its checks as one bar split by result with the counts, and what to fix first), change, top 3 fixes, rival snapshot with the latest move, 1 demand highlight with its searches by month, 3 things to do |
-| Audit | Pillars, all checks with results and points earned against possible, what's working, what to fix, score history, program switcher |
+| Onboarding | The input form from section 6, then program pick for Free with what happens next. No left side; the Drishti logo, with its eye, at the top. After the first Audit, Home |
+| Home | What to do first. The one-line answer; Start here on a first visit (three steps: your score, your first fix, your rivals; ticks as each is done; closed for good with "Got it, hide this", per person); "Do these 3 things this month" (Paid and Client: one from the Audit, one from rivals, one from what students ask, ordered by the points each could add) or "Fix these first" (Free: the top 3 fixes), each with where it comes from, the check as a small label, its programs, the points it could add (or how often students asked, for a content idea, with its format), the effort in Home's words (Quick, Medium, Big) and Mark as done; What changed since the last Audit (the score, each check that moved with its result before and after, the fixes marked done that this Audit checked, and for Paid and Client the rivals' moves and big jumps in searches; Free sees what Paid adds); then the score: the gauge, its band and change, "Up 14 since April", how far the next band is, and the 3 parts (each with the question it answers, its checks as one bar split by result with the counts, and what to fix first); rival snapshot with the latest move; 1 demand highlight with its searches by month. The score month by month and every check by name stay on the Audit |
+| Audit | Pillars, all checks with results and points earned against possible, what to fix and what's working (each check in one of them, so the counts add up to all checks; Free's To fix points up to its 3 fixes instead of repeating them), score history, program switcher |
 | Program detail | Same as Audit, for one program |
 | Check detail | Side panel: result, what was found, source link, date checked, how to fix, difficulty, details added by you |
 | Rivals | Rival list, head to head table, part by part (each part ranked against every rival), overall score month by month as a table, where you lead, moves, best content |
@@ -600,7 +604,7 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 |---|---|
 | `institutions` | id, name, type (college, university, skilling), city, state, website, instagram, youtube, other_links (jsonb), claimed (bool), is_prospect (bool), created_at |
 | `programs` | id, institution_id, name |
-| `memberships` | user_id, institution_id, role (owner, member) |
+| `memberships` | user_id, institution_id, role (owner, member), guide_closed_at (Start here closed) |
 | `team_users` | user_id, role (team, admin) |
 | `plans` | institution_id, tier (free, paid, client), starts_at, ends_at, set_by, free_program_id |
 | `signals` | id, institution_id, program_id (nullable), provider, check_key, value (jsonb), source_url, fetched_at |
@@ -613,7 +617,8 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 | `rival_ads` | id, rival_institution_id, promise, source_url, entered_by, entered_at |
 | `demand_pulls` | id, scope (city, state, india), region, program_key, month |
 | `demand_items` | id, pull_id, kind (rising, falling, question, worry, mention, season, idea), text, language, count, source_url, found_at |
-| `actions` | institution_id, month, rank, text, feature (audit, rivals, demand) |
+| `actions` | institution_id, month, rank, text, feature (audit, rivals, demand), effort |
+| `done_marks` | institution_id, check_key or thing and month, marked_by, marked_at, checked_by_audit (the first own Audit after a check was marked) |
 | `reports` | institution_id, month, storage_path, created_at |
 | `notifications` | id, institution_id, kind, text, read, created_at |
 | `notes` | id, institution_id, author_id, body, created_at (team only) |
@@ -627,6 +632,7 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 - Institution users only see their own institution's data, filtered by plan.
 - Team and Admin see everything.
 - Notes are team only.
+- Marks done: people at the institution and the team read them; only the owner adds or takes one back, through `mark_done` and `undo_done`, and only for a check the latest own Audit finds below Strong. Each person closes their own Start here.
 - Enquiries: anyone can send one, only through `submit_enquiry` (at most 3 a day from one email). Only the team reads them and marks them handled.
 - Rival data is only reachable through the `rivals` link of the viewing institution.
 - Plan gating must be enforced on the server, not only hidden in the UI.
@@ -708,7 +714,8 @@ Fictional only. No real institution names.
 - 8 institutions in Assam: 3 colleges, 2 universities, 3 skilling institutes. Mostly Guwahati, some in other Assam cities.
 - Programs such as BBA, MBA, BCA, B.Com, Nursing, Hotel Management, Digital Marketing, Data Analytics.
 - Use `.example` domains for websites (for example `northbank-college.example`).
-- A spread of scores: some Strong, some Needs work, some At risk.
+- A spread of scores: some Strong, some Needs work, some Getting started.
+- Fixes marked done: one the next Audit confirmed, one it did not find yet, one still waiting.
 - 6 months of Audit history for at least 2 institutions.
 - Rival scores and Demand pulls from April to September 2026, so the month by month charts have 6 months too.
 - Details added by some institutions, for themselves and their programs.

@@ -88,7 +88,7 @@ describe('scoring config v1', () => {
       [
         ['Strong', 70, 100],
         ['Needs work', 40, 69],
-        ['At risk', 0, 39],
+        ['Getting started', 0, 39],
       ],
     );
   });

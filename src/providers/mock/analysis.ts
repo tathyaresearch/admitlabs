@@ -29,7 +29,7 @@ export const mockAnalysis: AnalysisProvider = {
     const words = region ? placeWords(region.scope, region.region, region.state) : null;
     return fixture.ideas.flatMap((idea) => {
       const question = questions.find((candidate) => candidate.questionIndex === idea.question);
-      return question ? [{ text: words ? localize(idea.text, words) : idea.text, basedOn: question.text, sourceUrl: question.sourceUrl }] : [];
+      return question ? [{ text: words ? localize(idea.text, words) : idea.text, basedOn: question.text, sourceUrl: question.sourceUrl, format: idea.format, effort: idea.effort }] : [];
     });
   },
 

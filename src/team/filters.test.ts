@@ -4,8 +4,8 @@ import { filtersQuery, hasFilters, NO_FILTERS, pageRange, parseFilters, scoreRan
 
 describe('the team list filters, read from the address', () => {
   test('known values are kept; anything else is ignored', () => {
-    const filters = parseFilters({ q: ' north ', type: 'college', status: 'prospect', tier: 'client', score: 'at_risk', sort: 'score', page: '2', city: 'Guwahati' });
-    assert.deepEqual(filters, { q: 'north', type: 'college', city: 'Guwahati', state: null, status: 'prospect', tier: 'client', score: 'at_risk', sort: 'score', page: 2 });
+    const filters = parseFilters({ q: ' north ', type: 'college', status: 'prospect', tier: 'client', score: 'getting_started', sort: 'score', page: '2', city: 'Guwahati' });
+    assert.deepEqual(filters, { q: 'north', type: 'college', city: 'Guwahati', state: null, status: 'prospect', tier: 'client', score: 'getting_started', sort: 'score', page: 2 });
     assert.equal(parseFilters({ tier: 'paid_ending' }).tier, 'paid_ending');
     assert.deepEqual(parseFilters({ type: 'school', status: 'x', sort: 'bad', page: '-4' }), NO_FILTERS);
     assert.equal(hasFilters(NO_FILTERS), false);
@@ -22,7 +22,7 @@ describe('the team list filters, read from the address', () => {
   test('score bands come from the scoring config', () => {
     assert.deepEqual(scoreRange('strong'), { min: 70, max: 100 });
     assert.deepEqual(scoreRange('needs_work'), { min: 40, max: 69 });
-    assert.deepEqual(scoreRange('at_risk'), { min: 0, max: 39 });
+    assert.deepEqual(scoreRange('getting_started'), { min: 0, max: 39 });
   });
 
   test('a search never changes the filter itself', () => {

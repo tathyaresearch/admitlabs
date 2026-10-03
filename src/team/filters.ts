@@ -14,13 +14,13 @@ export const TEAM_STATUS_LABELS: Readonly<Record<TeamStatus, string>> = {
   rival_record: 'Rival record',
 };
 
-export const SCORE_BANDS = ['strong', 'needs_work', 'at_risk', 'none'] as const;
+export const SCORE_BANDS = ['strong', 'needs_work', 'getting_started', 'none'] as const;
 export type ScoreBand = (typeof SCORE_BANDS)[number];
 
 export const SCORE_BAND_LABELS: Readonly<Record<ScoreBand, string>> = {
   strong: 'Strong',
   needs_work: 'Needs work',
-  at_risk: 'At risk',
+  getting_started: 'Getting started',
   none: 'No Audit yet',
 };
 
@@ -99,7 +99,7 @@ export function hasFilters(filters: TeamFilters): boolean {
   return Boolean(filters.q || filters.type || filters.city || filters.state || filters.status || filters.tier || filters.score);
 }
 
-const BAND_LABEL: Readonly<Record<Exclude<ScoreBand, 'none'>, string>> = { strong: 'Strong', needs_work: 'Needs work', at_risk: 'At risk' };
+const BAND_LABEL: Readonly<Record<Exclude<ScoreBand, 'none'>, string>> = { strong: 'Strong', needs_work: 'Needs work', getting_started: 'Getting started' };
 
 /** The scores a band covers, from the scoring config: Strong is 70 to 100. */
 export function scoreRange(band: Exclude<ScoreBand, 'none'>): { min: number; max: number } {

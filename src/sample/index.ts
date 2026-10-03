@@ -9,6 +9,7 @@ export * from './demand.ts';
 export * from './details.ts';
 export * from './ids.ts';
 export * from './institutions.ts';
+export * from './marks.ts';
 export * from './profiles.ts';
 export * from './rivals.ts';
 export * from './shares.ts';

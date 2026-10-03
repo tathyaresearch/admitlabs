@@ -5,7 +5,7 @@
 
 import type { ProviderMode } from '../config/providers.ts';
 import type { CheckFacts } from '../domain/facts.ts';
-import type { CheckKey, CheckResult, ContentPlatform, DemandScope, Difficulty, InstitutionType } from '../domain/types.ts';
+import type { CheckKey, CheckResult, ContentPlatform, DemandScope, Difficulty, IdeaFormat, InstitutionType } from '../domain/types.ts';
 import type { Opportunity } from '../rivals/opportunities.ts';
 import type { RivalContentValue } from './signals.ts';
 
@@ -40,6 +40,10 @@ export interface ContentIdea {
   basedOn: string;
   /** Where that question was found. */
   sourceUrl: string;
+  /** What to make: a post, a reel, a video, an FAQ or a web page. */
+  format: IdeaFormat;
+  /** How big a job it is. */
+  effort: Difficulty;
 }
 
 export interface RivalActionsInput {
@@ -48,10 +52,12 @@ export interface RivalActionsInput {
   opportunities: readonly Opportunity[];
 }
 
-/** One of the Rivals "3 things to do": a short title and a line on why. */
+/** One of the Rivals "3 things to do": a short title, a line on why, and how big a job it is. */
 export interface RivalActionText {
   text: string;
   detail: string;
+  /** Null for a lesson about a check: the Audit's fix for that check says how big it is. */
+  effort: Difficulty | null;
 }
 
 export interface AnalysisProvider {

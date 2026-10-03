@@ -7,7 +7,7 @@ import { cache } from 'react';
 import { historyByMonth } from '@/audit/view';
 import { RIVAL_RULES } from '@/config/rivals';
 import { monthKey } from '@/domain/dates';
-import type { ContentPlatform, InstitutionType, RivalMoveKind, CheckKey } from '@/domain/types';
+import type { CheckKey, ContentPlatform, Difficulty, InstitutionType, RivalMoveKind } from '@/domain/types';
 import { loadHistory } from '@/lib/audit/load';
 import type { InstitutionViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
@@ -68,6 +68,9 @@ export interface ActionRow {
   detail: string | null;
   rivalId: string | null;
   checkKey: CheckKey | null;
+  /** How big a job it is (null for a lesson about a check: the Audit's fix says). */
+  effort: Difficulty | null;
+  /** 'YYYY-MM-01'. */
   month: string;
 }
 
@@ -217,7 +220,7 @@ export async function loadActions(institutionId: string): Promise<ActionRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('actions')
-    .select('rank, text, detail, rival_institution_id, check_key, month')
+    .select('rank, text, detail, rival_institution_id, check_key, month, effort')
     .eq('institution_id', institutionId)
     .eq('feature', 'rivals')
     .order('month', { ascending: false })
@@ -226,7 +229,7 @@ export async function loadActions(institutionId: string): Promise<ActionRow[]> {
   const latest = data?.[0]?.month;
   return (data ?? [])
     .filter((row) => row.month === latest)
-    .map((row) => ({ rank: row.rank, text: row.text, detail: row.detail, rivalId: row.rival_institution_id, checkKey: row.check_key, month: row.month }));
+    .map((row) => ({ rank: row.rank, text: row.text, detail: row.detail, rivalId: row.rival_institution_id, checkKey: row.check_key, effort: row.effort, month: row.month }));
 }
 
 /** Your latest Audit and each rival's latest rival Audit, compared check by check. */

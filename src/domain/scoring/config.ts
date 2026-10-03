@@ -8,7 +8,7 @@ import type { ScoreLabelBand, ScoringConfig } from '../scoring-config.ts';
 import { PILLARS, RESULTS } from '../types.ts';
 
 const FAMILIES = ['college_university', 'skilling'] as const;
-const LABEL_NAMES: readonly ScoreLabelBand['label'][] = ['Strong', 'Needs work', 'At risk'];
+const LABEL_NAMES: readonly ScoreLabelBand['label'][] = ['Strong', 'Needs work', 'Getting started'];
 
 export interface StoredScoringConfig {
   version: number;

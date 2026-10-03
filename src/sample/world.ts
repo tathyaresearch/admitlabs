@@ -16,7 +16,7 @@ import { rankDemand } from '../demand/rank.ts';
 import { regionsFor, type DemandRegion } from '../demand/regions.ts';
 import { pullDayOf } from '../demand/schedule.ts';
 import type { DemandRow } from '../demand/view.ts';
-import { istDate } from '../domain/dates.ts';
+import { istDate, monthKey } from '../domain/dates.ts';
 import { resultKey } from '../domain/scoring/score.ts';
 import { effectiveTier, paidPlanEndsAt, type PlanRecord } from '../domain/tiers.ts';
 import { CHECK_KEYS, type AuditKind, type AuditTrigger, type CheckKey, type InstitutionType } from '../domain/types.ts';
@@ -287,6 +287,8 @@ export async function sampleRivalLessons(slug: string, day: string): Promise<Riv
     detail: texts[index]?.detail ?? null,
     checkKey: item.type === 'gap' ? item.key : null,
     rivalId: item.type === 'gap' ? (item.rivals[0]?.id ?? null) : item.rival.id,
+    effort: texts[index]?.effort ?? null,
+    month: monthKey(asOf),
   }));
 }
 
@@ -346,7 +348,7 @@ export async function sampleDemand(slug: string, month: string): Promise<{ regio
           changePct: null,
           sourceUrl: idea.sourceUrl,
           foundAt: pulledAt.toISOString(),
-          meta: { basedOn: idea.basedOn },
+          meta: { basedOn: idea.basedOn, format: idea.format, effort: idea.effort },
         }),
       );
     });

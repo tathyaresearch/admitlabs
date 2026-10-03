@@ -205,10 +205,10 @@ describe('scoreAudit', () => {
 });
 
 describe('score labels (spec 7.4)', () => {
-  test('70 to 100 Strong, 40 to 69 Needs work, 0 to 39 At risk', () => {
+  test('70 to 100 Strong, 40 to 69 Needs work, 0 to 39 Getting started', () => {
     const cases: Array<[number, string]> = [
-      [0, 'At risk'],
-      [39, 'At risk'],
+      [0, 'Getting started'],
+      [39, 'Getting started'],
       [40, 'Needs work'],
       [69, 'Needs work'],
       [70, 'Strong'],
@@ -218,7 +218,7 @@ describe('score labels (spec 7.4)', () => {
   });
 
   test('the bands come from the config', () => {
-    const stricter = { labels: [{ label: 'Strong' as const, min: 80, max: 100 }, { label: 'Needs work' as const, min: 50, max: 79 }, { label: 'At risk' as const, min: 0, max: 49 }] };
+    const stricter = { labels: [{ label: 'Strong' as const, min: 80, max: 100 }, { label: 'Needs work' as const, min: 50, max: 79 }, { label: 'Getting started' as const, min: 0, max: 49 }] };
     assert.equal(scoreLabel(75, stricter), 'Needs work');
     assert.equal(scoreLabel(75, SCORING_V1), 'Strong');
   });

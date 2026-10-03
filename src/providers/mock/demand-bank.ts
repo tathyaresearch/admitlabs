@@ -51,11 +51,11 @@ function genericFixture(programKey: string, name: string): ProgramDemandFixture 
     ],
     worries: genericWorries(name, [base(60, 130), base(70, 130), base(20, 70), base(15, 60), base(20, 60), base(20, 40)]),
     ideas: [
-      { text: `Show last year's ${name} placements: company, role and salary, one student per reel.`, question: 0 },
-      { text: `Post one clear ${name} fee breakdown: tuition, exams and hostel, in a single image.`, question: 1 },
-      { text: `Answer "which college is good for ${name}" in Assamese, with a real day in class.`, question: 2 },
-      { text: `A recent ${name} graduate explains how they found their first job.`, question: 3 },
-      { text: `Share real first year salaries of your ${name} graduates, with the year.`, question: 4 },
+      { text: `Show last year's ${name} placements: company, role and salary, one student per reel.`, question: 0, format: 'reel', effort: 'medium' },
+      { text: `Post one clear ${name} fee breakdown: tuition, exams and hostel, in a single image.`, question: 1, format: 'post', effort: 'easy' },
+      { text: `Answer "which college is good for ${name}" in Assamese, with a real day in class.`, question: 2, format: 'reel', effort: 'medium' },
+      { text: `A recent ${name} graduate explains how they found their first job.`, question: 3, format: 'video', effort: 'medium' },
+      { text: `Share real first year salaries of your ${name} graduates, with the year.`, question: 4, format: 'post', effort: 'easy' },
     ],
   };
 }

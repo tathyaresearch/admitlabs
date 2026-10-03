@@ -6,7 +6,7 @@
 // program's checks with the same engine functions.
 
 import { CHECKS, checkLooksAt, checkName, type CheckLevel } from '../domain/checks.ts';
-import { itemPoints, rankFixes, rankWorking } from '../domain/scoring/rank.ts';
+import { itemPoints, rankFixes, rankOkay, rankWorking, type RankedItem } from '../domain/scoring/rank.ts';
 import type { CheckOutcome } from '../domain/scoring/score.ts';
 import { scoreLabel, type ScoreLabel } from '../domain/scores.ts';
 import type { ScoringConfig } from '../domain/scoring-config.ts';
@@ -93,7 +93,7 @@ export interface ListItem {
   name: string;
   pillar: Pillar;
   parts: ItemPart[];
-  /** What's working: Strong items first, then Okay. Null on fix items. */
+  /** What's working: Strong, or Okay where it only fills a short list. Null on fix items. */
   strength: 'strong' | 'okay' | null;
   /** What to fix: the hardest fix among the parts the viewer can see. */
   difficulty: Difficulty | null;
@@ -137,8 +137,11 @@ export interface AuditView {
   firstAudit: boolean;
   /** There was an earlier Audit, but it covered other programs, so the overall change is left out. */
   programsChanged: boolean;
+  /** The checks Strong everywhere they apply. With `fixes`, every check is in exactly one list. */
   working: ListItem[];
   fixes: ListItem[];
+  /** The checks at least Okay everywhere but not Strong everywhere (also in `fixes`): they fill a short what's working. */
+  okay: ListItem[];
   areas: Array<{ pillar: Pillar; rows: AreaRow[] }>;
 }
 
@@ -235,27 +238,9 @@ function fromStoredRanks(audit: StoredAudit, options: ViewOptions, field: 'stren
     });
 }
 
-/** The whole Audit: every program the viewer can see, ranked as stored. */
-export function overviewView(audit: StoredAudit, options: ViewOptions): AuditView {
-  return {
-    programId: null,
-    scores: audit.scores,
-    changes: audit.changes,
-    label: scoreLabel(audit.scores.overall, options.config),
-    firstAudit: audit.previousAuditId === null,
-    programsChanged: audit.previousAuditId !== null && audit.changes.overall === null,
-    working: fromStoredRanks(audit, options, 'strengthRank'),
-    fixes: fromStoredRanks(audit, options, 'fixRank'),
-    areas: areas(audit.checks, options),
-  };
-}
-
-/** One program: its own scores, its checks plus the shared institution checks, ranked for it. */
-export function programView(audit: StoredAudit, programId: string, options: ViewOptions): AuditView | null {
-  const program = audit.programs.find((entry) => entry.programId === programId);
-  if (!program) return null;
-  const checks = audit.checks.filter((check) => check.programId === null || check.programId === programId);
-  const byOutcome = new Map<CheckOutcome, StoredCheck>();
+/** The stored checks as the engine's outcomes, with the way back from each outcome to its check. */
+function outcomesOf(checks: readonly StoredCheck[]): { outcomes: CheckOutcome[]; checkOf: Map<CheckOutcome, StoredCheck> } {
+  const checkOf = new Map<CheckOutcome, StoredCheck>();
   const outcomes = checks.map((check) => {
     const outcome: CheckOutcome = {
       key: check.key,
@@ -265,25 +250,58 @@ export function programView(audit: StoredAudit, programId: string, options: View
       earned: hundredths(check.pointsAwarded),
       maxPoints: check.pointsMax,
     };
-    byOutcome.set(outcome, check);
+    checkOf.set(outcome, check);
     return outcome;
   });
+  return { outcomes, checkOf };
+}
 
-  const toItem = (item: { rank: number; key: CheckKey; pillar: Pillar; outcomes: CheckOutcome[]; value: number }, strength: ListItem['strength']): ListItem => {
-    const parts = item.outcomes.map((outcome) => part(byOutcome.get(outcome) as StoredCheck, options.programNames));
-    return {
-      rank: item.rank,
-      key: item.key,
-      name: checkName(item.key, options.institutionType),
-      pillar: item.pillar,
-      parts,
-      points: itemPoints(item, 1),
-      strength,
-      difficulty: strength === null ? hardest(parts) : null,
-    };
+/** An item the engine ranked, as a list item: its parts in program order and its effect over `programCount` programs. */
+function engineItem(item: RankedItem, checkOf: ReadonlyMap<CheckOutcome, StoredCheck>, options: ViewOptions, programCount: number, strength: ListItem['strength']): ListItem {
+  const parts = item.outcomes.map((outcome) => part(checkOf.get(outcome) as StoredCheck, options.programNames)).sort(byProgramName);
+  return {
+    rank: item.rank,
+    key: item.key,
+    name: checkName(item.key, options.institutionType),
+    pillar: item.pillar,
+    parts,
+    points: itemPoints(item, programCount),
+    strength,
+    difficulty: strength === null ? hardest(parts) : null,
   };
+}
 
-  const difficultyOf = (outcome: CheckOutcome): Difficulty => byOutcome.get(outcome)?.detail?.difficulty ?? 'medium';
+/** The whole Audit: every program the viewer can see, ranked as stored. */
+export function overviewView(audit: StoredAudit, options: ViewOptions): AuditView {
+  const fixes = fromStoredRanks(audit, options, 'fixRank');
+  // Strong everywhere only. (Audits from before October 2026 also ranked the programs where a
+  // check was Strong while others needed work; those checks are in what to fix.)
+  const toFix = new Set(fixes.map((item) => item.key));
+  const working = fromStoredRanks(audit, options, 'strengthRank')
+    .filter((item) => item.strength === 'strong' && !toFix.has(item.key))
+    .map((item, index) => ({ ...item, rank: index + 1 }));
+  const { outcomes, checkOf } = outcomesOf(audit.checks);
+  return {
+    programId: null,
+    scores: audit.scores,
+    changes: audit.changes,
+    label: scoreLabel(audit.scores.overall, options.config),
+    firstAudit: audit.previousAuditId === null,
+    programsChanged: audit.previousAuditId !== null && audit.changes.overall === null,
+    working,
+    fixes,
+    okay: rankOkay(outcomes, audit.programCount).map((item) => engineItem(item, checkOf, options, audit.programCount, 'okay')),
+    areas: areas(audit.checks, options),
+  };
+}
+
+/** One program: its own scores, its checks plus the shared institution checks, ranked for it. */
+export function programView(audit: StoredAudit, programId: string, options: ViewOptions): AuditView | null {
+  const program = audit.programs.find((entry) => entry.programId === programId);
+  if (!program) return null;
+  const checks = audit.checks.filter((check) => check.programId === null || check.programId === programId);
+  const { outcomes, checkOf } = outcomesOf(checks);
+  const difficultyOf = (outcome: CheckOutcome): Difficulty => checkOf.get(outcome)?.detail?.difficulty ?? 'medium';
   return {
     programId,
     scores: program.scores,
@@ -291,10 +309,19 @@ export function programView(audit: StoredAudit, programId: string, options: View
     label: scoreLabel(program.scores.overall, options.config),
     firstAudit: program.changes.overall === null,
     programsChanged: false,
-    working: rankWorking(outcomes, 1).map((item) => toItem(item, item.strength)),
-    fixes: rankFixes(outcomes, 1, difficultyOf).map((item) => toItem(item, null)),
+    working: rankWorking(outcomes, 1).map((item) => engineItem(item, checkOf, options, 1, 'strong')),
+    fixes: rankFixes(outcomes, 1, difficultyOf).map((item) => engineItem(item, checkOf, options, 1, null)),
+    okay: rankOkay(outcomes, 1).map((item) => engineItem(item, checkOf, options, 1, 'okay')),
     areas: areas(checks, options),
   };
+}
+
+/**
+ * A short what's working (the monthly report, a shared Audit and its PDF): the Strong checks
+ * first, then, when fewer than `limit` are Strong, the best checks that are at least Okay everywhere.
+ */
+export function workingTop(view: Pick<AuditView, 'working' | 'okay'>, limit: number): ListItem[] {
+  return [...view.working, ...view.okay].slice(0, limit).map((item, index) => ({ ...item, rank: index + 1 }));
 }
 
 /** One line of a check's results in its panel. */
@@ -473,4 +500,35 @@ export function pointsEarnedText(points: number, maxPoints: number): string {
 /** "8/25", for the list of checks. */
 export function pointsFraction(points: number, maxPoints: number): string {
   return `${Math.round(points)}/${maxPoints}`;
+}
+
+export interface MovedCheck {
+  key: CheckKey;
+  name: string;
+  /** The programs it moved in, by name; empty for a check on the whole institution. */
+  programs: string[];
+  from: CheckResult;
+  to: CheckResult;
+}
+
+/**
+ * What changed since the Audit before: every check whose result moved, one line per check and
+ * change (programs that moved the same way share it). The ones that moved up come first, then
+ * the rest, each in check order.
+ */
+export function movedChecks(view: Pick<AuditView, 'areas'>): MovedCheck[] {
+  const up: MovedCheck[] = [];
+  const down: MovedCheck[] = [];
+  for (const row of view.areas.flatMap((area) => area.rows)) {
+    const byChange = new Map<string, MovedCheck>();
+    for (const item of row.parts) {
+      if (!item.previousResult || item.previousResult === item.result) continue;
+      const id = `${item.previousResult}:${item.result}`;
+      const entry = byChange.get(id) ?? { key: row.key, name: row.name, programs: [], from: item.previousResult, to: item.result };
+      if (item.programName) entry.programs.push(item.programName);
+      byChange.set(id, entry);
+    }
+    for (const entry of byChange.values()) ((RESULT_RANK.get(entry.to) ?? 0) < (RESULT_RANK.get(entry.from) ?? 0) ? up : down).push(entry);
+  }
+  return [...up, ...down];
 }

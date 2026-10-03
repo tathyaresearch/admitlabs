@@ -2,7 +2,6 @@ import { overviewView, scoresByMonth } from '@/audit/view';
 import { AuditScreen } from '@/components/audit/AuditScreen';
 import { NoAuditYet } from '@/components/audit/NoAuditYet';
 import { RefreshButton } from '@/components/audit/RefreshButton';
-import { Notice } from '@/components/ui/Feedback';
 import { canSee } from '@/config/entitlements';
 import { monthKey } from '@/domain/dates';
 import { formatDate } from '@/domain/format';
@@ -12,10 +11,10 @@ import { loadAddedDetails } from '@/lib/details/load';
 
 export const metadata = { title: 'Audit' };
 
-export default async function AuditPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function AuditPage() {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
-  const [data, params, details] = await Promise.all([loadAuditPage(viewer), searchParams, loadAddedDetails(institution.id)]);
+  const [data, details] = await Promise.all([loadAuditPage(viewer), loadAddedDetails(institution.id)]);
 
   if (!data.audit) {
     return <NoAuditYet tier={viewer.tier} isOwner={role === 'owner'} hasFreeProgram={Boolean(viewer.plan?.freeProgramId)} nextAudit={data.nextAudit} />;
@@ -31,13 +30,6 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       tier={viewer.tier}
       caption={viewer.tier === 'client' ? ['Your AdmitLabs team can refresh it at any time'] : undefined}
       actions={data.refresh ? <RefreshButton left={data.refresh.left} resetsOn={formatDate(data.refresh.resetsOn)} /> : undefined}
-      notice={
-        params.welcome === '1' ? (
-          <Notice tone="inverse" icon="spark" title="Your first Audit is ready.">
-            Here is where you stand. Start with the first fix below.
-          </Notice>
-        ) : undefined
-      }
       entries={programEntries(data, viewer.tier, viewer.plan?.freeProgramId ?? null)}
       allLabel={free ? null : 'All programs'}
       scoreCaption="Overall score"

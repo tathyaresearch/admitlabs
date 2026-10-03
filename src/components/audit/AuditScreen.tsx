@@ -3,10 +3,12 @@
 //   2. The summary: the verdict, the score with its trend, and the three pillars (as on Home).
 //   3. What to do next: the top 3 fixes as one numbered list.
 //   4. The details in tabs: every fix, what's working, all 17 checks and the score history.
-// Free gets one "Paid shows the full picture" card instead of locked areas across the page.
+//      Each check is either to fix or working, so the first two counts add up to the third.
+// Free gets one "Paid shows the full picture" card instead of locked areas across the page, and
+// its 3 fixes once: the To fix tab points up to them instead of listing them again.
 
 import { Suspense, type ReactNode } from 'react';
-import type { AuditView, ListItem } from '@/audit/view';
+import { workingTop, type AuditView, type ListItem } from '@/audit/view';
 import { addedByYou, type AddedByYou } from '@/domain/details';
 import type { AddedDetails } from '@/lib/details/load';
 import { HomeSummary, type MonthScores } from '@/components/home/HomeSummary';
@@ -30,6 +32,8 @@ import { UnlockCard } from './UnlockCard';
 import styles from './audit.module.css';
 
 const TOP_FIXES = 3;
+/** With nothing Strong yet, how many of the best Okay checks show as closest to Strong. */
+const CLOSEST = 3;
 
 interface AuditScreenProps {
   view: AuditView;
@@ -161,8 +165,17 @@ export function AuditScreen(props: AuditScreenProps) {
               count: view.fixes.length,
               content: (
                 <div className={styles.tabStack}>
-                  {fixes.length ? <FixRows items={fixes} /> : <p className={styles.quietNote}>Every check is Strong. Keep it that way.</p>}
-                  {hiddenFixes > 0 ? <p className={styles.quietNote}>{plural(hiddenFixes, 'more fix', 'more fixes')}, ranked, come with Paid.</p> : null}
+                  {!fixes.length ? (
+                    <p className={styles.quietNote}>Every check is Strong. Keep it that way.</p>
+                  ) : tier === 'free' ? (
+                    // Free's fixes are the ones above, said once.
+                    <p className={styles.quietNote}>
+                      {fixes.length === 1 ? 'Your fix is above' : `Your top ${fixes.length} fixes are above`}, in Fix these first.
+                      {hiddenFixes > 0 ? ` ${plural(hiddenFixes, 'more fix', 'more fixes')}, ranked, come with Paid.` : ''}
+                    </p>
+                  ) : (
+                    <FixRows items={fixes} />
+                  )}
                 </div>
               ),
             },
@@ -174,8 +187,14 @@ export function AuditScreen(props: AuditScreenProps) {
                 <div className={styles.tabStack}>
                   {working.length ? (
                     <WorkingRows items={working} />
+                  ) : view.okay.length ? (
+                    // Nothing is Strong yet: the best Okay checks, as the PDFs list them. The count stays at 0.
+                    <>
+                      <p className={styles.quietNote}>Nothing is Strong yet. Closest to Strong:</p>
+                      <WorkingRows items={workingTop(view, CLOSEST)} />
+                    </>
                   ) : (
-                    <p className={styles.quietNote}>Nothing stands out yet. The fixes above are the quickest way to change that.</p>
+                    <p className={styles.quietNote}>Nothing is Strong yet. The fixes above are the quickest way to get there.</p>
                   )}
                   {hiddenStrengths > 0 ? <p className={styles.quietNote}>{plural(hiddenStrengths, 'more strength', 'more strengths')} come with Paid.</p> : null}
                 </div>

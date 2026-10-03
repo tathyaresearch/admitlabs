@@ -23,7 +23,9 @@ import {
   DEMAND_MONTHS,
   SAMPLE_ADS,
   SAMPLE_INSTITUTION_DETAILS,
+  SAMPLE_GUIDE_CLOSED,
   SAMPLE_INSTITUTIONS,
+  SAMPLE_MARKS,
   SAMPLE_NOTES,
   SAMPLE_PROGRAM_DETAILS,
   SAMPLE_RIVALS,
@@ -155,7 +157,17 @@ async function main(): Promise<void> {
       // Owners joined when they signed up; members a week later, when the owner invited them.
       const signedUp = istDate(sampleInstitution(user.institutionSlug).claimedAt ?? SAMPLE_TODAY, 10);
       const joined = user.membershipRole === 'owner' ? signedUp : new Date(signedUp.getTime() + 7 * DAY_MS);
-      return [{ user_id: requireUser(user.email), institution_id: institutionId(user.institutionSlug), role: user.membershipRole, created_at: joined.toISOString() }];
+      // People who have used Drishti for months closed Start here a day after they joined.
+      const guideClosed = SAMPLE_GUIDE_CLOSED.includes(user.email) ? new Date(joined.getTime() + DAY_MS).toISOString() : null;
+      return [
+        {
+          user_id: requireUser(user.email),
+          institution_id: institutionId(user.institutionSlug),
+          role: user.membershipRole,
+          created_at: joined.toISOString(),
+          guide_closed_at: guideClosed,
+        },
+      ];
     }),
   );
   // The team was there before the first institution was added.
@@ -208,6 +220,16 @@ async function main(): Promise<void> {
       first_setup: true,
       rival_ids: entry.rivals,
     })),
+  );
+
+  // Fixes the owners marked done. Added before the Audits, so the first own Audit after each
+  // mark checks it, as it would live.
+  await insert(
+    'done_marks',
+    SAMPLE_MARKS.map((mark) => {
+      const owner = sampleInstitution(mark.slug).owner;
+      return { institution_id: institutionId(mark.slug), check_key: mark.check, marked_by: userId(owner), marked_at: at(mark.markedOn, 17) };
+    }),
   );
 
   // Audits: every sample run, own, rival and team, through the live path (collect, score, save).

@@ -82,7 +82,8 @@ export async function onboardAction(previous: OnboardingState, formData: FormDat
     if (runError instanceof AuditRunError) redirect('/audit');
     throw runError;
   }
-  redirect('/audit?welcome=1');
+  // Home, where Start here walks through the score, the first fix and rivals.
+  redirect('/');
 }
 
 export interface ChoiceState {
@@ -111,7 +112,7 @@ export async function chooseFreeProgramAction(_previous: ChoiceState, formData: 
       if (runError instanceof AuditRunError) return { error: runError.message };
       throw runError;
     }
-    redirect('/audit?welcome=1');
+    redirect('/');
   }
   redirect('/audit');
 }

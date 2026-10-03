@@ -4,7 +4,7 @@
 // the date; how to fix only for the top 3 fixes (the database sends nothing more), and "AdmitLabs
 // can fix this" for the rest. Pure.
 
-import { overviewView, type AuditView, type ListItem, type StoredAudit, type StoredCheck } from '../audit/view.ts';
+import { overviewView, workingTop, type AuditView, type ListItem, type StoredAudit, type StoredCheck } from '../audit/view.ts';
 import { TEAM_RULES } from '../config/team.ts';
 import { formatDate } from '../domain/format.ts';
 import { CHECK_KEYS, DIFFICULTIES, INSTITUTION_TYPES, PILLARS, RESULTS, type CheckKey, type InstitutionType } from '../domain/types.ts';
@@ -158,7 +158,7 @@ export function sharedView(shared: Pick<SharedAudit, 'audit' | 'programNames' | 
     view,
     topFixes: view.fixes.slice(0, limit),
     moreFixes: view.fixes.slice(limit),
-    working: view.working.slice(0, 3),
+    working: workingTop(view, 3),
   };
 }
 

@@ -66,7 +66,7 @@ export const SCORING_V1: ScoringConfig = {
   labels: [
     { label: 'Strong', min: 70, max: 100 },
     { label: 'Needs work', min: 40, max: 69 },
-    { label: 'At risk', min: 0, max: 39 },
+    { label: 'Getting started', min: 0, max: 39 },
   ],
 
   thresholds: {

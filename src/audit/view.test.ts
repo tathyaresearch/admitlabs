@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { istDate, monthKey } from '../domain/dates.ts';
 import { itemPoints, rankFixes } from '../domain/scoring/rank.ts';
+import { sampleAuditChain } from '../sample/world.ts';
 import { recordFor, stored } from './testing.ts';
 import {
   fixAdvice,
   historyByMonth,
+  movedChecks,
   monthScore,
   overviewView,
   panelLines,
@@ -17,6 +19,7 @@ import {
   resultCounts,
   rowSummary,
   scoresByMonth,
+  workingTop,
   type ItemPart,
 } from './view.ts';
 
@@ -28,21 +31,48 @@ describe('the all-programs view', () => {
     const view = overviewView(stored(record, { freeDetails: true }), { institutionType: type, programNames: names });
     assert.equal(view.scores.overall, 46);
     assert.equal(view.label, 'Needs work');
-    assert.deepEqual(view.working.slice(0, 3).map((item) => item.name), ['Google search', 'Instagram', 'Review rating']);
+    // Nothing is Strong yet, so nothing is working; a short list fills with the best Okay checks.
+    assert.deepEqual(view.working, []);
+    assert.deepEqual(
+      workingTop(view, 3).map((item) => [item.name, item.strength, item.rank]),
+      [
+        ['Google search', 'okay', 1],
+        ['Instagram', 'okay', 2],
+        ['Review rating', 'okay', 3],
+      ],
+    );
     assert.deepEqual(view.fixes.slice(0, 3).map((item) => [item.name, pointsToGainText(item.points)]), [
       ['Placement proof', 'Could add up to 7 points'],
       ['Fees shown', 'Could add up to 6 points'],
       ['Google profile', 'Could add up to 5 points'],
     ]);
     assert.ok(view.fixes.slice(0, 3).every((item) => item.parts.every((part) => part.detail !== null) && item.difficulty !== null));
-    // Beyond the top 3 fixes, details stay hidden, except for checks already open as a top 3 strength.
-    const topStrengths = new Set(view.working.slice(0, 3).map((item) => item.key));
-    for (const item of view.fixes.slice(3)) {
-      const open = item.parts.every((part) => part.detail !== null);
-      assert.equal(open, topStrengths.has(item.key), item.name);
-    }
+    // Beyond the top 3 fixes, details stay hidden (Free sees the top 3 strengths too, and there are none).
+    for (const item of view.fixes.slice(3)) assert.ok(item.parts.every((part) => part.detail === null), item.name);
     assert.equal(view.fixes.length, 17);
     assert.equal(view.firstAudit, true);
+  });
+
+  test('each check is in one list: what is working and what to fix add up to the 17 checks', async () => {
+    const { record, names, type } = await recordFor('eastgate-university', '2026-09-15');
+    const view = overviewView(stored(record), { institutionType: type, programNames: names });
+    assert.equal(view.working.length + view.fixes.length, 17);
+    const fixes = new Set(view.fixes.map((item) => item.key));
+    for (const item of view.working) {
+      assert.ok(!fixes.has(item.key), item.name);
+      assert.ok(item.parts.every((part) => part.result === 'strong'), item.name);
+    }
+    assert.deepEqual(
+      view.working.map((item) => item.rank),
+      view.working.map((_, index) => index + 1),
+    );
+    // The Okay fill is made of checks to fix, at least Okay in every program.
+    for (const item of view.okay) {
+      assert.ok(fixes.has(item.key), item.name);
+      assert.ok(item.parts.every((part) => part.result === 'strong' || part.result === 'okay'), item.name);
+    }
+    const program = programView(stored(record), [...names.keys()][0] as string, { institutionType: type, programNames: names });
+    assert.equal((program?.working.length ?? 0) + (program?.fixes.length ?? 0), 17);
   });
 
   test('Eastgate on Paid: grouped fixes across 5 programs, with the same points as the engine', async () => {
@@ -310,5 +340,47 @@ describe('the check panel', () => {
       ],
     );
     assert.deepEqual(fixAdvice([part('BBA', 'strong', 30)]), []);
+  });
+});
+
+describe('what changed since the Audit before', () => {
+  test('Northbank in September: Instagram and Easy enquiry moved up, Weak to Okay', async () => {
+    const chain = await sampleAuditChain('northbank-college', 'own', '2026-09-10');
+    const latest = chain.at(-1);
+    assert.ok(latest);
+    const view = overviewView(stored(latest.record), { institutionType: latest.type, programNames: latest.names });
+    assert.deepEqual(movedChecks(view), [
+      { key: 'instagram_activity', name: 'Instagram', programs: [], from: 'weak', to: 'okay' },
+      { key: 'easy_enquiry', name: 'Easy enquiry', programs: [], from: 'weak', to: 'okay' },
+    ]);
+  });
+
+  test('programs that moved the same way share a line; what moved down comes after what moved up', () => {
+    const row = (key: 'fees_shown' | 'youtube', parts: ItemPart[]) => ({ key, name: key, looksAt: '', pillar: 'chosen' as const, level: 'program' as const, parts, summary: rowSummary(parts) });
+    const moved = (programName: string | null, previousResult: ItemPart['previousResult'], result: ItemPart['result']): ItemPart => ({
+      checkId: `${programName}-${result}`,
+      programId: programName,
+      programName,
+      result,
+      previousResult,
+      points: 0,
+      maxPoints: 25,
+      checkedAt: '2026-09-15T04:30:00.000Z',
+      detail: null,
+    });
+    const view = {
+      areas: [
+        { pillar: 'discovered' as const, rows: [row('youtube', [moved(null, 'okay', 'weak')])] },
+        { pillar: 'chosen' as const, rows: [row('fees_shown', [moved('BBA', 'missing', 'okay'), moved('MBA', 'missing', 'okay'), moved('BCA', 'weak', 'weak')])] },
+      ],
+    };
+    assert.deepEqual(
+      movedChecks(view).map((entry) => [entry.key, entry.programs, entry.from, entry.to]),
+      [
+        ['fees_shown', ['BBA', 'MBA'], 'missing', 'okay'],
+        ['youtube', [], 'okay', 'weak'],
+      ],
+    );
+    assert.deepEqual(movedChecks({ areas: [] }), []);
   });
 });

@@ -22,6 +22,10 @@ export type CheckResult = (typeof RESULTS)[number];
 export const DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 
+/** What a content idea asks you to make, as the analysis provider writes it. */
+export const IDEA_FORMATS = ['post', 'reel', 'video', 'faq', 'page'] as const;
+export type IdeaFormat = (typeof IDEA_FORMATS)[number];
+
 export const CHECK_KEYS = [
   'google_search',
   'instagram_activity',
@@ -122,6 +126,21 @@ export const DIFFICULTY_LABELS: Readonly<Record<Difficulty, string>> = {
   easy: 'Easy',
   medium: 'Medium',
   hard: 'Hard',
+};
+
+/** How big a job something is, in Home's words: Quick, Medium, Big. */
+export const EFFORT_LABELS: Readonly<Record<Difficulty, string>> = {
+  easy: 'Quick',
+  medium: 'Medium',
+  hard: 'Big',
+};
+
+export const IDEA_FORMAT_LABELS: Readonly<Record<IdeaFormat, string>> = {
+  post: 'Post',
+  reel: 'Reel',
+  video: 'Video',
+  faq: 'FAQ',
+  page: 'Web page',
 };
 
 export const LANGUAGE_LABELS: Readonly<Record<Language, string>> = {
