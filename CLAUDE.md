@@ -16,13 +16,18 @@ You are building **Drishti**, an institution-facing product by AdmitLabs. It hel
 
 ## Accounts (very important)
 
-This computer is logged in to **several different GitHub, Vercel and Supabase accounts** used for other products. None of them are for Drishti yet.
+This computer is logged in to **several different GitHub, Vercel and Supabase accounts** used for other products. Only the ones approved below are for this project.
 
-- **Never use, connect to, push to, deploy to or create anything in any GitHub, Vercel or Supabase account** without asking first.
+**Approved (3 October 2026), for the website only** (admitlabs.in and admitlabs.in/drishti):
+- **GitHub:** user `tathyaresearch` (approved for the push in place of "tathya"), repo `tathyaresearch/admitlabs` (https://github.com/tathyaresearch/admitlabs.git), the `origin` remote. The repo is public.
+- **Vercel:** connected through that repo (team tathya2, project admitlabs). A push to `main` deploys. Commit as `ofcareersofficial@gmail.com`: Vercel deploys only commits by an author linked to its account. Never use the `vercel` CLI.
+- **Supabase:** none yet. The dashboard's database is local only.
+
+- **Never use, connect to, push to, deploy to or create anything in any other GitHub, Vercel or Supabase account** without asking first.
 - Before any action that touches one of these services, **stop and ask** which exact account and project to use. Show the account name you see and wait for a clear yes.
-- Do not reuse any existing project, repo, database or keys, including Tathya's.
+- Do not reuse any other existing project, repo, database or keys, including Tathya's.
 - Do not run `git push`, `vercel`, `supabase link`, `supabase login` or `supabase db push` without approval.
-- Phases 1 to 7 run **locally only**: local Supabase (Supabase CLI with Docker), local Next.js. Git is local only until told otherwise.
+- The dashboard runs **locally only**: local Supabase (Supabase CLI with Docker), local Next.js.
 
 ## Stack (summary)
 
