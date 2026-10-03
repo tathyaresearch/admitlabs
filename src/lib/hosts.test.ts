@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
+import { readdirSync } from 'node:fs';
 import { describe, test } from 'node:test';
-import { isWebsiteAddress, redirectBecomesRelative, routeFor } from './hosts.ts';
+import { APP_SECTIONS, isWebsiteAddress, redirectBecomesRelative, routeFor } from './hosts.ts';
 
 // One app, two addresses: the website and the dashboard each answer only their own pages.
 
@@ -89,5 +90,52 @@ describe('routing by address', () => {
     assert.equal(isWebsiteAddress('drishti-preview.vercel.app', LIVE), false);
     const shared = { site: 'http://localhost:3000', app: 'http://localhost:3000' };
     assert.equal(isWebsiteAddress('localhost:3000', shared), false);
+  });
+});
+
+// While the dashboard is closed (production, until Drishti opens): the website on every address.
+describe('routing while the dashboard is closed', () => {
+  const closed = (host: string, path: string, origins = LIVE) => {
+    const [pathname = '/', query] = path.split('?');
+    return routeFor({ host, pathname, search: query ? `?${query}` : '' }, origins, false);
+  };
+
+  test('the website on its address and on previews', () => {
+    assert.deepEqual(closed('admitlabs.in', '/'), { kind: 'site', path: '/site' });
+    assert.deepEqual(closed('admitlabs.in', '/work-with-us'), { kind: 'site', path: '/site/work-with-us' });
+    assert.deepEqual(closed('admitlabs-git-main-tathyaresearch.vercel.app', '/'), { kind: 'site', path: '/site' });
+    assert.deepEqual(closed('admitlabs-abc123.vercel.app', '/work-with-us'), { kind: 'site', path: '/site/work-with-us' });
+    assert.deepEqual(closed('localhost:3100', '/'), { kind: 'site', path: '/site' });
+  });
+
+  test('the dashboard address and www move to the website', () => {
+    assert.deepEqual(closed('app.admitlabs.in', '/'), { kind: 'redirect', url: 'https://admitlabs.in/', permanent: false });
+    assert.deepEqual(closed('app.admitlabs.in', '/audit?check=fees_shown'), { kind: 'redirect', url: 'https://admitlabs.in/audit?check=fees_shown', permanent: false });
+    assert.deepEqual(closed('www.admitlabs.in', '/drishti'), { kind: 'redirect', url: 'https://admitlabs.in/drishti', permanent: true });
+    assert.deepEqual(closed('localhost:3000', '/', LOCAL), { kind: 'redirect', url: 'http://admitlabs.localhost:3000/', permanent: false });
+  });
+
+  test('sign up, log in, the product page and files are served as they are, on any address', () => {
+    for (const host of ['admitlabs.in', 'admitlabs-abc123.vercel.app']) {
+      for (const path of ['/signup', '/login', '/drishti', '/drishti/sample-report.pdf', '/_next/static/chunks/app.js', '/robots.txt', '/site/opengraph-image-1a2b3c']) {
+        assert.deepEqual(closed(host, path), { kind: 'pass' }, `${host}${path}`);
+      }
+    }
+  });
+
+  test('every other dashboard page asks for a website page that is not there: not found', () => {
+    for (const path of ['/audit', '/audit/abc', '/rivals', '/demand', '/reports/2026-08', '/reports/2026-08.pdf', '/plan', '/settings', '/notifications', '/work', '/onboarding', '/team', '/team/institutions/abc/pdf', '/share/token123', '/share/token123/pdf', '/design-system']) {
+      assert.deepEqual(closed('admitlabs.in', path), { kind: 'site', path: `/site${path}` }, path);
+    }
+    assert.deepEqual(closed('admitlabs.in', '/site/to-dashboard/login'), { kind: 'site', path: '/site/site/to-dashboard/login' });
+    assert.deepEqual(closed('admitlabs-abc123.vercel.app', '/team'), { kind: 'site', path: '/site/team' });
+  });
+
+  test('every dashboard page is listed, so none is ever missed', () => {
+    const pages = (dir: string) =>
+      readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && !/^[([_]/.test(entry.name))
+        .map((entry) => entry.name);
+    for (const page of [...pages('../app/'), ...pages('../app/(dashboard)/')]) assert.ok(APP_SECTIONS.includes(page), page);
   });
 });

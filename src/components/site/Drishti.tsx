@@ -8,13 +8,16 @@ import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { EyeName } from '@/components/ui/Eye';
 import { EyeMotion } from '@/components/ui/EyeMotion';
 import { Icon, type IconName } from '@/components/ui/Icon';
-import { appLink } from '@/lib/urls';
 import { FEATURES } from '@/product/content';
 import { CTA, DRISHTI } from '@/site/content';
 import { DASHBOARD } from '@/site/scenes';
+import { wayIn } from '@/site/way-in';
 import { Frame } from './Frame';
 import styles from './drishti.module.css';
 import site from './site.module.css';
+
+/** "Get your free Audit", or while Drishti is not open yet, "Talk to us" (src/site/way-in.ts). */
+const START = wayIn(CTA.primary);
 
 const NAV_ICONS: readonly IconName[] = ['home', 'audit', 'rivals', 'demand', 'reports'];
 const vars = (values: Record<string, string | number>) => values as CSSProperties;
@@ -185,8 +188,8 @@ export function DrishtiSection() {
         <div className={`${styles.foot} ${site.reveal}`}>
           <p className={styles.free}>{DRISHTI.free}</p>
           <div className={site.actions}>
-            <ButtonLink href={appLink('/signup')} size="lg" iconAfter="arrowRight" className={site.cta}>
-              {CTA.primary}
+            <ButtonLink href={START.href} size="lg" iconAfter="arrowRight" className={site.cta}>
+              {START.label}
             </ButtonLink>
             {/* A full page load: the product page arrives with its own styles, exactly as it loads anywhere. */}
             <AnchorButton href={DRISHTI.explorePath} variant="secondary" size="lg" className={site.ghost}>

@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { INSTITUTION_NAV } from '@/components/shell/nav';
 import { AppShell } from '@/components/shell/AppShell';
@@ -6,8 +7,11 @@ import { formatDate } from '@/domain/format';
 import { MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
+import { APP_OPEN } from '@/lib/urls';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  // Not open yet (src/lib/urls.ts): not found, whatever address it was asked on.
+  if (!APP_OPEN) notFound();
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
   const supabase = await createClient();

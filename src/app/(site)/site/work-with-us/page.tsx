@@ -3,14 +3,16 @@ import { EnquiryForm } from '@/components/site/EnquiryForm';
 import { SiteFooter } from '@/components/site/Footer';
 import { Frame } from '@/components/site/Frame';
 import { SiteHeader } from '@/components/site/Header';
+import { AnchorButton } from '@/components/ui/Button';
 import { SITE_SETTINGS } from '@/config/site';
+import { APP_OPEN } from '@/lib/urls';
 import { ENQUIRY } from '@/site/content';
 import enquiry from '@/components/site/enquiry.module.css';
 import site from '@/components/site/site.module.css';
 
 // "Work with us" (admitlabs.in/work-with-us): a short form that lands in the team area's
 // Enquiries list. In the Spotlight style, like the home page. Prerendered; the form sends through
-// a server action.
+// a server action. While Drishti is not open yet there is no database to send to: an email instead.
 export const dynamic = 'force-static';
 
 const TITLE = 'Work with us | AdmitLabs';
@@ -49,12 +51,23 @@ export default function WorkWithUsPage() {
                 {ENQUIRY.title}
               </h1>
               <p className={enquiry.lede}>{ENQUIRY.lede}</p>
-              <p className={enquiry.write}>
-                {ENQUIRY.orWrite} <a href={`mailto:${SITE_SETTINGS.email}`}>{SITE_SETTINGS.email}</a>.
-              </p>
+              {APP_OPEN ? (
+                <p className={enquiry.write}>
+                  {ENQUIRY.orWrite} <a href={`mailto:${SITE_SETTINGS.email}`}>{SITE_SETTINGS.email}</a>.
+                </p>
+              ) : null}
             </div>
             <div className={enquiry.card} data-theme="light">
-              <EnquiryForm />
+              {APP_OPEN ? (
+                <EnquiryForm />
+              ) : (
+                <div className={enquiry.mail}>
+                  <AnchorButton href={`mailto:${SITE_SETTINGS.email}`} icon="mail" size="lg" block className={site.ctaInk}>
+                    {ENQUIRY.emailUs}
+                  </AnchorButton>
+                  <p className={enquiry.mailAddress}>{SITE_SETTINGS.email}</p>
+                </div>
+              )}
             </div>
           </div>
         </section>

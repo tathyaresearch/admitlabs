@@ -9,6 +9,14 @@ export const SITE_URL = clean(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://admitl
 export const APP_URL = clean(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000');
 export const PRODUCT_URL = clean(process.env.NEXT_PUBLIC_PRODUCT_URL ?? `${SITE_URL}/drishti`);
 
+/**
+ * Whether the dashboard is open: sign up and log in, the dashboard, the team area and shared
+ * Audits. Production keeps it closed until Drishti opens (.env.production): the website and the
+ * product page are live on their own, /signup and /login say "Drishti opens soon." with a way to
+ * talk to us, every other dashboard page is not found, and nothing reaches a database.
+ */
+export const APP_OPEN = process.env.NEXT_PUBLIC_APP_OPEN !== 'false';
+
 /** A link into the dashboard, for the website and the product page. Relative when they share the dashboard's address. */
 export function appLink(path: string): string {
   const sameApp = PRODUCT_URL.startsWith(APP_URL);

@@ -6,8 +6,8 @@ import { Icon } from '@/components/ui/Icon';
 import { CellText } from '@/components/ui/Results';
 import { ENTITLEMENTS, type EntitlementGroup } from '@/config/entitlements';
 import { TIER_LABELS, TIERS } from '@/domain/types';
-import { appLink } from '@/lib/urls';
 import { CLIENTS, FAQ, FAQ_TITLE, PLANS } from '@/product/content';
+import { wayIn } from '@/site/way-in';
 import sections from '@/components/site/sections.module.css';
 import site from '@/components/site/site.module.css';
 import { Title, vars } from './Sections';
@@ -54,8 +54,8 @@ export function Plans() {
                   ))}
                 </ul>
                 <div className={styles.planFoot}>
-                  <ButtonLink href={appLink('/signup')} variant={paid ? 'primary' : 'secondary'} size="lg" block iconAfter="arrowRight" className={paid ? site.ctaInk : site.ghost}>
-                    {card.cta}
+                  <ButtonLink href={wayIn(card.cta).href} variant={paid ? 'primary' : 'secondary'} size="lg" block iconAfter="arrowRight" className={paid ? site.ctaInk : site.ghost}>
+                    {wayIn(card.cta).label}
                   </ButtonLink>
                   {card.note ? <p className={styles.planNote}>{card.note}</p> : null}
                 </div>

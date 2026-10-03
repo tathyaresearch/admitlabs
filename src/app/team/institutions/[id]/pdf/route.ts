@@ -7,13 +7,15 @@ import { latestStoredAudit } from '@/audit/read';
 import { TEAM_RULES } from '@/config/team';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
-import { APP_URL } from '@/lib/urls';
+import { APP_OPEN, APP_URL } from '@/lib/urls';
 import { buildAuditPdf } from '@/report/audit';
 import { renderAuditPdf } from '@/report/pdf/audit';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  // Not open yet (src/lib/urls.ts): not found, whatever address it was asked on.
+  if (!APP_OPEN) return new NextResponse('Not found.', { status: 404 });
   await requireTeamViewer();
   const { id } = await params;
   if (!UUID.test(id)) notFound();

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { rowSummary, type AuditView, type ItemPart, type ListItem, type PillarCheck } from '@/audit/view';
 import { ChecksTable } from '@/components/audit/ChecksTable';
@@ -8,6 +9,7 @@ import { SummaryBand } from '@/components/audit/SummaryBand';
 import { UnlockCard } from '@/components/audit/UnlockCard';
 import { HeadToHead } from '@/components/charts/HeadToHead';
 import { CityPicker } from '@/components/institution/CityPicker';
+import { APP_OPEN } from '@/lib/urls';
 import { ProgramPicker } from '@/components/institution/ProgramPicker';
 import { HistoryLine } from '@/components/charts/HistoryLine';
 import { MonthBars } from '@/components/charts/MonthBars';
@@ -347,6 +349,8 @@ function ThemePreview() {
 }
 
 export default async function DesignSystemPage() {
+  // Not open yet (src/lib/urls.ts): not found, whatever address it was asked on.
+  if (!APP_OPEN) notFound();
   if (process.env.NODE_ENV === 'production') await requireTeamViewer();
 
   return (

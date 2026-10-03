@@ -27,6 +27,12 @@ export const AUTH_COPY = {
   },
 } as const;
 
+/** While Drishti is not open yet (production, until it opens): instead of the form. No email, no code. */
+export const SOON_COPY = {
+  page: 'Drishti opens soon',
+  title: 'Drishti opens soon.',
+} as const;
+
 /** The same for both: the field, the code step and the checks. */
 export const CODE_COPY = {
   email: 'Work email',

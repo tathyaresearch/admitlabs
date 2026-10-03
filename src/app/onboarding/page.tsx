@@ -1,10 +1,11 @@
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { ProductLockup } from '@/components/ui/Brand';
 import { Button } from '@/components/ui/Button';
 import { signOut } from '@/lib/auth/actions';
 import { requireViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
+import { APP_OPEN } from '@/lib/urls';
 import { OnboardingForm } from './OnboardingForm';
 import { ProgramChoice } from './ProgramChoice';
 import styles from './onboarding.module.css';
@@ -12,6 +13,8 @@ import styles from './onboarding.module.css';
 export const metadata = { title: 'Set up your institution' };
 
 export default async function OnboardingPage() {
+  // Not open yet (src/lib/urls.ts): not found, whatever address it was asked on.
+  if (!APP_OPEN) notFound();
   const viewer = await requireViewer();
   if (viewer.teamRole) redirect('/team');
   const supabase = await createClient();

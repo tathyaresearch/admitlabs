@@ -131,6 +131,20 @@
   color: var(--text-muted);
 }
 
+/* While Drishti is not open yet: an email instead of the form. */
+.mail {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+}
+
+.mailAddress {
+  font: var(--type-strong);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
 .thanks {
   display: grid;
   justify-items: start;

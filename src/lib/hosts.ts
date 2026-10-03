@@ -7,11 +7,18 @@
 //                                    website.
 //   www on the website address:      the same page without www.
 //   Any other address (a preview):   everything as it is, so /site and /drishti can be looked at.
+//
+// While the dashboard is closed (production, until Drishti opens) every address shows the website:
+// the dashboard’s address and www move to it, /signup and /login stay and say Drishti opens soon,
+// and every other dashboard page is not found.
 
 export const SITE_PREFIX = '/site';
 
 /** The dashboard's first path segments. On the website's address they move to the dashboard's. */
-export const APP_SECTIONS: readonly string[] = ['login', 'signup', 'onboarding', 'audit', 'rivals', 'demand', 'reports', 'plan', 'settings', 'notifications', 'team', 'share', 'design-system'];
+export const APP_SECTIONS: readonly string[] = ['login', 'signup', 'onboarding', 'audit', 'rivals', 'demand', 'reports', 'plan', 'settings', 'notifications', 'work', 'team', 'share', 'design-system'];
+
+/** Sign up and log in. While the dashboard is closed they stay, on the website, and say Drishti opens soon. */
+export const DOORS: readonly string[] = ['signup', 'login'];
 
 export type HostRoute =
   /** Carry on: the dashboard's own rules apply (sign in and so on). */
@@ -59,11 +66,14 @@ export function isWebsiteAddress(host: string, origins: { site: string; app: str
   return asked === site.host || asked === `www.${site.host}`;
 }
 
-export function routeFor(request: Request, origins: { site: string; app: string }): HostRoute {
+/** `open`: whether the dashboard is open (src/lib/urls.ts APP_OPEN). */
+export function routeFor(request: Request, origins: { site: string; app: string }, open = true): HostRoute {
   const site = new URL(origins.site);
   const app = new URL(origins.app);
   const host = request.host.toLowerCase();
   const { pathname, search } = request;
+
+  if (!open) return closedRoute(host, pathname, search, site, app);
 
   // One address for both: no routing by address. The website stays at /site.
   if (site.host === app.host) return { kind: 'app' };
@@ -84,4 +94,20 @@ export function routeFor(request: Request, origins: { site: string; app: string 
   }
 
   return { kind: 'app' };
+}
+
+/**
+ * While the dashboard is closed: the website on every address (previews too). The dashboard’s
+ * address and www move to the website’s; /signup, /login, /drishti and files are served as they
+ * are; any other dashboard path asks for a website page that is not there, so it is not found.
+ */
+function closedRoute(host: string, pathname: string, search: string, site: URL, app: URL): HostRoute {
+  if (pathname.startsWith('/_next/') || pathname.startsWith('/__next')) return { kind: 'pass' };
+  if (host === app.host && app.host !== site.host) return { kind: 'redirect', url: `${site.origin}${pathname}${search}`, permanent: false };
+  if (host === `www.${site.host}`) return { kind: 'redirect', url: `${site.origin}${pathname}${search}`, permanent: true };
+  const section = pathname.split('/')[1] ?? '';
+  if (DOORS.includes(section) || under(pathname, '/drishti')) return { kind: 'pass' };
+  if (APP_SECTIONS.includes(section) || under(pathname, `${SITE_PREFIX}/to-dashboard`)) return { kind: 'site', path: `${SITE_PREFIX}${pathname}` };
+  if (isFramework(pathname) || under(pathname, SITE_PREFIX)) return { kind: 'pass' };
+  return { kind: 'site', path: pathname === '/' ? SITE_PREFIX : `${SITE_PREFIX}${pathname}` };
 }

@@ -4,8 +4,11 @@
 
 import type { ReactNode } from 'react';
 import { ProductLockup } from '@/components/ui/Brand';
+import { AnchorButton } from '@/components/ui/Button';
 import { Notice } from '@/components/ui/Feedback';
-import { CODE_COPY } from './content';
+import { SITE_SETTINGS } from '@/config/site';
+import { CTA } from '@/site/content';
+import { CODE_COPY, SOON_COPY } from './content';
 import styles from './auth.module.css';
 import stage from './stage.module.css';
 
@@ -23,6 +26,21 @@ export function AuthPage({ left, children }: { left: ReactNode; children: ReactN
         </div>
         <p className={stage.line}>{CODE_COPY.line}</p>
       </aside>
+    </div>
+  );
+}
+
+/**
+ * Instead of the form while Drishti is not open yet (production, until it opens): one line and a
+ * way to write to us, as everywhere on the website. No email field, no code, no database.
+ */
+export function OpensSoon() {
+  return (
+    <div className={styles.soon}>
+      <h1 className={styles.formTitle}>{SOON_COPY.title}</h1>
+      <AnchorButton href={`mailto:${SITE_SETTINGS.email}`} size="lg" block icon="mail" className={styles.soonButton}>
+        {CTA.talk}
+      </AnchorButton>
     </div>
   );
 }

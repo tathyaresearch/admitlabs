@@ -3,10 +3,13 @@
 
 import { Wordmark } from '@/components/ui/Brand';
 import { istParts } from '@/domain/dates';
-import { appLink } from '@/lib/urls';
 import { CTA, DRISHTI, FOOTER } from '@/site/content';
+import { wayIn } from '@/site/way-in';
 import sections from './sections.module.css';
 import site from './site.module.css';
+
+/** Sign in, or while Drishti is not open yet, "Talk to us" (src/site/way-in.ts). */
+const SIGN_IN = wayIn(CTA.signIn, '/login');
 
 export function SiteFooter() {
   return (
@@ -30,8 +33,8 @@ export function SiteFooter() {
             </a>
           </li>
           <li>
-            <a className={sections.footerLink} href={appLink('/login')}>
-              {CTA.signIn}
+            <a className={sections.footerLink} href={SIGN_IN.href}>
+              {SIGN_IN.label}
             </a>
           </li>
         </ul>

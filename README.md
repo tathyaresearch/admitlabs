@@ -213,6 +213,15 @@ The AdmitLabs team area at `/team` (spec section 13), for `team@admitlabs.exampl
 
 The limits (90 days, top 3 fixes, 100 rows a run, 50 a page, Paid ending within 30 days) are `TEAM_RULES` in `src/config/team.ts`. The sample data includes a live shared Audit for Cedar Skill Institute; `npm run db:reset` prints its link.
 
+## Live: the website first
+
+The website (admitlabs.in) and the product page (admitlabs.in/drishti) go live on Vercel from the GitHub repo tathyaresearch/admitlabs: a push to `main` deploys. The dashboard is not open yet.
+
+- **One switch.** `NEXT_PUBLIC_APP_OPEN` (`APP_OPEN` in `src/lib/urls.ts`). It is `false` in `.env.production`, which `next build` reads for production, and open everywhere else (`npm run dev`, tests). Set it to `true` when Drishti opens.
+- **While it is closed,** every address shows the website (admitlabs.in, and Vercel’s preview addresses); www.admitlabs.in and app.admitlabs.in move to admitlabs.in. `/signup` and `/login` keep their left side and say "Drishti opens soon." with a "Talk to us" button (an email to hello@admitlabs.in). Every "Get your free Audit", plan button and Sign in on the website and `/drishti` says "Talk to us" and opens `/signup` (`src/site/way-in.ts`). Work with us shows an "Email us" button instead of the form. Every other dashboard page (the dashboard, `/team`, `/share`, onboarding, the design system) is not found, and its pages and files check the switch too.
+- **No database in production.** Vercel has no Supabase settings and needs none: nothing on the live site reads a database. `.env.production` holds only the live addresses and the switch, no keys.
+- **Try it locally** the way Vercel runs it: `npm run build`, then `npx next start` and open http://localhost:3000 (any address that is not app.admitlabs.in shows the website).
+
 ## Website
 
 The AdmitLabs website (spec section 22), later served at admitlabs.in, is part of this app. Open http://admitlabs.localhost:3000; no sign in, and it works with the database stopped (only sending the form needs it).

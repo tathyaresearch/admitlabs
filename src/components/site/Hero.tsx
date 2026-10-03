@@ -2,11 +2,14 @@
 // light, the two buttons, and a quiet proof line, inside a fine frame with small crosses.
 
 import { ButtonLink } from '@/components/ui/Button';
-import { appLink } from '@/lib/urls';
 import { CTA, HERO } from '@/site/content';
+import { wayIn } from '@/site/way-in';
 import { Frame } from './Frame';
 import styles from './hero.module.css';
 import site from './site.module.css';
+
+/** "Get your free Audit", or while Drishti is not open yet, "Talk to us" (src/site/way-in.ts). */
+const START = wayIn(CTA.primary);
 
 export function Hero() {
   const { before, words } = HERO.title;
@@ -23,8 +26,8 @@ export function Hero() {
           {HERO.lede} <strong>{HERO.ledeEnd}</strong>
         </p>
         <div className={styles.actions}>
-          <ButtonLink href={appLink('/signup')} size="lg" iconAfter="arrowRight" className={site.cta}>
-            {CTA.primary}
+          <ButtonLink href={START.href} size="lg" iconAfter="arrowRight" className={site.cta}>
+            {START.label}
           </ButtonLink>
           <ButtonLink href={CTA.enquiryPath} variant="secondary" size="lg" className={site.ghost}>
             {CTA.secondary}

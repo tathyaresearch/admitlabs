@@ -6,10 +6,13 @@
 import { NextResponse } from 'next/server';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
+import { APP_OPEN } from '@/lib/urls';
 
 const LINK_SECONDS = 60;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ month: string }> }) {
+  // Not open yet (src/lib/urls.ts): not found, whatever address it was asked on.
+  if (!APP_OPEN) return new NextResponse('Not found.', { status: 404 });
   const { month } = await params;
   const viewer = await requireInstitutionViewer();
   const notFound = () => new NextResponse('Report not found.', { status: 404 });

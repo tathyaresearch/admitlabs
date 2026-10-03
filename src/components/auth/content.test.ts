@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, test } from 'node:test';
 import { hasDashes } from '../../domain/copy.ts';
 import { isNoAccount } from '../../lib/auth/no-account.ts';
-import { AUTH_COPY, CODE_COPY } from './content.ts';
+import { AUTH_COPY, CODE_COPY, SOON_COPY } from './content.ts';
 
 // The two doors into Drishti: their words are the user's, every free Audit button leads to sign
 // up, every sign-in link to log in, and log in tells an email with no account apart, for itself
@@ -29,7 +29,9 @@ describe('sign up and log in', () => {
     assert.equal(`${AUTH_COPY.login.footText} ${AUTH_COPY.login.footLink}`, 'New to Drishti? Sign up');
     assert.equal(`${CODE_COPY.loginSent} ${CODE_COPY.newHere} ${CODE_COPY.signUp}.`, 'If this email has a Drishti account, we’ve sent a code. New here? Sign up.');
     assert.equal(AUTH_COPY.signup.verify, 'Continue');
-    for (const text of texts({ AUTH_COPY, CODE_COPY })) {
+    // While Drishti is not open yet, instead of the form.
+    assert.equal(SOON_COPY.title, 'Drishti opens soon.');
+    for (const text of texts({ AUTH_COPY, CODE_COPY, SOON_COPY })) {
       assert.equal(hasDashes(text), false, text);
       assert.doesNotMatch(text, /["']/, text);
     }
@@ -41,27 +43,29 @@ describe('sign up and log in', () => {
   });
 
   test('every free Audit button on the website, /drishti and a shared Audit leads to sign up', () => {
-    const buttons = [
+    // The website and /drishti go through wayIn: sign up while the dashboard is open, "Talk to us"
+    // to /signup while it is closed (src/site/way-in.test.ts).
+    const ways = [
       ['components', 'site', 'Header.tsx'],
       ['components', 'site', 'Hero.tsx'],
       ['components', 'site', 'Drishti.tsx'],
       ['components', 'site', 'Sections.tsx'],
       ['components', 'product', 'Sections.tsx'],
       ['components', 'product', 'Offer.tsx'],
-      ['components', 'share', 'SharedAudit.tsx'],
     ];
-    for (const file of buttons) {
+    for (const file of ways) {
       const source = read(...file);
-      assert.match(source, /\/signup/, file.join('/'));
+      assert.match(source, /wayIn\((CTA\.primary|card\.cta)\)/, file.join('/'));
       assert.doesNotMatch(source, /\/login/, file.join('/'));
     }
+    assert.match(read('components', 'share', 'SharedAudit.tsx'), /\/signup/);
     for (const route of [['app', 'share', '[token]', 'pdf', 'route.ts'], ['app', 'team', 'institutions', '[id]', 'pdf', 'route.ts']]) {
       assert.match(read(...route), /freeAuditUrl: `\$\{APP_URL\}\/signup`/, route.join('/'));
     }
   });
 
   test('the website’s sign-in link leads to log in', () => {
-    assert.match(read('components', 'site', 'Footer.tsx'), /appLink\('\/login'\)/);
+    assert.match(read('components', 'site', 'Footer.tsx'), /wayIn\(CTA\.signIn, '\/login'\)/);
   });
 
   test('log in tells an email with no account apart from other failures', () => {

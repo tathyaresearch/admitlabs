@@ -5,11 +5,14 @@
 import Link from 'next/link';
 import { Wordmark } from '@/components/ui/Brand';
 import { ButtonLink } from '@/components/ui/Button';
-import { appLink } from '@/lib/urls';
 import { CTA, NAV, PRODUCTS } from '@/site/content';
+import { wayIn } from '@/site/way-in';
 import { ProductsMenu } from './ProductsMenu';
 import { SiteMenu } from './SiteMenu';
 import styles from './site.module.css';
+
+/** "Get your free Audit", or while Drishti is not open yet, "Talk to us" (src/site/way-in.ts). */
+const START = wayIn(CTA.primary);
 
 export function SiteHeader() {
   return (
@@ -34,8 +37,8 @@ export function SiteHeader() {
           <ButtonLink href={CTA.enquiryPath} variant="secondary" size="sm" className={`${styles.workLink} ${styles.ghost}`}>
             {CTA.secondary}
           </ButtonLink>
-          <ButtonLink href={appLink('/signup')} size="sm" className={`${styles.cta} ${styles.headerCta}`}>
-            {CTA.primary}
+          <ButtonLink href={START.href} size="sm" className={`${styles.cta} ${styles.headerCta}`}>
+            {START.label}
           </ButtonLink>
           <SiteMenu nav={NAV} products={PRODUCTS} work={{ href: CTA.enquiryPath, label: CTA.secondary }} />
         </div>

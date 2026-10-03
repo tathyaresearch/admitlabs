@@ -20,13 +20,16 @@ import { scoreLabel } from '@/domain/scores';
 import { PILLAR_LABELS, RESULTS, type CheckResult, type Pillar } from '@/domain/types';
 import type { IconRef } from '@/graphics/icons';
 import { PLATFORM_ICONS, PLATFORM_NAMES } from '@/graphics/platforms';
-import { appLink } from '@/lib/urls';
 import { CTA, FEATURES, FEATURES_HEAD, FINAL, HERO, PROBLEM, PROOF_LINE, REPORT, SCORE, STEPS, TRUST, type Feature } from '@/product/content';
 import type { Showcase } from '@/product/showcase';
+import { wayIn } from '@/site/way-in';
 import sections from '@/components/site/sections.module.css';
 import site from '@/components/site/site.module.css';
 import { AppWindow, askedOn, AuditPicture, DemandPicture, RivalsPicture } from './Previews';
 import styles from './product.module.css';
+
+/** "Get your free Audit", or while Drishti is not open yet, "Talk to us" (src/site/way-in.ts). */
+const START = wayIn(CTA.primary);
 
 export const vars = (values: Record<string, string | number>) => values as CSSProperties;
 
@@ -77,8 +80,8 @@ export function Hero({ showcase }: { showcase: Showcase }) {
         </h1>
         <p className={styles.heroLede}>{lede(HERO.lede)}</p>
         <div className={styles.heroActions}>
-          <ButtonLink href={appLink('/signup')} size="lg" iconAfter="arrowRight" className={site.cta}>
-            {CTA.primary}
+          <ButtonLink href={START.href} size="lg" iconAfter="arrowRight" className={site.cta}>
+            {START.label}
           </ButtonLink>
           <AnchorButton href="#report" variant="secondary" size="lg" iconAfter="arrowDown" className={site.ghost}>
             {REPORT.see}
@@ -475,8 +478,8 @@ export function FinalCall() {
           {FINAL.text}
         </p>
         <div className={`${site.actions} ${sections.finalActions} ${site.reveal}`} style={vars({ '--order': 2 })}>
-          <ButtonLink href={appLink('/signup')} size="lg" iconAfter="arrowRight" className={site.cta}>
-            {CTA.primary}
+          <ButtonLink href={START.href} size="lg" iconAfter="arrowRight" className={site.cta}>
+            {START.label}
           </ButtonLink>
         </div>
       </div>

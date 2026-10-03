@@ -1,12 +1,14 @@
 // Next.js 16 proxy (formerly middleware). First, which surface answers by the address the request
 // came to (src/lib/hosts.ts): the website and the product page need no sign-in and no session
 // work. Then, for the dashboard: refreshes the session and sends signed-out visitors to sign in.
+// While the dashboard is closed (production, until Drishti opens) every request is the website’s,
+// so nothing here reaches a database.
 // Pages still check the user on the server; this is not the only guard.
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { redirectBecomesRelative, routeFor } from '@/lib/hosts';
 import { updateSession } from '@/lib/supabase/proxy';
-import { APP_URL, SITE_URL } from '@/lib/urls';
+import { APP_OPEN, APP_URL, SITE_URL } from '@/lib/urls';
 
 const PUBLIC_PREFIXES = ['/login', '/signup', '/drishti', '/share', '/site'];
 
@@ -22,7 +24,7 @@ function isPublic(pathname: string): boolean {
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const host = request.headers.get('host') ?? request.nextUrl.host;
-  const route = routeFor({ host, pathname, search }, { site: SITE_URL, app: APP_URL });
+  const route = routeFor({ host, pathname, search }, { site: SITE_URL, app: APP_URL }, APP_OPEN);
   if (route.kind === 'redirect') {
     // Locally the dashboard has the server's own address, and Next would make this redirect
     // relative, keeping the visitor on the website's address. A route handler sends it instead.

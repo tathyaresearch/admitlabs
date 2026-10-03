@@ -7,12 +7,15 @@ import type { CSSProperties } from 'react';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { SITE_SETTINGS } from '@/config/site';
-import { appLink } from '@/lib/urls';
 import { AUDIENCE, CTA, FAQ, FINAL, HOW, TATHYA, WORK } from '@/site/content';
+import { wayIn } from '@/site/way-in';
 import { WORK_SAMPLES } from '@/site/work';
 import { Frame } from './Frame';
 import styles from './sections.module.css';
 import site from './site.module.css';
+
+/** "Get your free Audit", or while Drishti is not open yet, "Talk to us" (src/site/way-in.ts). */
+const START = wayIn(CTA.primary);
 
 const vars = (values: Record<string, string | number>) => values as CSSProperties;
 
@@ -151,8 +154,8 @@ export function FinalCall() {
           {FINAL.line}
         </p>
         <div className={`${site.actions} ${styles.finalActions} ${site.reveal}`} style={vars({ '--order': 2 })}>
-          <ButtonLink href={appLink('/signup')} size="lg" iconAfter="arrowRight" className={site.cta}>
-            {CTA.primary}
+          <ButtonLink href={START.href} size="lg" iconAfter="arrowRight" className={site.cta}>
+            {START.label}
           </ButtonLink>
           <ButtonLink href={CTA.enquiryPath} variant="secondary" size="lg" className={site.ghost}>
             {CTA.secondary}

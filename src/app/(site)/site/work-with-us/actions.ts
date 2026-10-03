@@ -5,6 +5,7 @@
 // one email in a day. Nothing is emailed; the team reads enquiries in the team area.
 
 import { createClient } from '@/lib/supabase/server';
+import { APP_OPEN } from '@/lib/urls';
 import { ENQUIRY } from '@/site/content';
 import { parseEnquiry, TRAP_FIELD, type EnquiryErrors, type EnquiryField } from '@/site/enquiry';
 
@@ -25,6 +26,8 @@ export async function submitEnquiryAction(previous: EnquiryState, formData: Form
   const attempt = previous.attempt + 1;
   const values = Object.fromEntries(FIELDS.map((field) => [field, String(formData.get(field) ?? '')])) as Record<EnquiryField, string>;
   if (String(formData.get(TRAP_FIELD) ?? '').trim()) return { status: 'sent', errors: {}, message: null, values: {}, attempt };
+  // While Drishti is not open yet there is no database: the page shows an email link instead.
+  if (!APP_OPEN) return { status: 'error', errors: {}, message: ENQUIRY.failed, values, attempt };
 
   const parsed = parseEnquiry(values);
   if (!parsed.ok) return { status: 'error', errors: parsed.errors, message: null, values, attempt };

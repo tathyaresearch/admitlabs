@@ -15,6 +15,8 @@ export const CTA = {
   /** Where "Work with us" goes, on the website's address. */
   enquiryPath: '/work-with-us',
   signIn: 'Sign in',
+  /** While Drishti is not open yet, every way into it says this and opens /signup (src/site/way-in.ts). */
+  talk: 'Talk to us',
 } as const;
 
 /** The products, in the header's Products menu and in the phone menu. Tathya opens in a new tab. */
@@ -164,6 +166,8 @@ export const ENQUIRY = {
   title: 'Tell us about your institution.',
   lede: 'A few details, and we’ll reply within one working day.',
   orWrite: 'Or write to us at',
+  /** While Drishti is not open yet there is no form to send: an email instead. */
+  emailUs: 'Email us',
   fields: {
     name: { label: 'Your name' },
     institution: { label: 'Institution' },

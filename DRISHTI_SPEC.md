@@ -94,7 +94,9 @@ One Next.js app, two addresses. Which pages answer depends on the address a requ
 | `/team/...` | AdmitLabs team area (team roles only), including Enquiries |
 | `/share/[token]` | Shared Audit link for prospects (read only, no login) |
 
-The addresses are settings in `.env` (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_PRODUCT_URL`), so moving them is a config change only. Locally the website is http://admitlabs.localhost:3000 and the dashboard http://localhost:3000. The website's pages live at `/site` inside the app. Search engines may crawl only the website's address (`robots.txt`), which lists its pages in `sitemap.xml`.
+**Website first.** Until Drishti opens, production runs with the dashboard closed (`NEXT_PUBLIC_APP_OPEN=false` in `.env.production`): every address shows the website, app.admitlabs.in moves to admitlabs.in, `/signup` and `/login` keep their left side and say "Drishti opens soon." with a "Talk to us" email button, every "Get your free Audit", plan button and Sign in on the website and `/drishti` says "Talk to us" and opens `/signup`, Work with us offers an email instead of the form, and every other dashboard route is not found. Nothing in production reads a database.
+
+The addresses are settings in `.env` (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_PRODUCT_URL`), with the live ones in `.env.production`, so moving them is a config change only. Locally the website is http://admitlabs.localhost:3000 and the dashboard http://localhost:3000. The website's pages live at `/site` inside the app. Search engines may crawl only the website's address (`robots.txt`), which lists its pages in `sitemap.xml`.
 
 ---
 

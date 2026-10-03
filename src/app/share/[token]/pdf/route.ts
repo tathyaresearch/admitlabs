@@ -5,9 +5,11 @@ import { NextResponse } from 'next/server';
 import { buildAuditPdf } from '@/report/audit';
 import { renderAuditPdf } from '@/report/pdf/audit';
 import { loadSharedLink } from '@/lib/share/load';
-import { APP_URL } from '@/lib/urls';
+import { APP_OPEN, APP_URL } from '@/lib/urls';
 
 export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
+  // Not open yet (src/lib/urls.ts): not found, whatever address it was asked on.
+  if (!APP_OPEN) return new NextResponse('Not found.', { status: 404 });
   const { token } = await params;
   const link = await loadSharedLink(token);
   if (!link) return new NextResponse('Not found.', { status: 404 });
