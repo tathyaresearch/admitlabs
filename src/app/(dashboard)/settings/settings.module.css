@@ -1,14 +1,194 @@
-/* Settings: one tab per form, each in one card, kept to a readable width. */
+/* Settings in plain groups: the list of groups on the left (a row of chips on a phone), the
+   chosen group on the right, each form in one card at a readable width. */
 
 .page {
   display: grid;
   gap: var(--page-gap);
-  max-width: 48rem;
+  max-width: 68rem;
 }
 
-.tab {
+.settings {
   display: grid;
-  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+}
+
+@media (min-width: 64rem) {
+  .settings {
+    grid-template-columns: 14rem minmax(0, 48rem);
+    align-items: start;
+    gap: var(--space-10);
+  }
+}
+
+.sections {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  list-style: none;
+}
+
+.sections::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .sections {
+    position: sticky;
+    top: var(--space-6);
+    flex-direction: column;
+    gap: 2px;
+    overflow: visible;
+  }
+}
+
+.section {
+  display: grid;
+  flex: none;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+@media (min-width: 64rem) {
+  .section {
+    border-color: transparent;
+    padding: var(--space-3);
+  }
+}
+
+.section:hover {
+  color: var(--text);
+}
+
+.section[aria-current='page'] {
+  border-color: transparent;
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.sectionName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-strong);
+  white-space: nowrap;
+}
+
+.sectionHint {
+  display: none;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+@media (min-width: 64rem) {
+  .sectionHint {
+    display: block;
+  }
+}
+
+.sectionBody {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.sectionHead {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.sectionTitle {
+  font: var(--type-section);
+  letter-spacing: var(--tracking-section);
+}
+
+.sectionText {
+  max-width: 40rem;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* A second heading inside a group, like the one over what you add about yourselves. */
+.subhead {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.subheadTitle {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+}
+
+/* A list in a card: rivals, with a link to each. */
+.rows {
+  display: grid;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) 0;
+}
+
+.row + .row {
+  border-top: 1px solid var(--line-raised);
+}
+
+.row:first-child {
+  padding-top: 0;
+}
+
+.rowName {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font: var(--type-strong);
+}
+
+.rowSub {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.rowLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font: var(--type-caption-strong);
+  color: var(--text);
+}
+
+/* Under a card's list or facts: the action and its note. */
+.cardFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line-raised);
+}
+
+/* What arrives in Notifications, and when. */
+.ahead {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: 1.1em;
+  list-style: disc outside;
+  font: var(--type-body);
 }
 
 .tabNote {
@@ -138,17 +318,6 @@
 }
 
 /* Details for each program: one folded card per program. */
-.programDetailsHead {
-  display: grid;
-  gap: var(--space-2);
-  margin-top: var(--space-6);
-}
-
-.programDetailsTitle {
-  font: var(--type-section);
-  letter-spacing: var(--tracking-section);
-}
-
 .programDetails {
   display: grid;
   gap: var(--space-2);
@@ -182,4 +351,23 @@
 
 .programBody {
   padding: 0 var(--card-padding-sm) var(--card-padding-sm);
+}
+
+/* The fold's own chevron, turned when open. */
+.programSummary {
+  list-style: none;
+}
+
+.programSummary::-webkit-details-marker {
+  display: none;
+}
+
+.programIcon {
+  flex: none;
+  color: var(--text-muted);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.programDetail[open] .programIcon {
+  transform: rotate(180deg);
 }

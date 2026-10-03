@@ -4,6 +4,7 @@ import { auditVerdict } from '@/audit/verdict';
 import { movedChecks, overviewView, scoresByMonth, type AuditView } from '@/audit/view';
 import { DemandCard } from '@/components/home/DemandCard';
 import { HomeScore } from '@/components/home/HomeScore';
+import { PaidAction } from '@/components/plan/PaidAction';
 import { HomeThings, type HomeThing } from '@/components/home/HomeThings';
 import { RivalsCard } from '@/components/home/RivalsCard';
 import { StartGuide } from '@/components/home/StartGuide';
@@ -106,13 +107,9 @@ export default async function HomePage() {
       <Notice
         icon="info"
         title={`Your Paid plan ends in ${reminder.daysLeft} ${reminder.daysLeft === 1 ? 'day' : 'days'}.`}
-        action={
-          <ButtonLink href="/plan" size="sm" variant="secondary">
-            See your plan
-          </ButtonLink>
-        }
+        action={<PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}
       >
-        It does not renew on its own. When it ends you move to Free and keep your last Audit score.
+        It does not renew on its own. When it ends you move to Free and keep your last Audit score. Ask AdmitLabs to continue it: the same price and terms, and nothing is paid here.
       </Notice>
     ) : null;
 
@@ -234,7 +231,7 @@ export default async function HomePage() {
           moves={moves}
           spikes={spikes}
           checkedOn={audit.runAt}
-          paidHref={full ? null : '/plan'}
+          paidAction={full ? null : <PaidAction viewer={viewer} variant="secondary" size="sm" />}
         />
       ) : null}
 
@@ -244,7 +241,7 @@ export default async function HomePage() {
         since={full ? sinceFirst(data) : null}
         note={auditNote(data, viewer.tier)}
         checkLinks="/audit?check="
-        upsell={full ? null : { href: '/plan', text: 'See your score month by month with Paid' }}
+        paidAction={full ? null : <PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}
       />
 
       <div className={styles.pair}>

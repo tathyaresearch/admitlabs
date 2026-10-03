@@ -4,7 +4,7 @@
 // the counts written out, and the check to fix first. The month by month chart and every check
 // by name stay on the Audit.
 
-import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { pillarChecks, type AuditView } from '@/audit/view';
 import { ScoreGauge } from '@/components/charts/ScoreGauge';
 import { FixFirst, SplitBar } from '@/components/ui/CheckSummary';
@@ -23,7 +23,7 @@ export function HomeScore({
   since,
   note,
   checkLinks,
-  upsell,
+  paidAction,
 }: {
   view: AuditView;
   checkedAt: string;
@@ -33,8 +33,8 @@ export function HomeScore({
   note: string | null;
   /** The start of a check's address ("/audit?check="). */
   checkLinks: string;
-  /** Free: the quiet way to more. */
-  upsell: { href: string; text: string } | null;
+  /** Free: asking for Paid, under one line on what it adds here. */
+  paidAction: ReactNode;
 }) {
   const quiet = view.firstAudit || view.programsChanged;
   const parts = new Map(pillarChecks(view).map((entry) => [entry.pillar, entry]));
@@ -106,11 +106,11 @@ export function HomeScore({
         </ul>
       </div>
       <ScoreHelp />
-      {upsell ? (
-        <Link href={upsell.href} className={styles.quietLink}>
-          {upsell.text}
-          <Icon name="arrowRight" size={14} />
-        </Link>
+      {paidAction ? (
+        <div className={styles.scorePaid}>
+          <p className={styles.scorePaidText}>See your score month by month with Paid.</p>
+          {paidAction}
+        </div>
       ) : null}
     </section>
   );

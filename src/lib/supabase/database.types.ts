@@ -619,45 +619,69 @@ export type Database = {
       }
       enquiries: {
         Row: {
+          asked_by: string | null
           created_at: string
           email: string
           handled_at: string | null
           handled_by: string | null
           id: string
           institution: string
+          institution_id: string | null
+          kind: Database["public"]["Enums"]["enquiry_kind"]
           message: string | null
-          name: string
-          phone: string
+          name: string | null
+          phone: string | null
           program: string | null
-          role: Database["public"]["Enums"]["enquiry_role"]
+          role: Database["public"]["Enums"]["enquiry_role"] | null
         }
         Insert: {
+          asked_by?: string | null
           created_at?: string
           email: string
           handled_at?: string | null
           handled_by?: string | null
           id?: string
           institution: string
+          institution_id?: string | null
+          kind?: Database["public"]["Enums"]["enquiry_kind"]
           message?: string | null
-          name: string
-          phone: string
+          name?: string | null
+          phone?: string | null
           program?: string | null
-          role: Database["public"]["Enums"]["enquiry_role"]
+          role?: Database["public"]["Enums"]["enquiry_role"] | null
         }
         Update: {
+          asked_by?: string | null
           created_at?: string
           email?: string
           handled_at?: string | null
           handled_by?: string | null
           id?: string
           institution?: string
+          institution_id?: string | null
+          kind?: Database["public"]["Enums"]["enquiry_kind"]
           message?: string | null
-          name?: string
-          phone?: string
+          name?: string | null
+          phone?: string | null
           program?: string | null
-          role?: Database["public"]["Enums"]["enquiry_role"]
+          role?: Database["public"]["Enums"]["enquiry_role"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "enquiries_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enquiries_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       institution_details: {
         Row: {
@@ -1668,6 +1692,8 @@ export type Database = {
     Views: {
       team_institutions: {
         Row: {
+          attention: number | null
+          attention_order: number | null
           audit_id: string | null
           audit_kind: Database["public"]["Enums"]["audit_kind"] | null
           checked_at: string | null
@@ -1681,10 +1707,14 @@ export type Database = {
           plan_starts_at: string | null
           plan_tier: Database["public"]["Enums"]["tier"] | null
           programs: number | null
+          rivals: number | null
           score: number | null
+          score_change: number | null
+          shared_at: string | null
           slug: string | null
           state: string | null
           status: string | null
+          team_refreshed_at: string | null
           tier: Database["public"]["Enums"]["tier"] | null
           type: Database["public"]["Enums"]["institution_type"] | null
           website: string | null
@@ -1725,6 +1755,7 @@ export type Database = {
         Returns: string
       }
       archive_program: { Args: { p_program: string }; Returns: undefined }
+      ask_for_paid: { Args: { p_institution: string }; Returns: string }
       close_start_guide: { Args: { p_institution: string }; Returns: undefined }
       create_share_link: {
         Args: { p_audit: string; p_days: number }
@@ -1793,6 +1824,13 @@ export type Database = {
           p_youtube: string
         }
         Returns: string
+      }
+      open_paid_ask: {
+        Args: { p_institution: string }
+        Returns: {
+          asked_at: string
+          kind: Database["public"]["Enums"]["enquiry_kind"]
+        }[]
       }
       record_actions: {
         Args: {
@@ -1957,6 +1995,7 @@ export type Database = {
         | "idea"
       demand_scope: "city" | "state" | "india"
       difficulty: "easy" | "medium" | "hard"
+      enquiry_kind: "work_with_us" | "ask_paid" | "continue_paid"
       enquiry_role:
         | "founder_director"
         | "principal_dean"
@@ -2144,6 +2183,7 @@ export const Constants = {
       ],
       demand_scope: ["city", "state", "india"],
       difficulty: ["easy", "medium", "hard"],
+      enquiry_kind: ["work_with_us", "ask_paid", "continue_paid"],
       enquiry_role: [
         "founder_director",
         "principal_dean",

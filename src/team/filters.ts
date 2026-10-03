@@ -33,10 +33,12 @@ export const PLAN_FILTER_LABELS: Readonly<Record<PlanFilter, string>> = {
   paid_ending: 'Ending soon',
 };
 
-export const TEAM_SORTS = ['name', 'score', 'checked'] as const;
+/** "Needs attention" first: the most urgent reason at the top (src/team/attention.ts). */
+export const TEAM_SORTS = ['attention', 'name', 'score', 'checked'] as const;
 export type TeamSort = (typeof TEAM_SORTS)[number];
 
 export const TEAM_SORT_LABELS: Readonly<Record<TeamSort, string>> = {
+  attention: 'Needs attention',
   name: 'Name',
   score: 'Score',
   checked: 'Last checked',
@@ -54,7 +56,7 @@ export interface TeamFilters {
   page: number;
 }
 
-export const NO_FILTERS: TeamFilters = { q: '', type: null, city: null, state: null, status: null, tier: null, score: null, sort: 'name', page: 1 };
+export const NO_FILTERS: TeamFilters = { q: '', type: null, city: null, state: null, status: null, tier: null, score: null, sort: 'attention', page: 1 };
 
 type Params = Readonly<Record<string, string | string[] | undefined>>;
 
@@ -75,7 +77,7 @@ export function parseFilters(params: Params): TeamFilters {
     status: pick(one(params.status), TEAM_STATUSES),
     tier: pick(one(params.tier), PLAN_FILTERS),
     score: pick(one(params.score), SCORE_BANDS),
-    sort: pick(one(params.sort), TEAM_SORTS) ?? 'name',
+    sort: pick(one(params.sort), TEAM_SORTS) ?? 'attention',
     page: Number.isFinite(page) && page > 0 ? page : 1,
   };
 }
@@ -89,7 +91,7 @@ export function filtersQuery(filters: TeamFilters, changes: Partial<TeamFilters>
     const value = next[key];
     if (value) params.set(key, value);
   }
-  if (next.sort !== 'name') params.set('sort', next.sort);
+  if (next.sort !== 'attention') params.set('sort', next.sort);
   if (next.page > 1) params.set('page', String(next.page));
   const query = params.toString();
   return query ? `?${query}` : '';

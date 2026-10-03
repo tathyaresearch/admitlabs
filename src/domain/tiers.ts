@@ -48,3 +48,18 @@ export function planReminder(plan: PlanRecord | null, now: Date): PlanReminder {
   if (daysLeft <= first) return { stage: 'ends_soon', daysLeft };
   return { stage: 'none', daysLeft };
 }
+
+export type PaidAskKind = 'ask_paid' | 'continue_paid';
+
+/**
+ * What an owner can ask AdmitLabs for now: Paid on Free (a Paid plan that ended counts as Free),
+ * to continue Paid from the first renewal reminder, nothing on Client or earlier in Paid. Mirrors
+ * private.paid_ask_kind() in the database, which turns away anything else.
+ */
+export function paidAskKind(plan: PlanRecord | null, now: Date): PaidAskKind | null {
+  const tier = effectiveTier(plan, now);
+  if (tier === 'free') return 'ask_paid';
+  if (tier === 'client') return null;
+  const stage = planReminder(plan, now).stage;
+  return stage === 'ends_soon' || stage === 'ends_very_soon' ? 'continue_paid' : null;
+}

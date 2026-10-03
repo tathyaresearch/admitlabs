@@ -140,6 +140,8 @@ The institution enters:
 7. YouTube (optional)
 8. Other social links: Facebook, LinkedIn (optional)
 
+In Settings, the owner can also add the institution's **Google Maps listing** (optional): the link from the listing's Share button, or the listing page. The Audit's Google profile and review checks then read that listing, so the rating and reviews are always the institution's own.
+
 After onboarding, Free users pick the **one program** their Free Audit covers. The last step says what happens next: Drishti checks what a student would see (about a minute), shows a score out of 100 and the first things to fix, and the next free Audit comes in 3 months. Then Home opens, with Start here (section 13).
 
 **Details added by you (Settings, every plan).** All optional and short.
@@ -465,20 +467,22 @@ Keep it short enough to read in 5 minutes.
 | Rival detail | One rival's full view, part by part and month by month, when their admissions open, their Google rating and its trend, and every check side by side (a side whose programs differ shows its weakest program). Every set of tabs opens on one with something in it: "Where they lead" shows only when they lead |
 | Demand | Region switch (City, State, All India), when it was updated and the next update, where it was found by name ("From Reddit, Quora and Search trends, in English, Hindi and Assamese"), 6 output sections from 9.4, the fastest rise by month, rising and falling as bars |
 | Reports | List of monthly PDFs, download, the score by month with every point's value |
-| Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans |
-| Settings | Institution details, programs, social links, users, details added by you (section 6) |
-| Notifications | Alerts list. Empty, or still short: what arrives here and when, for the plan |
+| Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans. "Ask for Paid" on Free and "Ask to continue Paid" from the first renewal reminder (see Asking for Paid below) |
+| Settings | Plain groups, each at its own address (a list on the left, a row on a phone): Institution (details, public links, the Google Maps listing, and details added by you, section 6), Programs (with the Free Audit program and details for each program), Rivals (who, and when they can change), Team, Plan (with asking for Paid) and Notifications (what arrives, and when). Only the owner changes them |
+| Notifications | Alerts list, with filters by what each is about (Audit, Rivals, Students, Reports, Plan, each with its count, only the ones that have alerts). Each link says where it goes ("See what changed", "See the move"). Empty, or still short: what arrives here and when, for the plan |
+
+**Asking for Paid.** Wherever Paid is offered (the cards that say what Paid adds, a locked preview, the check panel, What changed on Free, the Plan page, Settings, a Paid plan that ended), the owner asks with one click: "Ask for Paid" on Free, "Ask to continue Paid" from the first renewal reminder. The request lands in the team's Enquiries with the institution and the owner's email; asking again while one is open sends nothing new, and the page says when it was sent. The price and terms never change, nothing is paid online and no email is sent: the team writes back and an Admin switches the plan on. Members see who can ask; Client has nothing to ask.
 
 **Team screens (`/team`)**
 
 | Screen | Contents |
 |---|---|
-| Team home | All institutions: search, filter by type, city, state, score, tier, prospect or client |
+| Team home | All institutions, sorted by the reason each needs attention, most urgent first, each row saying why: a Paid plan ending within 30 days, a Client with no team Audit this month, a score down 3 or more, signed up with no rivals, a prospect not signed up a week after their Audit was shared. Search, filter by type, city, state, score, tier, prospect or client; sort by name, score or last checked too |
 | Bulk Audit | Add many institutions at once (paste list or CSV), run Audits, see results in a table |
 | Institution detail | Everything the institution sees, plus private notes, tier control (Admin), manual refresh |
 | Share | Create a share link or PDF of a prospect's Audit |
 | Rival ads | Enter what rivals promise in their ads, by hand until Drishti can collect it |
-| Enquiries | Everyone who wrote in through the website's Work with us form, newest first: name, role, institution, email, phone, program and message. New or All. Mark as handled, or back to new. Every team user sees them. No emails are sent |
+| Enquiries | Everyone who wrote in through the website's Work with us form (name, role, institution, email, phone, program and message), and owners who asked for Paid, or to continue it, from their dashboard (the institution, linked, and the owner's email), newest first. New or All. Mark as handled, or back to new. Every team user sees them. No emails are sent |
 
 **Team rules**
 
@@ -633,7 +637,7 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 - Team and Admin see everything.
 - Notes are team only.
 - Marks done: people at the institution and the team read them; only the owner adds or takes one back, through `mark_done` and `undo_done`, and only for a check the latest own Audit finds below Strong. Each person closes their own Start here.
-- Enquiries: anyone can send one, only through `submit_enquiry` (at most 3 a day from one email). Only the team reads them and marks them handled.
+- Enquiries: anyone can send one, only through `submit_enquiry` (at most 3 a day from one email). An owner asks for Paid only through `ask_for_paid`, which checks the owner and the plan and keeps one open request per kind; the institution reads its own open request through `open_paid_ask`. Only the team reads Enquiries and marks them handled.
 - Rival data is only reachable through the `rivals` link of the viewing institution.
 - Plan gating must be enforced on the server, not only hidden in the UI.
 

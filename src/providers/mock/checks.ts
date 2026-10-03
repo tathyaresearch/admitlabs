@@ -53,17 +53,19 @@ export const mockPlaces: Provider = {
     const month = monthKey(asOf);
     const profileResult = intendedResult(institution, 'google_profile', null, asOf);
     const ratingResult = intendedResult(institution, 'review_rating', null, asOf);
-    const exists = profileResult !== 'missing';
+    // The institution's own listing, when it gave one in Settings: the profile is there, and it is the source.
+    const listing = institution.otherLinks.googleMaps ?? null;
+    const exists = listing !== null || profileResult !== 'missing';
     const [year, monthNumber] = month.split('-').map(Number) as [number, number];
     const monthsIn = (year - 2026) * 12 + (monthNumber - 1);
     const reviewCount = exists ? reviewCountOverTime(profileResult, rngFor('reviews', institution.slug), scoringFamily(institution.type), monthsIn) : 0;
-    const source = exists
-      ? `https://maps.example/place/${institution.slug}`
-      : `https://maps.example/search?q=${encodeURIComponent(`${institution.name} ${institution.city}`)}`;
+    const source =
+      listing ??
+      (exists ? `https://maps.example/place/${institution.slug}` : `https://maps.example/search?q=${encodeURIComponent(`${institution.name} ${institution.city}`)}`);
     const rating = reviewRatingOverTime(ratingResult, rngFor('rating', institution.slug), rngFor('replies', institution.slug, month), reviewCount, monthsIn);
     return [
       makeSignal('places', 'google_profile', target, googleProfileFacts(reviewCount, exists), source, asOf),
-      makeSignal('places', 'review_rating', target, rating, `${source}/reviews`, asOf),
+      makeSignal('places', 'review_rating', target, rating, listing ?? `${source}/reviews`, asOf),
     ];
   },
 };

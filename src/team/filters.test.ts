@@ -6,6 +6,9 @@ describe('the team list filters, read from the address', () => {
   test('known values are kept; anything else is ignored', () => {
     const filters = parseFilters({ q: ' north ', type: 'college', status: 'prospect', tier: 'client', score: 'getting_started', sort: 'score', page: '2', city: 'Guwahati' });
     assert.deepEqual(filters, { q: 'north', type: 'college', city: 'Guwahati', state: null, status: 'prospect', tier: 'client', score: 'getting_started', sort: 'score', page: 2 });
+    // Needs attention is the default order; the address leaves it out.
+    assert.equal(parseFilters({}).sort, 'attention');
+    assert.equal(filtersQuery(parseFilters({ sort: 'name' })), '?sort=name');
     assert.equal(parseFilters({ tier: 'paid_ending' }).tier, 'paid_ending');
     assert.deepEqual(parseFilters({ type: 'school', status: 'x', sort: 'bad', page: '-4' }), NO_FILTERS);
     assert.equal(hasFilters(NO_FILTERS), false);

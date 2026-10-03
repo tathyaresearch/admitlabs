@@ -296,6 +296,29 @@ a.count:hover {
   overflow-wrap: anywhere;
 }
 
+/* Why it needs attention: one inverted chip for the most urgent reason, outlined ones after it. */
+.rowReasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.rowReason {
+  padding: 0.25em 0.5em;
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-xs);
+  font: var(--type-caption-strong);
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.rowReason:first-of-type {
+  border-color: transparent;
+  background: var(--text);
+  color: var(--surface);
+}
+
 .rowCell {
   display: none;
   font: var(--type-small);

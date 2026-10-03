@@ -1,18 +1,18 @@
-// Free: the one card that says what Paid adds, with the one "Unlock with Paid" action on the
-// page. It names what is locked and counts it; nothing locked is sent to the page.
+// Free: the one card that says what Paid adds, with the one "Ask for Paid" action on the page.
+// It names what is locked and counts it; nothing locked is sent to the page.
 
-import { ButtonLink } from '@/components/ui/Button';
+import type { ReactNode } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { plural } from '@/domain/format';
 import styles from './audit.module.css';
 
-export function UnlockCard({ moreFixes, moreStrengths, lockedPrograms }: { moreFixes: number; moreStrengths: number; lockedPrograms: number }) {
+export function UnlockCard({ moreFixes, moreStrengths, lockedPrograms, action }: { moreFixes: number; moreStrengths: number; lockedPrograms: number; action: ReactNode }) {
   const items = [
     moreFixes > 0 ? `${plural(moreFixes, 'more fix', 'more fixes')}, ranked, with how to fix each one` : null,
     moreStrengths > 0 ? `${plural(moreStrengths, 'more strength', 'more strengths')}, with what was found` : null,
     'What Drishti found for every check, and where it found it',
     lockedPrograms > 0 ? `Your other ${plural(lockedPrograms, 'program', 'programs')}, each with its own score` : 'Every program you offer, each with its own score',
-    'Score history, Audit by Audit',
+    'Your progress, month by month',
   ].filter((item): item is string => item !== null);
 
   return (
@@ -30,9 +30,7 @@ export function UnlockCard({ moreFixes, moreStrengths, lockedPrograms }: { moreF
           ))}
         </ul>
       </div>
-      <ButtonLink href="/plan" iconAfter="arrowRight">
-        Unlock with Paid
-      </ButtonLink>
+      <div className={styles.unlockAction}>{action}</div>
     </section>
   );
 }

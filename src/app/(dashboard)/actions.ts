@@ -2,7 +2,7 @@
 
 // Mark as done (owner only, on Home and in the Audit's check panel) and taking it back: checked
 // here and again in mark_done() and undo_done(), which also check the latest own Audit. Closing
-// Start here: anyone at the institution, for themselves.
+// Start here: anyone at the institution, for themselves. Asking AdmitLabs for Paid: the owner.
 
 import { revalidatePath } from 'next/cache';
 import { CHECK_KEYS, type CheckKey } from '@/domain/types';
@@ -53,4 +53,31 @@ export async function closeStartGuideAction(): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.rpc('close_start_guide', { p_institution: viewer.membership.institution.id });
   if (!error) revalidatePath('/');
+}
+
+export interface AskResult {
+  ok: boolean;
+  /** When the request was sent: now, or when an open one was sent before. */
+  askedAt: string | null;
+  error: string | null;
+}
+
+/**
+ * The owner asks AdmitLabs for Paid, or to continue it (C2). It lands in the team's Enquiries;
+ * ask_for_paid() checks the owner and the plan again and never sends a second open request.
+ * No payment and no email.
+ */
+export async function askForPaidAction(): Promise<AskResult> {
+  const viewer = await getViewer();
+  if (!viewer?.membership || viewer.viewingAs || viewer.membership.role !== 'owner') {
+    return { ok: false, askedAt: null, error: 'Only the owner of this account can ask for Paid.' };
+  }
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('ask_for_paid', { p_institution: viewer.membership.institution.id });
+  if (error) {
+    if (error.message.includes('nothing_to_ask')) return { ok: false, askedAt: null, error: 'There is nothing to ask for on your plan right now.' };
+    return { ok: false, askedAt: null, error: 'That did not send. Try again.' };
+  }
+  revalidatePath('/', 'layout');
+  return { ok: true, askedAt: data, error: null };
 }

@@ -68,6 +68,14 @@ On the Audit, each check is either to fix or working (Strong everywhere), so the
 - Plain words: "What do these mean?" under the parts explains the parts, the results and the bands; a result reads "18 of 30 points"; a check whose programs differ shows its weakest program; Demand says when it was updated and names its sources; a rival's page says when their admissions open.
 - Progress (Paid and Client): a table of each month's score and its three parts, the change since the month before, the place among your rivals that month, and the checks that moved (`src/audit/progress.ts`). Each month is compared with the month before directly, so an extra refresh in between never hides a move. Every Audit stays folded below.
 
+## Settings, asking for Paid, alerts
+
+- Settings is in plain groups, each at its own address: Institution (with the optional Google Maps listing, which the Audit's Google checks then read), Programs, Rivals, Team, Plan and Notifications.
+- "Ask for Paid" (Free) and "Ask to continue Paid" (from the first renewal reminder) replace every Paid link: one click sends the request to the team's Enquiries (`ask_for_paid`, owner only, one open request per kind). Price and terms are unchanged and nothing is paid online.
+- Notifications has filters by what each alert is about, and each link says where it goes.
+- The team's list opens with who needs attention, most urgent first, each row saying why (`src/team/attention.ts` and the `team_institutions` view).
+- The sample has Eastgate's and Brightpath's monthly reports from April to August.
+
 ## Empty states
 
 Anything that can be empty says why, what to do, and when it fills: no rival suggestions yet (where suggestions come from, and how to add rivals), no alerts yet (what arrives in Notifications and when, `src/domain/alerts.ts`), Demand before its first update, a new prospect on the team side (run a team Audit, see what to fix, share it), no enquiries yet, no notes or share links. Tabs open on the first one with something in it.

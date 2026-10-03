@@ -1,7 +1,7 @@
 import { historyByMonth, monthScore } from '@/audit/view';
 import { SectionHead } from '@/components/audit/AuditHeader';
 import { EarlierReports, LatestReport, ReportsUnlockCard, type ReportScore } from '@/components/report/Reports';
-import { ButtonLink } from '@/components/ui/Button';
+import { PaidAction } from '@/components/plan/PaidAction';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
 import { monthKey } from '@/domain/dates';
@@ -47,7 +47,7 @@ export default async function ReportsPage() {
             Notifications.
           </EmptyState>
         ) : (
-          <ReportsUnlockCard place={institution.city} />
+          <ReportsUnlockCard place={institution.city} action={<PaidAction viewer={viewer} />} />
         )}
       </div>
     );
@@ -67,11 +67,7 @@ export default async function ReportsPage() {
         {endedOn ? (
           <Notice
             title={`Your Paid plan ended on ${formatDate(endedOn)}.`}
-            action={
-              <ButtonLink href="/plan" size="sm" iconAfter="arrowRight">
-                Unlock with Paid
-              </ButtonLink>
-            }
+            action={<PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}
           >
             Your past reports stay here to download. New reports are made on Paid.
           </Notice>

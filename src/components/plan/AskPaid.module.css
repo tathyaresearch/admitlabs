@@ -1,0 +1,38 @@
+/* Asking AdmitLabs for Paid: the button with a quiet line under it, or what was asked and when. */
+
+.ask {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.note {
+  max-width: 34rem;
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.asked {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  max-width: 36rem;
+  font: var(--type-small);
+  text-wrap: pretty;
+}
+
+.asked svg {
+  flex: none;
+  margin-top: 0.15em;
+}
+
+.email {
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.error {
+  font: var(--type-caption);
+  color: var(--text);
+}

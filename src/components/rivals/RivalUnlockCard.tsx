@@ -1,13 +1,13 @@
-// Free: the one card that says what Paid adds to Rivals, with the one "Unlock with Paid" action
+// Free: the one card that says what Paid adds to Rivals, with the one "Ask for Paid" action
 // on the page. It names what is locked and counts it, to show the data is real. Nothing locked
 // is sent to the page.
 
-import { ButtonLink } from '@/components/ui/Button';
+import type { ReactNode } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { plural } from '@/domain/format';
 import audit from '@/components/audit/audit.module.css';
 
-export function RivalUnlockCard({ moves, posts, ads }: { moves: number; posts: number; ads: number }) {
+export function RivalUnlockCard({ moves, posts, ads, action }: { moves: number; posts: number; ads: number; action: ReactNode }) {
   const items = [
     'Head to head scores, pillar by pillar',
     'Where each rival leads you, check by check, with what was found',
@@ -32,9 +32,7 @@ export function RivalUnlockCard({ moves, posts, ads }: { moves: number; posts: n
           ))}
         </ul>
       </div>
-      <ButtonLink href="/plan" iconAfter="arrowRight">
-        Unlock with Paid
-      </ButtonLink>
+      <div className={audit.unlockAction}>{action}</div>
     </section>
   );
 }

@@ -3,8 +3,9 @@
 // card. Downloads are plain links: the server checks who is asking and hands over a short-lived
 // link to the file.
 
+import type { ReactNode } from 'react';
 import { Sparkline } from '@/components/charts/Sparkline';
-import { AnchorButton, ButtonLink } from '@/components/ui/Button';
+import { AnchorButton } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { KpiNumber } from '@/components/ui/Kpi';
 import { Counted, Delta } from '@/components/ui/Results';
@@ -150,8 +151,8 @@ export function EarlierReports({ reports, scores }: { reports: readonly ReportRo
   );
 }
 
-/** Free: what the monthly report holds, with the one "Unlock with Paid" action and the sample. */
-export function ReportsUnlockCard({ place }: { place: string }) {
+/** Free: what the monthly report holds, with the one "Ask for Paid" action and the sample. */
+export function ReportsUnlockCard({ place, action }: { place: string; action: ReactNode }) {
   const items = [
     'One PDF on the 1st of every month, for the month just ended',
     'Your score, what is working and what to fix, ranked',
@@ -176,9 +177,7 @@ export function ReportsUnlockCard({ place }: { place: string }) {
         </ul>
       </div>
       <div className={styles.unlockActions}>
-        <ButtonLink href="/plan" iconAfter="arrowRight">
-          Unlock with Paid
-        </ButtonLink>
+        {action}
         <a href={SAMPLE_REPORT_HREF} className={audit.headLink} download>
           <Icon name="download" size={16} />
           See a sample report

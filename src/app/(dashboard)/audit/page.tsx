@@ -2,6 +2,7 @@ import { overviewView, scoresByMonth } from '@/audit/view';
 import { AuditScreen } from '@/components/audit/AuditScreen';
 import { NoAuditYet } from '@/components/audit/NoAuditYet';
 import { RefreshButton } from '@/components/audit/RefreshButton';
+import { PaidAction } from '@/components/plan/PaidAction';
 import { canSee } from '@/config/entitlements';
 import { monthKey } from '@/domain/dates';
 import { formatDate } from '@/domain/format';
@@ -48,6 +49,7 @@ export default async function AuditPage() {
       details={details}
       institutionType={institution.type}
       marking={{ ...marking, onMark: markDoneAction }}
+      paid={free ? { card: <PaidAction viewer={viewer} />, compact: <PaidAction viewer={viewer} variant="secondary" size="sm" note={false} /> } : null}
     />
   );
 }

@@ -10,6 +10,7 @@ import { ActivityTabs } from '@/components/rivals/Activity';
 import { lessonSteps } from '@/components/rivals/Lessons';
 import { RivalCheckPanel } from '@/components/rivals/RivalCheckPanel';
 import { RivalUnlockCard } from '@/components/rivals/RivalUnlockCard';
+import { PaidAction } from '@/components/plan/PaidAction';
 import { StandTable } from '@/components/rivals/StandTable';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
@@ -89,7 +90,7 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
           verdict={freeRivalsVerdict(standings)}
           rivalsHref={null}
         />
-        <RivalUnlockCard {...data.free.teaser} />
+        <RivalUnlockCard {...data.free.teaser} action={<PaidAction viewer={viewer} />} />
       </div>
     );
   }

@@ -1,14 +1,14 @@
-// Free: the one card that says what Paid adds to Demand, with the one "Unlock with Paid" action
+// Free: the one card that says what Paid adds to Demand, with the one "Ask for Paid" action
 // on the page. It names what is locked and counts it, to show the data is real. Nothing locked
 // is sent to the page.
 
-import { ButtonLink } from '@/components/ui/Button';
+import type { ReactNode } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { plural } from '@/domain/format';
 import type { FreeDemand } from '@/lib/demand/load';
 import audit from '@/components/audit/audit.module.css';
 
-export function DemandUnlockCard({ teaser }: { teaser: FreeDemand['teaser'] }) {
+export function DemandUnlockCard({ teaser, action }: { teaser: FreeDemand['teaser']; action: ReactNode }) {
   const more = Math.max(0, teaser.trends - 1);
   const items = [
     teaser.questions > 0 ? `The top ${plural(teaser.questions, 'student question', 'student questions')} this month, with where they were asked` : 'The top student questions this month',
@@ -37,9 +37,7 @@ export function DemandUnlockCard({ teaser }: { teaser: FreeDemand['teaser'] }) {
           ))}
         </ul>
       </div>
-      <ButtonLink href="/plan" iconAfter="arrowRight">
-        Unlock with Paid
-      </ButtonLink>
+      <div className={audit.unlockAction}>{action}</div>
     </section>
   );
 }

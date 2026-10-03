@@ -3,6 +3,7 @@ import { MonthBars } from '@/components/charts/MonthBars';
 import { AskTabs } from '@/components/demand/AskTabs';
 import { DemandUnlockCard } from '@/components/demand/DemandUnlockCard';
 import { IdeaList } from '@/components/demand/IdeaList';
+import { PaidAction } from '@/components/plan/PaidAction';
 import { MentionsTable } from '@/components/demand/MentionsTable';
 import { DemandProgramTabs, RegionSwitch } from '@/components/demand/Nav';
 import { SeasonClock } from '@/components/demand/SeasonClock';
@@ -55,7 +56,7 @@ export default async function DemandPage({ searchParams }: { searchParams: Promi
           caption={[institution.city, highlight ? formatMonth(highlight.month) : 'Updated once a month', 'Grouped, never personal']}
         />
         <DemandCard highlight={highlight} demandHref={null} place={institution.city} nextUpdate={nextPullOn(now).toISOString()} />
-        <DemandUnlockCard teaser={data.free.teaser} />
+        <DemandUnlockCard teaser={data.free.teaser} action={<PaidAction viewer={viewer} />} />
       </div>
     );
   }

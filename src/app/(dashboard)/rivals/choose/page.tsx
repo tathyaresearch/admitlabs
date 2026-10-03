@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PaidAction } from '@/components/plan/PaidAction';
 import { RivalChooser } from '@/components/rivals/RivalChooser';
 import { Notice } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
@@ -46,8 +46,8 @@ export default async function ChooseRivalsPage() {
           Paid can change them once a month. You can change them again from {formatDate(change.nextOn)}.
         </Notice>
       ) : (
-        <Notice icon="info" title="On Free, your rivals stay as you picked them.">
-          Paid can change them once a month. <Link href="/plan">See what Paid adds</Link>.
+        <Notice icon="info" title="On Free, your rivals stay as you picked them." action={<PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}>
+          Paid can change them once a month.
         </Notice>
       );
   } else {

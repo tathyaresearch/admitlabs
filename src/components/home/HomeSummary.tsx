@@ -8,6 +8,7 @@
 // Without score history the space beside the gauge shows what Paid adds (Free), or what each
 // result earns (a shared Audit); after a first Audit, that the next one shows the change.
 
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { auditVerdict } from '@/audit/verdict';
 import { pillarChecks, type AuditView, type PillarChecks, type ScoreSet } from '@/audit/view';
@@ -42,7 +43,7 @@ function PlaceholderChart() {
 }
 
 /** Beside the gauge: the score by month, a first Audit's note, Free's locked preview, or what each result earns. */
-function ScoreSide({ trend, side, label, checkedAt }: { trend: MonthScores | null; side: 'locked' | 'explain'; label: string; checkedAt: string }) {
+function ScoreSide({ trend, side, label, checkedAt, paidAction }: { trend: MonthScores | null; side: 'locked' | 'explain'; label: string; checkedAt: string; paidAction: ReactNode }) {
   if (trend && trend.length > 1) {
     return (
       <figure className={styles.scoreSide}>
@@ -68,6 +69,7 @@ function ScoreSide({ trend, side, label, checkedAt }: { trend: MonthScores | nul
           title="See your score month by month"
           description="Paid shows every month's score, with the lines where Needs work and Strong begin."
           placeholder={<PlaceholderChart />}
+          action={paidAction ?? undefined}
         />
       </div>
     );
@@ -134,6 +136,7 @@ export function HomeSummary({
   historyLabel = 'Overall score by month',
   verdict = true,
   help = false,
+  paidAction = null,
 }: {
   view: AuditView;
   checkedAt: string;
@@ -158,6 +161,8 @@ export function HomeSummary({
   verdict?: boolean;
   /** "What do these mean?" under the parts (the Audit). */
   help?: boolean;
+  /** Free's locked preview: asking for Paid. */
+  paidAction?: ReactNode;
 }) {
   // Same rules as the Audit page: no change on a first Audit, or when the programs changed.
   const quiet = view.firstAudit || view.programsChanged || !showChange;
@@ -191,7 +196,7 @@ export function HomeSummary({
               <p className={styles.nextBand}>{nextBandText(view.scores.overall)}</p>
               {note ? <p className={styles.nextBand}>{note}</p> : null}
             </div>
-            <ScoreSide trend={trend} side={side} label={historyLabel} checkedAt={checkedAt} />
+            <ScoreSide trend={trend} side={side} label={historyLabel} checkedAt={checkedAt} paidAction={paidAction} />
           </div>
         </KpiCard>
         <div className={styles.pillars}>

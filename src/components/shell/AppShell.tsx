@@ -1,6 +1,7 @@
-// The dashboard frame. Desktop: a sidebar with whose dashboard this is and their plan at the top,
-// the pages in the middle and the account at the bottom, beside the page on a raised panel.
-// Phone: a slim top bar (who, notifications, account) and a bottom bar with the main pages.
+// The dashboard frame. Desktop: a sidebar with "Drishti by AdmitLabs" at the top left (home),
+// whose dashboard this is and their plan under it, the pages in the middle and the account at the
+// bottom, beside the page on a raised panel. Phone: a slim top bar (the same lockup,
+// notifications, account) and a bottom bar with the main pages.
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -44,29 +45,30 @@ export function AppShell({ sections, homeHref, email, roleLabel, context, showNo
       </a>
 
       <aside className={styles.sidebar}>
-        <Link href={homeHref} className={styles.context} aria-label={`${context.title}, home`}>
-          {context.brandMark ? <BrandMark size={36} className={styles.brandMark} /> : null}
-          <span className={styles.contextText}>
-            <span className={styles.contextTitle}>{context.title}</span>
-            <span className={styles.contextDetail}>{context.detail}</span>
-          </span>
-        </Link>
+        <div className={styles.sidebarHead}>
+          <Link href={homeHref} className={styles.brand} aria-label="Drishti by AdmitLabs, home">
+            <ProductLockup size="md" motion="blink" />
+          </Link>
+          <div className={styles.contextBlock}>
+            {context.brandMark ? <BrandMark size={36} className={styles.brandMark} /> : null}
+            <span className={styles.contextText}>
+              <span className={styles.contextTitle}>{context.title}</span>
+              <span className={styles.contextDetail}>{context.detail}</span>
+            </span>
+          </div>
+        </div>
         <div className={styles.sidebarNav}>
           <SideNav sections={sections} badges={showNotifications && unread ? { '/notifications': unread } : undefined} />
         </div>
         <div className={styles.sidebarFoot}>
           <AccountMenu variant="side" email={email} roleLabel={roleLabel} institutionName={context.title} />
-          <p className={styles.madeBy}>
-            <ProductLockup size="sm" motion="blink" />
-          </p>
         </div>
       </aside>
 
       <div className={styles.column}>
         <header className={styles.topbar}>
-          <Link href={homeHref} className={styles.topbarContext} aria-label={`${context.title}, home`}>
-            {context.brandMark ? <BrandMark size={28} className={styles.brandMark} /> : null}
-            <span className={styles.topbarTitle}>{context.title}</span>
+          <Link href={homeHref} className={styles.topbarBrand} aria-label="Drishti by AdmitLabs, home">
+            <ProductLockup size="md" motion="blink" />
           </Link>
           <div className={styles.topbarActions}>
             {showNotifications ? (

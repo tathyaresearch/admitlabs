@@ -174,7 +174,7 @@ export async function runAudit(db: Db, options: RunAuditOptions): Promise<RunAud
   }
 
   // Collect: institution checks once, program checks for each audited program.
-  const links = (institution.other_links ?? {}) as { facebook?: string; linkedin?: string };
+  const links = (institution.other_links ?? {}) as { facebook?: string; linkedin?: string; google_maps?: string };
   const ref: InstitutionRef = {
     id: institution.id,
     slug: institution.slug,
@@ -185,7 +185,7 @@ export async function runAudit(db: Db, options: RunAuditOptions): Promise<RunAud
     website: institution.website,
     instagram: institution.instagram,
     youtube: institution.youtube,
-    otherLinks: { facebook: links.facebook, linkedin: links.linkedin },
+    otherLinks: { facebook: links.facebook, linkedin: links.linkedin, googleMaps: links.google_maps },
     programKeys: active.flatMap((program) => (program.program_key ? [program.program_key] : [])),
   };
   const programRefs: ProgramRef[] = audited.map((program) => ({ id: program.id, name: program.name, programKey: program.program_key }));

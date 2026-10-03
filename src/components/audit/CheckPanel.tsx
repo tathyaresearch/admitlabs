@@ -9,9 +9,8 @@
 // Opens from ?check=<key>, so it can be linked and survives a reload. Details the plan does not
 // include arrive as null and show a placeholder, never real data.
 
-import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useOptimistic, useState, useTransition } from 'react';
+import { useOptimistic, useState, useTransition, type ReactNode } from 'react';
 import { fixAdvice, type AreaRow, type ItemPart } from '@/audit/view';
 import { AddedNote } from '@/components/details/Added';
 import { SourceLine } from '@/components/ui/Data';
@@ -56,6 +55,7 @@ export function CheckPanel({
   added = {},
   fixes = {},
   marking = null,
+  paidAction = null,
 }: {
   rows: readonly AreaRow[];
   /** What the institution added in Settings that relates to each part, by the part's check id. */
@@ -64,6 +64,8 @@ export function CheckPanel({
   fixes?: Readonly<Partial<Record<CheckKey, PanelFix>>>;
   /** Mark as done. Left out where nothing can be marked (the team's pages). */
   marking?: PanelMarking | null;
+  /** Free: asking for Paid, under what Paid would show. */
+  paidAction?: ReactNode;
 }) {
   const params = useSearchParams();
   const router = useRouter();
@@ -97,7 +99,7 @@ export function CheckPanel({
       description={row ? `${PILLAR_LABELS[row.pillar]}: ${PILLAR_QUESTIONS[row.pillar]} ${row.looksAt}.` : undefined}
       footer={row && fix && marking ? <MarkFooter check={row.key} marking={marking} /> : undefined}
     >
-      {row ? <PanelBody row={row} fix={fix} added={added} /> : null}
+      {row ? <PanelBody row={row} fix={fix} added={added} paidAction={paidAction} /> : null}
     </SidePanel>
   );
 }
@@ -138,7 +140,7 @@ function BlockLabel({ number, children }: { number: number; children: string }) 
   );
 }
 
-function PanelBody({ row, fix, added }: { row: AreaRow; fix: PanelFix | null; added: Readonly<Record<string, AddedByYou>> }) {
+function PanelBody({ row, fix, added, paidAction }: { row: AreaRow; fix: PanelFix | null; added: Readonly<Record<string, AddedByYou>>; paidAction: ReactNode }) {
   const why = row.parts.find((part) => part.detail?.whyItMatters)?.detail?.whyItMatters ?? null;
   const advice = fixAdvice(row.parts);
   const groups = foundGroups(row.parts);
@@ -206,10 +208,7 @@ function PanelBody({ row, fix, added }: { row: AreaRow; fix: PanelFix | null; ad
             <p className={styles.lockedText}>
               {seen ? 'Paid shows what Drishti found for the rest, where it found it, and how to fix it.' : 'Paid shows what Drishti found for this check, where it found it, and how to fix it.'}
             </p>
-            <Link href="/plan" className={styles.lockedLink}>
-              See what Paid adds
-              <Icon name="arrowRight" size={14} />
-            </Link>
+            {paidAction}
           </div>
         ) : null}
       </section>

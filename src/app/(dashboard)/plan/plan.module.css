@@ -36,7 +36,7 @@
     grid-area: points;
   }
 
-  .offerNote {
+  .offerAsk {
     grid-area: note;
   }
 }
@@ -81,12 +81,15 @@
   color: var(--text-muted);
 }
 
-.offerNote {
+/* Asking for Paid, under the offer: the button, then how it works. */
+.offerAsk {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
   padding-top: var(--space-4);
   border-top: 1px solid var(--line-raised);
-  font: var(--type-caption);
-  color: var(--text-muted);
 }
+
 
 /* The compare table: each plan heads its column with its price, your plan is marked and tinted,
    ticks for what is included, short values for what is partly included, and empty cells for

@@ -65,7 +65,7 @@ export default async function TeamHomePage({ searchParams }: { searchParams: Pro
         <InstitutionFilters filters={filters} cities={places.cities} states={places.states} />
         <ResultLine filters={filters} total={total} />
         {rows.length ? (
-          <InstitutionRows rows={rows} />
+          <InstitutionRows rows={rows} now={now} />
         ) : hasFilters(filters) || filters.page > 1 ? (
           <EmptyState icon="search" title="No institutions match" headingLevel={3}>
             Try fewer filters, or add prospects with a bulk Audit.

@@ -138,6 +138,33 @@ export function checkLinkedin(input: string): Check<string | null> {
   );
 }
 
+/** Google Maps links: the share button's short links, and the full listing pages. */
+const MAPS_SHORT_HOSTS = ['maps.app.goo.gl', 'g.page'];
+const GOOGLE_HOSTS = ['google.com', 'www.google.com', 'google.co.in', 'www.google.co.in'];
+
+/**
+ * Optional. The link to the institution's own listing on Google Maps, as its Share button gives
+ * it (maps.app.goo.gl/...) or as the address bar shows it (google.com/maps/place/...). Kept as
+ * given, query and all, since some listings are only a ?cid= number.
+ */
+export function checkGoogleMaps(input: string): Check<string | null> {
+  const text = input.trim();
+  if (!text) return ok(null);
+  const message = 'Paste the link to your listing on Google Maps, or leave it empty.';
+  const url = parseUrl(text);
+  if (!url || text.length > 500) return fail(message);
+  const host = url.hostname.toLowerCase();
+  const path = url.pathname.replace(/\/+$/, '');
+  const listing =
+    (isExampleHost(host) && host.startsWith('maps')) ||
+    (MAPS_SHORT_HOSTS.includes(host) && path.length > 1) ||
+    (host === 'goo.gl' && path.startsWith('/maps/')) ||
+    (host === 'maps.google.com' && (path.length > 1 || url.search.length > 1)) ||
+    (GOOGLE_HOSTS.includes(host) && path.startsWith('/maps'));
+  if (!listing) return fail(message);
+  return ok(`https://${host}${path || (url.search ? '/' : '')}${url.search}`);
+}
+
 export interface ProgramChoice {
   name: string;
   /** The Demand key for listed programs; null for "Other". */
@@ -174,6 +201,8 @@ export interface InstitutionFields {
   youtube: string;
   facebook: string;
   linkedin: string;
+  /** Settings only: the listing on Google Maps. */
+  googleMaps?: string;
 }
 
 export interface InstitutionDetails {
@@ -184,7 +213,7 @@ export interface InstitutionDetails {
   website: string;
   instagram: string;
   youtube: string | null;
-  otherLinks: { facebook?: string; linkedin?: string };
+  otherLinks: { facebook?: string; linkedin?: string; google_maps?: string };
 }
 
 export type FieldErrors<K extends string> = Partial<Record<K, string>>;
@@ -199,6 +228,7 @@ export function checkInstitution(fields: InstitutionFields): { details: Institut
   const youtube = checkYoutube(fields.youtube);
   const facebook = checkFacebook(fields.facebook);
   const linkedin = checkLinkedin(fields.linkedin);
+  const googleMaps = checkGoogleMaps(fields.googleMaps ?? '');
 
   const errors: FieldErrors<keyof InstitutionFields> = {};
   if (!name.ok) errors.name = name.error;
@@ -209,11 +239,13 @@ export function checkInstitution(fields: InstitutionFields): { details: Institut
   if (!youtube.ok) errors.youtube = youtube.error;
   if (!facebook.ok) errors.facebook = facebook.error;
   if (!linkedin.ok) errors.linkedin = linkedin.error;
+  if (!googleMaps.ok) errors.googleMaps = googleMaps.error;
 
-  if (!name.ok || !type.ok || !place.ok || !website.ok || !instagram.ok || !youtube.ok || !facebook.ok || !linkedin.ok) return { details: null, errors };
+  if (!name.ok || !type.ok || !place.ok || !website.ok || !instagram.ok || !youtube.ok || !facebook.ok || !linkedin.ok || !googleMaps.ok) return { details: null, errors };
   const otherLinks: InstitutionDetails['otherLinks'] = {};
   if (facebook.value) otherLinks.facebook = facebook.value;
   if (linkedin.value) otherLinks.linkedin = linkedin.value;
+  if (googleMaps.value) otherLinks.google_maps = googleMaps.value;
   return {
     details: {
       name: name.value,

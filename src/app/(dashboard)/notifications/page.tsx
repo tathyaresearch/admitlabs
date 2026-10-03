@@ -3,6 +3,7 @@ import { EmptyState } from '@/components/ui/Feedback';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
 import { nextPullOn } from '@/demand/schedule';
+import { ALERT_FILTER_LABELS, ALERT_FILTERS, alertFilter, alertLinkText, type AlertFilter } from '@/domain/alert-kinds';
 import { alertsAhead } from '@/domain/alerts';
 import { recentGroup, type RecentGroup } from '@/domain/dates';
 import { formatDate } from '@/domain/format';
@@ -35,9 +36,14 @@ const GROUPS: ReadonlyArray<{ id: RecentGroup; title: string }> = [
 ];
 
 // Notifications answers "What changed lately?": newest first, grouped by this week, this month
-// and earlier. Each one opens where it happened. While the list is short, what arrives here next.
-export default async function NotificationsPage() {
+// and earlier, with filters by what they are about. Each one's link says where it goes. While
+// the list is short, what arrives here next.
+const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
+export default async function NotificationsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const viewer = await requireInstitutionViewer();
+  const asked = one((await searchParams).show);
+  const show: AlertFilter | null = ALERT_FILTERS.includes(asked as AlertFilter) ? (asked as AlertFilter) : null;
   const { institution } = viewer.membership;
   const supabase = await createClient();
   const [{ data }, audits, rivals] = await Promise.all([
@@ -45,8 +51,11 @@ export default async function NotificationsPage() {
     loadAuditPage(viewer),
     loadRivalList(institution.id),
   ]);
-  const notifications = data ?? [];
-  const unread = notifications.filter((item) => !item.read).length;
+  const all = data ?? [];
+  // Only the filters that have alerts, each with how many.
+  const counts = ALERT_FILTERS.map((filter) => ({ filter, count: all.filter((item) => alertFilter(item.kind) === filter).length })).filter((entry) => entry.count > 0);
+  const notifications = show ? all.filter((item) => alertFilter(item.kind) === show) : all;
+  const unread = all.filter((item) => !item.read).length;
   const now = new Date();
   const ahead = alertsAhead({
     tier: viewer.tier,
@@ -63,6 +72,18 @@ export default async function NotificationsPage() {
   return (
     <div className={styles.page}>
       <PageHead title="Notifications" question="What changed lately?" caption={unread ? `${unread} new since you last looked` : 'You are up to date'} />
+      {counts.length > 1 ? (
+        <nav className={styles.filters} aria-label="Show">
+          <Link href="/notifications" className={styles.filter} aria-current={show === null ? 'page' : undefined} scroll={false}>
+            All <span className="num">{all.length}</span>
+          </Link>
+          {counts.map(({ filter, count }) => (
+            <Link key={filter} href={`/notifications?show=${filter}`} className={styles.filter} aria-current={show === filter ? 'page' : undefined} scroll={false}>
+              {ALERT_FILTER_LABELS[filter]} <span className="num">{count}</span>
+            </Link>
+          ))}
+        </nav>
+      ) : null}
       {grouped.length ? (
         grouped.map((group) => (
           <section key={group.id} className={styles.group} aria-labelledby={`group-${group.id}`}>
@@ -84,7 +105,7 @@ export default async function NotificationsPage() {
                       <span>{formatDate(item.created_at)}</span>
                       {item.link ? (
                         <Link href={item.link} className={styles.link}>
-                          Open
+                          {alertLinkText(item.kind, item.link)}
                           <Icon name="arrowRight" size={14} />
                         </Link>
                       ) : null}
@@ -96,6 +117,8 @@ export default async function NotificationsPage() {
             </ol>
           </section>
         ))
+      ) : show ? (
+        <p className={styles.none}>No {ALERT_FILTER_LABELS[show].toLowerCase()} alerts yet.</p>
       ) : (
         <EmptyState icon="bell" title="No alerts yet">
           <p>What arrives here, and when:</p>
@@ -106,7 +129,7 @@ export default async function NotificationsPage() {
           </ul>
         </EmptyState>
       )}
-      {grouped.length && notifications.length < SHORT_LIST ? (
+      {grouped.length && !show && all.length < SHORT_LIST ? (
         <section className={styles.group} aria-labelledby="ahead-title">
           <h2 id="ahead-title" className={styles.groupTitle}>
             What arrives here next

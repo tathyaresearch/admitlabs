@@ -38,6 +38,24 @@
 }
 
 /* Whose dashboard this is, and their plan. */
+/* The top of the sidebar: "Drishti by AdmitLabs" (home), then whose dashboard this is. */
+.sidebarHead {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: var(--space-3) var(--space-2) var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  text-decoration: none;
+}
+
+/* Whose dashboard this is. The pictures of the dashboard (on /drishti and the sign-up pages) draw
+   their sidebar with .context; the app itself uses .contextBlock, under the lockup. */
 .context {
   display: flex;
   align-items: center;
@@ -52,6 +70,17 @@
 
 .context:hover {
   background: var(--surface-hover);
+}
+
+.contextBlock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text);
 }
 
 .brandMark {
@@ -150,11 +179,6 @@
 .sidebarFoot {
   display: grid;
   gap: var(--space-3);
-}
-
-.madeBy {
-  padding: 0 var(--space-2);
-  color: var(--text-muted);
 }
 
 /* Account: at the foot of the sidebar on desktop, in the top bar on a phone. */
@@ -358,22 +382,13 @@
   }
 }
 
-.topbarContext {
-  display: flex;
+.topbarBrand {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
   min-width: 0;
+  padding: var(--space-1) 0;
   color: var(--text);
   text-decoration: none;
-}
-
-.topbarTitle {
-  font: var(--type-strong);
-  font-weight: var(--weight-heading);
-  letter-spacing: var(--tracking-section);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .topbarActions {

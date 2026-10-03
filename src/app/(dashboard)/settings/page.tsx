@@ -1,14 +1,25 @@
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { AddedTag } from '@/components/details/Added';
-import { Button } from '@/components/ui/Button';
-import { Card, FactList, PageHead } from '@/components/ui/Layout';
-import { Tabs, type TabItem } from '@/components/ui/Tabs';
+import { PaidAction } from '@/components/plan/PaidAction';
+import { Button, ButtonLink } from '@/components/ui/Button';
+import { Icon, type IconName } from '@/components/ui/Icon';
+import { Card, FactList } from '@/components/ui/Layout';
+import { PageHead } from '@/components/ui/Layout';
+import { SCHEDULES } from '@/config/schedules';
+import { nextPullOn } from '@/demand/schedule';
+import { alertsAhead } from '@/domain/alerts';
 import { institutionDetailLines, isEmptyProgram, programDetailLines, EMPTY_PROGRAM_DETAILS } from '@/domain/details';
 import { formatDate } from '@/domain/format';
-import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS } from '@/domain/types';
-import { requireInstitutionViewer } from '@/lib/auth/guards';
-import { loadAuditPage, nextAuditText } from '@/lib/audit/load';
-import { loadAddedDetails } from '@/lib/details/load';
+import { planReminder } from '@/domain/tiers';
+import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
+import { requireInstitutionViewer, type InstitutionViewer } from '@/lib/auth/guards';
+import { loadAuditPage, nextAuditText, type AuditPageData } from '@/lib/audit/load';
+import { loadAddedDetails, type AddedDetails } from '@/lib/details/load';
+import { loadChangeState, loadRivalList, type RivalInfo } from '@/lib/rivals/load';
 import { createClient } from '@/lib/supabase/server';
+import { nextReport } from '@/report/schedule';
+import { canChangeRivals, type RivalChangeState } from '@/rivals/rules';
 import { removeMemberAction, revokeInviteAction } from './actions';
 import { InstitutionDetailsForm, ProgramDetailsForm } from './DetailsForms';
 import { DetailsForm, FreeProgramForm, InviteForm, ProgramsForm } from './SettingsForms';
@@ -16,24 +27,46 @@ import styles from './settings.module.css';
 
 export const metadata = { title: 'Settings' };
 
-// Settings: "Your institution, programs and people." One tab per form, each with its own Save.
-export default async function SettingsPage() {
-  const viewer = await requireInstitutionViewer();
+// Settings answers "How is our account set up?" in plain groups (B9): Institution (with what you
+// add about yourselves), Programs, Rivals, Team, Plan and Notifications. The groups are a list on
+// the left (a row on a phone); each opens at its own address, so a page can link straight to one.
+// Only the owner changes things; everyone else reads them.
+
+const GROUPS = ['institution', 'programs', 'rivals', 'team', 'plan', 'notifications'] as const;
+type Group = (typeof GROUPS)[number];
+
+const GROUP_INFO: Readonly<Record<Group, { name: string; hint: string; icon: IconName }>> = {
+  institution: { name: 'Institution', hint: 'Name, city and public links', icon: 'institution' },
+  programs: { name: 'Programs', hint: 'What you offer', icon: 'briefcase' },
+  rivals: { name: 'Rivals', hint: 'Who you compare with', icon: 'rivals' },
+  team: { name: 'Team', hint: 'Who can see this dashboard', icon: 'team' },
+  plan: { name: 'Plan', hint: 'Your plan and its dates', icon: 'plan' },
+  notifications: { name: 'Notifications', hint: 'What arrives, and when', icon: 'bell' },
+};
+
+const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
+function Head({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className={styles.sectionHead}>
+      <h2 className={styles.sectionTitle}>{title}</h2>
+      <p className={styles.sectionText}>{children}</p>
+    </div>
+  );
+}
+
+function Readonly({ owner }: { owner: boolean }) {
+  return owner ? null : <p className={styles.sectionText}>Only the owner of this account can change these.</p>;
+}
+
+// Institution ------------------------------------------------------------------------------------
+
+async function InstitutionGroup({ viewer, added }: { viewer: InstitutionViewer; added: AddedDetails }) {
   const { institution, role } = viewer.membership;
   const owner = role === 'owner';
   const supabase = await createClient();
-
-  const [details, audit, peopleRows, invites, added] = await Promise.all([
-    supabase.from('institutions').select('name, type, city, state, website, instagram, youtube, other_links').eq('id', institution.id).single(),
-    loadAuditPage(viewer),
-    supabase.rpc('institution_people', { p_institution: institution.id }),
-    supabase.from('invites').select('id, email, created_at').eq('institution_id', institution.id).is('accepted_at', null).order('created_at'),
-    loadAddedDetails(institution.id),
-  ]);
-  const row = details.data;
-  const links = (row?.other_links ?? {}) as { facebook?: string; linkedin?: string };
-  const programs = audit.programs.filter((program) => !program.archived);
-  const freeProgram = programs.find((program) => program.id === viewer.plan?.freeProgramId);
+  const { data: row } = await supabase.from('institutions').select('name, type, city, state, website, instagram, youtube, other_links').eq('id', institution.id).single();
+  const links = (row?.other_links ?? {}) as { facebook?: string; linkedin?: string; google_maps?: string };
   const initial = {
     name: row?.name ?? '',
     type: row?.type ?? '',
@@ -44,199 +77,367 @@ export default async function SettingsPage() {
     youtube: row?.youtube ?? '',
     facebook: links.facebook ?? '',
     linkedin: links.linkedin ?? '',
+    googleMaps: links.google_maps ?? '',
   };
+  const aboutLines = institutionDetailLines(added.institution, institution.type);
+  return (
+    <>
+      <Head title="Institution">What Drishti checks: your name, type, city and the public links a student would see. Changes apply from your next Audit.</Head>
+      <Readonly owner={owner} />
+      <Card padding="md">
+        {owner ? (
+          <DetailsForm initial={initial} />
+        ) : (
+          <FactList
+            items={[
+              { label: 'Name', value: initial.name },
+              { label: 'Type', value: row ? INSTITUTION_TYPE_LABELS[row.type] : '' },
+              { label: 'City', value: `${initial.city}, ${initial.state}` },
+              { label: 'Website', value: initial.website.replace(/^https?:\/\//, '') },
+              { label: 'Instagram', value: initial.instagram || 'Not added' },
+              { label: 'YouTube', value: initial.youtube || 'Not added' },
+              { label: 'Facebook', value: initial.facebook || 'Not added' },
+              { label: 'LinkedIn', value: initial.linkedin || 'Not added' },
+              { label: 'Google Maps listing', value: initial.googleMaps || 'Not added' },
+            ]}
+          />
+        )}
+      </Card>
+      <div className={styles.subhead}>
+        <h3 className={styles.subheadTitle}>About {institution.name}</h3>
+        <div className={styles.tabNoteRow}>
+          <AddedTag />
+          <p className={styles.tabNote}>Facts only you know. Drishti shows them next to what it finds, and uses them in how to fix and your report. They never change your score.</p>
+        </div>
+      </div>
+      <Card padding="md">
+        {owner ? (
+          <InstitutionDetailsForm initial={added.institution} institutionType={institution.type} />
+        ) : aboutLines.length ? (
+          <FactList items={aboutLines} />
+        ) : (
+          <p className={styles.plainText}>Nothing added yet. The owner adds these.</p>
+        )}
+      </Card>
+    </>
+  );
+}
 
+// Programs ---------------------------------------------------------------------------------------
+
+function ProgramsGroup({ viewer, audit, added }: { viewer: InstitutionViewer; audit: AuditPageData; added: AddedDetails }) {
+  const owner = viewer.membership.role === 'owner';
+  const programs = audit.programs.filter((program) => !program.archived);
+  const freeProgram = programs.find((program) => program.id === viewer.plan?.freeProgramId);
+  return (
+    <>
+      <Head title="Programs">Every program you offer. Removing one keeps it in past Audits. Changes apply from your next Audit.</Head>
+      <Readonly owner={owner} />
+      <Card padding="md">
+        {owner ? (
+          <ProgramsForm programs={programs.map((program) => ({ name: program.name, programKey: program.programKey }))} />
+        ) : programs.length ? (
+          <ul className={styles.plainList}>
+            {programs.map((program) => (
+              <li key={program.id}>{program.name}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.plainText}>No programs added yet. The owner adds them here.</p>
+        )}
+      </Card>
+
+      {viewer.tier === 'free' ? (
+        <>
+          <div className={styles.subhead}>
+            <h3 className={styles.subheadTitle}>Your free Audit</h3>
+            <p className={styles.tabNote}>Your free Audit covers one program. Paid covers every program.</p>
+          </div>
+          <Card padding="md">
+            {owner ? (
+              <FreeProgramForm
+                programs={programs.map((program) => ({ id: program.id, name: program.name }))}
+                current={freeProgram?.id ?? null}
+                note={`You can change it at any time. It applies at your next free Audit${audit.nextAudit ? `, on ${formatDate(audit.nextAudit.on)}` : ''}.`}
+              />
+            ) : (
+              <p className={styles.plainText}>{freeProgram ? `Your free Audit covers ${freeProgram.name}. ${nextAuditText(audit)}.` : 'The owner has not picked a program yet.'}</p>
+            )}
+          </Card>
+        </>
+      ) : null}
+
+      <div className={styles.subhead}>
+        <h3 className={styles.subheadTitle}>Details for each program</h3>
+        <div className={styles.tabNoteRow}>
+          <AddedTag />
+          <p className={styles.tabNote}>Fees, seats, placements and dates. Shown as added by you. Never part of your score.</p>
+        </div>
+      </div>
+      <div className={styles.programDetails}>
+        {programs.map((program) => {
+          const programAdded = added.programs.get(program.id) ?? EMPTY_PROGRAM_DETAILS;
+          const lines = programDetailLines(programAdded);
+          return (
+            <details key={program.id} className={styles.programDetail}>
+              <summary className={styles.programSummary}>
+                <span className={styles.programName}>
+                  {program.name}
+                  <span className={styles.programMeta}>{isEmptyProgram(programAdded) ? 'Nothing added yet' : lines.map((line) => line.label).join(', ')}</span>
+                </span>
+                <Icon name="chevronDown" size={16} className={styles.programIcon} />
+              </summary>
+              <div className={styles.programBody}>
+                {owner ? (
+                  <ProgramDetailsForm programId={program.id} programName={program.name} initial={programAdded} />
+                ) : lines.length ? (
+                  <FactList items={lines} />
+                ) : (
+                  <p className={styles.plainText}>Nothing added yet. The owner adds these.</p>
+                )}
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+// Rivals -----------------------------------------------------------------------------------------
+
+function rivalRule(change: RivalChangeState): string {
+  switch (change.kind) {
+    case 'first_setup':
+      return 'Pick 3 to 5 you compete with. Drishti checks them as soon as you save.';
+    case 'anytime':
+      return 'You can change them any time.';
+    case 'available':
+      return 'You can change them once a month.';
+    case 'used':
+      return `Changed on ${formatDate(change.changedOn)}. You can change them again from ${formatDate(change.nextOn)}.`;
+    case 'locked':
+      return 'On Free you keep the rivals you picked. Paid can change them once a month.';
+  }
+}
+
+function RivalsGroup({ viewer, rivals, change }: { viewer: InstitutionViewer; rivals: readonly RivalInfo[]; change: RivalChangeState }) {
+  const owner = viewer.membership.role === 'owner';
+  const canChange = owner && canChangeRivals(change);
+  return (
+    <>
+      <Head title="Rivals">The institutions you compare with, 3 to 5 of them. Public information only, and they never know who tracks them.</Head>
+      <Card padding="md">
+        {rivals.length ? (
+          <ul className={styles.rows}>
+            {rivals.map((rival) => (
+              <li key={rival.id} className={styles.row}>
+                <span className={styles.rowName}>
+                  {rival.name}
+                  <span className={styles.rowSub}>
+                    {INSTITUTION_TYPE_LABELS[rival.type]}, {rival.city}
+                  </span>
+                </span>
+                {viewer.tier === 'free' ? null : (
+                  <Link href={`/rivals/${rival.id}`} className={styles.rowLink}>
+                    Open
+                    <Icon name="arrowRight" size={14} />
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.plainText}>No rivals picked yet. {owner ? 'Pick 3 to 5 you compete with.' : 'The owner of your account picks them.'}</p>
+        )}
+        <div className={styles.cardFoot}>
+          {canChange ? (
+            <ButtonLink href="/rivals/choose" variant="secondary" size="sm" icon="rivals">
+              {rivals.length ? 'Change rivals' : 'Pick your rivals'}
+            </ButtonLink>
+          ) : null}
+          <p className={styles.tabNote}>{owner ? rivalRule(change) : 'The owner of your account picks and changes your rivals.'}</p>
+        </div>
+      </Card>
+    </>
+  );
+}
+
+// Team -------------------------------------------------------------------------------------------
+
+async function TeamGroup({ viewer }: { viewer: InstitutionViewer }) {
+  const { institution, role } = viewer.membership;
+  const owner = role === 'owner';
+  const supabase = await createClient();
+  const [peopleRows, invites] = await Promise.all([
+    supabase.rpc('institution_people', { p_institution: institution.id }),
+    supabase.from('invites').select('id, email, created_at').eq('institution_id', institution.id).is('accepted_at', null).order('created_at'),
+  ]);
   const people = peopleRows.data ?? [];
   const invited = invites.data ?? [];
+  return (
+    <>
+      <Head title="Team">Everyone who can see this dashboard. Members can look; only the owner changes things.</Head>
+      <Card padding="md">
+        <ul className={styles.people}>
+          {people.map((person) => (
+            <li key={person.user_id} className={styles.person}>
+              <span className={styles.personEmail}>
+                {person.email}
+                <span className={styles.personRole}>
+                  {MEMBERSHIP_ROLE_LABELS[person.role]}
+                  {person.user_id === viewer.userId ? ', you' : ''}
+                </span>
+              </span>
+              {owner && person.role === 'member' ? (
+                <form action={removeMemberAction}>
+                  <input type="hidden" name="user" value={person.user_id} />
+                  <Button type="submit" variant="quiet" size="sm">
+                    Remove
+                  </Button>
+                </form>
+              ) : null}
+            </li>
+          ))}
+          {invited.map((invite) => (
+            <li key={invite.id} className={styles.person}>
+              <span className={styles.personEmail}>
+                {invite.email}
+                <span className={styles.personRole}>Invited {formatDate(invite.created_at)}</span>
+              </span>
+              {owner ? (
+                <form action={revokeInviteAction}>
+                  <input type="hidden" name="invite" value={invite.id} />
+                  <Button type="submit" variant="quiet" size="sm">
+                    Cancel invite
+                  </Button>
+                </form>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+        {owner ? <InviteForm /> : <p className={styles.tabNote}>The owner invites people here.</p>}
+      </Card>
+    </>
+  );
+}
 
-  const tabs: TabItem[] = [
-    {
-      id: 'details',
-      label: 'Details',
-      content: (
-        <div className={styles.tab}>
-          <p className={styles.tabNote}>What Drishti checks: your name, type, city and public links.</p>
-          <Card padding="md">
-            {owner ? (
-              <DetailsForm initial={initial} />
-            ) : (
-              <FactList
-                items={[
-                  { label: 'Name', value: initial.name },
-                  { label: 'Type', value: row ? INSTITUTION_TYPE_LABELS[row.type] : '' },
-                  { label: 'City', value: `${initial.city}, ${initial.state}` },
-                  { label: 'Website', value: initial.website.replace(/^https?:\/\//, '') },
-                  { label: 'Instagram', value: initial.instagram || 'Not added' },
-                  { label: 'YouTube', value: initial.youtube || 'Not added' },
-                  { label: 'Facebook', value: initial.facebook || 'Not added' },
-                  { label: 'LinkedIn', value: initial.linkedin || 'Not added' },
-                ]}
-              />
-            )}
-          </Card>
-        </div>
-      ),
-    },
-    {
-      id: 'about',
-      label: 'About',
-      content: (
-        <div className={styles.tab}>
-          <div className={styles.tabNoteRow}>
-            <AddedTag />
-            <p className={styles.tabNote}>Drishti shows this next to what it finds, and uses it in how to fix and your report. It never changes your score.</p>
-          </div>
-          <Card padding="md">
-            {owner ? (
-              <InstitutionDetailsForm initial={added.institution} institutionType={institution.type} />
-            ) : institutionDetailLines(added.institution, institution.type).length ? (
-              <FactList items={institutionDetailLines(added.institution, institution.type)} />
-            ) : (
-              <p className={styles.plainText}>Nothing added yet. The owner adds these.</p>
-            )}
-          </Card>
-        </div>
-      ),
-    },
-    {
-      id: 'programs',
-      label: 'Programs',
-      count: programs.length,
-      content: (
-        <div className={styles.tab}>
-          <p className={styles.tabNote}>Every program you offer. Removing one keeps it in past Audits.</p>
-          <Card padding="md">
-            {owner ? (
-              <ProgramsForm programs={programs.map((program) => ({ name: program.name, programKey: program.programKey }))} />
-            ) : (
-              <ul className={styles.plainList}>
-                {programs.map((program) => (
-                  <li key={program.id}>{program.name}</li>
-                ))}
-              </ul>
-            )}
-          </Card>
-          <div className={styles.programDetailsHead}>
-            <h2 className={styles.programDetailsTitle}>Details for each program</h2>
-            <div className={styles.tabNoteRow}>
-              <AddedTag />
-              <p className={styles.tabNote}>Fees, seats, placements and dates. Shown as added by you. Never part of your score.</p>
-            </div>
-          </div>
-          <div className={styles.programDetails}>
-            {programs.map((program) => {
-              const programAdded = added.programs.get(program.id) ?? EMPTY_PROGRAM_DETAILS;
-              const lines = programDetailLines(programAdded);
-              return (
-                <details key={program.id} className={styles.programDetail}>
-                  <summary className={styles.programSummary}>
-                    <span className={styles.programName}>
-                      {program.name}
-                      <span className={styles.programMeta}>{isEmptyProgram(programAdded) ? 'Nothing added yet' : lines.map((line) => line.label).join(', ')}</span>
-                    </span>
-                  </summary>
-                  <div className={styles.programBody}>
-                    {owner ? (
-                      <ProgramDetailsForm programId={program.id} programName={program.name} initial={programAdded} />
-                    ) : lines.length ? (
-                      <FactList items={lines} />
-                    ) : (
-                      <p className={styles.plainText}>Nothing added yet. The owner adds these.</p>
-                    )}
-                  </div>
-                </details>
-              );
-            })}
-          </div>
-        </div>
-      ),
-    },
-    ...(viewer.tier === 'free'
-      ? [
-          {
-            id: 'free-program',
-            label: 'Free Audit program',
-            content: (
-              <div className={styles.tab}>
-                <p className={styles.tabNote}>Your free Audit covers one program. Paid covers every program.</p>
-                <Card padding="md">
-                  {owner ? (
-                    <FreeProgramForm
-                      programs={programs.map((program) => ({ id: program.id, name: program.name }))}
-                      current={freeProgram?.id ?? null}
-                      note={`You can change it at any time. It applies at your next free Audit${audit.nextAudit ? `, on ${formatDate(audit.nextAudit.on)}` : ''}.`}
-                    />
-                  ) : (
-                    <p className={styles.plainText}>
-                      {freeProgram ? `Your free Audit covers ${freeProgram.name}. ${nextAuditText(audit)}.` : 'The owner has not picked a program yet.'}
-                    </p>
-                  )}
-                </Card>
-              </div>
-            ),
-          },
-        ]
+// Plan -------------------------------------------------------------------------------------------
+
+function PlanGroup({ viewer, audit }: { viewer: InstitutionViewer; audit: AuditPageData }) {
+  const { tier, plan } = viewer;
+  const reminder = planReminder(plan, new Date());
+  const schedule = SCHEDULES[tier];
+  const facts = [
+    { label: 'Your plan', value: TIER_LABELS[tier] },
+    ...(plan && tier !== 'free' ? [{ label: 'Since', value: formatDate(plan.startsAt) }] : []),
+    ...(tier === 'paid' && plan?.endsAt
+      ? [{ label: 'Ends', value: `${formatDate(plan.endsAt)}${reminder.daysLeft !== null ? `, in ${reminder.daysLeft} ${reminder.daysLeft === 1 ? 'day' : 'days'}` : ''}. No auto-renew.` }]
       : []),
-    {
-      id: 'people',
-      label: 'People',
-      count: people.length + invited.length,
-      content: (
-        <div className={styles.tab}>
-          <p className={styles.tabNote}>Everyone who can see this dashboard.</p>
-          <Card padding="md">
-            <ul className={styles.people}>
-              {people.map((person) => (
-                <li key={person.user_id} className={styles.person}>
-                  <span className={styles.personEmail}>
-                    {person.email}
-                    <span className={styles.personRole}>
-                      {MEMBERSHIP_ROLE_LABELS[person.role]}
-                      {person.user_id === viewer.userId ? ', you' : ''}
-                    </span>
-                  </span>
-                  {owner && person.role === 'member' ? (
-                    <form action={removeMemberAction}>
-                      <input type="hidden" name="user" value={person.user_id} />
-                      <Button type="submit" variant="quiet" size="sm">
-                        Remove
-                      </Button>
-                    </form>
-                  ) : null}
-                </li>
-              ))}
-              {invited.map((invite) => (
-                <li key={invite.id} className={styles.person}>
-                  <span className={styles.personEmail}>
-                    {invite.email}
-                    <span className={styles.personRole}>Invited {formatDate(invite.created_at)}</span>
-                  </span>
-                  {owner ? (
-                    <form action={revokeInviteAction}>
-                      <input type="hidden" name="invite" value={invite.id} />
-                      <Button type="submit" variant="quiet" size="sm">
-                        Cancel invite
-                      </Button>
-                    </form>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-            {owner ? <InviteForm /> : null}
-          </Card>
-        </div>
-      ),
-    },
+    ...(tier === 'client' ? [{ label: 'Ends', value: 'With your AdmitLabs service' }] : []),
+    { label: 'Audits', value: schedule.auditEveryMonths === 1 ? 'Every month' : `Every ${schedule.auditEveryMonths} months` },
+    // Only when it runs on this plan: a Paid plan ending before it says so under Ends.
+    ...(audit.nextAudit && audit.nextAudit.tier === tier ? [{ label: tier === 'free' ? 'Next free Audit' : 'Next Audit', value: formatDate(audit.nextAudit.on) }] : []),
   ];
+  return (
+    <>
+      <Head title="Plan">What you are on, and until when. One plan, one price: no discounts, and no auto-renew.</Head>
+      <Card padding="md">
+        <FactList items={facts} />
+        <div className={styles.cardFoot}>
+          <PaidAction viewer={viewer} />
+          <Link href="/plan" className={styles.rowLink}>
+            Compare plans
+            <Icon name="arrowRight" size={14} />
+          </Link>
+        </div>
+      </Card>
+    </>
+  );
+}
+
+// Notifications ----------------------------------------------------------------------------------
+
+function NotificationsGroup({ viewer, audit, rivals }: { viewer: InstitutionViewer; audit: AuditPageData; rivals: readonly RivalInfo[] }) {
+  const now = new Date();
+  const ahead = alertsAhead({
+    tier: viewer.tier,
+    nextAudit: audit.nextAudit,
+    hasRivals: rivals.length > 0,
+    city: viewer.membership.institution.city,
+    nextUpdate: nextPullOn(now),
+    nextReport: nextReport(now).on,
+  });
+  return (
+    <>
+      <Head title="Notifications">What arrives in Notifications, and when. Each new one also shows as a count beside Notifications in the menu.</Head>
+      <Card padding="md">
+        <ul className={styles.ahead}>
+          {ahead.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+        <div className={styles.cardFoot}>
+          <Link href="/notifications" className={styles.rowLink}>
+            Open Notifications
+            <Icon name="arrowRight" size={14} />
+          </Link>
+        </div>
+      </Card>
+    </>
+  );
+}
+
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const viewer = await requireInstitutionViewer();
+  const { institution, role } = viewer.membership;
+  const asked = one((await searchParams).group);
+  const group: Group = GROUPS.includes(asked as Group) ? (asked as Group) : 'institution';
+  const [audit, added, rivals] = await Promise.all([loadAuditPage(viewer), loadAddedDetails(institution.id), loadRivalList(institution.id)]);
+  const change = await loadChangeState(institution.id, viewer.tier, rivals.length > 0);
+
+  let body: ReactNode;
+  switch (group) {
+    case 'programs':
+      body = <ProgramsGroup viewer={viewer} audit={audit} added={added} />;
+      break;
+    case 'rivals':
+      body = <RivalsGroup viewer={viewer} rivals={rivals} change={change} />;
+      break;
+    case 'team':
+      body = <TeamGroup viewer={viewer} />;
+      break;
+    case 'plan':
+      body = <PlanGroup viewer={viewer} audit={audit} />;
+      break;
+    case 'notifications':
+      body = <NotificationsGroup viewer={viewer} audit={audit} rivals={rivals} />;
+      break;
+    default:
+      body = <InstitutionGroup viewer={viewer} added={added} />;
+  }
 
   return (
     <div className={styles.page}>
-      <PageHead
-        title="Settings"
-        question="Your institution, programs and people."
-        caption={owner ? ['Changes apply from your next Audit'] : ['Only the owner of this account can change these']}
-      />
-      <Tabs label="Settings" items={tabs} />
+      <PageHead title="Settings" question="How is our account set up?" caption={role === 'owner' ? undefined : ['Only the owner of this account can change these']} />
+      <div className={styles.settings}>
+        <nav aria-label="Settings groups">
+          <ul className={styles.sections}>
+            {GROUPS.map((id) => (
+              <li key={id}>
+                <Link href={id === 'institution' ? '/settings' : `/settings?group=${id}`} className={styles.section} aria-current={id === group ? 'page' : undefined} scroll={false}>
+                  <span className={styles.sectionName}>
+                    <Icon name={GROUP_INFO[id].icon} size={16} />
+                    {GROUP_INFO[id].name}
+                  </span>
+                  <span className={styles.sectionHint}>{GROUP_INFO[id].hint}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className={styles.sectionBody}>{body}</div>
+      </div>
     </div>
   );
 }

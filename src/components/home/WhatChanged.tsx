@@ -3,6 +3,7 @@
 // checked; then, for Paid and Client, the rivals' moves and the big jumps in searches. Free sees
 // what Paid would add.
 
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { pointsAddedText, type MarkOutcome } from '@/audit/marks';
 import type { MovedCheck } from '@/audit/view';
@@ -58,7 +59,7 @@ export function WhatChanged({
   moves,
   spikes,
   checkedOn,
-  paidHref,
+  paidAction,
 }: {
   /** The Audit before's date; null when the plan does not show it (Free). */
   since: string | null;
@@ -75,8 +76,8 @@ export function WhatChanged({
   spikes: readonly Spike[] | null;
   /** The latest Audit's date. */
   checkedOn: string;
-  /** Free: where to see what Paid adds. */
-  paidHref: string | null;
+  /** Free: asking for Paid. */
+  paidAction: ReactNode;
 }) {
   const confirmed = new Map(marks.flatMap((mark) => (mark.outcome.kind === 'confirmed' ? [[mark.key, mark] as const] : [])));
   const notYet = marks.filter((mark) => mark.outcome.kind === 'not_yet');
@@ -191,17 +192,14 @@ export function WhatChanged({
           </div>
         ) : null}
 
-        {paidHref ? (
+        {paidAction ? (
           <div className={styles.changeGroup}>
             <p className={styles.changeLabel}>
               <Icon name="plan" size={14} />
               With Paid
             </p>
             <p className={styles.changeLine}>Paid shows what changed every month: your rivals&apos; moves, what students search for, and all your programs.</p>
-            <Link href={paidHref} className={styles.quietLink}>
-              See what Paid adds
-              <Icon name="arrowRight" size={14} />
-            </Link>
+            {paidAction}
           </div>
         ) : null}
       </div>

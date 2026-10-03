@@ -1,5 +1,6 @@
 // Plan gating (spec section 10). Shows enough to prove the data is real (the teaser: real
-// layout, counts, one example the plan allows), blurs the rest, and offers one clear action.
+// layout, counts, one example the plan allows), blurs the rest, and offers one clear action:
+// asking for Paid where the page passes it, otherwise a link to the plans.
 //
 // Rule: `placeholder` must be fake placeholder content. The server never sends locked data
 // to the page, so there is nothing real under the blur to reveal.
@@ -18,9 +19,11 @@ interface LockedPanelProps {
   placeholder: ReactNode;
   actionLabel?: string;
   actionHref?: string;
+  /** Takes the place of the link: "Ask for Paid". */
+  action?: ReactNode;
 }
 
-export function LockedPanel({ title, description, teaser, placeholder, actionLabel = 'Unlock with Paid', actionHref = '/plan' }: LockedPanelProps) {
+export function LockedPanel({ title, description, teaser, placeholder, actionLabel = 'Unlock with Paid', actionHref = '/plan', action }: LockedPanelProps) {
   return (
     <div className={styles.locked}>
       {teaser ? <div>{teaser}</div> : null}
@@ -35,9 +38,11 @@ export function LockedPanel({ title, description, teaser, placeholder, actionLab
             </span>
             <p className={styles.title}>{title}</p>
             <p className={styles.description}>{description}</p>
-            <ButtonLink href={actionHref} size="sm" iconAfter="arrowRight">
-              {actionLabel}
-            </ButtonLink>
+            {action ?? (
+              <ButtonLink href={actionHref} size="sm" iconAfter="arrowRight">
+                {actionLabel}
+              </ButtonLink>
+            )}
           </div>
         </div>
       </div>

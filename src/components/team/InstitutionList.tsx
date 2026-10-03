@@ -1,6 +1,6 @@
 // The team's list: search and three filters in one row, the rest under "More filters" (a plain
 // form, so a filtered list can be bookmarked), and one row per institution, in one card, that
-// opens its page.
+// opens its page. Each row says why it needs attention, if it does; the list starts with those.
 
 import Link from 'next/link';
 import { Button, ButtonLink } from '@/components/ui/Button';
@@ -10,6 +10,7 @@ import { formatDate, hostAndPath, plural } from '@/domain/format';
 import { scoreLabel } from '@/domain/scores';
 import { INSTITUTION_TYPE_LABELS, INSTITUTION_TYPES, TIER_LABELS } from '@/domain/types';
 import type { TeamListRow } from '@/lib/team/load';
+import { attentionReasons } from '@/team/attention';
 import {
   filtersQuery,
   hasFilters,
@@ -54,7 +55,7 @@ export function InstitutionFilters({ filters, cities, states }: { filters: TeamF
           <SelectField id="team-city" name="city" label="City" defaultValue={filters.city ?? ''} options={[any('Any city'), ...cities.map((value) => ({ value, label: value }))]} />
         </div>
       </details>
-      {filters.sort !== 'name' ? <input type="hidden" name="sort" value={filters.sort} /> : null}
+      {filters.sort !== 'attention' ? <input type="hidden" name="sort" value={filters.sort} /> : null}
     </form>
   );
 }
@@ -89,7 +90,7 @@ function auditSource(row: TeamListRow): string {
   return row.auditKind ? 'Their Audit' : 'No Audit yet';
 }
 
-export function InstitutionRows({ rows }: { rows: readonly TeamListRow[] }) {
+export function InstitutionRows({ rows, now }: { rows: readonly TeamListRow[]; now: Date }) {
   return (
     <div className={styles.list}>
       <div className={styles.listHead} aria-hidden="true">
@@ -100,11 +101,25 @@ export function InstitutionRows({ rows }: { rows: readonly TeamListRow[] }) {
         <span>Last checked</span>
         <span />
       </div>
-      {rows.map((row) => (
+      {rows.map((row) => {
+        const reasons = attentionReasons(row, now);
+        return (
         <Link key={row.id} href={`/team/institutions/${row.id}`} className={styles.listRow}>
           <span className={styles.rowName}>
             {row.name}
             <span className={styles.rowSub}>{hostAndPath(row.website)}</span>
+            {reasons.length ? (
+              <>
+                <span className="visually-hidden">Needs attention: </span>
+                <span className={styles.rowReasons}>
+                  {reasons.map((reason) => (
+                    <span key={reason.key} className={styles.rowReason}>
+                      {reason.text}
+                    </span>
+                  ))}
+                </span>
+              </>
+            ) : null}
           </span>
           <span className={styles.rowCell}>
             {row.city}
@@ -126,7 +141,8 @@ export function InstitutionRows({ rows }: { rows: readonly TeamListRow[] }) {
           </span>
           <Icon name="chevronRight" size={16} className={styles.chevron} />
         </Link>
-      ))}
+        );
+      })}
     </div>
   );
 }

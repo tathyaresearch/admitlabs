@@ -15,7 +15,7 @@ export interface InstitutionRef {
   website: string;
   instagram: string | null;
   youtube: string | null;
-  otherLinks: { facebook?: string; linkedin?: string };
+  otherLinks: { facebook?: string; linkedin?: string; googleMaps?: string };
   /** Normalised keys of the programs it offers, as a crawler would see them on the site. */
   programKeys: readonly string[];
 }

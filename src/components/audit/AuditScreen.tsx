@@ -61,6 +61,8 @@ interface AuditScreenProps {
   institutionType: InstitutionType;
   /** Mark as done in the check panel. */
   marking?: PanelMarking | null;
+  /** Free: asking for Paid, in the card that says what Paid adds and, smaller, in the previews. */
+  paid?: { card: ReactNode; compact: ReactNode } | null;
 }
 
 /** What was added that relates to each part of each check, by the part's check id. */
@@ -154,6 +156,7 @@ export function AuditScreen(props: AuditScreenProps) {
         note={props.note}
         checkLinks="?check="
         help
+        paidAction={props.paid?.compact ?? null}
         scoreLabel={props.scoreCaption}
         historyLabel={props.historyLabel}
       />
@@ -175,7 +178,7 @@ export function AuditScreen(props: AuditScreenProps) {
         empty={<p className={styles.quietNote}>Every check is Strong. Keep it that way.</p>}
       />
 
-      {tier === 'free' ? <UnlockCard moreFixes={hiddenFixes} moreStrengths={hiddenStrengths} lockedPrograms={lockedPrograms} /> : null}
+      {tier === 'free' ? <UnlockCard moreFixes={hiddenFixes} moreStrengths={hiddenStrengths} lockedPrograms={lockedPrograms} action={props.paid?.card ?? null} /> : null}
 
       <section id="details" className={styles.section} aria-labelledby="details-title">
         <SectionHead
@@ -256,6 +259,7 @@ export function AuditScreen(props: AuditScreenProps) {
           added={addedByPart(view, props.details, props.institutionType)}
           fixes={panelFixes(view, props.institutionType)}
           marking={props.marking ?? null}
+          paidAction={props.paid?.compact ?? null}
         />
       </Suspense>
     </div>

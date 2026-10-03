@@ -48,6 +48,17 @@ describe('mock providers', () => {
     }
   });
 
+  test('a Google Maps listing given in Settings is the Google checks own source', async () => {
+    const listing = 'https://maps.example/place/eastgate-university-main-campus';
+    const signals = await collect({ kind: 'institution', institution: { ...eastgateRef, otherLinks: { ...eastgateRef.otherLinks, googleMaps: listing } } }, asOf);
+    const profile = signals.find((signal) => signal.key === 'google_profile');
+    const rating = signals.find((signal) => signal.key === 'review_rating');
+    assert.equal(profile?.sourceUrl, listing);
+    assert.equal(rating?.sourceUrl, listing);
+    const without = await collect({ kind: 'institution', institution: eastgateRef }, asOf);
+    assert.notEqual(without.find((signal) => signal.key === 'google_profile')?.sourceUrl, listing, 'without one, Drishti finds the profile itself');
+  });
+
   test('the same inputs always give the same sample data', async () => {
     const first = await collectAll(eastgateRef, toProgramRefs(eastgate));
     const second = await collectAll(eastgateRef, toProgramRefs(eastgate));

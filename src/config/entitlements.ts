@@ -96,7 +96,7 @@ export const ENTITLEMENTS: readonly EntitlementRow[] = [
       client: { access: 'full', text: 'All' },
     },
   },
-  { key: 'audit_score_history', group: 'Audit', label: 'Score history', cells: { free: NO, paid: YES, client: YES } },
+  { key: 'audit_score_history', group: 'Audit', label: 'Progress, month by month', cells: { free: NO, paid: YES, client: YES } },
   { key: 'rivals_suggested', group: 'Rivals', label: 'Suggested rivals', cells: all(YES) },
   { key: 'rivals_ahead_or_behind', group: 'Rivals', label: 'Ahead or behind (overall only)', cells: all(YES) },
   {

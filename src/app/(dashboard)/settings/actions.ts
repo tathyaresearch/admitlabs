@@ -36,7 +36,7 @@ const NOT_OWNER = 'Only the owner of this account can change settings.';
 export async function updateDetailsAction(previous: FormState, formData: FormData): Promise<FormState> {
   if (!(await ownerOnly())) return reply(previous, { status: 'error', message: NOT_OWNER });
   const values = Object.fromEntries(
-    ['name', 'type', 'city', 'state', 'website', 'instagram', 'youtube', 'facebook', 'linkedin'].map((name) => [name, field(formData, name)]),
+    ['name', 'type', 'city', 'state', 'website', 'instagram', 'youtube', 'facebook', 'linkedin', 'googleMaps'].map((name) => [name, field(formData, name)]),
   ) as unknown as InstitutionFields;
   const { details, errors } = checkInstitution(values);
   if (!details) return reply(previous, { status: 'error', message: 'Check the fields marked below.', errors, values: { ...values } });

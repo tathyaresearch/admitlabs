@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { istDate } from './dates.ts';
-import { effectiveTier, paidPlanEndsAt, planReminder, type PlanRecord } from './tiers.ts';
+import { effectiveTier, paidAskKind, paidPlanEndsAt, planReminder, type PlanRecord } from './tiers.ts';
 
 const now = istDate('2026-09-30', 12);
 const paid = (startsAt: string, endsAt: string): PlanRecord => ({ tier: 'paid', startsAt: istDate(startsAt, 10), endsAt: istDate(endsAt, 10) });
@@ -74,5 +74,24 @@ describe('planReminder', () => {
     assert.deepEqual(planReminder({ tier: 'free', startsAt: istDate('2026-06-10'), endsAt: null }, now), { stage: 'none', daysLeft: null });
     assert.deepEqual(planReminder({ tier: 'client', startsAt: istDate('2026-03-02'), endsAt: null }, now), { stage: 'none', daysLeft: null });
     assert.deepEqual(planReminder(null, now), { stage: 'none', daysLeft: null });
+  });
+});
+
+describe('what an owner can ask AdmitLabs for (mirrors private.paid_ask_kind)', () => {
+  const paid = { tier: 'paid' as const, startsAt: istDate('2026-04-15'), endsAt: istDate('2026-10-15') };
+  test('Free asks for Paid, and so does a Paid plan that has ended', () => {
+    assert.equal(paidAskKind(null, istDate('2026-10-03', 12)), 'ask_paid');
+    assert.equal(paidAskKind({ tier: 'free', startsAt: istDate('2026-06-10'), endsAt: null }, istDate('2026-10-03', 12)), 'ask_paid');
+    assert.equal(paidAskKind(paid, istDate('2026-10-20', 12)), 'ask_paid');
+  });
+
+  test('Paid asks to continue from its first reminder, 30 days before the end', () => {
+    assert.equal(paidAskKind(paid, istDate('2026-08-20', 12)), null);
+    assert.equal(paidAskKind(paid, istDate('2026-09-15', 12)), 'continue_paid');
+    assert.equal(paidAskKind(paid, istDate('2026-10-03', 12)), 'continue_paid');
+  });
+
+  test('Client never asks', () => {
+    assert.equal(paidAskKind({ tier: 'client', startsAt: istDate('2026-03-02'), endsAt: null }, istDate('2026-10-03', 12)), null);
   });
 });

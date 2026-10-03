@@ -3,10 +3,11 @@ import Link from 'next/link';
 import { ActionButton } from '@/components/team/InstitutionPanels';
 import { EmptyState } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
-import { formatDateTime, plural } from '@/domain/format';
+import { PLAN_RULES } from '@/config/plans';
+import { formatDateTime, formatInr, plural } from '@/domain/format';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
-import { loadEnquiries, type EnquiryRow } from '@/lib/team/enquiries';
+import { loadEnquiries, type EnquiryRow, type FormEnquiry, type PaidAsk } from '@/lib/team/enquiries';
 import { ENQUIRY_ROLE_LABELS, formatPhone } from '@/site/enquiry';
 import { setEnquiryHandledAction } from './actions';
 import audit from '@/components/audit/audit.module.css';
@@ -19,7 +20,55 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: viewer?.teamRole ? 'Enquiries' : 'Page not found' };
 }
 
+function Handled({ enquiry }: { enquiry: EnquiryRow }) {
+  return (
+    <div className={team.itemActions}>
+      {enquiry.handledAt ? (
+        <>
+          <span className={styles.handled}>Handled {formatDateTime(enquiry.handledAt)}</span>
+          <ActionButton action={setEnquiryHandledAction.bind(null, enquiry.id, false)} label="Mark as new" variant="quiet" />
+        </>
+      ) : (
+        <ActionButton action={setEnquiryHandledAction.bind(null, enquiry.id, true)} label="Mark as handled" variant="secondary" />
+      )}
+    </div>
+  );
+}
+
+/** An owner's request from the dashboard: what they asked for, who, and where to switch it on. */
+function Ask({ enquiry }: { enquiry: PaidAsk }) {
+  return (
+    <article className={team.item} aria-labelledby={`enquiry-${enquiry.id}`}>
+      <div className={team.itemHead}>
+        <h2 id={`enquiry-${enquiry.id}`} className={team.itemTitle}>
+          {enquiry.kind === 'ask_paid' ? 'Asks for Paid' : 'Asks to continue Paid'}
+        </h2>
+        <Link href={`/team/institutions/${enquiry.institutionId}`} className={team.link}>
+          {enquiry.institution}
+        </Link>
+      </div>
+      <p className={team.itemMeta}>
+        <span>Sent {formatDateTime(enquiry.createdAt)}, from their dashboard</span>
+      </p>
+      <p className={styles.contact}>
+        <span>The owner:</span>
+        <a className={team.link} href={`mailto:${enquiry.email}`}>
+          {enquiry.email}
+        </a>
+      </p>
+      <p className={team.itemBody}>
+        Paid is {formatInr(PLAN_RULES.paid.priceInr)} for {PLAN_RULES.paid.lengthMonths} months, with no auto-renew. Write back, then an Admin switches it on from their page.
+      </p>
+      <Handled enquiry={enquiry} />
+    </article>
+  );
+}
+
 function Enquiry({ enquiry }: { enquiry: EnquiryRow }) {
+  return enquiry.kind === 'work_with_us' ? <FormRow enquiry={enquiry} /> : <Ask enquiry={enquiry} />;
+}
+
+function FormRow({ enquiry }: { enquiry: FormEnquiry }) {
   return (
     <article className={team.item} aria-labelledby={`enquiry-${enquiry.id}`}>
       <div className={team.itemHead}>
@@ -42,22 +91,14 @@ function Enquiry({ enquiry }: { enquiry: EnquiryRow }) {
         </a>
       </p>
       {enquiry.message ? <p className={team.itemBody}>{enquiry.message}</p> : null}
-      <div className={team.itemActions}>
-        {enquiry.handledAt ? (
-          <>
-            <span className={styles.handled}>Handled {formatDateTime(enquiry.handledAt)}</span>
-            <ActionButton action={setEnquiryHandledAction.bind(null, enquiry.id, false)} label="Mark as new" variant="quiet" />
-          </>
-        ) : (
-          <ActionButton action={setEnquiryHandledAction.bind(null, enquiry.id, true)} label="Mark as handled" variant="secondary" />
-        )}
-      </div>
+      <Handled enquiry={enquiry} />
     </article>
   );
 }
 
-// Enquiries: who wrote in through the website's "Work with us" form, newest first. New ones until
-// someone on the team marks them handled. No emails are sent.
+// Enquiries: who wrote in through the website's "Work with us" form, and owners who asked for
+// Paid from their dashboard, newest first. New ones until someone on the team marks them handled.
+// No emails are sent.
 export default async function EnquiriesPage({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
   await requireTeamViewer();
   const showAll = (await searchParams).show === 'all';
@@ -70,7 +111,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
       <PageHead
         title="Enquiries"
         question="Who wants to work with us?"
-        caption={[`${fresh.length} new`, `${plural(all.length, 'enquiry', 'enquiries')} in all`, 'From the website’s Work with us form']}
+        caption={[`${fresh.length} new`, `${plural(all.length, 'enquiry', 'enquiries')} in all`, 'From the website’s Work with us form, and requests for Paid from dashboards']}
       />
       <nav className={styles.filter} aria-label="Show">
         <Link href="/team/enquiries" className={styles.filterLink} aria-current={showAll ? undefined : 'page'}>
@@ -91,7 +132,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
         <EmptyState icon="enquiry" title={all.length === 0 ? 'No enquiries yet' : 'Nothing new'}>
           <p>
             {all.length === 0
-              ? 'They arrive here when someone sends the Work with us form on the website. Each one shows who wrote, how to reach them and what they need.'
+              ? 'They arrive here when someone sends the Work with us form on the website, or an owner asks for Paid from their dashboard. Each one shows who it is, how to reach them and what they need.'
               : 'Every enquiry has been handled. See them all under All.'}
           </p>
         </EmptyState>

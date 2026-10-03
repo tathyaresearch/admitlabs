@@ -25,12 +25,17 @@ export interface TeamListRow {
   score: number | null;
   auditKind: string | null;
   checkedAt: string | null;
+  claimed: boolean;
+  scoreChange: number | null;
+  rivals: number;
+  sharedAt: string | null;
+  teamRefreshedAt: string | null;
 }
 
 /** The end of the window for Paid plans ending soon. */
 const endingSoonBy = (now: Date) => new Date(now.getTime() + TEAM_RULES.paidEndingSoonDays * 86_400_000).toISOString();
 
-const LIST_COLUMNS = 'id, name, type, city, state, website, status, tier, plan_ends_at, programs, score, audit_kind, checked_at';
+const LIST_COLUMNS = 'id, name, type, city, state, website, status, tier, plan_ends_at, programs, score, audit_kind, checked_at, claimed, score_change, rivals, shared_at, team_refreshed_at';
 
 export async function loadInstitutionList(filters: TeamFilters, now: Date): Promise<{ rows: TeamListRow[]; total: number }> {
   const supabase = await createClient();
@@ -48,6 +53,8 @@ export async function loadInstitutionList(filters: TeamFilters, now: Date): Prom
     const { min, max } = scoreRange(filters.score);
     query = query.gte('score', min).lte('score', max);
   }
+  // Needs attention: the most urgent reason first, then the most pressing within it (the view's rules).
+  if (filters.sort === 'attention') query = query.order('attention', { ascending: true, nullsFirst: false }).order('attention_order', { ascending: true, nullsFirst: false });
   if (filters.sort === 'score') query = query.order('score', { ascending: false, nullsFirst: false });
   if (filters.sort === 'checked') query = query.order('checked_at', { ascending: false, nullsFirst: false });
   query = query.order('name').order('id');
@@ -70,6 +77,11 @@ export async function loadInstitutionList(filters: TeamFilters, now: Date): Prom
       score: row.score,
       auditKind: row.audit_kind,
       checkedAt: row.checked_at,
+      claimed: Boolean(row.claimed),
+      scoreChange: row.score_change,
+      rivals: row.rivals ?? 0,
+      sharedAt: row.shared_at,
+      teamRefreshedAt: row.team_refreshed_at,
     })),
   };
 }

@@ -6,6 +6,7 @@ import { hasDashes } from './copy.ts';
 import {
   checkCity,
   checkFacebook,
+  checkGoogleMaps,
   checkInstagram,
   checkInstitution,
   checkLinkedin,
@@ -142,5 +143,33 @@ describe('signup fields', () => {
     assert.equal(bad.details, null);
     assert.deepEqual(Object.keys(bad.errors).sort(), ['city', 'facebook', 'instagram', 'linkedin', 'name', 'type', 'website', 'youtube']);
     for (const message of Object.values(bad.errors)) assert.equal(hasDashes(message ?? ''), false);
+  });
+});
+
+describe('the Google Maps listing (Settings, optional)', () => {
+  test('the Share button link and the listing page are kept as given', () => {
+    assert.deepEqual(checkGoogleMaps(''), { ok: true, value: null });
+    assert.deepEqual(checkGoogleMaps('maps.app.goo.gl/Ab12Cd34'), { ok: true, value: 'https://maps.app.goo.gl/Ab12Cd34' });
+    assert.deepEqual(checkGoogleMaps('https://www.google.com/maps/place/Eastgate+University/@26.14,91.73,17z'), {
+      ok: true,
+      value: 'https://www.google.com/maps/place/Eastgate+University/@26.14,91.73,17z',
+    });
+    assert.deepEqual(checkGoogleMaps('https://maps.google.com/?cid=1234567890'), { ok: true, value: 'https://maps.google.com/?cid=1234567890' });
+    assert.deepEqual(checkGoogleMaps('maps.example/place/eastgate-university'), { ok: true, value: 'https://maps.example/place/eastgate-university' });
+  });
+
+  test('anything that is not a listing on Google Maps is turned away, in plain words', () => {
+    for (const input of ['https://www.google.com/search?q=eastgate', 'facebook.com/eastgate', 'maps.app.goo.gl/', 'not a link']) {
+      const result = checkGoogleMaps(input);
+      assert.equal(result.ok, false, input);
+      if (!result.ok) assert.equal(result.error, 'Paste the link to your listing on Google Maps, or leave it empty.');
+    }
+  });
+
+  test('kept with the other links', () => {
+    const fields = { name: 'Eastgate University', type: 'university', city: 'Guwahati', state: 'Assam', website: 'eastgate-university.example', instagram: '@eastgateuniversity', youtube: '', facebook: '', linkedin: '' };
+    assert.deepEqual(checkInstitution({ ...fields, googleMaps: 'maps.app.goo.gl/Ab12Cd34' }).details?.otherLinks, { google_maps: 'https://maps.app.goo.gl/Ab12Cd34' });
+    assert.deepEqual(checkInstitution(fields).details?.otherLinks, {});
+    assert.equal(checkInstitution({ ...fields, googleMaps: 'facebook.com/x' }).errors.googleMaps, 'Paste the link to your listing on Google Maps, or leave it empty.');
   });
 });

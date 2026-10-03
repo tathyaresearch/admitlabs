@@ -4,6 +4,7 @@ import { programView, scoresByMonth } from '@/audit/view';
 import { AuditScreen } from '@/components/audit/AuditScreen';
 import { ProgramTabs } from '@/components/audit/Programs';
 import { UnlockCard } from '@/components/audit/UnlockCard';
+import { PaidAction } from '@/components/plan/PaidAction';
 import { EmptyState } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
 import { monthKey } from '@/domain/dates';
@@ -62,6 +63,7 @@ export default async function ProgramAuditPage({ params }: Props) {
           moreFixes={0}
           moreStrengths={0}
           lockedPrograms={entries.filter((entry) => entry.state === 'locked').length || Math.max(0, data.programs.length - scored)}
+          action={<PaidAction viewer={viewer} />}
         />
       </div>
     );

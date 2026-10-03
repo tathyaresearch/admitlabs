@@ -2,6 +2,7 @@ import { Notice } from '@/components/ui/Feedback';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { KpiCard, KpiNote, KpiNumber, KpiWord } from '@/components/ui/Kpi';
 import { SectionHead } from '@/components/audit/AuditHeader';
+import { PaidAction } from '@/components/plan/PaidAction';
 import { Card, PageHead } from '@/components/ui/Layout';
 import { CellText } from '@/components/ui/Results';
 import { ENTITLEMENTS, PLAN_PAGE_GROUPS, type EntitlementCell, type EntitlementRow } from '@/config/entitlements';
@@ -58,7 +59,8 @@ function daysText(days: number): string {
 }
 
 // Plan answers "What's in our plan?": the plan and its dates, what to do next (on Free, what Paid
-// adds; near the end of Paid, the reminder), then one table that compares the plans.
+// adds and "Ask for Paid"; near the end of Paid, the reminder and "Ask to continue Paid"), then
+// one table that compares the plans.
 export default async function PlanPage() {
   const viewer = await requireInstitutionViewer();
   const { tier, plan } = viewer;
@@ -124,8 +126,12 @@ export default async function PlanPage() {
       </section>
 
       {reminder.stage === 'ends_soon' || reminder.stage === 'ends_very_soon' ? (
-        <Notice title={`Your Paid plan ends ${daysText(reminder.daysLeft ?? 0)}, on ${formatDate(plan?.endsAt as Date)}.`}>
-          It does not renew on its own. When it ends you move to Free, and you keep your last Audit score.
+        <Notice
+          title={`Your Paid plan ends ${daysText(reminder.daysLeft ?? 0)}, on ${formatDate(plan?.endsAt as Date)}.`}
+          action={<PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}
+        >
+          It does not renew on its own. When it ends you move to Free, and you keep your last Audit score. Ask AdmitLabs to continue it: the same price and
+          terms, and nothing is paid here.
         </Notice>
       ) : null}
 
@@ -156,7 +162,9 @@ export default async function PlanPage() {
               One plan, one price
             </li>
           </ul>
-          <p className={styles.offerNote}>In this early version, the AdmitLabs team switches Paid on for you.</p>
+          <div className={styles.offerAsk}>
+            <PaidAction viewer={viewer} note="short" />
+          </div>
         </Card>
       ) : null}
 

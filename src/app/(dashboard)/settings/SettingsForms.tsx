@@ -43,6 +43,16 @@ export function DetailsForm({ initial }: { initial: Record<string, string> }) {
         <TextField id="facebook" name="facebook" label="Facebook (optional)" defaultValue={values.facebook} error={errors.facebook} />
         <TextField id="linkedin" name="linkedin" label="LinkedIn (optional)" defaultValue={values.linkedin} error={errors.linkedin} />
       </div>
+      <TextField
+        id="googleMaps"
+        name="googleMaps"
+        label="Google Maps listing (optional)"
+        inputMode="url"
+        placeholder="maps.app.goo.gl/..."
+        hint="Paste the link from your listing's Share button on Google Maps. Drishti reads your rating and reviews from it, so they are always your own."
+        defaultValue={values.googleMaps}
+        error={errors.googleMaps}
+      />
       <div className={styles.actions}>
         <Button type="submit" loading={pending}>
           Save details
