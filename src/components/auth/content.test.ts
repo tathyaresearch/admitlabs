@@ -31,6 +31,7 @@ describe('sign up and log in', () => {
     assert.equal(AUTH_COPY.signup.verify, 'Continue');
     // While Drishti is not open yet, instead of the form.
     assert.equal(SOON_COPY.title, 'Drishti opens soon.');
+    assert.equal(SOON_COPY.text, 'We’re opening Drishti to a few institutions first. Talk to us to be one of them.');
     for (const text of texts({ AUTH_COPY, CODE_COPY, SOON_COPY })) {
       assert.equal(hasDashes(text), false, text);
       assert.doesNotMatch(text, /["']/, text);

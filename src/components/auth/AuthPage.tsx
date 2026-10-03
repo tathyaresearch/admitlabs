@@ -37,7 +37,10 @@ export function AuthPage({ left, children }: { left: ReactNode; children: ReactN
 export function OpensSoon() {
   return (
     <div className={styles.soon}>
-      <h1 className={styles.formTitle}>{SOON_COPY.title}</h1>
+      <div className={styles.formHead}>
+        <h1 className={styles.formTitle}>{SOON_COPY.title}</h1>
+        <p className={styles.formText}>{SOON_COPY.text}</p>
+      </div>
       <AnchorButton href={`mailto:${SITE_SETTINGS.email}`} size="lg" block icon="mail" className={styles.soonButton}>
         {CTA.talk}
       </AnchorButton>

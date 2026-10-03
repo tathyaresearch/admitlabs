@@ -31,6 +31,7 @@ export const AUTH_COPY = {
 export const SOON_COPY = {
   page: 'Drishti opens soon',
   title: 'Drishti opens soon.',
+  text: 'We’re opening Drishti to a few institutions first. Talk to us to be one of them.',
 } as const;
 
 /** The same for both: the field, the code step and the checks. */
