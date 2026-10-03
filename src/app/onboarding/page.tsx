@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { Wordmark } from '@/components/ui/Brand';
+import { ProductLockup } from '@/components/ui/Brand';
 import { Button } from '@/components/ui/Button';
 import { signOut } from '@/lib/auth/actions';
 import { requireViewer } from '@/lib/auth/guards';
@@ -64,7 +64,7 @@ function Frame({ step, email, children }: { step: 1 | 2; email: string; children
   return (
     <div className={styles.page}>
       <header className={styles.topbar}>
-        <Wordmark height={19} />
+        <ProductLockup size="md" motion="blink" />
         <div className={styles.topbarEnd}>
           <span className={styles.signedIn}>{email}</span>
           <form action={signOut}>

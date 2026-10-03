@@ -13,7 +13,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   if (!link) return new NextResponse('Not found.', { status: 404 });
   if (link.status === 'expired') return NextResponse.redirect(new URL(`/share/${token}`, request.url), 303);
 
-  const pdf = await renderAuditPdf(buildAuditPdf(link, { madeAt: new Date(link.sharedAt), freeAuditUrl: `${APP_URL}/login` }));
+  const pdf = await renderAuditPdf(buildAuditPdf(link, { madeAt: new Date(link.sharedAt), freeAuditUrl: `${APP_URL}/signup` }));
   return new NextResponse(new Uint8Array(pdf), {
     headers: {
       'content-type': 'application/pdf',

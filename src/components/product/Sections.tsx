@@ -77,7 +77,7 @@ export function Hero({ showcase }: { showcase: Showcase }) {
         </h1>
         <p className={styles.heroLede}>{lede(HERO.lede)}</p>
         <div className={styles.heroActions}>
-          <ButtonLink href={appLink('/login')} size="lg" iconAfter="arrowRight" className={site.cta}>
+          <ButtonLink href={appLink('/signup')} size="lg" iconAfter="arrowRight" className={site.cta}>
             {CTA.primary}
           </ButtonLink>
           <AnchorButton href="#report" variant="secondary" size="lg" iconAfter="arrowDown" className={site.ghost}>
@@ -475,7 +475,7 @@ export function FinalCall() {
           {FINAL.text}
         </p>
         <div className={`${site.actions} ${sections.finalActions} ${site.reveal}`} style={vars({ '--order': 2 })}>
-          <ButtonLink href={appLink('/login')} size="lg" iconAfter="arrowRight" className={site.cta}>
+          <ButtonLink href={appLink('/signup')} size="lg" iconAfter="arrowRight" className={site.cta}>
             {CTA.primary}
           </ButtonLink>
         </div>

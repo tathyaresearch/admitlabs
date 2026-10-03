@@ -12,7 +12,7 @@ import { MAX_PAGES, pageCount } from './pdf/render.ts';
 // The shared Audit as a PDF (Phase 6): the same content as the shared page, from what a live link
 // returns. Riverbend College (a college) and Cedar Skill Institute (a skilling institute).
 
-const OPTIONS = { madeAt: new Date('2026-10-01T06:30:00Z'), freeAuditUrl: 'http://localhost:3000/login' };
+const OPTIONS = { madeAt: new Date('2026-10-01T06:30:00Z'), freeAuditUrl: 'http://localhost:3000/signup' };
 const SAMPLES = [
   ['riverbend-college', 'college'],
   ['cedar-skill-institute', 'skilling institute'],
@@ -56,7 +56,7 @@ describe('what goes into the shared Audit PDF', () => {
 
   test('ends with the AdmitLabs line and the free Audit', async () => {
     const data = buildAuditPdf(await sampleShared(), OPTIONS);
-    assert.deepEqual(data.closing, { text: 'Want AdmitLabs to fix this for you?', email: ADMITLABS_EMAIL, freeAudit: 'Get your free Audit at localhost:3000/login' });
+    assert.deepEqual(data.closing, { text: 'Want AdmitLabs to fix this for you?', email: ADMITLABS_EMAIL, freeAudit: 'Get your free Audit at localhost:3000/signup' });
     assert.equal(ADMITLABS_EMAIL, 'hello@admitlabs.in');
     assert.equal(data.monthLabel, 'Audit of 18 Sep 2026');
     assert.equal(data.sharedOn, '19 Sep 2026');

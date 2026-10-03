@@ -34,7 +34,7 @@ export function SiteHeader() {
           <ButtonLink href={CTA.enquiryPath} variant="secondary" size="sm" className={`${styles.workLink} ${styles.ghost}`}>
             {CTA.secondary}
           </ButtonLink>
-          <ButtonLink href={appLink('/login')} size="sm" className={`${styles.cta} ${styles.headerCta}`}>
+          <ButtonLink href={appLink('/signup')} size="sm" className={`${styles.cta} ${styles.headerCta}`}>
             {CTA.primary}
           </ButtonLink>
           <SiteMenu nav={NAV} products={PRODUCTS} work={{ href: CTA.enquiryPath, label: CTA.secondary }} />

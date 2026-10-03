@@ -81,7 +81,8 @@ One Next.js app, two addresses. Which pages answer depends on the address a requ
 | `/` (website) | AdmitLabs home page |
 | `/work-with-us` (website) | Work with us: the enquiry form |
 | `/drishti` (website) | Product page |
-| `/login` | Email OTP login |
+| `/signup` | Sign up: email, then a 6-digit code. A new email gets an account; one that has an account is simply signed in |
+| `/login` | Log in: the same email code, for an account that exists or someone invited. It never says whether an email has an account, and never creates one for anyone else |
 | `/onboarding` | Institution setup |
 | `/` (dashboard, logged in) | Dashboard home |
 | `/audit`, `/audit/[programId]` | Audit |
@@ -448,8 +449,10 @@ Keep it short enough to read in 5 minutes.
 
 | Screen | Contents |
 |---|---|
-| Login | Email, then OTP |
-| Onboarding | The input form from section 6, then program pick for Free |
+| Sign up (`/signup`) | Email, then a 6-digit code. "Create your Drishti account", "Free to start. Enter your email and we'll send you a code." An email that already has an account is simply signed in. "Already have an account? Log in". Left side: Home for the sample university in the dark, under a soft light that follows the cursor; where it falls, the score counts up and the bars grow |
+| Log in (`/login`) | The same email and code. "Welcome back", "Enter your email. We'll send you a code." Log in never says whether an email has an account, so nobody can check who uses Drishti: for any email it shows the same code step, "If this email has a Drishti account, we've sent a code. New here? Sign up." (Sign up carries the email over), and answers in about the same time. It sends a code only to an account that exists, or to someone invited by an owner or the AdmitLabs team, who comes in like any account and joins on first sign in. It never creates an account for anyone else. "New to Drishti? Sign up". Left side: the Drishti eye, big, in the middle, following the cursor, among four cards of the sample's dashboard that lean with the cursor and change in turn (the score counts up, the rivals change places, the questions come in, the searches grow); the eye watches each card as it changes and reads along the field while someone types |
+| Sign up and log in, both | The form first in reading order. On a wide screen the left side sits beside it; on a phone it is a small band above the form and plays on its own, as on any touch screen. With reduced motion the left side is still. The left side carries the logo and one line, "See where you stand. Every month." |
+| Onboarding | The input form from section 6, then program pick for Free. No left side; the Drishti logo, with its eye, at the top |
 | Home | Overall score on its gauge with the score month by month, how far the next band is, 3 pillars (each with its trend, how many of its checks are Strong and its weakest check), change, top 3 fixes, rival snapshot with the latest move, 1 demand highlight with its searches by month, 3 things to do |
 | Audit | Pillars, all checks with results and points earned against possible, what's working, what to fix, score history, program switcher |
 | Program detail | Same as Audit, for one program |
@@ -494,7 +497,7 @@ Drishti uses the AdmitLabs brand. **No exceptions.**
 | Ivory | #F2E8D6 | Text on dark, main light surface |
 | Slate | #8A8D94 | Captions, metadata |
 
-Confirm these hex values against the AdmitLabs brand identity PDF before Phase 1 ends. Greys between black and ivory are allowed. **No accent colour. No green, amber or red. No gradients, no glow.** One exception: the AdmitLabs website (section 22), the `/drishti` product page included (section 15), may use subtle monochrome gradients (black to graphite, soft ivory tones) for light, depth and section transitions. Never colour, neon or glow. The dashboard keeps no gradients.
+Confirm these hex values against the AdmitLabs brand identity PDF before Phase 1 ends. Greys between black and ivory are allowed. **No accent colour. No green, amber or red. No gradients, no glow.** One exception: the AdmitLabs website (section 22), the `/drishti` product page included (section 15), may use subtle monochrome gradients (black to graphite, soft ivory tones) for light, depth and section transitions; so may the left side of sign up and log in (section 13), in the same Spotlight style. Never colour, neon or glow. The dashboard keeps no gradients, and so does the dashboard drawn on those left sides.
 
 **Type**
 
@@ -509,12 +512,12 @@ Confirm these hex values against the AdmitLabs brand identity PDF before Phase 1
 - "Drishti by AdmitLabs" with the Drishti eye before the word: two lids drawn as an almond within an almond, a round iris, and three short lashes on the upper lid. Drawn once (`src/graphics/eye.ts`) for the screens, the PDFs, the link previews and the favicon, in the text colour, so it works on black and on ivory.
 - Three lashes from 20 px up. Smaller (the dashboard sidebar, menus) and in the favicon, the eye stands alone.
 - How it moves, monochrome and calm, never a constant loop:
-  - **A**, in the dashboard, login and a shared Audit: the eye opens as it appears, then blinks once every 23 seconds, and once on hover. The lashes follow the lid.
+  - **A**, in the dashboard, sign up, log in, onboarding and a shared Audit: the eye opens as it appears, then blinks once every 23 seconds, and once on hover. The lashes follow the lid.
   - **C**, on `/drishti` and the website: the same, and the iris turns gently towards the pointer (on a phone it looks ahead, and a tap blinks).
   - **The Rise reveal**, once, as the intro of the `/drishti` hero and the website's Drishti section (when it comes into view, not on every scroll): the eye, half open, rises from behind the word and peeks over the top of the D, looks left and right, glides down into its place, opens fully and blinks once; then it is C.
   - **Still**: pictures of the product, the Products menu, the PDFs and link previews.
   - With reduced motion turned on, every eye is still and open.
-- Favicon: the eye on a black rounded square for the dashboard, login and `/drishti`. The website's own pages keep the "AL" mark.
+- Favicon: the eye on a black rounded square for the dashboard, sign up, log in and `/drishti`. The website's own pages keep the "AL" mark.
 - Motion files: `brand/motion` holds the Rise reveal and the Side reveal (the eye comes out from behind the D) as MP4 and GIF, square and wide, on black and ivory, with and without "by AdmitLabs". `npm run motion:record` makes them again from the development-only stage at `/drishti/motion`.
 
 **Contrast**
@@ -578,7 +581,7 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 **Motion**, calm and almost all CSS: sections and headings fade and rise in; each feature's bar holds its place while its pictures pass; the score counts up while its gauge draws; points bars fill; the rivals slide into rank order; Demand's bars grow; the report's pages fan out; buttons, cards and plans answer the pointer. With reduced motion, or no script, everything shows settled.
 
-"Get your free Audit" leads to `/login` then `/onboarding`.
+"Get your free Audit" (and the Paid plan's "Start with a free Audit") leads to `/signup`, then `/onboarding`.
 
 ---
 
@@ -721,7 +724,7 @@ The main AdmitLabs website, built in this app (section 4), in the **Spotlight** 
 
 **What AdmitLabs is:** an education only content partner. Three services (content only, never ads) and two products: Drishti for institutions and Tathya for students.
 
-**Pages:** the home page (`/`), Work with us (`/work-with-us`) and the product page (`/drishti`, section 15, in the same style). One header on every page: Services, Products (a small menu: Drishti, with its eye, still, before the name, and Tathya, which opens mytathya.in in a new tab), How we work, FAQ, "Work with us" and "Get your free Audit" (a menu on a phone, with both products); clear over the light at the top, glass once the page moves. The logo and the buttons keep clear of the frame's lines and crosses, on a desktop and on a phone. One footer: "© 2026 AdmitLabs" (the current year), the email, Drishti and Sign in.
+**Pages:** the home page (`/`), Work with us (`/work-with-us`) and the product page (`/drishti`, section 15, in the same style). One header on every page: Services, Products (a small menu: Drishti, with its eye, still, before the name, and Tathya, which opens mytathya.in in a new tab), How we work, FAQ, "Work with us" and "Get your free Audit" (a menu on a phone, with both products); clear over the light at the top, glass once the page moves. The logo and the buttons keep clear of the frame's lines and crosses, on a desktop and on a phone. One footer: "© 2026 AdmitLabs" (the current year), the email, Drishti and Sign in. Every "Get your free Audit" leads to sign up (`/signup`); Sign in leads to log in (`/login`).
 
 **Home page sections, in order:**
 

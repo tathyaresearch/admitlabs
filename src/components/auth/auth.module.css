@@ -1,0 +1,147 @@
+/*
+  The two doors into Drishti, /signup and /login (spec section 13): the left side (./stage.module.css)
+  and the form, which keeps the dashboard's tokens and no gradients. On a phone the left side is a
+  small band above the form; the form comes first in reading order everywhere.
+*/
+
+.page {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'stage'
+    'form';
+  background: var(--surface);
+  color: var(--text);
+}
+
+@media (min-width: 60rem) {
+  .page {
+    grid-template-columns: minmax(0, 1.4fr) minmax(27rem, 1fr);
+    grid-template-rows: minmax(100dvh, auto);
+    grid-template-areas: 'stage form';
+  }
+}
+
+.stageArea {
+  grid-area: stage;
+}
+
+/* The form: given room, in a calm and confident type. ------------------------------------------- */
+
+.formSide {
+  grid-area: form;
+  display: grid;
+  grid-template-rows: auto auto;
+  align-content: start;
+  gap: var(--space-10);
+  min-width: 0;
+  padding: var(--space-8) var(--gutter) var(--space-6);
+}
+
+@media (min-width: 60rem) {
+  .formSide {
+    grid-template-rows: 1fr auto;
+    align-content: stretch;
+    padding: var(--space-12) clamp(2.5rem, 1rem + 3vw, 5rem) var(--space-8);
+  }
+}
+
+.formWrap {
+  justify-self: center;
+  width: 100%;
+  max-width: 23rem;
+}
+
+@media (min-width: 60rem) {
+  .formWrap {
+    align-self: center;
+  }
+}
+
+.form {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.formHead {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.formTitle {
+  font-size: clamp(1.75rem, 1.55rem + 0.7vw, 2.25rem);
+  font-weight: var(--weight-title);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.formText {
+  max-width: 21rem;
+  font: var(--type-lead);
+  color: var(--text-muted);
+}
+
+.keep {
+  white-space: nowrap;
+}
+
+/* The field and the button a size up on these pages: two classes, so they win over the shared
+   styles whatever order those load in. */
+.form .input {
+  min-height: 3rem;
+  padding-inline: 0.875rem;
+  font-size: 1rem;
+}
+
+.form .submit {
+  min-height: 3rem;
+}
+
+.foot {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.footLink {
+  color: var(--text);
+  font-weight: var(--weight-heading);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 0.25em;
+}
+
+.footLink:hover {
+  text-decoration-color: var(--text);
+}
+
+.secondary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: calc(var(--space-2) * -1);
+}
+
+.devHint {
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--line-medium);
+  border-radius: var(--radius-sm);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.devHint a {
+  color: var(--text);
+  font-weight: var(--weight-medium);
+}
+
+.trust {
+  justify-self: center;
+  width: 100%;
+  max-width: 23rem;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}

@@ -185,7 +185,7 @@ export function DrishtiSection() {
         <div className={`${styles.foot} ${site.reveal}`}>
           <p className={styles.free}>{DRISHTI.free}</p>
           <div className={site.actions}>
-            <ButtonLink href={appLink('/login')} size="lg" iconAfter="arrowRight" className={site.cta}>
+            <ButtonLink href={appLink('/signup')} size="lg" iconAfter="arrowRight" className={site.cta}>
               {CTA.primary}
             </ButtonLink>
             {/* A full page load: the product page arrives with its own styles, exactly as it loads anywhere. */}

@@ -1,20 +1,19 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { ProductLockup, Wordmark } from '@/components/ui/Brand';
-import { Notice } from '@/components/ui/Feedback';
+import { AuthForm } from '@/components/auth/AuthForm';
+import { AuthPage, DatabaseOff } from '@/components/auth/AuthPage';
+import { AUTH_COPY } from '@/components/auth/content';
+import { stageData } from '@/components/auth/stage-data';
+import { WatchStage } from '@/components/auth/WatchStage';
 import { getViewer, homePathFor } from '@/lib/auth/viewer';
 import { mailpitUrl, supabaseConfig } from '@/lib/env';
 import { safeNextPath } from '@/lib/urls';
-import { LoginForm } from './LoginForm';
-import styles from './login.module.css';
+import { loadShowcase } from '@/product/showcase';
 
-export const metadata: Metadata = { title: 'Sign in' };
+// Log in: for someone who already has an account. The same email code as sign up, but it never
+// creates an account: an email with no account gets "No account yet" and a way to sign up.
 
-const FEATURES = [
-  { name: 'Audit', question: 'How do we look?' },
-  { name: 'Rivals', question: "Who's ahead of us?" },
-  { name: 'Demand', question: 'What do students want?' },
-] as const;
+export const metadata: Metadata = { title: AUTH_COPY.login.page };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const configured = supabaseConfig() !== null;
@@ -23,39 +22,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     if (viewer) redirect(homePathFor(viewer));
   }
   const { next } = await searchParams;
+  const data = stageData(await loadShowcase());
 
   return (
-    <div className={styles.page}>
-      <section className={`invert ${styles.brandPanel}`} aria-label="About Drishti">
-        <Wordmark height={20} />
-        <div className={styles.brandBody}>
-          <ProductLockup size="lg" motion="blink" />
-          <p className={styles.brandLine}>See where you stand, who&apos;s ahead, and what students want. Every month.</p>
-          <ol className={styles.features}>
-            {FEATURES.map((feature, index) => (
-              <li key={feature.name} className={styles.feature}>
-                <span className={`${styles.featureIndex} num`}>0{index + 1}</span>
-                <span className={styles.featureName}>{feature.name}</span>
-                <span className={styles.featureQuestion}>{feature.question}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-        <p className={styles.brandFoot}>Public data only. Every result shows its source and the date it was checked.</p>
-      </section>
-
-      <section className={styles.formPanel}>
-        {configured ? (
-          <LoginForm next={safeNextPath(next)} mailpitUrl={process.env.NODE_ENV === 'development' ? mailpitUrl() : null} />
-        ) : (
-          <div className={styles.form}>
-            <Notice title="The local database is not running" tone="inverse">
-              Start it with <code>npm run db:start</code>, load the sample data with <code>npm run db:reset</code>, then restart{' '}
-              <code>npm run dev</code>.
-            </Notice>
-          </div>
-        )}
-      </section>
-    </div>
+    <AuthPage left={<WatchStage data={data} />}>
+      {configured ? <AuthForm mode="login" next={safeNextPath(next)} mailpitUrl={process.env.NODE_ENV === 'development' ? mailpitUrl() : null} /> : <DatabaseOff />}
+    </AuthPage>
   );
 }

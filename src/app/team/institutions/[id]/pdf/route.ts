@@ -36,7 +36,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         audit,
         programNames: new Map((programs.data ?? []).map((program) => [program.id, program.name])),
       },
-      { madeAt: now, freeAuditUrl: `${APP_URL}/login` },
+      { madeAt: now, freeAuditUrl: `${APP_URL}/signup` },
     ),
   );
   return new NextResponse(new Uint8Array(pdf), {

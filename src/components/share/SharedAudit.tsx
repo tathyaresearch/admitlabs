@@ -136,7 +136,7 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
             </p>
           </div>
           <div className={styles.closingActions}>
-            <ButtonLink href="/login" iconAfter="arrowRight">
+            <ButtonLink href="/signup" iconAfter="arrowRight">
               Get your free Audit
             </ButtonLink>
             <AnchorButton href={pdfHref} variant="secondary" icon="download">
@@ -256,7 +256,7 @@ export function ExpiredLink() {
         <ProductLockup size="md" motion="blink" />
         <h1 className={styles.expiredTitle}>This link has expired</h1>
         <p className={styles.muted}>Shared Audits stay open for a while, then close. You can see where you stand today with your own free Audit.</p>
-        <ButtonLink href="/login" iconAfter="arrowRight">
+        <ButtonLink href="/signup" iconAfter="arrowRight">
           Get your free Audit
         </ButtonLink>
       </div>

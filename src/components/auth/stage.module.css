@@ -1,0 +1,839 @@
+/*
+  The left sides of /signup and /login (./AuthPage.tsx). They alone may use the website's Spotlight
+  style: black, soft monochrome light from above, a fine grain (the user's choice, 2026-10-03). The
+  dashboard drawn inside them keeps its own look, with no gradients; the form beside them keeps the
+  dashboard's tokens (./auth.module.css). Strictly monochrome.
+
+  /signup: Home in the dark under a light that follows the cursor (./SpotlightStage.tsx).
+  /login: the Drishti eye among four cards of the dashboard (./WatchStage.tsx).
+
+  On a phone the left side is a small band above the form. Motion sits inside
+  prefers-reduced-motion: no-preference; otherwise each left side is still.
+*/
+
+.stage {
+  --hair: rgba(242, 232, 214, 0.08);
+  --hair-2: rgba(242, 232, 214, 0.14);
+  --pad: clamp(1rem, 0.4rem + 1.8vw, 2.5rem);
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  height: clamp(10.5rem, 6rem + 22vw, 15rem);
+  background:
+    url('/textures/grain-on-dark.png') 0 0 / 64px 64px repeat,
+    radial-gradient(85% 60% at 32% -12%, rgba(242, 232, 214, 0.11), rgba(242, 232, 214, 0.035) 55%, transparent 80%),
+    var(--black);
+  color: var(--ivory);
+}
+
+@media (min-width: 60rem) {
+  .stage {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    min-height: 36rem;
+    border-right: 1px solid var(--hair);
+  }
+}
+
+/* A little dark behind the logo, so it reads over what moves. */
+.stage::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  inset: 0 0 auto;
+  height: clamp(4.75rem, 3rem + 3vw, 6.5rem);
+  background: linear-gradient(180deg, rgba(10, 10, 12, 0.92), rgba(10, 10, 12, 0.6) 45%, transparent);
+  pointer-events: none;
+}
+
+.brand {
+  position: absolute;
+  z-index: 4;
+  top: var(--pad);
+  left: var(--pad);
+}
+
+/* The one line, in the website's headline finish: ivory falling gently to warm grey. Not on a phone,
+   where the band stays motion only. */
+.line {
+  position: absolute;
+  z-index: 4;
+  left: var(--pad);
+  bottom: var(--pad);
+  display: none;
+  font-size: clamp(1.375rem, 1rem + 0.9vw, 1.875rem);
+  font-weight: var(--weight-heading);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  background: linear-gradient(180deg, #f6eee0 22%, #c8c0b2 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (min-width: 60rem) {
+  .line {
+    display: block;
+  }
+}
+
+/* /signup: the spotlight. ----------------------------------------------------------------------- */
+
+.lightStage {
+  --lr: clamp(9rem, 5rem + 11vw, 18rem);
+  position: absolute;
+  inset: 0;
+}
+
+.dashFrame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1160px;
+  transform-origin: 0 0;
+  overflow: hidden;
+  border: 1px solid rgba(242, 232, 214, 0.12);
+  border-radius: 1rem;
+  background: var(--black);
+  box-shadow: 0 60px 120px -40px rgba(0, 0, 0, 0.9);
+}
+
+.dashScreen {
+  display: grid;
+  grid-template-columns: 14.5rem minmax(0, 1fr);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dashSidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-3);
+}
+
+.dashPanel {
+  --surface: var(--surface-panel);
+  min-width: 0;
+  margin: var(--space-2) var(--space-2) 0 0;
+  padding: var(--space-10);
+  border-radius: 0.75rem 0.75rem 0 0;
+  background: var(--surface);
+}
+
+/* The dark: Home shows faintly everywhere and in full under the light, which falls off softly. */
+.veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle var(--lr) at var(--lx, 40%) var(--ly, 38%),
+    rgba(10, 10, 12, 0) 0%,
+    rgba(10, 10, 12, 0.05) 38%,
+    rgba(10, 10, 12, 0.66) 72%,
+    rgba(10, 10, 12, 0.93) 100%
+  );
+}
+
+/* The light itself: a faint warmth where it falls, and the stage's foot fading to black. */
+.lamp {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle calc(var(--lr) * 1.15) at var(--lx, 40%) var(--ly, 38%), rgba(242, 232, 214, 0.05), transparent 70%),
+    linear-gradient(180deg, transparent 72%, rgba(10, 10, 12, 0.85) 100%);
+}
+
+@media (max-width: 59.99rem) {
+  .lamp {
+    background: radial-gradient(circle calc(var(--lr) * 1.15) at var(--lx, 56%) var(--ly, 60%), rgba(242, 232, 214, 0.05), transparent 70%);
+  }
+}
+
+/* /login: the eye among the cards. ------------------------------------------------------------- */
+
+.watch {
+  position: absolute;
+  inset: 0;
+  perspective: 1400px;
+}
+
+/* A soft light behind the eye, and one that follows the cursor across the cards. */
+.watchLight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle min(26vw, 20rem) at var(--cx, 50%) var(--cy, 52%), rgba(242, 232, 214, 0.075), rgba(242, 232, 214, 0.02) 55%, transparent 75%),
+    radial-gradient(48% 42% at var(--gx, 50%) var(--gy, 45%), rgba(242, 232, 214, 0.06), transparent 72%);
+}
+
+/* The cards' own space, scaled to fit the stage (--k, set by WatchStage.tsx), with the eye in its
+   middle at --cx, --cy. */
+.desk {
+  position: absolute;
+  left: var(--cx, 50%);
+  top: var(--cy, 52%);
+  width: 980px;
+  height: 800px;
+  translate: -50% -50%;
+  scale: var(--k, 0.78);
+  transform-style: preserve-3d;
+}
+
+.float {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate3d(calc(var(--px, 0) * var(--depth) * 30px), calc(var(--py, 0) * var(--depth) * 24px), calc(var(--depth) * 40px))
+    rotateX(calc(var(--py, 0) * var(--depth) * -7deg)) rotateY(calc(var(--px, 0) * var(--depth) * 9deg));
+  transform-style: preserve-3d;
+}
+
+.eyeWrap {
+  position: absolute;
+  z-index: 2;
+  left: var(--cx, 50%);
+  top: var(--cy, 52%);
+  width: calc(250px * var(--k, 0.78));
+  translate: -50% -50%;
+}
+
+.bigEye {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  color: var(--ivory);
+}
+
+.bigLids {
+  fill: currentColor;
+  fill-rule: evenodd;
+}
+
+.bigLash path,
+.bigIris circle {
+  fill: currentColor;
+}
+
+.bigShut {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  opacity: 0;
+}
+
+.bigOpen,
+.bigLid,
+.bigIris,
+.bigLashes {
+  transform-box: view-box;
+  transform-origin: 20px 12px;
+}
+
+.bigLashOpen,
+.bigLash {
+  transform-box: view-box;
+}
+
+.bigIris {
+  transform: translate(var(--look-x, 0px), var(--look-y, 0px));
+}
+
+.bigLashes {
+  transform: translate(calc(var(--look-x, 0px) * 0.12), calc(var(--look-y, 0px) * 0.25));
+}
+
+/* The cards: pieces of the dashboard, flat like the dashboard's own cards. */
+.mini {
+  display: grid;
+  gap: 0.875rem;
+  width: var(--w, 300px);
+  padding: 1.125rem 1.25rem 1.25rem;
+  border: 1px solid rgba(242, 232, 214, 0.1);
+  border-radius: 0.875rem;
+  background: #141417;
+  box-shadow: 0 calc(20px + var(--depth, 1) * 30px) calc(40px + var(--depth, 1) * 50px) calc(-24px - var(--depth, 1) * 10px) rgba(0, 0, 0, 0.95);
+  color: var(--ivory);
+  transition:
+    border-color 500ms var(--ease-out),
+    box-shadow 500ms var(--ease-out);
+}
+
+/* The card the eye watches catches a little more light. */
+.mini[data-watched] {
+  border-color: rgba(242, 232, 214, 0.3);
+  box-shadow:
+    0 calc(20px + var(--depth, 1) * 30px) calc(40px + var(--depth, 1) * 50px) calc(-24px - var(--depth, 1) * 10px) rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(242, 232, 214, 0.06);
+}
+
+.miniHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--slate);
+}
+
+.miniMuted {
+  font-size: 0.8125rem;
+  font-weight: var(--weight-regular);
+  color: var(--slate);
+  letter-spacing: 0;
+}
+
+.miniTitle {
+  font-size: 0.9375rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.miniMeta {
+  font-size: 0.75rem;
+  color: var(--slate);
+  white-space: nowrap;
+}
+
+.miniMeta :global(.num) {
+  color: var(--ivory);
+}
+
+.miniGauge {
+  --gauge-max: 12rem;
+  display: grid;
+  justify-items: center;
+}
+
+.miniScoreMeta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: -0.25rem;
+}
+
+.miniPillars {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--hair);
+}
+
+.miniPillars li {
+  display: grid;
+  grid-template-columns: 1rem 5.25rem minmax(0, 1fr) 1.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.miniPillars li :global(.num) {
+  justify-self: end;
+  font-size: 0.875rem;
+}
+
+.miniTrack {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(242, 232, 214, 0.12);
+  overflow: hidden;
+}
+
+.miniTrack i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ivory);
+  transform-origin: left;
+}
+
+.miniRank {
+  color: var(--ivory);
+}
+
+.miniLadder {
+  display: grid;
+  gap: 4px;
+}
+
+.miniRung {
+  --row: 2.25rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: 0.75rem minmax(0, 9rem) minmax(0, 1fr) 1.5rem;
+  align-items: center;
+  gap: 0.625rem;
+  height: var(--row);
+  padding: 0 0.625rem;
+  border-radius: 0.5rem;
+  background: #1a1a1e;
+  font-size: 0.8125rem;
+}
+
+.miniRung[data-you] {
+  z-index: 1;
+  background: #2a2b30;
+  font-weight: var(--weight-heading);
+}
+
+.miniRungRank {
+  color: var(--slate);
+  font-size: 0.75rem;
+}
+
+.miniRungName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miniRungScore {
+  justify-self: end;
+}
+
+.miniQuestions {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.miniQuestions li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--hair);
+}
+
+.miniQuestions li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.miniQuestion {
+  font-size: 0.8125rem;
+  font-weight: var(--weight-medium);
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+
+.miniBig {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.miniBig :global(.num) {
+  font-size: 2rem;
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.miniMonths {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: end;
+  gap: 6px;
+  height: 4.25rem;
+}
+
+.miniMonths span {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+}
+
+.miniMonths i {
+  display: block;
+  width: 58%;
+  border-radius: 3px 3px 1px 1px;
+  background: rgba(242, 232, 214, 0.3);
+  transform-origin: bottom;
+}
+
+.miniMonths span:last-child i {
+  background: var(--ivory);
+}
+
+/* On a phone the cards are small tags around the eye, the one it watches lit. */
+.chip {
+  position: absolute;
+  z-index: 2;
+  left: var(--tx);
+  top: var(--ty);
+  translate: -50% -50%;
+  display: none;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 0.5rem;
+  background: rgba(20, 20, 23, 0.92);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+  transition:
+    opacity 420ms var(--ease-out),
+    border-color 420ms var(--ease-out);
+}
+
+.chip[data-chip='score'] {
+  --tx: 19%;
+  --ty: 50%;
+}
+
+.chip[data-chip='rivals'] {
+  --tx: 81%;
+  --ty: 50%;
+}
+
+.chip[data-chip='asked'] {
+  --tx: 81%;
+  --ty: 76%;
+}
+
+.chip[data-chip='trend'] {
+  --tx: 19%;
+  --ty: 76%;
+}
+
+.chipValue {
+  font-size: 0.875rem;
+  font-weight: var(--weight-heading);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.chipWord {
+  color: rgba(242, 232, 214, 0.74);
+}
+
+.chipTrack {
+  display: block;
+  width: 1.75rem;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(242, 232, 214, 0.16);
+  overflow: hidden;
+}
+
+.chipTrack i {
+  display: block;
+  height: 100%;
+  background: var(--ivory);
+  transform-origin: left;
+}
+
+.chipLadder,
+.chipBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 0.75rem;
+}
+
+.chipLadder i,
+.chipBars i {
+  display: block;
+  width: 4px;
+  border-radius: 1px;
+  background: rgba(242, 232, 214, 0.32);
+}
+
+.chipLadder i[data-you],
+.chipBars i:last-child {
+  background: var(--ivory);
+}
+
+.chipBars i {
+  transform-origin: bottom;
+}
+
+@media (max-width: 59.99rem) {
+  .desk {
+    display: none;
+  }
+
+  .chip {
+    display: flex;
+  }
+
+  .eyeWrap {
+    left: 50%;
+    top: 60%;
+    width: min(27%, 7rem + 4vw);
+  }
+
+  .watchLight {
+    background: radial-gradient(circle min(40vw, 10rem) at 50% 60%, rgba(242, 232, 214, 0.075), transparent 75%);
+  }
+}
+
+/* Motion. ------------------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* /signup: as the light reaches a part of Home, its bars fill and the months grow in turn. */
+  .lightStage[data-live] [data-zone][data-play] [data-fill] {
+    transform-origin: left;
+    animation: auth-fill 1000ms cubic-bezier(0.33, 1, 0.68, 1) both;
+  }
+
+  .lightStage[data-live] [data-zone='demand'][data-play] [data-fill] {
+    transform-origin: bottom;
+    animation-name: auth-grow;
+    animation-delay: calc(var(--i, 0) * 110ms);
+  }
+
+  /* /login: the eye opens as the page appears, then blinks now and then (set by WatchStage.tsx). */
+  .watch[data-live] .bigOpen {
+    animation: big-open 760ms cubic-bezier(0.22, 0.9, 0.3, 1) 250ms both;
+  }
+
+  .watch[data-live] .bigLashOpen {
+    animation: big-lash-open 760ms cubic-bezier(0.22, 0.9, 0.3, 1) 250ms both;
+  }
+
+  .watch[data-live] .bigShutOpen {
+    animation: big-shut-open 760ms linear 250ms both;
+  }
+
+  .eyeWrap[data-blink] .bigLid {
+    animation: big-blink 380ms both;
+  }
+
+  .eyeWrap[data-blink] .bigLash {
+    animation: big-lash-blink 380ms both;
+  }
+
+  .eyeWrap[data-blink] .bigShutBlink {
+    animation: big-shut-blink 380ms linear both;
+  }
+
+  /* Each card bobs gently. */
+  .watch[data-live] .mini {
+    animation: auth-bob 6s ease-in-out infinite alternate;
+  }
+
+  .watch[data-live] .float:nth-child(2) .mini {
+    animation-delay: -2s;
+  }
+
+  .watch[data-live] .float:nth-child(3) .mini {
+    animation-delay: -4s;
+  }
+
+  .watch[data-live] .float:nth-child(4) .mini {
+    animation-delay: -1s;
+  }
+
+  /* The tags on a phone: the one the eye watches is lit. */
+  .watch[data-live] .chip {
+    opacity: 0.55;
+  }
+
+  .watch[data-live] .chip[data-watched] {
+    opacity: 1;
+    border-color: rgba(242, 232, 214, 0.34);
+  }
+
+  /* The score: its pillars fill, then its result shows. */
+  .miniScore .miniPillars i,
+  .chip[data-chip='score'] .chipTrack i {
+    transition: scale 900ms var(--ease-out);
+  }
+
+  .miniScore .miniPillars li:nth-child(2) i {
+    transition-delay: 120ms;
+  }
+
+  .miniScore .miniPillars li:nth-child(3) i {
+    transition-delay: 240ms;
+  }
+
+  .miniScore[data-phase='start'] .miniPillars i,
+  .chip[data-chip='score'][data-phase='start'] .chipTrack i {
+    scale: 0 1;
+    transition: none;
+  }
+
+  .miniScore .miniScoreMeta {
+    transition: opacity 500ms var(--ease-out) 1100ms;
+  }
+
+  .miniScore[data-phase='start'] .miniScoreMeta {
+    opacity: 0;
+    transition: none;
+  }
+
+  /* The rivals change places: out to the order of their names, then into rank order. */
+  .miniRivals .miniRung {
+    transition: translate 950ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .miniRivals[data-phase='names'] .miniRung {
+    translate: 0 calc(var(--from, 0) * (var(--row) + 4px));
+  }
+
+  .chip[data-chip='rivals'] .chipLadder i {
+    transition: translate 950ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .chip[data-chip='rivals'][data-phase='names'] .chipLadder i {
+    translate: calc(var(--from, 0) * 6px) 0;
+  }
+
+  .miniRivals .miniTrack i {
+    transition: scale 800ms var(--ease-out) 650ms;
+  }
+
+  .miniRivals[data-phase='names'] .miniTrack i {
+    scale: 0 1;
+    transition: scale 400ms var(--ease-out);
+  }
+
+  .miniRivals :is(.miniRungRank, .miniRank) {
+    transition: opacity 400ms var(--ease-out) 800ms;
+  }
+
+  .miniRivals[data-phase='names'] :is(.miniRungRank, .miniRank) {
+    opacity: 0;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  /* The questions come in one by one. */
+  .watch[data-live] .miniQuestions li {
+    opacity: clamp(0, var(--shown, 3) - var(--i, 0), 1);
+    translate: 0 calc(clamp(0, var(--i, 0) + 1 - var(--shown, 3), 1) * 0.5rem);
+    transition:
+      opacity 520ms var(--ease-out),
+      translate 520ms var(--ease-out);
+  }
+
+  /* The searches grow, month by month. */
+  .miniTrend .miniMonths i {
+    transition: scale 700ms var(--ease-out) calc(var(--i, 0) * 120ms);
+  }
+
+  .chip[data-chip='trend'] .chipBars i {
+    transition: scale 600ms var(--ease-out) calc(var(--i, 0) * 100ms);
+  }
+
+  .miniTrend[data-phase='start'] .miniMonths i,
+  .chip[data-chip='trend'][data-phase='start'] .chipBars i {
+    scale: 1 0;
+    transition: none;
+  }
+
+  /* A card set empty is set at once. */
+  .watch[data-setting] * {
+    transition: none !important;
+  }
+}
+
+@keyframes big-open {
+  from {
+    transform: scaleY(0.06);
+  }
+}
+
+@keyframes big-lash-open {
+  from {
+    transform: translateY(calc(var(--drop) * 0.94)) scaleY(-1);
+  }
+}
+
+@keyframes big-shut-open {
+  0%,
+  4% {
+    opacity: 1;
+  }
+
+  11%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes big-blink {
+  0% {
+    transform: scaleY(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+
+  30%,
+  44% {
+    transform: scaleY(0.06);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.3, 1);
+  }
+
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes big-lash-blink {
+  0% {
+    transform: translateY(0) scaleY(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+
+  30%,
+  44% {
+    transform: translateY(calc(var(--drop) * 0.94)) scaleY(-1);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.3, 1);
+  }
+
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+@keyframes big-shut-blink {
+  0%,
+  23% {
+    opacity: 0;
+  }
+
+  29%,
+  47% {
+    opacity: 1;
+  }
+
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes auth-fill {
+  from {
+    scale: 0 1;
+  }
+}
+
+@keyframes auth-grow {
+  from {
+    scale: 1 0;
+  }
+}
+
+@keyframes auth-bob {
+  from {
+    translate: 0 -4px;
+  }
+
+  to {
+    translate: 0 4px;
+  }
+}

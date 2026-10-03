@@ -32,10 +32,12 @@ describe('routing by address', () => {
 
   test('dashboard pages on the website address move to the dashboard, with their query', () => {
     assert.deepEqual(at('admitlabs.in', '/login'), { kind: 'redirect', url: 'https://app.admitlabs.in/login', permanent: false });
+    assert.deepEqual(at('admitlabs.in', '/signup'), { kind: 'redirect', url: 'https://app.admitlabs.in/signup', permanent: false });
     assert.deepEqual(at('admitlabs.in', '/audit/abc?check=fees_shown'), { kind: 'redirect', url: 'https://app.admitlabs.in/audit/abc?check=fees_shown', permanent: false });
     assert.deepEqual(at('admitlabs.in', '/team/enquiries'), { kind: 'redirect', url: 'https://app.admitlabs.in/team/enquiries', permanent: false });
     assert.deepEqual(at('admitlabs.in', '/share/token123'), { kind: 'redirect', url: 'https://app.admitlabs.in/share/token123', permanent: false });
     assert.deepEqual(at('admitlabs.localhost:3000', '/login', LOCAL), { kind: 'redirect', url: 'http://localhost:3000/login', permanent: false });
+    assert.deepEqual(at('admitlabs.localhost:3000', '/signup', LOCAL), { kind: 'redirect', url: 'http://localhost:3000/signup', permanent: false });
   });
 
   test('the product page and the website on the dashboard address move to the website', () => {
@@ -46,7 +48,7 @@ describe('routing by address', () => {
   });
 
   test('the dashboard address keeps the dashboard', () => {
-    for (const path of ['/', '/login', '/audit', '/team', '/share/abc', '/drishtiish']) assert.deepEqual(at('app.admitlabs.in', path), { kind: 'app' });
+    for (const path of ['/', '/login', '/signup', '/audit', '/team', '/share/abc', '/drishtiish']) assert.deepEqual(at('app.admitlabs.in', path), { kind: 'app' });
     assert.deepEqual(at('localhost:3000', '/', LOCAL), { kind: 'app' });
   });
 

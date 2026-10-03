@@ -26,7 +26,9 @@ const ROOT = join(import.meta.dirname, '..');
 const WEBSITE = [join(ROOT, 'components', 'site'), join(ROOT, 'app', '(site)')];
 /** The product page, now part of the website's look: its gradients are allowed too. */
 const PRODUCT_PAGE = [join(ROOT, 'components', 'product'), join(ROOT, 'app', '(product)', 'drishti')];
-const mayHaveGradients = (path: string) => [...WEBSITE, ...PRODUCT_PAGE].some((dir) => path.startsWith(dir));
+/** The left side of /signup and /login (the user's choice, 2026-10-03): its own stylesheet only. */
+const AUTH_LEFT_SIDE = [join(ROOT, 'components', 'auth', 'stage.module.css')];
+const mayHaveGradients = (path: string) => [...WEBSITE, ...PRODUCT_PAGE, ...AUTH_LEFT_SIDE].some((dir) => path.startsWith(dir));
 const ALL = texts(Object.fromEntries(Object.entries(scenes)));
 
 describe('the website’s pictures', () => {
@@ -54,7 +56,7 @@ describe('the website’s pictures', () => {
     }
   });
 
-  test('gradients only on the website and the product page: the dashboard keeps none', () => {
+  test('gradients only on the website, the product page and the left side of /signup and /login: the dashboard keeps none', () => {
     const outside = files(ROOT, /\.(css|tsx)$/).filter((path) => !mayHaveGradients(path));
     assert.ok(outside.length > 20);
     for (const path of outside) assert.doesNotMatch(readFileSync(path, 'utf8'), /gradient\(/, path);

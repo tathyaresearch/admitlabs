@@ -23,7 +23,7 @@ export function Hero() {
           {HERO.lede} <strong>{HERO.ledeEnd}</strong>
         </p>
         <div className={styles.actions}>
-          <ButtonLink href={appLink('/login')} size="lg" iconAfter="arrowRight" className={site.cta}>
+          <ButtonLink href={appLink('/signup')} size="lg" iconAfter="arrowRight" className={site.cta}>
             {CTA.primary}
           </ButtonLink>
           <ButtonLink href={CTA.enquiryPath} variant="secondary" size="lg" className={site.ghost}>

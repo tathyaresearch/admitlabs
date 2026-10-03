@@ -151,7 +151,7 @@ export function FinalCall() {
           {FINAL.line}
         </p>
         <div className={`${site.actions} ${styles.finalActions} ${site.reveal}`} style={vars({ '--order': 2 })}>
-          <ButtonLink href={appLink('/login')} size="lg" iconAfter="arrowRight" className={site.cta}>
+          <ButtonLink href={appLink('/signup')} size="lg" iconAfter="arrowRight" className={site.cta}>
             {CTA.primary}
           </ButtonLink>
           <ButtonLink href={CTA.enquiryPath} variant="secondary" size="lg" className={site.ghost}>

@@ -8,7 +8,7 @@ import { redirectBecomesRelative, routeFor } from '@/lib/hosts';
 import { updateSession } from '@/lib/supabase/proxy';
 import { APP_URL, SITE_URL } from '@/lib/urls';
 
-const PUBLIC_PREFIXES = ['/login', '/drishti', '/share', '/site'];
+const PUBLIC_PREFIXES = ['/login', '/signup', '/drishti', '/share', '/site'];
 
 /** The route handler that sends a dashboard path on to the dashboard's address, when this cannot. */
 const TO_DASHBOARD = '/site/to-dashboard';
@@ -58,5 +58,6 @@ export const config = {
   // robots.txt and sitemap.xml answer by address themselves, with no sign-in on any address.
   // Pictures in public/brand and public/work (the website's Our work) are served as they are:
   // Next's image optimizer asks for them with no address, which would read as the dashboard's.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|brand/|work/|robots.txt|sitemap.xml).*)'],
+  // So is the grain in public/textures, which /signup and /login use on the dashboard's address.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|brand/|work/|textures/|robots.txt|sitemap.xml).*)'],
 };

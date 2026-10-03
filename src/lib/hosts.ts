@@ -11,7 +11,7 @@
 export const SITE_PREFIX = '/site';
 
 /** The dashboard's first path segments. On the website's address they move to the dashboard's. */
-export const APP_SECTIONS: readonly string[] = ['login', 'onboarding', 'audit', 'rivals', 'demand', 'reports', 'plan', 'settings', 'notifications', 'team', 'share', 'design-system'];
+export const APP_SECTIONS: readonly string[] = ['login', 'signup', 'onboarding', 'audit', 'rivals', 'demand', 'reports', 'plan', 'settings', 'notifications', 'team', 'share', 'design-system'];
 
 export type HostRoute =
   /** Carry on: the dashboard's own rules apply (sign in and so on). */

@@ -54,7 +54,7 @@ export function Plans() {
                   ))}
                 </ul>
                 <div className={styles.planFoot}>
-                  <ButtonLink href={appLink('/login')} variant={paid ? 'primary' : 'secondary'} size="lg" block iconAfter="arrowRight" className={paid ? site.ctaInk : site.ghost}>
+                  <ButtonLink href={appLink('/signup')} variant={paid ? 'primary' : 'secondary'} size="lg" block iconAfter="arrowRight" className={paid ? site.ctaInk : site.ghost}>
                     {card.cta}
                   </ButtonLink>
                   {card.note ? <p className={styles.planNote}>{card.note}</p> : null}

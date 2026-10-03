@@ -26,9 +26,15 @@ Then open http://localhost:3000 for the dashboard, or http://admitlabs.localhost
 - `db:start` creates Drishti's own local signing key if it is missing, then starts Drishti's Supabase (project `drishti`, ports 55320 to 55329, so it runs next to other local stacks).
 - `db:reset` rebuilds the database from `supabase/migrations`, writes `.env.local` from `supabase status`, and loads the sample data.
 
-## Sign in
+## Sign up and log in
 
-Sign in with any sample email. The 6-digit code arrives in Mailpit at http://127.0.0.1:55324, never a real inbox.
+Two doors, one email code underneath (`src/lib/auth/email-code.ts`): http://localhost:3000/signup and http://localhost:3000/login. The 6-digit code arrives in Mailpit at http://127.0.0.1:55324, never a real inbox.
+
+- **Sign up** (`/signup`, where every "Get your free Audit" leads): "Create your Drishti account". A new email gets an account and goes to onboarding; an email that already has one is simply signed in. Its left side is Drishti's Home for the sample university in the dark, under a soft light that follows the cursor; where the light falls, the score counts up and the bars grow (`SpotlightStage.tsx`).
+- **Log in** (`/login`, where Sign in leads and where signed-out visitors are sent): "Welcome back". It never says whether an email has an account: for any email it shows the same code step, "If this email has a Drishti account, we’ve sent a code. New here? Sign up.", and answers in about the same time (at least 1.2 seconds). It sends a code only to an account, or to someone with a pending invite (an owner's Member or the AdmitLabs team), who comes in like any account (`src/lib/auth/invites.ts`); it never creates an account for anyone else. Its Sign up link carries the email to sign up in the same tab, never in the address. Its left side is the Drishti eye, big, among four cards of the sample's dashboard: the eye follows the cursor, the cards lean with it and change in turn, the eye watches each as it changes, and it reads along the field while someone types (`WatchStage.tsx`).
+- **Both.** The form first in reading order; on a phone the left side is a small band above it and plays on its own, as on any touch screen; with reduced motion it is still. The left side alone may use the Spotlight style, black with soft light and grain (`stage.module.css`, the one dashboard stylesheet the gradient test allows); the form keeps the dashboard's tokens. Everything is in `src/components/auth`, the words in `content.ts`.
+
+Log in with any sample email:
 
 | Email | Who |
 |---|---|
@@ -40,7 +46,7 @@ Sign in with any sample email. The 6-digit code arrives in Mailpit at http://127
 | team@admitlabs.example | AdmitLabs team |
 | admin@admitlabs.example | AdmitLabs admin |
 
-Any other email creates a new account and goes to onboarding: the institution's details, then the one program a free Audit covers, then the first Audit runs.
+Any other email signs up at `/signup` and goes to onboarding: the institution's details, then the one program a free Audit covers, then the first Audit runs. Onboarding shows the Drishti logo, with its eye, at the top.
 
 ## Try the Audit on each tier
 
@@ -176,8 +182,8 @@ The AdmitLabs website (spec section 22), later served at admitlabs.in, is part o
 - **Pages.** The home page and Work with us (`/work-with-us`), with the product page beside them. The words are in `src/site/content.ts`; a test checks them (no dashes, no prices, the FAQ as approved, and only who we work with).
 - **Spotlight style** (redesign of 2026-10-02): black with soft light from above, ivory surfaces for the moments that matter, fine frames with small crosses (`Frame.tsx`), and no small labels above headings. Fixed black and ivory, whatever the device setting. Each section has its own stylesheet in `src/components/site`.
 - **Pictures drawn for the website**, in HTML and CSS: a search, a review, an enquiry, a program's page, posts, a reel and a film, an admission season, Drishti's Home. They show a made-up institution, Larkmoor University, in Bangalore, and made-up neighbours (`src/site/scenes.ts`), never Drishti's own sample data, with no caption. Instagram and YouTube appear only as their official one-colour logos.
-- **Gradients and grain.** The website and the product page (`/drishti`) may use subtle monochrome gradients; a test (`src/site/scenes.test.ts`) checks that the dashboard has none. The grain is one 3 KB picture tile (`public/textures/grain-on-dark.png`) layered into a background, and only where light falls (the hero, the dark stages, the final call): a noise filter or grain over whole long sections made browsers slow to draw the page.
-- **Header.** Services, Products (a small menu: Drishti, and Tathya, which opens https://mytathya.in in a new tab), How we work and FAQ, then "Work with us" and "Get your free Audit". On a phone, a menu with both products. The logo and the buttons keep clear of the frame's lines and crosses.
+- **Gradients and grain.** The website and the product page (`/drishti`) may use subtle monochrome gradients, and so may the left side of sign up and log in; a test (`src/site/scenes.test.ts`) checks that the dashboard has none. The grain is one 3 KB picture tile (`public/textures/grain-on-dark.png`) layered into a background, and only where light falls (the hero, the dark stages, the final call): a noise filter or grain over whole long sections made browsers slow to draw the page.
+- **Header.** Services, Products (a small menu: Drishti, and Tathya, which opens https://mytathya.in in a new tab), How we work and FAQ, then "Work with us" and "Get your free Audit". On a phone, a menu with both products. Every "Get your free Audit" goes to `/signup`; the footer's Sign in goes to `/login`. The logo and the buttons keep clear of the frame's lines and crosses.
 - **Motion** is CSS only, with no script and no animation library: on load the light comes up and the frame draws; sections fade and rise in as they scroll into view; the system's moments arrive in order (the search types its query, the enquiry is received), the phones rise, the posts appear and the season fills; a dot travels the monthly loop; buttons, cards and links answer the pointer calmly. With reduced motion nothing moves and everything shows settled.
 - **Work with us** saves each enquiry to the `enquiries` table through `submit_enquiry`, the only way in. The form and the database check the same limits. A hidden field catches bots (they are told it went, and nothing is kept), and one email can send at most 3 a day. A service tile's "Work with us" link names that service in the message. The team sees them under Enquiries.
 - **Settings** (`SITE_SETTINGS` in `src/config/site.ts`): `showWork` turns on Our work once there are samples in `src/site/work.ts` (images in `public/work/`); `tathyaUrl` is where "Explore Tathya" and the Products menu's Tathya link go (https://mytathya.in, in a new tab); `email` is the contact address.
@@ -195,7 +201,7 @@ The AdmitLabs website (spec section 22), later served at admitlabs.in, is part o
 - **The score, as a table.** Inside the Audit: the total beside the words, then the three parts side by side (stacked on a phone), each with its question and score, and every check's result (the weakest program's, as the Audit's grid shows). Rows sit in slots of one height, so they line up across the parts; Trusted's empty last slot is ruled like the rest (`slots` in `Sections.tsx`). Bars are one width (`--bar-w`) and the words one column (`--result-col`), shorter on a small phone. Only the total and the three part scores are numbers, and a test checks they add up. Then what each result earns.
 - **Real previews, fictional data.** Each preview is the dashboard's own component, filled with the sample world's August 2026, worked out in memory with the real scoring engine (`src/sample/world.ts`), then shown under the website's names (`src/product/larkmoor.ts`): Larkmoor University, Bangalore, with Calderwood College, Brackenfield University and Thornbury College as its rivals. Only the words change; a test checks that every number matches and that no sample world name or place is left. The previews carry no caption. The dashboard's sample keeps Eastgate. The page is prerendered at build and never reads the database.
 - **Motion.** Sections fade and rise in; each feature's bar holds its place while its pictures pass; the Audit's score counts up as its gauge draws (`CountUp.tsx`; the eye's `EyeMotion.tsx` is the page's only other script); its bars fill; the rivals slide from the order of their names into rank order; Demand's months grow in turn; the report's pages fan out from one pile; buttons, stages and plans answer the pointer. All of it is off with reduced motion, where the page shows settled.
-- **Buttons.** "Get your free Audit" and "Start with a free Audit" go to `/login`, then onboarding. For now the AdmitLabs team switches Paid on.
+- **Buttons.** "Get your free Audit" and "Start with a free Audit" go to `/signup`, then onboarding. For now the AdmitLabs team switches Paid on.
 - **Sample report.** `/drishti/sample-report.pdf` is the report the monthly job would make for the same institution and month, under the same names as the page (Larkmoor University), marked "Sample report. Fictional data." on the cover and every page. Made once at build.
 - **Words and numbers.** The copy is in `src/product/content.ts`. Every number in it (prices, plan length, reminders, schedules, the 17 checks, 3 to 5 rivals) comes from config, and a test checks it.
 - **Sharing.** `opengraph-image.tsx` draws the link preview (1200 by 630) with the report's Bricolage font files.
@@ -205,6 +211,7 @@ The AdmitLabs website (spec section 22), later served at admitlabs.in, is part o
 | What | Address |
 |---|---|
 | App | http://localhost:3000 |
+| Sign up, log in | http://localhost:3000/signup, http://localhost:3000/login |
 | Website | http://admitlabs.localhost:3000 |
 | Product page | http://admitlabs.localhost:3000/drishti |
 | Design system | http://localhost:3000/design-system |
@@ -238,8 +245,8 @@ The AdmitLabs website (spec section 22), later served at admitlabs.in, is part o
 supabase/        config, migrations (schema, row level security, owner actions), database tests, email template
 scripts/         env, seed, audit, tier, rivals, demand, report, dash check, reveal recording (TypeScript run directly by Node)
 brand/motion/    the Drishti reveals as MP4 and GIF, made by npm run motion:record
-src/app/         routes: (site)/site (the website), (product)/drishti, login, (dashboard), onboarding, team, share, design-system
-src/components/  ui, charts, audit, rivals, demand, report, team and share screens, the website, institution inputs and the app shell
+src/app/         routes: (site)/site (the website), (product)/drishti, signup, login, (dashboard), onboarding, team, share, design-system
+src/components/  ui, charts, audit, rivals, demand, report, team and share screens, sign up and log in, the website, institution inputs and the app shell
 src/domain/      pure logic: the scoring engine (domain/scoring), checks, schedules, onboarding checks, dates, tiers
 src/config/      every adjustable value: scoring, plans, entitlements, schedules, providers, cities, programs
 src/providers/   the provider interface, mock providers, and real provider slots
