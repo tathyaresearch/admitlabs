@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
-import { changeWords, countWords, LANGUAGE_TAGS, PLATFORM_LABELS, platformOf, sourcesCaption, spikeNotice, worrySentence } from './text.ts';
+import { askedLine, changeWords, countWords, filledInNote, LANGUAGE_TAGS, PLATFORM_LABELS, platformOf, risingLine, sourcesCaption, spikeNotice, topicLine, trendWord } from './text.ts';
 
 describe('Demand in words', () => {
   test('changes, never a minus sign', () => {
@@ -13,12 +13,6 @@ describe('Demand in words', () => {
 
   test('the spike alert', () => {
     assert.equal(spikeNotice('BCA with AI and Machine Learning', 'Guwahati', 47), 'Rising in Guwahati: BCA with AI and Machine Learning, up 47% this month.');
-  });
-
-  test('what students worry about most', () => {
-    assert.equal(worrySentence('Guwahati', ['placements', 'fees']), 'Students in Guwahati worry most about placements and fees.');
-    assert.equal(worrySentence('Assam', ['hostel']), 'Students in Assam worry most about hostels.');
-    assert.equal(worrySentence('All India', ['new']), '');
   });
 
   test('how often, in words that fit the item', () => {
@@ -48,6 +42,30 @@ describe('Demand in words', () => {
     assert.equal(LANGUAGE_TAGS.en, null);
     assert.equal(LANGUAGE_TAGS.hi, 'Asked in Hindi');
     assert.equal(LANGUAGE_TAGS.as, 'Asked in Assamese');
+  });
+
+  test('a search trend in words: Rising fast from 40%, Rising from 10%, Falling from a 5% drop, else Steady (spec 9.5)', () => {
+    assert.equal(trendWord(46), 'Rising fast');
+    assert.equal(trendWord(40), 'Rising fast');
+    assert.equal(trendWord(39.4), 'Rising');
+    assert.equal(trendWord(10), 'Rising');
+    assert.equal(trendWord(9.6), 'Rising', 'rounded first');
+    assert.equal(trendWord(8), 'Steady');
+    assert.equal(trendWord(-4), 'Steady');
+    assert.equal(trendWord(-5), 'Falling');
+    assert.equal(trendWord(-21), 'Falling');
+    assert.equal(trendWord(null), null);
+  });
+
+  test('why an idea, and when the state fills in', () => {
+    assert.equal(askedLine(96, 'Guwahati'), 'Asked about 96 times in Guwahati this month.');
+    assert.equal(askedLine(1, 'Assam'), 'Asked about 1 time in Assam this month.');
+    assert.equal(topicLine('BBA', 'fees', 140, 'Guwahati'), 'BBA fees came up in about 140 questions in Guwahati this month.');
+    assert.equal(risingLine('Power BI and dashboards', 'Rising fast', 'Guwahati'), 'Searches for “Power BI and dashboards” are rising fast in Guwahati.');
+    assert.equal(filledInNote('Tezpur', 'Assam', ['Digital Marketing', 'Hotel Management'], true), 'Tezpur has too little data yet, so Assam fills in.');
+    assert.equal(filledInNote('Tezpur', 'Assam', ['Hotel Management'], false), 'Tezpur has too little data yet for Hotel Management, so Assam fills in there.');
+    // The keyword tool is named in a sentence.
+    assert.equal(sourcesCaption(['trends', 'keywords', 'reddit', 'quora'], ['en', 'hi', 'as']), 'From Search trends, the keyword tool, Reddit and Quora, in English, Hindi and Assamese');
   });
 
   test('no dashes anywhere', () => {

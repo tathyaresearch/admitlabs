@@ -766,6 +766,7 @@ export type Database = {
           region: string
           scope: Database["public"]["Enums"]["demand_scope"]
           state: string | null
+          too_little: boolean
         }
         Insert: {
           id?: string
@@ -775,6 +776,7 @@ export type Database = {
           region: string
           scope: Database["public"]["Enums"]["demand_scope"]
           state?: string | null
+          too_little?: boolean
         }
         Update: {
           id?: string
@@ -784,6 +786,7 @@ export type Database = {
           region?: string
           scope?: Database["public"]["Enums"]["demand_scope"]
           state?: string | null
+          too_little?: boolean
         }
         Relationships: []
       }
@@ -2367,22 +2370,11 @@ export type Database = {
         Returns: {
           change_pct: number
           count: number
+          count_source: string
           found_at: string
           month: string
           program_name: string
           region: string
-          source_url: string
-          text: string
-        }[]
-      }
-      demand_mentions: {
-        Args: { p_institution: string }
-        Returns: {
-          count: number
-          found_at: string
-          institution_id: string
-          month: string
-          sentiment: Database["public"]["Enums"]["sentiment"]
           source_url: string
           text: string
         }[]

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { neededPulls, parseScope, pullKey, regionLabel, regionPlace, regionsFor } from './regions.ts';
+import { neededPulls, pullKey, regionLabel, regionPlace, regionsFor } from './regions.ts';
 
 describe('how wide to look', () => {
   test('city, state and All India for an institution', () => {
@@ -17,10 +17,6 @@ describe('how wide to look', () => {
     assert.equal(regionLabel({ scope: 'india', region: 'India' }), 'All India');
     assert.equal(regionPlace({ scope: 'india', region: 'India' }), 'India');
     assert.equal(regionPlace({ scope: 'city', region: 'Guwahati' }), 'Guwahati');
-    assert.equal(parseScope('state'), 'state');
-    assert.equal(parseScope('india'), 'india');
-    assert.equal(parseScope('anything else'), 'city');
-    assert.equal(parseScope(undefined), 'city');
   });
 });
 

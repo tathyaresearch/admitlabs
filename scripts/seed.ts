@@ -9,7 +9,9 @@ import { TEAM_RULES } from '../src/config/team.ts';
 import { applyReviewChange, approveAudit } from '../src/audit/review-jobs.ts';
 import { runAudit } from '../src/audit/run.ts';
 import { neededNow, pullDemand } from '../src/demand/jobs.ts';
-import { pullDayOf } from '../src/demand/schedule.ts';
+import { parsePickedIdea } from '../src/demand/picks.ts';
+import { writeContentPicks, writeMonthPicks } from '../src/demand/picks-jobs.ts';
+import { pullDayOf, pullMonth } from '../src/demand/schedule.ts';
 import { istDate } from '../src/domain/dates.ts';
 import { formatDate } from '../src/domain/format.ts';
 import { institutionDetailsToRow, programDetailsToRow } from '../src/domain/details.ts';
@@ -23,6 +25,7 @@ import { consentLine } from '../src/leads/text.ts';
 import {
   ADMIN_EMAIL,
   DEMAND_MONTHS,
+  PICK_MONTHS,
   SAMPLE_ADS,
   SAMPLE_INSTITUTION_DETAILS,
   SAMPLE_GUIDE_CLOSED,
@@ -31,6 +34,7 @@ import {
   SAMPLE_LEAD_LINKS,
   SAMPLE_LEAD_SETTINGS,
   SAMPLE_LEADS,
+  SAMPLE_MADE,
   SAMPLE_MARKS,
   SAMPLE_NOTES,
   SAMPLE_PROGRAM_DETAILS,
@@ -440,6 +444,28 @@ async function main(): Promise<void> {
     }
   }
 
+  // Make these 3 for August and September, picked with each month's update for every institution
+  // signed up by then. One that signed up after September's gets its 3 at sign up, as it would
+  // live (Loomcraft). Then the ones made: Eastgate made 2 of August's 3.
+  let pickCount = 0;
+  const pickedOn = (month: string) => new Date(pullDayOf(month).getTime() + 2 * 3_600_000);
+  for (const month of PICK_MONTHS) pickCount += await writeMonthPicks(db, month, pickedOn(month));
+  const lastPicked = pickedOn(PICK_MONTHS[PICK_MONTHS.length - 1] ?? '2026-09');
+  for (const sample of SAMPLE_INSTITUTIONS) {
+    const claimed = sample.claimedAt ? new Date(at(sample.claimedAt)) : null;
+    if (claimed && claimed.getTime() > lastPicked.getTime() && (await writeContentPicks(db, institutionId(sample.slug), pullMonth(claimed), claimed)) > 0) pickCount += 1;
+  }
+  const { data: picks, error: pickError } = await db.from('content_picks').select('institution_id, month, rank, idea');
+  if (pickError) fail(`Could not read Make these 3: ${pickError.message}`);
+  await insert(
+    'done_marks',
+    SAMPLE_MADE.map((made) => {
+      const pick = (picks ?? []).find((row) => row.institution_id === institutionId(made.slug) && row.month === `${made.month}-01` && row.rank === made.rank);
+      const idea = parsePickedIdea(pick?.idea) ?? fail(`No pick ${made.rank} for ${made.slug} in ${made.month}.`);
+      return { institution_id: institutionId(made.slug), thing: idea.text, month: `${made.month}-01`, marked_by: userId(sampleInstitution(made.slug).owner), marked_at: at(made.markedOn, 18) };
+    }),
+  );
+
   // Each month from April to August: its Rivals 3 things to do (on the month's last day), then
   // its monthly report for the Paid and Client institutions, made on the 1st of the next month
   // through the live path (September's is made on 1 October).
@@ -485,6 +511,7 @@ async function main(): Promise<void> {
   console.log(`  Let AdmitLabs fix this ${SAMPLE_FIX_REQUESTS.length}, Leads ${SAMPLE_LEADS.length} from ${SAMPLE_LEAD_LINKS.length} tracking links`);
   console.log(`  Rival moves ${moveCount}, best posts ${contentCount ?? 0}, ads ${SAMPLE_ADS.length}, Rivals 3 things to do ${actionCount} (April to September)`);
   console.log(`  Demand pulls ${needed.length * DEMAND_MONTHS.length} with ${demandItems} grouped items, ${spikeCount} spike alerts sent`);
+  console.log(`  Make these 3 picked ${pickCount} times (${PICK_MONTHS.join(' and ')}), ${SAMPLE_MADE.length} marked as made`);
   console.log(`  Monthly reports ${reportPages.length}, ${REPORT_MONTHS[0]} to ${REPORT_MONTHS[REPORT_MONTHS.length - 1]} (${reportPages.map((report) => `${report.month} ${report.pages} pages`).join(', ')})`);
   console.log('\nSign in at http://localhost:3000/login with any of these:');
   for (const user of SAMPLE_USERS) {

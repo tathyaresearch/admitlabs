@@ -19,6 +19,15 @@ export const SAMPLE_MARKS: readonly SampleMark[] = [
 ];
 
 /**
+ * Make these 3 the sample owners marked as made, by month and rank as picked (spec section 20):
+ * Eastgate made 2 of August's 3. The third is still rising in September, so its Demand page says so.
+ */
+export const SAMPLE_MADE: ReadonlyArray<{ slug: string; month: string; rank: number; markedOn: string }> = [
+  { slug: 'eastgate-university', month: '2026-08', rank: 1, markedOn: '2026-09-04' },
+  { slug: 'eastgate-university', month: '2026-08', rank: 3, markedOn: '2026-09-17' },
+];
+
+/**
  * People who have used Drishti for months and closed Start here long ago. Everyone else sees it
  * on Home after their first Audit (Northbank's and Silverline's owners, in the sample).
  */

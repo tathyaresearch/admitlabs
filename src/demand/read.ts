@@ -21,6 +21,15 @@ export interface DemandProgramRef {
   programKey: string;
 }
 
+/** A program's latest pull for a region: its month, when it was pulled, and whether the city had too little (spec 9.2). */
+export interface PullInfo {
+  id: string;
+  /** 'YYYY-MM' */
+  month: string;
+  pulledAt: string;
+  tooLittle: boolean;
+}
+
 export interface TopicMonth {
   /** 'YYYY-MM' */
   month: string;
@@ -63,17 +72,17 @@ export async function topicHistory(
     .sort((a, b) => a.month.localeCompare(b.month));
 }
 
-/** The grouped items of each program's latest pull for the region, and when the newest was pulled. */
+/** The grouped items of each program's latest pull for the region, each pull, and when the newest was pulled. */
 export async function latestDemandRows(
   db: Db,
   region: DemandRegion,
   programs: readonly DemandProgramRef[],
   upToMonth?: string,
-): Promise<{ rows: DemandRow[]; pulledAt: string | null }> {
-  if (programs.length === 0) return { rows: [], pulledAt: null };
+): Promise<{ rows: DemandRow[]; pulledAt: string | null; pulls: Map<string, PullInfo> }> {
+  if (programs.length === 0) return { rows: [], pulledAt: null, pulls: new Map() };
   let query = db
     .from('demand_pulls')
-    .select('id, program_key, month, pulled_at')
+    .select('id, program_key, month, pulled_at, too_little')
     .eq('scope', region.scope)
     .eq('region', region.region)
     .in(
@@ -86,9 +95,11 @@ export async function latestDemandRows(
   if (error) throw new DemandReadError(`Could not load Demand pulls: ${error.message}`);
 
   // The latest month for each program.
-  const latest = new Map<string, { id: string; month: string; pulledAt: string }>();
-  for (const pull of pulls ?? []) if (!latest.has(pull.program_key)) latest.set(pull.program_key, { id: pull.id, month: pull.month.slice(0, 7), pulledAt: pull.pulled_at });
-  if (latest.size === 0) return { rows: [], pulledAt: null };
+  const latest = new Map<string, PullInfo>();
+  for (const pull of pulls ?? []) {
+    if (!latest.has(pull.program_key)) latest.set(pull.program_key, { id: pull.id, month: pull.month.slice(0, 7), pulledAt: pull.pulled_at, tooLittle: pull.too_little });
+  }
+  if (latest.size === 0) return { rows: [], pulledAt: null, pulls: latest };
 
   const { data: items, error: itemError } = await db
     .from('demand_items')
@@ -124,5 +135,5 @@ export async function latestDemandRows(
     ];
   });
   const pulledAt = [...latest.values()].map((pull) => pull.pulledAt).sort().pop() ?? null;
-  return { rows, pulledAt };
+  return { rows, pulledAt, pulls: latest };
 }

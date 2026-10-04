@@ -4,6 +4,7 @@
 // one; a question or a topic keeps the questions counted. Shared by the monthly job and the
 // in-memory sample world. Pure.
 
+import { DEMAND_RULES } from '../config/demand.ts';
 import { ASK_TOPICS, type AskTopic, type DemandKind, type Language } from '../domain/types.ts';
 import type { ContentIdea, ContentIdeaInput } from '../providers/analysis.ts';
 import type { AnySignal, Signal } from '../providers/types.ts';
@@ -69,6 +70,19 @@ export function pulledItems(signals: readonly AnySignal[]): { items: PulledItem[
   });
   const rising = found.filter((entry) => entry.kind === 'rising').map((entry) => ({ text: entry.text, trendIndex: index(entry.signal.value.meta.trendIndex) }));
   return { items, basis: { questions, topics, rising } };
+}
+
+/**
+ * A city has too little data for a program when search trends gave it nothing, or fewer
+ * questions than the rule were counted there (the topics' counts, else the questions'): its state
+ * fills in (spec 9.2).
+ */
+export function hasTooLittle(items: ReadonlyArray<Pick<PulledItem, 'kind' | 'count'>>): boolean {
+  const trends = items.some((item) => item.kind === 'rising' || item.kind === 'falling');
+  const topics = items.filter((item) => item.kind === 'topic');
+  const counted = topics.length ? topics : items.filter((item) => item.kind === 'question');
+  const asked = counted.reduce((sum, item) => sum + (item.count ?? 0), 0);
+  return !trends || asked < DEMAND_RULES.cityMinQuestions;
 }
 
 /** The writer's ideas, in its order, as items of the same pull. */

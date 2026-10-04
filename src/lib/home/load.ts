@@ -4,12 +4,11 @@
 
 import type { DoneMark } from '@/audit/marks';
 import { DEMAND_RULES } from '@/config/demand';
-import { demandView } from '@/demand/view';
 import { formatDate } from '@/domain/format';
 import type { CheckKey } from '@/domain/types';
 import type { AuditPageData } from '@/lib/audit/load';
 import type { InstitutionViewer } from '@/lib/auth/guards';
-import { loadDemandPage } from '@/lib/demand/load';
+import { loadDemandSignals } from '@/lib/demand/load';
 import { loadRivalList, type MoveRow } from '@/lib/rivals/load';
 import { createClient } from '@/lib/supabase/server';
 
@@ -82,10 +81,9 @@ export interface Spike {
 
 /** This month's big jumps in what students search for in your city (the ones Paid and Client are alerted to). */
 export async function loadSpikes(viewer: InstitutionViewer): Promise<Spike[]> {
-  const demand = await loadDemandPage(viewer, 'city');
-  const month = demandView(demand.rows, { singleProgram: demand.programs.length === 1, skills: viewer.membership.institution.type === 'skilling' });
-  return month.rising
-    .filter((row) => (row.changePct ?? 0) >= DEMAND_RULES.spikeMinChangePct)
+  const signals = await loadDemandSignals(viewer);
+  return (signals?.trends ?? [])
+    .filter((row) => row.kind === 'rising' && row.region === viewer.membership.institution.city && (row.changePct ?? 0) >= DEMAND_RULES.spikeMinChangePct)
     .map((row) => ({ text: row.text, programName: row.programName, changePct: row.changePct ?? 0, sourceUrl: row.sourceUrl }));
 }
 

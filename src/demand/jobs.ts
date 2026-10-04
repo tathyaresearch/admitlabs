@@ -1,7 +1,8 @@
 // Demand pulls, run on the server with the service key (spec sections 9 and 11): one shared
 // pull per region and program each month, with an alert for each big spike to the Paid and
-// Client institutions in that city; and a first pull, straight away, for a region and program
-// nobody needed before. The one path for the app, the scripts and the seed.
+// Client institutions in that city, then each institution's Make these 3 (picks-jobs.ts); and a
+// first pull, straight away, for a region and program nobody needed before, with the new
+// institution's 3. The one path for the app, the scripts and the seed.
 //
 // Honest numbers (spec 9.5): a search trend keeps its count only when the keyword tool gives
 // searches a month for it; a question or a topic keeps the questions counted.
@@ -13,7 +14,8 @@ import type { Database, Json } from '../lib/supabase/database.types.ts';
 import { collect } from '../providers/collect.ts';
 import { getAnalysisProvider } from '../providers/registry.ts';
 import type { InstitutionType } from '../domain/types.ts';
-import { ideaItems, pulledItems } from './items.ts';
+import { hasTooLittle, ideaItems, pulledItems } from './items.ts';
+import { writeContentPicks, writeMonthPicks } from './picks-jobs.ts';
 import { bigSpikes } from './rank.ts';
 import { neededPulls, pullKey, regionLabel, type NeededPull } from './regions.ts';
 import { isPullDue, pullMonth } from './schedule.ts';
@@ -120,6 +122,8 @@ export async function pullDemand(db: Db, pull: NeededPull, month: string, pulled
       program_key: pull.programKey,
       month: monthStart(month),
       pulled_at: pulledAt.toISOString(),
+      // Too little in the city: its state fills in for this program (spec 9.2).
+      too_little: pull.scope === 'city' && hasTooLittle(found),
       items,
       spikes: spikes.map((notice) => ({ notice })),
     }),
@@ -137,20 +141,27 @@ export async function demandPullsDue(db: Db, now: Date): Promise<{ month: string
   return { month, due: needed.filter((pull) => isPullDue(pulledAt.get(pullKey(pull)) ?? null, month)) };
 }
 
-/** Every monthly pull due on `now`, with spike alerts. */
-export async function runDuePulls(db: Db, now: Date, env?: Env): Promise<PullResult[]> {
+/** Every monthly pull due on `now`, with spike alerts, then the month's 3 for each institution that has none yet. */
+export async function runDuePulls(db: Db, now: Date, env?: Env): Promise<{ pulls: PullResult[]; picked: number }> {
   const { month, due } = await demandPullsDue(db, now);
-  if (due.length === 0) return [];
-  const results: PullResult[] = [];
-  for (const pull of due) results.push(await pullDemand(db, pull, month, now, { notify: true, env }));
-  return results;
+  const pulls: PullResult[] = [];
+  for (const pull of due) pulls.push(await pullDemand(db, pull, month, now, { notify: true, env }));
+  return { pulls, picked: due.length ? await writeMonthPicks(db, month, now) : 0 };
 }
 
 /**
  * A new signup, or a program added in Settings: any region and program nobody needed before is
  * pulled straight away, for the latest pull month, so the Demand page is never empty. No alerts.
+ * Then the institution's 3 for that month, unless it has them already (they are kept until the
+ * next update).
  */
 export async function firstPulls(db: Db, institutionId: string, now: Date, env?: Env): Promise<number> {
+  const pulled = await firstPullsOnly(db, institutionId, now, env);
+  await writeContentPicks(db, institutionId, pullMonth(now), now);
+  return pulled;
+}
+
+async function firstPullsOnly(db: Db, institutionId: string, now: Date, env?: Env): Promise<number> {
   const { rows } = await institutions(db);
   const institution = rows.find((row) => row.id === institutionId);
   if (!institution) return 0;

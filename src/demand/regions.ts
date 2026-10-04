@@ -2,7 +2,7 @@
 // when the city has too little. It is pulled once per region and program and shared by every
 // institution that needs it. Version 1's All India pulls stay readable but are no longer made. Pure.
 
-import { DEMAND_SCOPES, type DemandScope } from '../domain/types.ts';
+import type { DemandScope } from '../domain/types.ts';
 
 export interface DemandRegion {
   scope: DemandScope;
@@ -28,10 +28,6 @@ export function regionLabel(region: Pick<DemandRegion, 'scope' | 'region'>): str
 /** The place in a sentence: "Students in India worry most about fees." */
 export function regionPlace(region: Pick<DemandRegion, 'scope' | 'region'>): string {
   return region.scope === 'india' ? 'India' : region.region;
-}
-
-export function parseScope(value: string | undefined): DemandScope {
-  return (DEMAND_SCOPES as readonly string[]).includes(value ?? '') ? (value as DemandScope) : 'city';
 }
 
 /** The regions pulled each month: the city, and its state to fill in. */

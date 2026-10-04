@@ -1,50 +1,346 @@
 /*
-  The Demand screens, in the dashboard's page order: the answer with the fastest rise and the
-  season clock, the content ideas, then what students ask and what they say about you and your
-  rivals in tabs. Space and surfaces do the separating; lines are kept for rows.
+  Demand (spec 9.4), as the version 2 mock was approved: Make these 3 as cards, then the programs
+  rising and falling as bars with words, what students ask by program, what gets attention with
+  the best months to post, and more ideas as rows that open. Monochrome: words, thin bars and the
+  ivory and black flip do the work, and every bar has its word or number beside it.
 */
 
-/* Region switch: City, State, All India, as links (the page is server rendered). */
+/* Where something was found, and when ------------------------------------------------------------ */
 
-.regions {
+.source {
   display: inline-flex;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--line-medium);
-  border-radius: var(--radius-sm);
-  background: var(--field);
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.region {
-  display: inline-flex;
-  flex: none;
   align-items: center;
-  min-height: 2rem;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-xs);
+  gap: 0.3em;
+  font: var(--type-caption-strong);
   color: var(--text-muted);
-  font: var(--type-label);
-  text-decoration: none;
   white-space: nowrap;
-  transition:
-    background-color var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out);
 }
 
-.region:hover {
+.source:hover {
   color: var(--text);
 }
 
-.region[aria-current='page'] {
-  background: var(--surface-inverse);
-  color: var(--text-inverse);
-  font-weight: var(--weight-heading);
+.found {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
 }
 
-/* Under a trend: its program, how often it was searched and where. */
+.error {
+  font: var(--type-small);
+  font-weight: var(--weight-semibold);
+}
+
+.fillNote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.fillNote > svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+/* Make these 3 ------------------------------------------------------------------------------------- */
+
+.lastMonth {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font: var(--type-body);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-md);
+  text-wrap: pretty;
+}
+
+.lastMonth > svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+.ideaGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--card-gap);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+@container (min-width: 60rem) {
+  .ideaGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.ideaCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ideaTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ideaTitle {
+  font: var(--type-card);
+  font-size: 1.0625rem;
+  letter-spacing: var(--tracking-section);
+  text-wrap: pretty;
+}
+
+.ideaWhy {
+  font: var(--type-small);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.ideaHook {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  font: var(--weight-medium) var(--size-body) / 1.45 var(--font-sans);
+  background: var(--surface-nested);
+  border-radius: var(--radius-md);
+}
+
+.ideaLabel {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.ideaPoints {
+  display: grid;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  margin: var(--space-1) 0 0;
+  font: var(--type-small);
+}
+
+.ideaSource {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* Mark as made sits at the foot of each card, level across the three. */
+.ideaFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-1);
+}
+
+.made {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-label);
+  font-weight: var(--weight-semibold);
+}
+
+/* Free: the two it does not see, said in words, with nothing hidden behind them. */
+.lockedCard {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--card-padding-sm);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--card-radius);
+}
+
+.lockedTitle {
+  font: var(--type-card);
+}
+
+@container (min-width: 60rem) {
+  .lockedCard {
+    grid-column: span 2;
+    align-self: start;
+  }
+}
+
+/* More ideas: rows that open ---------------------------------------------------------------------- */
+
+.ideaRow + .ideaRow,
+.showMore .ideaRow:first-of-type {
+  border-top: 1px solid var(--line);
+}
+
+.ideaSummary {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.ideaRow:first-of-type > .ideaSummary {
+  padding-top: 0;
+}
+
+.ideaSummary::-webkit-details-marker {
+  display: none;
+}
+
+.ideaSummaryText {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ideaRowTitle {
+  font: var(--type-strong);
+  text-wrap: pretty;
+}
+
+.ideaRowWhy {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.ideaChevron {
+  margin-top: 4px;
+  color: var(--text-muted);
+  transition: rotate var(--duration-fast) var(--ease-out);
+}
+
+.ideaRow[open] .ideaChevron {
+  rotate: 180deg;
+}
+
+.ideaOpen {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0 0 var(--space-4) calc(1.75rem + var(--space-3));
+}
+
+@media (max-width: 30rem) {
+  .ideaOpen {
+    padding-left: 0;
+  }
+}
+
+.showMore {
+  display: grid;
+}
+
+.showMoreSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: fit-content;
+  padding: var(--space-3) 0 0;
+  font: var(--type-label);
+  font-weight: var(--weight-semibold);
+  list-style: none;
+  cursor: pointer;
+}
+
+.showMoreSummary::-webkit-details-marker {
+  display: none;
+}
+
+.showMore[open] > .showMoreSummary {
+  display: none;
+}
+
+/* Programs rising and falling ---------------------------------------------------------------------- */
+
+.trendList,
+.plainRows,
+.askList,
+.questions,
+.monthList {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.trendRow,
+.plainRow {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+}
+
+.trendRow:first-child,
+.plainRow:first-child {
+  padding-top: 0;
+}
+
+.trendRow + .trendRow,
+.plainRow + .plainRow,
+.showMore .trendList,
+.showMore .plainRows {
+  border-top: 1px solid var(--line);
+}
+
+.showMore .trendList > .trendRow:first-child,
+.showMore .plainRows > .plainRow:first-child {
+  padding-top: var(--space-3);
+}
+
+.trendHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.trendName {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+  font: var(--type-strong);
+  text-wrap: pretty;
+}
+
+.trendWord {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-label);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.trendTrack {
+  height: 4px;
+  background: var(--chart-track);
+  border-radius: var(--radius-full);
+}
+
+.trendFill,
+.trendFillFalling {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.trendFill {
+  background: var(--text);
+}
+
+.trendFillFalling {
+  background: var(--text-muted);
+}
 
 .trendMeta {
   display: flex;
@@ -55,654 +351,156 @@
   color: var(--text-muted);
 }
 
-/* Season clock: the stages ahead, with where the admission year is now and what comes next. */
+.level {
+  flex: none;
+  font: var(--type-label);
+  white-space: nowrap;
+}
 
-.season {
-  container-type: inline-size;
+.level[data-level='most'] {
+  font-weight: var(--weight-bold);
+}
+
+/* What students ask --------------------------------------------------------------------------------- */
+
+.asks,
+.tabBody {
   display: grid;
-  align-content: start;
   gap: var(--space-4);
-  padding: var(--card-padding-sm);
-  background: var(--surface-raised);
-  border: 1px solid var(--card-border);
-  border-radius: var(--card-radius);
 }
 
-@media (min-width: 48rem) {
-  .season {
-    padding: var(--space-5) var(--card-padding);
-  }
-}
-
-.seasonTitle {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-/* The stages ahead, each piece named on its own months with when it runs; the one now in the text colour. */
-.stages {
+.askRow {
   display: grid;
-  grid-template-columns: var(--stage-columns);
-  gap: 3px;
-  list-style: none;
-}
-
-.stage {
-  display: grid;
-  align-content: start;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.stagePiece {
-  display: block;
-  height: 6px;
-  border-radius: var(--radius-full);
-  background: var(--line-strong);
-}
-
-.stage[data-now='true'] .stagePiece {
-  background: var(--text);
-}
-
-.stageName {
-  overflow: hidden;
-  padding-right: var(--space-2);
-  font: var(--type-caption-strong);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.stageWhen {
-  overflow: hidden;
-  padding-right: var(--space-2);
-  font: var(--type-caption);
-  font-size: var(--size-micro);
-  color: var(--text-muted);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* On a phone: one stage a line, its piece, its name and when it runs. */
-@container (max-width: 28rem) {
-  .stages {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
-  }
-
-  .stages .stage {
-    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: var(--space-3);
-  }
-}
-
-.seasonFacts {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.seasonFact {
-  display: grid;
-  gap: 2px;
-}
-
-.seasonLabel {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.seasonText {
-  font: var(--type-small);
-}
-
-@media (max-width: 30rem) {
-  .season {
-    padding: var(--space-4);
-  }
-}
-
-/* Lists inside the tabs. */
-
-.list {
-  display: grid;
-}
-
-.item {
-  display: grid;
-  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
-  align-items: start;
-  gap: var(--space-2) var(--space-4);
+  gap: var(--space-2);
   padding: var(--space-4) 0;
 }
 
-.item + .item {
+.askRow:first-child {
+  padding-top: 0;
+}
+
+.askRow + .askRow {
   border-top: 1px solid var(--line);
 }
 
-.itemRank {
-  padding-top: 2px;
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.itemBody {
+.askHead {
   display: grid;
-  gap: var(--space-1);
-  min-width: 0;
+  grid-template-columns: 7rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.itemText {
+.askName {
   font: var(--type-strong);
 }
 
-.itemMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1) var(--space-3);
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.1em 0.45em;
-  border: 1px solid var(--line-medium);
-  border-radius: var(--radius-xs);
-  font: var(--type-caption-strong);
-  color: var(--text);
-  white-space: nowrap;
-}
-
-.tagSolid {
-  background: var(--surface-inverse);
-  border-color: var(--surface-inverse);
-  color: var(--text-inverse);
-}
-
-.share {
-  display: block;
+.askBar {
   height: 4px;
-  max-width: 32rem;
-  margin-top: var(--space-1);
   background: var(--chart-track);
-  border-radius: 2px;
-  overflow: hidden;
+  border-radius: var(--radius-full);
 }
 
-.shareFill {
+.askBar > span {
   display: block;
   height: 100%;
   background: var(--text);
+  border-radius: inherit;
 }
 
-.source {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-  padding-top: 2px;
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.source:hover {
-  color: var(--text);
-}
-
-.note {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-@media (max-width: 40rem) {
-  .item {
-    grid-template-columns: 1.5rem minmax(0, 1fr);
-  }
-
-  .item > .source {
-    grid-column: 2;
-  }
-}
-
-/* What students say: you and each rival, praise and criticism side by side. */
-
-.mentions {
-  display: grid;
-  background: var(--surface-raised);
-  border: 1px solid var(--line-raised);
-  border-radius: var(--radius-lg);
-}
-
-.mentionRow {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr);
-  align-items: start;
-  gap: var(--space-3) var(--space-6);
-  padding: var(--space-4) var(--space-5);
-}
-
-.mentionRow + .mentionRow {
-  border-top: 1px solid var(--line-raised);
-}
-
-.mentionHead {
-  padding-top: var(--space-3);
-  padding-bottom: var(--space-3);
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.mentionYou {
-  margin: var(--space-2);
-  border-radius: var(--radius-md);
-}
-
-.mentionYou + .mentionRow {
-  border-top: 0;
-}
-
-.who {
-  display: grid;
-  gap: 1px;
-  min-width: 0;
-}
-
-.whoName {
-  font: var(--type-strong);
-}
-
-.whoSub {
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-.topics {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.topic {
-  display: grid;
-  gap: 2px;
-}
-
-.topicText {
-  font: var(--type-small);
-}
-
-.topicMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1) var(--space-3);
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-.cellLabel {
-  display: none;
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-@media (max-width: 48rem) {
-  .mentionHead {
-    display: none;
-  }
-
-  .mentionRow {
-    grid-template-columns: minmax(0, 1fr);
-    padding: var(--space-4);
-  }
-
-  .cellLabel {
-    display: block;
-  }
-}
-
-/* Demand's summary: the fastest rise and the admission year, side by side. */
-.kpis {
-  display: grid;
-  gap: var(--card-gap);
-}
-
-@container (min-width: 52rem) {
-  .kpis {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  }
-}
-
-/* The fastest rise: its words, and its searches by month beside them when the card is wide. */
-.riseCard {
-  container-type: inline-size;
-}
-
-.rise {
-  display: grid;
-  gap: var(--space-5) var(--space-8);
-}
-
-@container (min-width: 30rem) {
-  .rise {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
-    align-items: end;
-  }
-}
-
-.riseWords {
-  display: grid;
-  align-content: start;
-  gap: var(--space-3);
-}
-
-.kpiTitle {
-  font: var(--type-section);
-  font-size: 1.25rem;
-  letter-spacing: var(--tracking-section);
-  text-wrap: balance;
-}
-
-/* The rest of the ideas, folded under the first three. */
-.moreIdeas {
-  display: grid;
-  gap: var(--space-3);
-}
-
-/* Content ideas (./IdeaList.tsx): numbered rows in one card, as Home's things to do. */
-
-.ideas {
-  display: grid;
-  list-style: none;
-  background: var(--surface-raised);
-  border: 1px solid var(--card-border);
-  border-radius: var(--card-radius);
-  overflow: hidden;
-}
-
-.ideas > li + li {
-  border-top: 1px solid var(--line-raised);
-}
-
-.idea {
-  container-type: inline-size;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-2) var(--space-4);
-  padding: var(--space-5) var(--card-padding-sm);
-}
-
-@media (min-width: 48rem) {
-  .idea {
-    padding: var(--space-5) var(--card-padding);
-  }
-}
-
-.ideaNumber {
-  display: grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-full);
-  background: var(--surface-nested);
-  font: var(--type-num);
-  font-weight: var(--weight-heading);
-}
-
-.ideaMain {
-  display: grid;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-@container (min-width: 44rem) {
-  .ideaMain {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-    gap: var(--space-6);
-  }
-}
-
-.ideaBody {
-  display: grid;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.ideaKicker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1) var(--space-3);
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-/* What to make: a post, a reel, a video, an FAQ or a web page. */
-.format {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 0.3em 0.55em;
-  border: 1px solid var(--line-medium);
-  border-radius: var(--radius-xs);
-  font: var(--type-caption-strong);
-  line-height: 1;
-  color: var(--text);
-}
-
-.ideaTitle {
-  font: var(--type-card);
-  font-size: 1rem;
-  letter-spacing: var(--tracking-section);
-  text-wrap: pretty;
-}
-
-/* The real question it answers, set off by a line on its left. */
-.ideaQuestion {
-  display: grid;
-  gap: 2px;
-  padding-left: var(--space-3);
-  border-left: 2px solid var(--line-medium);
-}
-
-.ideaQuote {
-  font: var(--type-small);
-  text-wrap: pretty;
-}
-
-.ideaMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1) var(--space-3);
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-/* The rising search behind it. */
-.ideaTrend {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-1);
-  font: var(--type-caption-strong);
-}
-
-.ideaTrend svg {
-  flex: none;
-  margin-top: 0.1em;
-}
-
-.ideaEffort {
+.askShare {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.4em;
-  font: var(--type-strong);
-  font-size: var(--size-small);
+  gap: var(--space-2);
+  font: var(--type-label);
+  font-weight: var(--weight-semibold);
   white-space: nowrap;
 }
 
-.ideaEffortLabel {
+.askCount {
   font: var(--type-caption);
   color: var(--text-muted);
 }
 
-.moreIdeas > summary {
-  width: fit-content;
-  cursor: pointer;
-  list-style: none;
+@media (max-width: 30rem) {
+  .askHead {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .askBar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }
 
-.moreIdeas > summary::-webkit-details-marker {
-  display: none;
+.questions {
+  gap: var(--space-3);
 }
 
-.tabNote {
-  margin-bottom: var(--space-3);
+.question {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.questionText {
+  font: var(--type-small);
+  text-wrap: pretty;
+}
+
+.otherQuestions {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+/* The best months to post ---------------------------------------------------------------------------- */
+
+.monthRow {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+}
+
+.monthRow:first-child {
+  padding-top: 0;
+}
+
+.monthRow + .monthRow {
+  border-top: 1px solid var(--line);
+}
+
+.monthProgram {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-strong);
+}
+
+.monthText {
   font: var(--type-small);
   color: var(--text-muted);
 }
 
-/* Rising and falling: one list, each change a bar from the middle line, right for up (in the
-   text colour) and left for down (grey). The arrow and the number say the same in words. */
-.divergeItem {
-  grid-template-columns: minmax(0, 1fr) minmax(8rem, 16rem) 3.75rem 8rem;
-  align-items: center;
-}
-
-.divergeHead {
+.monthStrip {
   display: grid;
-  gap: var(--space-2) var(--space-4);
-  padding-bottom: var(--space-1);
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 3px;
 }
 
-.divergeHeadBar {
+.monthCell {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.divergeHeadBar > :first-child {
-  padding-right: var(--space-2);
-  text-align: right;
-}
-
-.divergeHeadBar > :last-child {
-  padding-left: var(--space-2);
-}
-
-.divergeBar {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
+  place-items: center;
   height: 1.5rem;
-}
-
-/* The middle line: no change. */
-.divergeBar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  background: var(--line-strong);
-}
-
-.divergeSide {
-  display: flex;
-  height: 10px;
-}
-
-.divergeSide:first-child {
-  justify-content: flex-end;
-}
-
-.divergeFill {
-  display: block;
-  height: 100%;
-}
-
-.divergeSide:first-child .divergeFill {
-  background: var(--line-strong);
-  border-radius: 2px 0 0 2px;
-}
-
-.divergeSide:last-child .divergeFill {
-  background: var(--text);
-  border-radius: 0 2px 2px 0;
-}
-
-.divergeValue {
   font: var(--type-caption-strong);
-  white-space: nowrap;
-}
-
-.divergeItem > .source {
-  justify-self: end;
-}
-
-@media (max-width: 40rem) {
-  .divergeHead {
-    display: none;
-  }
-
-  .divergeItem {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .divergeItem > .itemBody,
-  .divergeItem > .source {
-    grid-column: 1 / -1;
-  }
-
-  .divergeItem > .source {
-    justify-self: start;
-  }
-}
-
-/* Praise against criticism for one institution: one bar split in two, both counts beside it. */
-.balance {
-  display: grid;
-  gap: var(--space-1);
-  margin-top: var(--space-2);
-}
-
-.balanceBar {
-  display: flex;
-  gap: 2px;
-  height: 6px;
-  max-width: 12rem;
-}
-
-.balancePraise,
-.balanceCriticism {
-  display: block;
-  flex-basis: 0;
-  min-width: 3px;
-  height: 100%;
-  border-radius: 2px;
-}
-
-.balancePraise {
-  background: var(--text);
-}
-
-.balanceCriticism {
-  background: var(--line-strong);
-}
-
-.balanceText {
-  font: var(--type-caption);
+  font-size: var(--size-micro);
   color: var(--text-muted);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-xs);
 }
 
-.balanceText :global(.num) {
-  color: var(--text);
-  font-weight: var(--weight-heading);
+.monthBest {
+  color: var(--text-inverse);
+  background: var(--surface-inverse);
+  border-color: var(--surface-inverse);
 }

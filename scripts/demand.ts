@@ -6,10 +6,10 @@
 //   npm run demand -- --due --date 2026-10-28 --dry-run    list what is due, run nothing
 //   npm run demand -- --first --institution <slug>         any first pulls a new institution needs
 //
-// Due means: every region and program an institution that has signed up needs (its city, its
-// state and All India, for each of its programs) without a pull for the month yet. From the 28th
-// that is this month; before it, last month. Big spikes in a city alert the Paid and Client
-// institutions there.
+// Due means: every region and program an institution that has signed up needs (its city and its
+// state, for each of its programs) without a pull for the month yet. From the 28th that is this
+// month; before it, last month. Big spikes in a city alert the Paid and Client institutions there.
+// Then each institution gets the month's Make these 3, kept until the next update.
 
 import { parseArgs } from 'node:util';
 import { DemandJobError, demandPullsDue, firstPulls, runDuePulls } from '../src/demand/jobs.ts';
@@ -42,10 +42,12 @@ async function main(): Promise<void> {
       console.log('');
       return;
     }
-    for (const result of await runDuePulls(db, asOf)) {
+    const { pulls, picked } = await runDuePulls(db, asOf);
+    for (const result of pulls) {
       const spikes = result.spikes.length ? `; ${plural(result.spikes.length, 'spike', 'spikes')}: ${result.spikes.join(' ')}` : '';
       console.log(`  ${regionLabel(result.pull)}, ${result.pull.programKey}: ${plural(result.items, 'grouped item', 'grouped items')}${spikes}`);
     }
+    if (pulls.length) console.log(`  Make these 3 picked for ${plural(picked, 'institution', 'institutions')}`);
     console.log('');
     return;
   }

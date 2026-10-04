@@ -9,17 +9,22 @@ describe('Demand rules', () => {
     assert.equal(DEMAND_RULES.spikeMinChangePct, 40);
   });
 
-  test('shared pulls monthly on the 28th, 5 top questions and 5 content ideas (spec 9.4)', () => {
+  test('shared pulls monthly on the 28th, and Make these 3 (spec 9.4)', () => {
     assert.equal(DEMAND_RULES.pullDay, 28);
-    assert.equal(DEMAND_RULES.topQuestions, 5);
-    assert.equal(DEMAND_RULES.contentIdeas, 5);
+    assert.equal(DEMAND_RULES.picks, 3);
+  });
+
+  test('honest numbers in words: Rising fast from 40%, Rising from 10% (spec 9.5, adjustable here)', () => {
+    assert.equal(DEMAND_RULES.risingFastMinPct, 40);
+    assert.equal(DEMAND_RULES.risingMinPct, 10);
   });
 
   test('matches what each plan sees and gets (spec sections 10 and 11)', () => {
-    assert.equal(entitlement('demand_rising_trend', 'free').access, 'full');
+    assert.equal(entitlement('demand_make_three', 'free').text, 'The first one, for its program');
+    assert.equal(entitlement('demand_make_three', 'paid').text, 'All 3');
+    assert.equal(entitlement('demand_programs', 'free').limit, 1);
+    assert.equal(entitlement('demand_programs', 'client').access, 'full');
     assert.equal(entitlement('demand_everything_else', 'free').access, 'placeholder');
-    assert.equal(entitlement('demand_mentions', 'free').access, 'none');
-    assert.equal(entitlement('demand_mentions', 'paid').access, 'full');
     assert.equal(SCHEDULES.free.demandSpikeAlerts, false);
     assert.equal(SCHEDULES.paid.demandSpikeAlerts, true);
     assert.equal(SCHEDULES.client.demandSpikeAlerts, true);

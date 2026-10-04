@@ -28,7 +28,9 @@ describe('entitlements (spec section 10)', () => {
     assert.equal(limitFor('audit_programs', 'paid'), null);
     assert.equal(canSee('audit_score_history', 'free'), false);
     assert.equal(canSee('audit_score_history', 'paid'), true);
-    assert.equal(canSee('demand_mentions', 'free'), false);
+    assert.equal(limitFor('demand_make_three', 'free'), 1);
+    assert.equal(limitFor('demand_programs', 'free'), 1);
+    assert.equal(limitFor('demand_make_three', 'paid'), null);
     assert.equal(canSee('monthly_report', 'free'), false);
     assert.equal(canSee('alerts', 'free'), false);
   });
@@ -70,8 +72,9 @@ describe('entitlements (spec section 10)', () => {
         'audit_score_history',
         'rivals_full_comparison',
         'rivals_change',
+        'demand_make_three',
+        'demand_programs',
         'demand_everything_else',
-        'demand_mentions',
         'alerts',
         'monthly_report',
       ],
