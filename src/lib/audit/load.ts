@@ -109,14 +109,6 @@ export function nextAuditText(data: AuditPageData): string {
   return `${data.nextAudit.tier === 'free' ? 'Next free Audit' : 'Next Audit'} on ${formatDate(data.nextAudit.on)}`;
 }
 
-/**
- * The quiet line under the score: the next Audit, but only when it runs on the plan you are on.
- * A Paid plan that ends before its next Audit says so in the plan notice instead.
- */
-export function auditNote(data: AuditPageData, tier: Tier): string | null {
-  return data.nextAudit && data.nextAudit.tier === tier ? `${nextAuditText(data)}.` : null;
-}
-
 export async function loadAuditPage(viewer: Viewer & { membership: NonNullable<Viewer['membership']> }): Promise<AuditPageData> {
   const institutionId = viewer.membership.institution.id;
   const [audit, programs, history, waiting] = await Promise.all([loadLatestAudit(institutionId), loadPrograms(institutionId), loadHistory(institutionId), loadWaiting(institutionId)]);

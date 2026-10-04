@@ -281,7 +281,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ auditId
           <span className={audit.strongText}>{editCount ? `${editCount} ${editCount === 1 ? 'change' : 'changes'}.` : 'No changes.'}</span>
           <span className={styles.approveMore}> {words}. Approving shows it to the college and tells them in Notifications.</span>
         </span>
-        <ApproveButton auditId={auditId} onApprove={approveAuditAction} />
+        <ApproveButton id={auditId} onApprove={approveAuditAction} />
       </div>
     </div>
   );

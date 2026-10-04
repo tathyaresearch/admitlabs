@@ -36,7 +36,7 @@ describe('the product page previews', () => {
 
   test('the Audit, rivals and Demand all agree with the sample report', async () => {
     const { audit, rivals, demand, report } = await loadShowcase();
-    assert.equal(audit.scores.overall, report.cover.score);
+    assert.equal(audit.scores.overall, report.score.overall);
     assert.equal(audit.changes.overall, 1);
     assert.equal(audit.fixes.length > 3, true);
     assert.deepEqual(
@@ -48,7 +48,10 @@ describe('the product page previews', () => {
         ['Thornbury College', 45, false],
       ],
     );
-    assert.equal(rivals.verdict, report.rivals?.verdict.replaceAll('’', "'"));
+    assert.deepEqual(
+      report.rivals?.ranking.map((row) => [row.name, row.overall]),
+      rivals.rows.map((row) => [row.name, row.overall]),
+    );
     assert.ok(rivals.moves.length > 0 && rivals.moves.every((move) => move.detectedAt.startsWith('2026-08')));
     assert.equal(demand.place, 'Bangalore');
     assert.ok(demand.view.topTrend);
@@ -147,7 +150,7 @@ describe('the product page previews', () => {
     for (const text of [...words(showcase), ...reportTexts(showcase.report)]) assert.doesNotMatch(text, SAMPLE_WORLD, text);
     // The renaming only changes words: the sample report's numbers are the PDF's.
     const sample = await sampleReportData();
-    assert.equal(showcase.report.cover.score, sample.cover.score);
+    assert.equal(showcase.report.score.overall, sample.score.overall);
     assert.deepEqual(asLarkmoor(sample), showcase.report);
   });
 

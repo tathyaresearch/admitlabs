@@ -1,14 +1,15 @@
 // Renders a report snapshot to a PDF file in memory. Runs on the server only (the report job,
 // the script and the seed); the web app never loads the PDF library.
 //
-// Most months come to 7 pages. A month with long lists and long sentences can run over, so a
-// report that would pass the cap is made again in its compact form (3 fixes in detail instead
-// of 5, shorter limits on long sentences). Nothing is dropped from the ranked lists.
+// Most months come to about 7 pages: the cover, then one run of pages from This month in short to
+// the sources. A month with long lists and long sentences can run over, so a report that would pass the
+// cap is made again in its compact form (3 fixes in detail instead of 5, fewer steps, shorter
+// limits on long sentences). Nothing is dropped from the ranked lists.
 
 import { createElement as h } from 'react';
 import { Document, renderToBuffer } from '@react-pdf/renderer';
 import type { ReportData } from '../data.ts';
-import { ClosingPage, CoverPage, DemandPage, FixesPage, ProgramsPage, RivalsPage, SummaryPage } from './pages.ts';
+import { CoverPage, ReportPages } from './pages.ts';
 import { registerFonts } from './theme.ts';
 
 /** Never more than this many pages: short enough to read in 5 minutes. */
@@ -22,7 +23,7 @@ export function pageCount(pdf: Uint8Array): number {
 export async function renderLayout(data: ReportData, compact: boolean): Promise<Buffer> {
   registerFonts();
   const madeAt = new Date(data.madeAt);
-  const pages = [CoverPage, SummaryPage, FixesPage, ProgramsPage, RivalsPage, DemandPage, ClosingPage];
+  const pages = [CoverPage, ReportPages];
   const document = h(
     Document,
     {

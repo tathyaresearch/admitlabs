@@ -29,7 +29,7 @@ import { loadAddedDetails, type AddedDetails } from '@/lib/details/load';
 import { loadLinkCounts } from '@/lib/leads/load';
 import { loadTeamInstitution, type LinkRow, type TeamInstitution, type WorkRow } from '@/lib/team/load';
 import { APP_URL, SITE_URL } from '@/lib/urls';
-import { fixThing } from '@/report/things';
+import { checkFixTitle } from '@/report/things';
 import { TEAM_STATUS_LABELS, type TeamStatus } from '@/team/filters';
 import { planActions, planDetail } from '@/team/plans';
 import { linkState, linkStateText, sharePath } from '@/team/share';
@@ -334,7 +334,7 @@ function fixStep(item: ListItem, institutionType: InstitutionType): NextStep {
         <PartResults parts={item.parts} showNames={item.parts.length > 1} />
       </span>
     ),
-    title: fixThing(item, institutionType).title,
+    title: checkFixTitle(item, institutionType),
     detail: finding,
     aside: (
       <span className={audit.fixAside}>

@@ -1,120 +1,92 @@
-import Link from 'next/link';
 import { markKey, markOutcome } from '@/audit/marks';
 import { auditVerdict } from '@/audit/verdict';
-import { movedChecks, overviewView, scoresByMonth, type AuditView } from '@/audit/view';
+import { movedChecks, overviewView } from '@/audit/view';
+import { WordTiles } from '@/components/audit/PlaceBits';
 import { FirstAuditWaiting, WaitingNotice } from '@/components/audit/Waiting';
-import { DemandCard } from '@/components/home/DemandCard';
-import { HomeScore } from '@/components/home/HomeScore';
-import { PaidAction } from '@/components/plan/PaidAction';
+import { DemandHighlightCard, EnquiriesCard, RivalsLineCard } from '@/components/home/HomeCards';
 import { HomeThings, type HomeThing } from '@/components/home/HomeThings';
-import { RivalsCard } from '@/components/home/RivalsCard';
 import { StartGuide } from '@/components/home/StartGuide';
 import { TeamCard } from '@/components/home/TeamCard';
 import { WhatChanged, type CheckedMark } from '@/components/home/WhatChanged';
+import { PaidAction } from '@/components/plan/PaidAction';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
-import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
 import { limitFor } from '@/config/entitlements';
 import { ADMITLABS_EMAIL } from '@/config/team';
-import { checkName } from '@/domain/checks';
 import { nextPullOn } from '@/demand/schedule';
-import { monthKey } from '@/domain/dates';
-import { formatCount, formatDate } from '@/domain/format';
+import { checkName } from '@/domain/checks';
+import { monthKey, previousMonth } from '@/domain/dates';
+import { auditFixPath } from '@/domain/fix-key';
+import { formatDate } from '@/domain/format';
 import { planReminder } from '@/domain/tiers';
-import { LANGUAGE_LABELS, type InstitutionType } from '@/domain/types';
+import { leadsSummary } from '@/leads/summary';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
-import { auditNote, loadAuditPage, nextAuditText, type AuditPageData } from '@/lib/audit/load';
-import { loadCityIdeas, loadHighlight, loadHighlightHistory } from '@/lib/demand/load';
+import { loadAuditPage, nextAuditText } from '@/lib/audit/load';
+import { loadPlacesPage } from '@/lib/audit/places';
+import { loadHighlight, loadHighlightHistory, loadLatestPicks } from '@/lib/demand/load';
 import { loadGuideClosed, loadMarks, loadMovesSince, loadSpikes } from '@/lib/home/load';
-import { loadActions, loadRivalSnapshot } from '@/lib/rivals/load';
+import { loadLinkCounts } from '@/lib/leads/load';
+import { loadActions, loadRivalLine, loadRivalList, loadRivalSnapshot } from '@/lib/rivals/load';
 import { loadWork } from '@/lib/team/work';
-import { byPoints, fixThing, threeThings, type Thing } from '@/report/things';
+import { freeThings, threeThings, type Thing } from '@/report/things';
 import { workCard } from '@/team/work';
-import { closeStartGuideAction, markDoneAction } from './actions';
-import styles from '@/components/home/home.module.css';
-import { AUDIT_CHECK_PREFIX, auditFixPath, checkFixKey } from '@/domain/fix-key';
+import { askFixAction, closeStartGuideAction, markDoneAction, markFixAction } from './actions';
+import audit from '@/components/audit/places.module.css';
+import styles from '@/components/home/today.module.css';
 
 export const metadata = { title: 'Home' };
 
-/** Where a thing to do opens: the check in the Audit, the rival, or Demand. */
+const QUESTION = 'How are we doing this month?';
+
+/** Where a thing opens: the fix's panel in the Audit, the rival, or Demand. */
 function thingHref(thing: Thing): string {
-  switch (thing.source) {
-    case 'audit':
-      return thing.checkKey ? auditFixPath(checkFixKey(thing.checkKey)) : '/audit';
-    case 'rivals':
-      return thing.rivalId ? `/rivals/${thing.rivalId}` : '/rivals';
-    default:
-      return '/demand';
-  }
+  if (thing.fixId) return auditFixPath(thing.fixId);
+  if (thing.source === 'rivals') return thing.rivalId ? `/rivals/${thing.rivalId}` : '/rivals';
+  return '/demand';
 }
 
-/** What a thing says under its title. The points, or how often a question was asked, sit beside it. */
-function thingDetail(thing: Thing): string {
-  if (thing.source === 'audit') return thing.detail.replace(/^Could add (up to \d+ points?|less than 1 point)\. /, '');
-  const question = thing.question;
-  if (!question) return thing.detail;
-  const asked = question.language === 'en' ? 'It answers' : `It answers a question asked in ${LANGUAGE_LABELS[question.language]}`;
-  return `${asked}: “${question.text}”`;
-}
-
-/** A thing as Home lists it, with what Mark as done saves and whether it is marked. */
-function homeThing(thing: Thing, type: InstitutionType, place: string, done: ReadonlySet<string>): HomeThing {
-  const mark = thing.checkKey ? { check: thing.checkKey, thing: null, month: null } : { check: null, thing: thing.title, month: thing.month };
-  const key = markKey({ checkKey: mark.check, thing: mark.thing, month: mark.month });
+function homeThing(thing: Thing, done: ReadonlySet<string>): HomeThing {
   return {
-    key,
+    key: thing.fixId ?? `${thing.source}:${thing.title}`,
     source: thing.source,
     title: thing.title,
-    check: thing.checkKey ? { key: thing.checkKey, name: checkName(thing.checkKey, type) } : null,
-    programs: thing.programs,
-    format: thing.format,
-    detail: thingDetail(thing),
-    points: thing.points,
-    weight: thing.question ? `Asked about ${formatCount(thing.question.count)} ${thing.question.count === 1 ? 'time' : 'times'} in ${place}` : null,
-    effort: thing.effort,
+    label: thing.label,
     href: thingHref(thing),
-    mark,
-    done: done.has(key),
+    impact: thing.impact,
+    effort: thing.effort,
+    programs: thing.programs,
+    weight: thing.weight,
+    fixId: thing.fixId,
+    mark: thing.mark,
+    done: thing.mark ? done.has(markKey({ checkKey: null, thing: thing.mark.thing, month: thing.mark.month })) : false,
   };
 }
 
-/** "Up 14 since April": the first month with a score, and the overall change since. */
-function sinceFirst(data: AuditPageData): { month: string; change: number } | null {
-  const months = scoresByMonth(data.history, (runAt) => monthKey(new Date(runAt)));
-  const first = months[0];
-  const last = months.at(-1);
-  if (!first || !last || months.length < 2) return null;
-  return { month: first.month, change: last.scores.overall - first.scores.overall };
-}
-
-// Home answers one question: "How are we doing this month?" The answer first, then what to do
-// this month, what changed since the last Audit, the score, and rivals and demand.
+// Home answers "How are we doing this month?" (spec section 13), as the version 2 mock was
+// approved: the one line from the three words, the three words with what to fix first in each,
+// a Client's team and enquiries, the things to do this month, what changed since the last Audit,
+// then the rivals' one line and one demand highlight. No score and no gauge.
 export default async function HomePage() {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
-  // Paid and Client see the month's 3 things to do (the same three as the monthly report); Free
-  // keeps its top 3 fixes.
   const full = viewer.tier !== 'free';
-  // A Client's AdmitLabs team: what it did and does next (the database shows the log to Clients only).
   const client = viewer.tier === 'client';
-  const [data, rivals, highlight, lessons, ideas, guideClosed, work] = await Promise.all([
+  const owner = role === 'owner' && !viewer.viewingAs;
+  const now = new Date();
+  const [data, rivals, rivalList, highlight, guideClosed, work, links] = await Promise.all([
     loadAuditPage(viewer),
     loadRivalSnapshot(viewer),
+    loadRivalList(institution.id),
     loadHighlight(institution.id),
-    full ? loadActions(institution.id) : Promise.resolve([]),
-    full ? loadCityIdeas(viewer) : Promise.resolve([]),
     loadGuideClosed(viewer),
     client ? loadWork(institution.id) : Promise.resolve(null),
+    client ? loadLinkCounts(institution.id) : Promise.resolve(null),
   ]);
-  const searches = await loadHighlightHistory(viewer, highlight);
-  const reminder = planReminder(viewer.plan, new Date());
-  // Only an Audit on the current plan checks what was marked done (a Paid plan ending first does not).
+  const [line, searches] = await Promise.all([loadRivalLine(institution.id, rivalList.map((rival) => rival.id)), loadHighlightHistory(viewer, highlight)]);
+  const reminder = planReminder(viewer.plan, now);
   const nextAudit = data.nextAudit && data.nextAudit.tier === viewer.tier ? formatDate(data.nextAudit.on) : null;
-  const teamCard = work ? (
-    <TeamCard card={workCard(work, new Date())} lastChecked={data.audit?.runAt ?? null} nextAudit={nextAudit} email={ADMITLABS_EMAIL} allHref="/work" />
-  ) : null;
-  const view: AuditView | null = data.audit ? overviewView(data.audit, { institutionType: institution.type, programNames: data.names }) : null;
+  const planLine = viewer.tier === 'paid' && viewer.plan?.endsAt ? `Paid until ${formatDate(viewer.plan.endsAt)}` : viewer.tier === 'client' ? 'Client' : 'Free plan';
 
   const reminderNotice =
     reminder.stage === 'ends_soon' || reminder.stage === 'ends_very_soon' ? (
@@ -123,166 +95,142 @@ export default async function HomePage() {
         title={`Your Paid plan ends in ${reminder.daysLeft} ${reminder.daysLeft === 1 ? 'day' : 'days'}.`}
         action={<PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}
       >
-        It does not renew on its own. When it ends you move to Free and keep your last Audit score. Ask AdmitLabs to continue it: the same price and terms, and nothing is paid here.
+        It does not renew on its own. When it ends you move to Free and keep your last Audit. Ask AdmitLabs to continue it: the same price and terms, and nothing is paid here.
       </Notice>
     ) : null;
+  const clientCards =
+    work && links ? (
+      <div className={styles.pair}>
+        <TeamCard card={workCard(work, now)} lastChecked={data.audit?.runAt ?? null} nextAudit={nextAudit} email={ADMITLABS_EMAIL} allHref="/work" />
+        <EnquiriesCard summary={leadsSummary(links)} thisMonth={monthKey(now)} lastMonth={previousMonth(monthKey(now))} />
+      </div>
+    ) : null;
+  const cards = (
+    <div className={styles.pair}>
+      <RivalsLineCard city={institution.city} line={line} latest={rivals.latestMove} hasRivals={rivalList.length > 0} owner={owner} />
+      <DemandHighlightCard
+        highlight={highlight}
+        history={searches.flatMap((point) => (point.count === null ? [] : [{ month: point.month, count: point.count }]))}
+        city={institution.city}
+        nextUpdate={formatDate(nextPullOn(now))}
+      />
+    </div>
+  );
 
-  if (!view || !data.audit) {
-    // A first Audit waiting for the AdmitLabs team's review: the line takes the place of the results.
-    if (data.waiting) {
-      return (
-        <div className={styles.home}>
-          <div className={styles.summary}>
-            <PageHead title="Home" question="How are we doing this month?" />
-            {reminderNotice}
-          </div>
-          <FirstAuditWaiting ranAt={data.waiting.runAt} isOwner={role === 'owner' && !viewer.viewingAs} hasRivals={(rivals.standings?.length ?? 0) > 0} city={institution.city} />
-        </div>
-      );
-    }
+  const places = data.audit ? await loadPlacesPage(viewer, data) : null;
+  if (!data.audit || !places) {
     return (
-      <div className={styles.home}>
-        <div className={styles.summary}>
-          <PageHead title="Home" question="How are we doing this month?" />
+      <div className={audit.page}>
+        <div className={audit.top}>
+          <PageHead title="Home" question={QUESTION} caption={[planLine]} />
           {reminderNotice}
         </div>
-        <EmptyState
-          icon="audit"
-          title={viewer.tier === 'free' && !viewer.plan?.freeProgramId ? 'Pick the program your free Audit covers' : 'Your first Audit is on its way'}
-          action={
-            viewer.tier === 'free' && !viewer.plan?.freeProgramId && role === 'owner' ? (
-              <ButtonLink href="/onboarding" iconAfter="arrowRight">
-                Pick a program
-              </ButtonLink>
-            ) : undefined
-          }
-        >
-          {data.nextAudit ? `${nextAuditText(data)}.` : 'Your score and what to fix first will show here.'}
-        </EmptyState>
-        {teamCard}
-        <div className={styles.pair}>
-          <RivalsCard
-            ladder={rivals.ladder}
-            standings={rivals.standings?.map((rival) => ({ id: rival.id, name: rival.name, standing: rival.standing })) ?? null}
-            verdict={rivals.verdict}
-            rivalsHref="/rivals"
-            chooseHref={role === 'owner' ? '/rivals/choose' : null}
-            latestMove={rivals.latestMove}
-          />
-          <DemandCard highlight={highlight} demandHref="/demand" place={institution.city} history={searches} nextUpdate={nextPullOn(new Date()).toISOString()} />
-        </div>
+        {data.waiting ? (
+          // A first Audit waiting for the AdmitLabs team's review: the line takes the place of the results.
+          <FirstAuditWaiting ranAt={data.waiting.runAt} isOwner={owner} hasRivals={rivalList.length > 0} city={institution.city} />
+        ) : (
+          <EmptyState
+            icon="audit"
+            title={viewer.tier === 'free' && !viewer.plan?.freeProgramId ? 'Pick the program your free Audit covers' : 'Your first Audit is on its way'}
+            action={
+              viewer.tier === 'free' && !viewer.plan?.freeProgramId && role === 'owner' ? (
+                <ButtonLink href="/onboarding" iconAfter="arrowRight">
+                  Pick a program
+                </ButtonLink>
+              ) : undefined
+            }
+          >
+            {data.nextAudit ? `${nextAuditText(data)}.` : 'What students see about you, and what to fix first, will show here.'}
+          </EmptyState>
+        )}
+        {clientCards}
+        {cards}
       </div>
     );
   }
 
-  const audit = data.audit;
-  // The Audit before the latest, for "What changed since": Paid and Client see their history; Free sees the latest only.
-  const previous = full ? (data.history.at(-2) ?? null) : null;
-  const [marks, moves, spikes] = await Promise.all([
-    loadMarks(institution.id, audit.id),
-    full ? loadMovesSince(institution.id, previous?.runAt ?? audit.runAt) : Promise.resolve(null),
+  const latest = data.audit;
+  const { view, state } = places;
+  const overview = overviewView(latest, { institutionType: institution.type, programNames: data.names });
+  // The Audit before the latest, for "What changed since": Paid and Client see their history; Free sees its own.
+  const before = [...data.history].reverse().find((row) => row.runAt < latest.runAt) ?? null;
+  const [marks, moves, spikes, lessons, picks] = await Promise.all([
+    loadMarks(institution.id, latest.id),
+    full ? loadMovesSince(institution.id, before?.runAt ?? latest.runAt) : Promise.resolve(null),
     full ? loadSpikes(viewer) : Promise.resolve(null),
+    full ? loadActions(institution.id) : Promise.resolve([]),
+    full ? loadLatestPicks(institution.id) : Promise.resolve([]),
   ]);
-  const open = new Set(marks.filter((mark) => mark.checkedBy === null).map(markKey));
-
-  const things: HomeThing[] = full
-    ? byPoints(
-        threeThings({
-          institutionType: institution.type,
-          place: institution.city,
-          fixes: view.fixes,
-          lessons: lessons.map((lesson) => ({ text: lesson.text, detail: lesson.detail, checkKey: lesson.checkKey, rivalId: lesson.rivalId, effort: lesson.effort, month: lesson.month.slice(0, 7) })),
-          ideas,
-        }),
-      ).map((thing) => homeThing(thing, institution.type, institution.city, open))
-    : view.fixes.slice(0, limitFor('audit_what_to_fix', 'free') ?? 3).map((fix) => homeThing(fixThing(fix, institution.type), institution.type, institution.city, open));
-
+  const thingMarks = new Set(marks.filter((mark) => mark.thing).map(markKey));
+  const things = full
+    ? threeThings({
+        fixes: view.fixes,
+        lessons: lessons.map((lesson) => ({ ...lesson, month: lesson.month.slice(0, 7) })),
+        picks,
+        rivalNames: new Map(rivalList.map((rival) => [rival.id, rival.name])),
+      })
+    : freeThings(view.fixes, limitFor('audit_what_to_fix', 'free') ?? 3);
   const checked: CheckedMark[] = marks.flatMap((mark) =>
-    mark.checkKey && mark.checkedBy === audit.id
-      ? [{ key: mark.checkKey, name: checkName(mark.checkKey, institution.type), markedAt: mark.markedAt, outcome: markOutcome(mark.checkKey, audit, data.names) }]
+    mark.checkKey && mark.checkedBy === latest.id
+      ? [{ key: mark.checkKey, name: checkName(mark.checkKey, institution.type), markedAt: mark.markedAt, outcome: markOutcome(mark.checkKey, latest, data.names) }]
       : [],
   );
   const firstFix = view.fixes[0];
-  const showGuide = !guideClosed;
+  const words = view.words.map((word) => `${word.name} ${word.word}`).join(', ');
 
   return (
-    <div className={styles.home}>
-      <div className={styles.summary}>
-        <PageHead title="Home" question="How are we doing this month?" />
+    <div className={audit.page}>
+      <div className={audit.top}>
+        <PageHead title="Home" question={QUESTION} caption={[`Audit checked ${formatDate(latest.runAt)}`, planLine]} />
         {reminderNotice}
-        {data.waiting ? <WaitingNotice shownRunAt={audit.runAt} /> : null}
-        <div className={styles.answer}>
-          <p className={styles.verdict}>{auditVerdict(view.scores)}</p>
-          <Link href="/audit" className={styles.headLink}>
-            Open Audit
-            <Icon name="arrowRight" size={16} />
-          </Link>
-        </div>
+        {data.waiting ? <WaitingNotice shownRunAt={latest.runAt} /> : null}
+        <p className={styles.answer}>{auditVerdict(overview.scores)}</p>
       </div>
 
-      {showGuide ? (
+      <WordTiles words={view.words} fixHref={(key) => auditFixPath(`check:${key}`)} />
+
+      {guideClosed ? null : (
         <StartGuide
-          score={view.scores.overall}
-          firstFix={firstFix ? { title: fixThing(firstFix, institution.type).title, points: firstFix.points, href: auditFixPath(checkFixKey(firstFix.key)) } : null}
-          fixMarked={firstFix ? open.has(markKey({ checkKey: firstFix.key, thing: null, month: null })) : false}
-          rivalsPicked={rivals.rivals.length > 0}
+          words={words}
+          firstFix={firstFix ? { title: firstFix.title, impact: firstFix.impact, href: auditFixPath(firstFix.id) } : null}
+          fixMarked={firstFix ? state.marked.includes(firstFix.id) : false}
+          rivalsPicked={rivalList.length > 0}
           owner={role === 'owner'}
           onClose={closeStartGuideAction}
         />
-      ) : null}
+      )}
 
-      {teamCard}
+      {clientCards}
 
       <HomeThings
         id="things"
         title={full ? 'Do these 3 things this month' : 'Fix these first'}
-        description={[
-          full ? 'Ordered by the points each could add.' : 'The changes that could add the most to your score.',
-          role === 'owner' && !viewer.viewingAs ? 'Mark one done when it is done: your next Audit checks it.' : 'When one is marked done, your next Audit checks it.',
-        ].join(' ')}
-        items={things}
-        canMark={role === 'owner' && !viewer.viewingAs}
-        nextAudit={nextAudit}
-        onMark={markDoneAction}
-        empty="Every check is Strong. Keep it that way."
+        help={
+          full
+            ? 'Ordered by impact: a fix from your Audit, a lesson from your rivals and one of Make these 3. Mark one done when it is done: your next Audit checks a fix.'
+            : 'The changes that matter most, from your free Audit. Mark one done when it is done: your next Audit checks it.'
+        }
+        items={things.map((thing) => homeThing(thing, thingMarks))}
+        fixState={state}
+        fixHandlers={{ onMark: markFixAction, onAsk: askFixAction }}
+        onMarkThing={markDoneAction}
+        empty="Nothing needs fixing right now. Keep it that way."
       />
 
-      {/* A first free Audit has nothing to compare with yet; Paid and Client still see their rivals and searches. */}
-      {full || !view.firstAudit ? (
-        <WhatChanged
-          since={previous?.runAt ?? null}
-          first={view.firstAudit}
-          change={view.firstAudit || view.programsChanged ? null : view.changes.overall}
-          score={view.scores.overall}
-          moved={movedChecks(view)}
-          marks={checked}
-          moves={moves}
-          spikes={spikes}
-          checkedOn={audit.runAt}
-          paidAction={full ? null : <PaidAction viewer={viewer} variant="secondary" size="sm" />}
-        />
-      ) : null}
-
-      <HomeScore
-        view={view}
-        checkedAt={audit.runAt}
-        since={full ? sinceFirst(data) : null}
-        note={auditNote(data, viewer.tier)}
-        checkLinks={AUDIT_CHECK_PREFIX}
-        paidAction={full ? null : <PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}
+      <WhatChanged
+        since={full ? (before?.runAt ?? null) : null}
+        first={overview.firstAudit}
+        words={view.words}
+        moved={movedChecks(overview)}
+        marks={checked}
+        moves={moves}
+        spikes={spikes}
+        place={institution.city}
+        checkedOn={latest.runAt}
+        paidAction={full ? null : <PaidAction viewer={viewer} variant="secondary" size="sm" />}
       />
 
-      <div className={styles.pair}>
-        <RivalsCard
-          ladder={rivals.ladder}
-          standings={rivals.standings?.map((rival) => ({ id: rival.id, name: rival.name, standing: rival.standing })) ?? null}
-          verdict={rivals.verdict}
-          rivalsHref="/rivals"
-          chooseHref={role === 'owner' ? '/rivals/choose' : null}
-          latestMove={rivals.latestMove}
-        />
-        <DemandCard highlight={highlight} demandHref="/demand" place={institution.city} history={searches} nextUpdate={nextPullOn(new Date()).toISOString()} />
-      </div>
+      {cards}
     </div>
   );
 }

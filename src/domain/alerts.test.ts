@@ -18,15 +18,21 @@ describe('what arrives in Notifications, and when', () => {
       'Your next Audit, on 15 Oct 2026, and what moved in it.',
       "Your rivals' moves, from the weekly check every Monday.",
       'Big jumps in what students in Guwahati search for, after each update. The next is on 28 Oct 2026.',
-      'Your monthly report, on 1 Nov 2026.',
+      'Your monthly summary and report, on 1 Nov 2026.',
     ]);
     assert.equal(alertsAhead({ ...BASE, tier: 'client', hasRivals: false })[1], "Your rivals' moves, once you pick your rivals.");
+  });
+
+  test('a Paid plan that ends before the next report: no report promised', () => {
+    const lines = alertsAhead({ ...BASE, tier: 'paid', nextReport: null });
+    assert.equal(lines.length, 3);
+    assert.ok(lines.every((line) => !line.includes('report')));
   });
 
   test('Free: its next free Audit, and what Paid adds', () => {
     assert.deepEqual(alertsAhead({ ...BASE, tier: 'free', nextAudit: { on: istDate('2027-01-03', 6), tier: 'free' } }), [
       'Your next free Audit, on 3 Jan 2027, and what moved in it.',
-      "Paid adds your rivals' moves, big jumps in what students search for, and a monthly report.",
+      "Paid adds your rivals' moves, big jumps in what students search for, and a monthly summary and report.",
     ]);
   });
 

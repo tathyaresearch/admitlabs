@@ -89,20 +89,15 @@ export const styles = StyleSheet.create({
     padding: PAGE.side,
   },
 
-  // Page head: eyebrow, title, one line on what the page shows.
-  head: { marginBottom: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: COLORS.black },
+  // A part's head: an eyebrow over its title, and one line on what it shows.
   eyebrow: { fontSize: 7.5, fontWeight: 500, letterSpacing: 0.9, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 6 },
-  title: { fontSize: 22, fontWeight: 600, letterSpacing: -0.5, lineHeight: 1.15 },
   lead: { fontSize: 10, color: COLORS.muted, marginTop: 5, lineHeight: 1.4 },
 
-  section: { marginTop: 20 },
   sectionTitle: { fontSize: 12, fontWeight: 600, letterSpacing: -0.15, marginBottom: 2 },
   sectionLead: { fontSize: 8.5, color: COLORS.muted, marginBottom: 8 },
 
   small: { fontSize: 8.5, lineHeight: 1.4 },
   caption: { fontSize: 7.5, color: COLORS.muted, lineHeight: 1.4 },
-  strong: { fontWeight: 600 },
-  rule: { borderBottomWidth: 0.75, borderBottomColor: COLORS.line },
 
   footer: {
     position: 'absolute',

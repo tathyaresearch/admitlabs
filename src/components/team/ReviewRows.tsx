@@ -223,8 +223,8 @@ export function ReviewRows({ auditId, rows, onChange }: { auditId: string; rows:
   );
 }
 
-/** Approve and send, in the bar at the bottom of the review. */
-export function ApproveButton({ auditId, onApprove }: { auditId: string; onApprove: (auditId: string) => Promise<ReviewActionResult> }) {
+/** Approve and send, in the bar at the bottom of a review: an Audit's, or a monthly summary's. */
+export function ApproveButton({ id, onApprove }: { id: string; onApprove: (id: string) => Promise<ReviewActionResult> }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   return (
@@ -234,7 +234,7 @@ export function ApproveButton({ auditId, onApprove }: { auditId: string; onAppro
         loading={pending}
         onClick={() =>
           startTransition(async () => {
-            const outcome = await onApprove(auditId);
+            const outcome = await onApprove(id);
             if (outcome && !outcome.ok) setError(outcome.error);
           })
         }

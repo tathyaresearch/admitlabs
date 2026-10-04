@@ -102,7 +102,7 @@ select set_config('request.jwt.claims', '{"sub":"14000000-0000-4000-8000-0000000
 select is((select count(*)::integer from public.reports where storage_path like '24000000%'), 3, 'The team sees every report');
 select is((select count(*)::integer from storage.objects where bucket_id = 'reports' and name like '24000000%'), 3, 'and every file');
 select throws_ok(
-  $$select public.record_report('24000000-0000-4000-8000-00000000000a', '2026-09-01', 'x.pdf', 7::smallint, 1000, now(), null)$$,
+  $$select public.record_report('24000000-0000-4000-8000-00000000000a', '2026-09-01', 'x.pdf', 7::smallint, 1000, now(), null, 'approved', null)$$,
   '42501', null,
   'Only the server records reports'
 );
@@ -113,7 +113,7 @@ select set_config('request.jwt.claims', '{"role":"service_role"}', true);
 set local role service_role;
 
 select isnt(
-  public.record_report('24000000-0000-4000-8000-00000000000a', '2026-09-01', '24000000-0000-4000-8000-00000000000a/2026-09.pdf', 7::smallint, 91000, now(), 'Your September report is ready.'),
+  public.record_report('24000000-0000-4000-8000-00000000000a', '2026-09-01', '24000000-0000-4000-8000-00000000000a/2026-09.pdf', 7::smallint, 91000, now(), '{"month":"2026-09"}'::jsonb, 'approved', 'Your September report is ready.'),
   null::uuid,
   'A made report is recorded'
 );
@@ -123,7 +123,7 @@ select results_eq(
   'with "Your September report is ready."'
 );
 select lives_ok(
-  $$select public.record_report('24000000-0000-4000-8000-00000000000a', '2026-09-01', '24000000-0000-4000-8000-00000000000a/2026-09.pdf', 8::smallint, 95000, now(), null)$$,
+  $$select public.record_report('24000000-0000-4000-8000-00000000000a', '2026-09-01', '24000000-0000-4000-8000-00000000000a/2026-09.pdf', 8::smallint, 95000, now(), null, 'approved', null)$$,
   'Making the same month again replaces it'
 );
 select results_eq(

@@ -13,7 +13,7 @@ import { parsePickedIdea } from '../src/demand/picks.ts';
 import { writeContentPicks, writeMonthPicks } from '../src/demand/picks-jobs.ts';
 import { pullDayOf, pullMonth } from '../src/demand/schedule.ts';
 import { istDate } from '../src/domain/dates.ts';
-import { formatDate } from '../src/domain/format.ts';
+import { formatDate, plural } from '../src/domain/format.ts';
 import { institutionDetailsToRow, programDetailsToRow } from '../src/domain/details.ts';
 import { paidPlanEndsAt } from '../src/domain/tiers.ts';
 import { TIER_LABELS } from '../src/domain/types.ts';
@@ -61,6 +61,8 @@ type Row<T extends keyof Tables> = Tables[T]['Insert'];
 const DAY_MS = 86_400_000;
 /** The sample world's monthly reports: April to August 2026, each made on the 1st of the next month. */
 const REPORT_MONTHS = ['2026-04', '2026-05', '2026-06', '2026-07', '2026-08'] as const;
+/** September's, made on 1 October as it would be live: with Review first it waits, sent automatically it goes. */
+const LIVE_REPORT_MONTH = '2026-09';
 
 const db = serviceClient();
 
@@ -264,6 +266,8 @@ async function main(): Promise<void> {
         createdBy: run.kind === 'team' ? requireUser(TEAM_EMAIL) : null,
         review: run.waiting || reviewed ? 'waiting' : 'approved',
         ...(run.kind === 'own' && !run.waiting && !reviewed && (sample.reviewFirst ?? true) ? { approvedBy: requireUser(TEAM_EMAIL), approvedAt: istDate(run.day, 13) } : {}),
+        // Past Audit ready emails are not sent again; the one the team approves below goes.
+        emails: false,
       });
       auditCounts[run.kind] += 1;
       if (run.waiting) auditCounts.waiting += 1;
@@ -466,20 +470,26 @@ async function main(): Promise<void> {
     }),
   );
 
-  // Each month from April to August: its Rivals 3 things to do (on the month's last day), then
-  // its monthly report for the Paid and Client institutions, made on the 1st of the next month
-  // through the live path (September's is made on 1 October).
-  const reportPages: Array<{ month: string; pages: number }> = [];
-  for (const month of REPORT_MONTHS) {
-    const lastDay = new Date(monthEnd(month).getTime() - 15 * 3_600_000);
-    for (const tracker of new Set(SAMPLE_RIVALS.map(([slug]) => slug))) {
-      actionCount += await writeRivalActions(db, institutionId(tracker), lastDay);
+  // Each month from April to August: its Rivals 3 things to do (on the month's last day), then its
+  // summary and monthly report for the Paid and Client institutions, made on the 1st of the next
+  // month through the live path, approved as they were made, without sending past emails again.
+  // Then September's, made on 1 October as it would be live (its Rivals 3 things to do were written
+  // today, above): Eastgate's waits in To review, Brightpath's goes out automatically with its email.
+  const reportPages: Array<{ month: string; name: string; pages: number; review: string; emails: number }> = [];
+  for (const month of [...REPORT_MONTHS, LIVE_REPORT_MONTH]) {
+    const live = month === LIVE_REPORT_MONTH;
+    if (!live) {
+      const lastDay = new Date(monthEnd(month).getTime() - 15 * 3_600_000);
+      for (const tracker of new Set(SAMPLE_RIVALS.map(([slug]) => slug))) {
+        actionCount += await writeRivalActions(db, institutionId(tracker), lastDay);
+      }
     }
     const reportDay = reportDayOf(month);
     const { due: reportsToMake } = await reportsDue(db, reportDay);
     for (const institution of reportsToMake) {
       try {
-        reportPages.push({ month, pages: (await makeReport(db, institution.id, month, reportDay, { notify: true })).pages });
+        const made = await makeReport(db, institution.id, month, reportDay, live ? { notify: true } : { notify: true, review: 'approved', send: false });
+        reportPages.push({ month, name: institution.name, pages: made.pages, review: made.review, emails: made.emails?.sent ?? 0 });
       } catch (error) {
         fail(`Could not make the ${month} report for ${institution.name}: ${error instanceof Error ? error.message : String(error)}`);
       }
@@ -495,6 +505,7 @@ async function main(): Promise<void> {
   const older: string[] = [];
   for (const notice of notices ?? []) {
     if (notice.kind === 'audit_ready' && !newestAudit.has(notice.institution_id)) newestAudit.add(notice.institution_id);
+    else if (notice.kind === 'report_ready' && new Date(notice.created_at).getTime() >= istDate(SAMPLE_TODAY, 0).getTime()) continue;
     else if ((notice.kind === 'rival_move' || notice.kind === 'demand_spike') && new Date(notice.created_at).getTime() >= recent) continue;
     else older.push(notice.id);
   }
@@ -512,7 +523,9 @@ async function main(): Promise<void> {
   console.log(`  Rival moves ${moveCount}, best posts ${contentCount ?? 0}, ads ${SAMPLE_ADS.length}, Rivals 3 things to do ${actionCount} (April to September)`);
   console.log(`  Demand pulls ${needed.length * DEMAND_MONTHS.length} with ${demandItems} grouped items, ${spikeCount} spike alerts sent`);
   console.log(`  Make these 3 picked ${pickCount} times (${PICK_MONTHS.join(' and ')}), ${SAMPLE_MADE.length} marked as made`);
-  console.log(`  Monthly reports ${reportPages.length}, ${REPORT_MONTHS[0]} to ${REPORT_MONTHS[REPORT_MONTHS.length - 1]} (${reportPages.map((report) => `${report.month} ${report.pages} pages`).join(', ')})`);
+  const live = reportPages.filter((report) => report.month === LIVE_REPORT_MONTH);
+  console.log(`  Monthly summaries and reports ${reportPages.length}, ${REPORT_MONTHS[0]} to ${LIVE_REPORT_MONTH} (${reportPages.map((report) => `${report.month} ${report.pages} pages`).join(', ')})`);
+  console.log(`  September, made 1 Oct: ${live.map((report) => `${report.name} ${report.review === 'waiting' ? 'waits in To review' : `sent to ${plural(report.emails, 'person', 'people')}`}`).join(', ')}`);
   console.log('\nSign in at http://localhost:3000/login with any of these:');
   for (const user of SAMPLE_USERS) {
     const sample = user.institutionSlug ? sampleInstitution(user.institutionSlug) : null;

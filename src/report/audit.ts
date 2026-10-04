@@ -1,34 +1,17 @@
-// A prospect's shared Audit as a PDF (spec section 13, Phase 6 decisions): the same content as
-// the shared page, in the report's design. Every check with its result, what was found, the
-// source and the date; how to fix only for the top 3 fixes, and one line saying AdmitLabs can fix
-// the rest. Built from what shared_audit() returned, so it never holds more than the link does. Pure.
+// A prospect's shared Audit as a PDF (spec section 13): the same content as the shared page, place
+// by place with the three words, in the report's design. What to fix first (the top 3 in full: what
+// was found, why, the steps and the ready fix), the rest by name under one line saying AdmitLabs can
+// fix them, then each place with what was found and its proof, what's good and what to fix. Built
+// from what shared_audit() returned, so it never holds more than the link does. Pure.
 
+import type { StoredFinding } from '../audit/places.ts';
 import { auditVerdict } from '../audit/verdict.ts';
 import { ADMITLABS_EMAIL } from '../config/team.ts';
 import { formatDate, hostAndPath } from '../domain/format.ts';
-import { scoreLabel, type ScoreLabel } from '../domain/scores.ts';
-import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS, PILLARS, type CheckKey, type CheckResult, type Pillar } from '../domain/types.ts';
-import { platformFromUrl, type Platform } from '../graphics/platforms.ts';
-import { sharedView, type SharedAudit } from '../team/share.ts';
-import { fixOf, programRows, REPORT_LIMITS, typeset, workingRow, type ReportData, type ReportFix } from './data.ts';
-
-export interface AuditCheckPart {
-  program: string | null;
-  result: CheckResult;
-  finding: string | null;
-  source: string | null;
-  /** Where the source points, for its mark. */
-  platform: Platform | null;
-  checkedOn: string;
-}
-
-export interface AuditCheck {
-  key: CheckKey;
-  name: string;
-  /** "In your top 3 fixes." for those three, otherwise nothing. */
-  note: string | null;
-  parts: AuditCheckPart[];
-}
+import { INSTITUTION_TYPE_LABELS } from '../domain/types.ts';
+import { sharedPlaces, type SharedAudit } from '../team/share.ts';
+import { typeset } from './data.ts';
+import { fixDetailOf, fixRowOf, placesFor, reportWords, type ReportFix, type ReportFixRow, type ReportPlace, type ReportWord } from './places.ts';
 
 export interface AuditPdfData {
   institution: { name: string; place: string; website: string };
@@ -37,62 +20,38 @@ export interface AuditPdfData {
   madeAt: string;
   checkedOn: string;
   sharedOn: string;
-  cover: { score: number; label: ScoreLabel; verdict: string };
-  pillars: Array<{ pillar: Pillar; name: string; score: number; label: ScoreLabel }>;
-  working: ReportData['working'];
+  /** The one line from the three words. */
+  answer: string;
+  words: ReportWord[];
+  /** Explained in full. */
   topFixes: ReportFix[];
-  /** Explained no further than the problem: one line above them says AdmitLabs can fix them. */
-  moreFixes: ReportFix[];
-  programs: ReportData['programs'];
-  morePrograms: number;
-  checks: Array<{ pillar: Pillar; name: string; checks: AuditCheck[] }>;
+  /** By name only, under one line saying AdmitLabs can fix them. */
+  moreFixes: ReportFixRow[];
+  places: ReportPlace[];
   closing: { text: string; email: string; freeAudit: string };
 }
 
-export const TOP_FIX_NOTE = 'In your top 3 fixes.';
+/** The shared Audit, with its findings (a team PDF reads them as the team). */
+export type AuditPdfInput = Omit<SharedAudit, 'findings'> & { findings: readonly StoredFinding[] };
 
-export function buildAuditPdf(shared: Omit<SharedAudit, 'findings'>, options: { madeAt: Date; freeAuditUrl: string }): AuditPdfData {
-  const { view, topFixes, moreFixes, working } = sharedView(shared);
-  const type = shared.institution.type;
-  const topKeys = new Set(topFixes.map((item) => item.key));
+export function buildAuditPdf(shared: AuditPdfInput, options: { madeAt: Date; freeAuditUrl: string }): AuditPdfData {
+  const view = sharedPlaces({ ...shared, findings: [...shared.findings] });
   const checkedOn = formatDate(shared.audit.runAt);
-
   return typeset({
     institution: {
       name: shared.institution.name,
-      place: `${INSTITUTION_TYPE_LABELS[type]} in ${shared.institution.city}, ${shared.institution.state}`,
+      place: `${INSTITUTION_TYPE_LABELS[shared.institution.type]} in ${shared.institution.city}, ${shared.institution.state}`,
       website: hostAndPath(shared.institution.website),
     },
     monthLabel: `Audit of ${checkedOn}`,
     madeAt: options.madeAt.toISOString(),
     checkedOn,
     sharedOn: formatDate(shared.sharedAt),
-    cover: { score: shared.audit.scores.overall, label: view.label, verdict: auditVerdict(shared.audit.scores) },
-    pillars: PILLARS.map((pillar) => ({ pillar, name: PILLAR_LABELS[pillar], score: shared.audit.scores[pillar], label: scoreLabel(shared.audit.scores[pillar]) })),
-    working: working.map(workingRow),
-    topFixes: topFixes.map((item) => fixOf(item, type)),
-    moreFixes: moreFixes.map((item) => ({ ...fixOf(item, type), howToFix: null, difficulty: null })),
-    programs: programRows(shared.audit, { institutionType: type, programNames: shared.programNames }),
-    morePrograms: Math.max(0, shared.audit.programs.length - REPORT_LIMITS.programs),
-    checks: view.areas.map((area) => ({
-      pillar: area.pillar,
-      name: PILLAR_LABELS[area.pillar],
-      checks: area.rows
-        .filter((row) => row.parts.length)
-        .map((row) => ({
-          key: row.key,
-          name: row.name,
-          note: topKeys.has(row.key) ? TOP_FIX_NOTE : null,
-          parts: row.parts.map((part) => ({
-            program: part.programName,
-            result: part.result,
-            finding: part.detail?.finding ?? null,
-            source: part.detail?.sourceUrl ? hostAndPath(part.detail.sourceUrl) : null,
-            platform: part.detail?.sourceUrl ? platformFromUrl(part.detail.sourceUrl) : null,
-            checkedOn: formatDate(part.checkedAt),
-          })),
-        })),
-    })),
+    answer: auditVerdict(shared.audit.scores),
+    words: reportWords(view.words),
+    topFixes: view.topFixes.map((fix, index) => fixDetailOf(fix, index + 1)),
+    moreFixes: view.fixes.slice(view.topFixes.length).map((fix, index) => fixRowOf(fix, view.topFixes.length + index + 1)),
+    places: placesFor(view),
     closing: { text: 'Want AdmitLabs to fix this for you?', email: ADMITLABS_EMAIL, freeAudit: `Get your free Audit at ${options.freeAuditUrl.replace(/^https?:\/\//, '')}` },
   });
 }

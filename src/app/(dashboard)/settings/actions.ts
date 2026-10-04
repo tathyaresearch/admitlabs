@@ -1,8 +1,9 @@
 'use server';
 
-// Settings (spec section 13): institution details, programs, the Free program and people.
-// Owners only; every change goes through a database function that checks the caller again.
-// Changes to details and programs apply from the next Audit.
+// Settings (spec section 13): institution details, programs, the Free program, people and their
+// emails. Owners only, except that each person turns their own email on or off; every change goes
+// through a database function that checks the caller again. Changes to details and programs apply
+// from the next Audit.
 
 import { revalidatePath } from 'next/cache';
 import { checkInstitution, checkPrograms, type InstitutionFields } from '@/domain/onboarding';
@@ -132,5 +133,17 @@ export async function removeMemberAction(formData: FormData): Promise<void> {
   if (!(await ownerOnly())) return;
   const supabase = await createClient();
   await supabase.rpc('remove_member', { p_user: field(formData, 'user') });
+  revalidatePath('/settings');
+}
+
+/**
+ * A person's monthly summary email (on Free, the Audit ready email), on or off: each person their
+ * own, the owner anyone's. set_summary_email() checks the caller again.
+ */
+export async function setSummaryEmailAction(formData: FormData): Promise<void> {
+  const viewer = await getViewer();
+  if (!viewer?.membership) return;
+  const supabase = await createClient();
+  await supabase.rpc('set_summary_email', { p_institution: viewer.membership.institution.id, p_user: field(formData, 'user'), p_on: field(formData, 'on') === 'true' });
   revalidatePath('/settings');
 }

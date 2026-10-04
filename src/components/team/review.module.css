@@ -248,3 +248,15 @@
   justify-items: end;
   gap: var(--space-1);
 }
+
+/* A monthly summary's line: its name, the line with where it comes from, and Edit line. */
+@container (min-width: 56rem) {
+  .summaryRow {
+    grid-template-columns: 12rem minmax(0, 1fr) auto;
+  }
+}
+
+.summaryValue {
+  font: var(--type-body);
+  text-wrap: pretty;
+}

@@ -2346,6 +2346,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      approve_report: {
+        Args: {
+          p_at?: string
+          p_by?: string
+          p_notice: string
+          p_pages: number
+          p_report: string
+          p_size: number
+        }
+        Returns: undefined
+      }
       archive_lead_link: { Args: { p_link: string }; Returns: undefined }
       archive_program: { Args: { p_program: string }; Returns: undefined }
       ask_admitlabs_fix: {
@@ -2415,6 +2426,7 @@ export type Database = {
           email: string
           joined_at: string
           role: Database["public"]["Enums"]["membership_role"]
+          summary_email: boolean
           user_id: string
         }[]
       }
@@ -2511,14 +2523,26 @@ export type Database = {
           p_month: string
           p_notice: string
           p_pages: number
+          p_review: Database["public"]["Enums"]["review_state"]
           p_size: number
           p_storage_path: string
+          p_summary: Json
         }
         Returns: string
       }
       record_review: { Args: { payload: Json }; Returns: undefined }
       record_rival_ad: { Args: { payload: Json }; Returns: string }
       record_rival_check: { Args: { payload: Json }; Returns: number }
+      record_summary_edit: {
+        Args: {
+          p_after: string
+          p_by?: string
+          p_reason?: string
+          p_report: string
+          p_target: string
+        }
+        Returns: undefined
+      }
       remove_member: { Args: { p_user: string }; Returns: undefined }
       remove_team_invite: { Args: { p_email: string }; Returns: undefined }
       remove_team_user: { Args: { p_user: string }; Returns: undefined }
@@ -2580,6 +2604,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_summary_email: {
+        Args: { p_institution: string; p_on: boolean; p_user: string }
+        Returns: undefined
+      }
       set_team_role: {
         Args: {
           p_role: Database["public"]["Enums"]["team_role"]
@@ -2611,6 +2639,7 @@ export type Database = {
         }
         Returns: string
       }
+      summary_recipients: { Args: { p_institution: string }; Returns: string[] }
       team_people: {
         Args: never
         Returns: {

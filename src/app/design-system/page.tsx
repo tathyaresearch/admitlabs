@@ -9,6 +9,7 @@ import { SummaryBand } from '@/components/audit/SummaryBand';
 import { UnlockCard } from '@/components/audit/UnlockCard';
 import { HeadToHead } from '@/components/charts/HeadToHead';
 import { CityPicker } from '@/components/institution/CityPicker';
+import { PAID_PRICE } from '@/domain/tiers';
 import { APP_OPEN } from '@/lib/urls';
 import { ProgramPicker } from '@/components/institution/ProgramPicker';
 import { HistoryLine } from '@/components/charts/HistoryLine';
@@ -503,7 +504,7 @@ export default async function DesignSystemPage() {
                     <span className={`${styles.tScore} num`}>73</span>
                     <span className={`${styles.tScoreMedium} num`}>73</span>
                     <span className={`${styles.tScoreSmall} num`}>73</span>
-                    <span className={`${styles.tMetric} num`}>₹24,999</span>
+                    <span className={`${styles.tMetric} num`}>{PAID_PRICE.amount}</span>
                   </div>
                   <p className={styles.tCaption}>Score 56 to 104px, dial 44 to 56px, number cards 24 to 28px, other numbers 22px. All 600. Numbers inside a sentence stay in Bricolage: Could add up to 4 points.</p>
                 </Specimen>
@@ -790,7 +791,7 @@ export default async function DesignSystemPage() {
                 <Stat label="Rivals tracked" value="3" sub="3 to 5 allowed" />
               </Card>
               <Card>
-                <Stat label="Paid" value="₹24,999" sub="+ GST for 6 months" />
+                <Stat label="Paid" value={PAID_PRICE.amount} sub={`${PAID_PRICE.tax} ${PAID_PRICE.term}`} />
               </Card>
             </div>
             <Card>

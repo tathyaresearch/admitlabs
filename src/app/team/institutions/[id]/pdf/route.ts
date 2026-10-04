@@ -1,9 +1,10 @@
 // The latest team Audit of a prospect (or rival record) as a PDF, for the team to send on. The
-// same content a share link shows: how to fix for the top 3 fixes only. Team only.
+// same content a share link shows, place by place with the three words: how to fix for the top 3
+// fixes only. Team only.
 
 import { notFound } from 'next/navigation';
 import { NextResponse } from 'next/server';
-import { latestStoredAudit } from '@/audit/read';
+import { latestStoredAudit, storedFindings } from '@/audit/read';
 import { TEAM_RULES } from '@/config/team';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
@@ -27,6 +28,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   ]);
   if (institution.error || programs.error) throw new Error('Could not load the institution.');
   if (!institution.data || !audit) notFound();
+  const findings = await storedFindings(supabase, audit.id);
 
   const now = new Date();
   const pdf = await renderAuditPdf(
@@ -36,6 +38,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         expiresAt: new Date(now.getTime() + TEAM_RULES.shareLinkDays * 86_400_000).toISOString(),
         institution: institution.data,
         audit,
+        findings,
         programNames: new Map((programs.data ?? []).map((program) => [program.id, program.name])),
       },
       { madeAt: now, freeAuditUrl: `${APP_URL}/signup` },

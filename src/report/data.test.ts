@@ -1,173 +1,192 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { regionsFor } from '../demand/regions.ts';
 import { hasDashes } from '../domain/copy.ts';
 import { istDate } from '../domain/dates.ts';
-import { buildReport, changeSince, compactLinks, curlyQuotes, questionsLead, REPORT_LIMITS, reportTexts, sinceWhen } from './data.ts';
+import { buildReport, changeSince, curlyQuotes, leadsFacts, PAID_CONTACT, REPORT_LIMITS, reportTexts, sinceWhen } from './data.ts';
+import { PLACE_LIMITS } from './places.ts';
 import { sampleReportInput as input } from './testing.ts';
 
-// The report snapshot, from Eastgate University's sample Audit (see ./testing.ts).
+// The report snapshot, in the spec's order (section 12), from Eastgate University's September (see
+// ./testing.ts).
+
+const LINKS = [
+  { name: 'Instagram bio', count: 6, before: 5 },
+  { name: 'Reel: Data Analytics placements', count: 11, before: 7 },
+  { name: 'YouTube: Hotel Management campus tour', count: 4, before: 3 },
+  { name: 'Facebook page', count: 2, before: 2 },
+  { name: 'Old poster', count: 0, before: 0 },
+];
 
 describe('what goes into the monthly report', () => {
-  test('short enough to read in 5 minutes: every list is capped', async () => {
+  test('the cover: the month, the institution and Visibility, Trust and Chosen', async () => {
     const data = buildReport(await input());
-    assert.equal(data.working.length, REPORT_LIMITS.working);
+    assert.equal(data.monthLabel, 'September 2026');
+    assert.equal(data.monthName, 'September');
+    assert.equal(data.madeOn, '1 Oct 2026');
+    assert.equal(data.checkedOn, 'Checked 15 Sep 2026');
+    assert.deepEqual(
+      data.words.map((word) => word.name),
+      ['Visibility', 'Trust', 'Chosen'],
+    );
+    assert.ok(data.words.every((word) => ['Strong', 'Okay', 'Weak'].includes(word.word)));
+    assert.ok(data.answer.length > 0);
+  });
+
+  test('the score shows small, with its change dated', async () => {
+    const data = buildReport(await input());
+    assert.equal(data.score.change, 'Up 1 since August');
+    assert.equal(Number.isInteger(data.score.overall), true);
+    const first = await input();
+    first.audit.previousAuditId = null;
+    assert.equal(buildReport({ ...first, history: first.history.slice(-1) }).score.change, 'First Audit');
+  });
+
+  test('This month in short: the words, Home’s 3 things, one rival move; enquiries only for a Client', async () => {
+    const data = buildReport(await input());
+    assert.equal(data.summary.month, '2026-09');
+    assert.equal(data.summary.lines.things.length, 3);
+    assert.deepEqual(
+      [...new Set(data.summary.things.map((thing) => thing.source))].sort(),
+      ['audit', 'demand', 'rivals'],
+    );
+    // The latest move of the month: 21 Sep.
+    assert.equal(data.summary.lines.move, 'Silverline College: Added page 7.');
+    assert.equal(data.summary.lines.enquiries, null);
+    assert.equal(data.leads, null);
+  });
+
+  test('the summary as the team left it wins over a new one', async () => {
+    const base = await input();
+    const kept = buildReport(base).summary;
+    const fixed = { ...kept, lines: { ...kept.lines, move: 'Silverline College announced its 2027 dates.' } };
+    assert.equal(buildReport({ ...base, summary: fixed }).summary.lines.move, 'Silverline College announced its 2027 dates.');
+  });
+
+  test('What the internet says: the five places, what’s good and what to fix, each with its proof', async () => {
+    const data = buildReport(await input());
+    assert.deepEqual(
+      data.places.map((place) => place.name),
+      ['Website', 'Google', 'Social media', 'What people say', 'Other places'],
+    );
+    for (const place of data.places) {
+      assert.ok(place.good.length <= PLACE_LIMITS.good && place.fixes.length <= PLACE_LIMITS.fixes, place.name);
+      for (const item of [...place.good, ...place.fixes]) assert.ok(item.proof?.line || place.thin, `${place.name}: ${item.title}`);
+    }
+    const website = data.places[0];
+    assert.ok(website?.fixes.every((item) => item.impact?.startsWith('Impact ') && item.proof?.source && item.proof.date === '15 Sep 2026'));
+  });
+
+  test('What to fix: the top 5 in detail with steps and the ready fix, the rest as a short ranked list', async () => {
+    const data = buildReport(await input());
     assert.equal(data.fixes.length, REPORT_LIMITS.fixesInDetail);
-    assert.ok(data.moreFixes.length > 0);
     assert.deepEqual(
       [...data.fixes, ...data.moreFixes].map((fix) => fix.rank),
       Array.from({ length: data.fixes.length + data.moreFixes.length }, (_, index) => index + 1),
-      'the full ranked list, in order',
+      'one ranking, in order',
     );
-    assert.equal(data.rivals?.moves.length, REPORT_LIMITS.moves);
-    assert.equal(data.rivals?.moreMoves, 2);
-    assert.equal(data.demand?.rising.length, REPORT_LIMITS.rising);
-    assert.equal(data.demand?.questions.length, REPORT_LIMITS.questions);
-    assert.equal(data.demand?.ideas.length, REPORT_LIMITS.ideas);
-    assert.equal(data.summary.history.length, REPORT_LIMITS.historyMonths);
-    assert.equal(data.things.length, 3);
+    assert.ok(data.moreFixes.length <= REPORT_LIMITS.moreFixes);
+    for (const fix of data.fixes) {
+      assert.ok(fix.steps.length > 0 && fix.steps.length <= PLACE_LIMITS.steps, fix.title);
+      assert.ok(['high', 'medium', 'low'].includes(fix.impact));
+    }
+    assert.ok(data.fixes.some((fix) => fix.readyFix));
   });
 
-  test('the cover and score summary: whole numbers, the label, and the change since the Audit before', async () => {
+  test('Rivals: the one line, the ranking with the small score and the words, place by place, the alerts', async () => {
     const data = buildReport(await input());
-    assert.equal(data.monthLabel, 'September 2026');
-    assert.equal(data.madeOn, '1 Oct 2026');
-    assert.equal(data.cover.change, 'Up 1 since August');
-    assert.equal(data.cover.checkedOn, 'Checked 15 Sep 2026');
+    const rivals = data.rivals;
+    assert.ok(rivals);
+    assert.equal(rivals.line, 'This month, Silverline College is ahead on placement proof and Instagram.');
+    assert.equal(rivals.ranking.length, 4);
+    assert.ok(rivals.ranking.some((row) => row.you));
+    const newcomer = rivals.ranking.find((row) => row.name === 'Newcomer College');
+    assert.deepEqual([newcomer?.place, newcomer?.overall, newcomer?.words, newcomer?.nearby], [null, null, [], true]);
+    assert.equal(rivals.places.length, 5);
+    assert.ok(rivals.places.every((place) => place.cells.length === 4));
+    assert.equal(rivals.moves.length, REPORT_LIMITS.moves);
+    assert.equal(rivals.moreMoves, 3);
+    assert.equal(rivals.moves[0]?.date, '21 Sep 2026');
+  });
+
+  test('Demand: Make these 3, programs rising and falling, what students ask and the best months, each capped', async () => {
+    const data = buildReport(await input());
+    const demand = data.demand;
+    assert.ok(demand);
+    assert.equal(demand.place, 'Guwahati');
+    assert.equal(demand.picks.length, 3);
+    assert.equal(demand.picks[0]?.weight, 'Asked about 91 times in Guwahati this month.');
+    assert.equal(demand.picks[0]?.meta, 'Reel · BBA');
+    assert.ok(demand.trends.length > 0 && demand.trends.length <= REPORT_LIMITS.trends);
+    assert.ok(demand.questions.length > 0 && demand.questions.length <= REPORT_LIMITS.questions);
+    assert.ok(demand.bestMonths.length <= REPORT_LIMITS.bestMonths);
+    const asked = demand.questions.map((question) => question.asked);
+    assert.deepEqual(asked, [...asked].sort((a, b) => b - a), 'asked most first');
+    assert.equal(new Set(demand.questions.map((question) => question.text)).size, demand.questions.length, 'each question once');
+  });
+
+  test('Leads, for a Client: the month’s enquiries by link, counts only', async () => {
+    const data = buildReport(await input({ tier: 'client', leads: LINKS }));
+    assert.equal(data.leads?.line, 'Your content brought 23 enquiries in September, 6 more than in August. Most came from Reel: Data Analytics placements.');
+    assert.equal(data.leads?.total, 23);
     assert.deepEqual(
-      data.summary.pillars.map((pillar) => [pillar.name, pillar.change]),
-      [
-        ['Visibility', 'No change'],
-        ['Trust', 'Up 3'],
-        ['Chosen', 'Down 1'],
-      ],
+      data.leads?.links.map((link) => link.name),
+      ['Reel: Data Analytics placements', 'Instagram bio', 'YouTube: Hotel Management campus tour', 'Facebook page'],
     );
-    for (const value of [data.cover.score, ...data.summary.pillars.map((pillar) => pillar.score), ...data.summary.history.map((point) => point.score)]) {
-      assert.equal(Number.isInteger(value), true, String(value));
-    }
+    assert.equal(data.summary.lines.enquiries, data.leads?.line);
+    assert.deepEqual(leadsFacts(LINKS), { count: 23, before: 17, top: { name: 'Reel: Data Analytics placements', count: 11 } });
+  });
+
+  test('Progress and sources: the small score and the three words month by month, your place among rivals', async () => {
+    const data = buildReport(await input());
     assert.deepEqual(
-      data.summary.history.map((point) => point.label),
+      data.progress.map((row) => row.label),
       ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
     );
-  });
-
-  test('points are whole numbers in every sentence', async () => {
-    const data = buildReport(await input());
-    const pointTexts = reportTexts(data).filter((text) => /points?\b/.test(text));
-    assert.ok(pointTexts.length > 0);
-    for (const text of pointTexts) assert.doesNotMatch(text, /\d\.\d+ points?/, text);
-  });
-
-  test('a first Audit says so, and shows no pillar changes', async () => {
-    const base = await input();
-    const data = buildReport({ ...base, audit: { ...base.audit, previousAuditId: null, changes: { overall: null, discovered: null, trusted: null, chosen: null } } });
-    assert.equal(data.cover.change, 'First Audit');
-    assert.ok(data.summary.pillars.every((pillar) => pillar.change === null));
-  });
-
-  test('rivals: you and each rival, highest first, a rival not yet scored last', async () => {
-    const data = buildReport(await input());
+    assert.equal(data.progress[0]?.change, null);
+    assert.equal(data.progress[2]?.change, 'Up 8');
+    assert.ok(data.progress.every((row) => row.words.length === 3 && row.place?.endsWith('of 3')));
     assert.deepEqual(
-      data.rivals?.rows.map((row) => [row.rank, row.name, row.you]),
-      [
-        [1, 'Silverline College', false],
-        [2, 'Eastgate University', true],
-        [3, 'Highfield University', false],
-        [null, 'Newcomer College', false],
-      ],
-    );
-    assert.match(data.rivals?.verdict ?? '', /^You’re ahead of Highfield University\. Next step: catching Silverline College/);
-    // Newest first.
-    assert.deepEqual(data.rivals?.moves[0], { rival: 'Silverline College', kind: 'New page', text: 'Added page 7.', date: '21 Sep 2026' });
-  });
-
-  test('Demand for the city: the top rising trends, questions and ideas, grouped', async () => {
-    const data = buildReport(await input());
-    assert.equal(data.demand?.place, 'Guwahati');
-    assert.deepEqual(
-      data.demand?.rising.map((trend) => trend.change),
-      ['Up 47%', 'Up 38%', 'Up 30%'],
-    );
-    assert.equal(data.demand?.questions[1]?.language, 'Asked in Hindi');
-    assert.equal(data.demand?.pulledOn, '28 Sep 2026');
-  });
-
-  test('the questions say which languages are shown in English: only those they were asked in', () => {
-    assert.equal(questionsLead(['as', 'en', 'hi']), 'What students ask most, grouped. Hindi and Assamese questions are shown in English.');
-    assert.equal(questionsLead(['en', 'hi']), 'What students ask most, grouped. Hindi questions are shown in English.');
-    assert.equal(questionsLead(['en']), 'What students ask most, grouped.');
-    assert.equal(questionsLead([]), 'What students ask most, grouped.');
-  });
-
-  test('by program: every program, in name order, each with the one fix that would help it most', async () => {
-    const data = buildReport(await input());
-    assert.deepEqual(
-      data.programs.map((program) => program.name),
-      ['B.Sc Data Analytics', 'B.Sc Nursing', 'BBA', 'BCA', 'MBA'],
-    );
-    assert.ok(data.programs.every((program) => program.topFix && program.topFixGain?.startsWith('Could add')));
-    assert.equal(data.morePrograms, 0);
-  });
-
-  test('3 things to do: the biggest fix, a rivals lesson on another check, the top idea', async () => {
-    const data = buildReport(await input());
-    assert.deepEqual(
-      data.things.map((thing) => thing.source),
-      ['audit', 'rivals', 'demand'],
-    );
-    assert.equal(data.things[2]?.title, 'Idea 1.');
-  });
-
-  test('sources and dates: every check, one date when they share it, and where Rivals and Demand came from', async () => {
-    const data = buildReport(await input());
-    assert.equal(data.sources.checks.length, 17);
-    assert.equal(data.sources.checkedOn, '15 Sep 2026');
-    assert.ok(data.sources.checks.every((check) => check.links.length > 0));
-    assert.deepEqual(
-      data.sources.notes.map((note) => note.label),
+      data.sources.map((note) => note.label),
       ['Audit', 'Rivals', 'Demand'],
     );
-    assert.match(data.sources.notes[1]?.text ?? '', /last run 1 Sep 2026\. Moves from the weekly check of their public pages, last run 28 Sep 2026\./);
+    assert.match(data.sources[1]?.text ?? '', /Moves from the weekly check of their public pages, last run 28 Sep 2026\./);
+    const client = buildReport(await input({ tier: 'client', leads: LINKS }));
+    assert.deepEqual(
+      client.sources.map((note) => note.label),
+      ['Audit', 'Rivals', 'Demand', 'Leads'],
+    );
   });
 
-  test('no rivals or no Demand yet: those sections say nothing made up', async () => {
-    const data = buildReport(await input({ rivals: [], moves: [], lessons: [], demand: { region: regionsFor({ city: 'Guwahati', state: 'Assam' }).city, rows: [], pulledAt: null } }));
+  test('no rivals or no Demand yet: those parts say nothing made up', async () => {
+    const data = buildReport(await input({ rivals: [], moves: [], lessons: [], line: null, picks: [], demand: { place: 'Guwahati', signals: null } }));
     assert.equal(data.rivals, null);
     assert.equal(data.demand, null);
-    assert.deepEqual(
-      data.sources.notes.map((note) => note.label),
-      ['Audit'],
-    );
-    assert.ok(data.things.every((thing) => thing.source === 'audit'));
+    assert.equal(data.summary.lines.move, 'Pick 3 to 5 rivals in Drishti, and their moves show here.');
+    assert.ok(data.summary.things.every((thing) => thing.source === 'audit'));
   });
 
-  test('Paid only: one quiet line on the last page. Client never gets it', async () => {
+  test('Paid only: one quiet line at the end. Client never gets it', async () => {
     const paid = buildReport(await input());
-    assert.equal(`${paid.contact?.text} ${paid.contact?.email}`, 'Want AdmitLabs to do this for you? hello@admitlabs.in');
+    assert.deepEqual(paid.contact, { ...PAID_CONTACT });
     assert.equal(paid.tierLabel, 'Paid');
-    const client = buildReport(await input({ tier: 'client' }));
+    const client = buildReport(await input({ tier: 'client', leads: LINKS }));
     assert.equal(client.contact, null);
-    assert.equal(reportTexts(client).some((text) => text.includes('admitlabs.in')), false);
+    assert.equal(reportTexts(client).some((text) => text.includes('hello@admitlabs.in')), false);
   });
 
-  test('curly quotes everywhere in the report, whatever the source wrote', async () => {
+  test('curly quotes everywhere, whatever the source wrote; no dashes anywhere', async () => {
     const base = await input();
     const data = buildReport({
       ...base,
-      lessons: [{ text: "Learn from Silverline College's top post", detail: '"A student\x27s first day" reached 48,200 views.', checkKey: null, rivalId: 'silverline', effort: 'medium', month: '2026-09' }],
       moves: [{ rivalId: 'highfield', kind: 'fee_change', description: 'Replaced MBA fee amounts with "Contact us for fees".', detectedAt: base.moves[0]?.detectedAt ?? '' }],
     });
-    assert.equal(data.things[1]?.title, 'Learn from Silverline College’s top post');
-    assert.equal(data.things[1]?.detail, '“A student’s first day” reached 48,200 views.');
     assert.equal(data.rivals?.moves[0]?.text, 'Replaced MBA fee amounts with “Contact us for fees”.');
+    assert.equal(data.summary.lines.move, 'Highfield University: Replaced MBA fee amounts with “Contact us for fees”.');
     for (const tier of ['paid', 'client'] as const) {
-      for (const text of reportTexts(buildReport({ ...base, tier }))) assert.doesNotMatch(text, /["']/, text);
-    }
-  });
-
-  test('no dashes anywhere in the report', async () => {
-    for (const tier of ['paid', 'client'] as const) {
-      for (const text of reportTexts(buildReport(await input({ tier })))) assert.equal(hasDashes(text), false, text);
+      for (const text of reportTexts(buildReport({ ...base, tier, leads: tier === 'client' ? LINKS : null }))) {
+        assert.doesNotMatch(text, /["']/, text);
+        assert.equal(hasDashes(text), false, text);
+      }
     }
   });
 });
@@ -188,18 +207,5 @@ describe('report words', () => {
     assert.equal(curlyQuotes('"Fees" (see "Programs").'), '“Fees” (see “Programs”).');
     assert.equal(curlyQuotes("What's working, last year's batch, 'quoted'"), 'What’s working, last year’s batch, ‘quoted’');
     assert.equal(curlyQuotes('No quotes here.'), 'No quotes here.');
-  });
-
-  test('sources: one link per site, and how many more pages there', () => {
-    assert.deepEqual(
-      compactLinks([
-        'https://site.example/programs/bba',
-        'https://site.example/programs/mba',
-        'https://www.site.example/programs/bca/',
-        'https://maps.example/place/site',
-        'https://site.example/programs/bba',
-      ]),
-      ['maps.example/place/site', 'site.example/programs/bba and 2 more'],
-    );
   });
 });

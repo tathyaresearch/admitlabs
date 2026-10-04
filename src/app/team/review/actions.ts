@@ -1,9 +1,11 @@
 'use server';
 
-// The team's review (spec section 25): a change to a waiting Audit, and Approve and send. Team
-// only: checked here, and again by row level security and inside record_review() and
-// approve_audit(), which also refuse an Audit that is no longer waiting. Every change is kept.
-// Once approved, the month's rival line and lessons are worked out again from the new Audit.
+// The team's review (spec section 25): a change to a waiting Audit or a line of a waiting monthly
+// summary, and Approve and send. Team only: checked here, and again by row level security and
+// inside record_review(), record_summary_edit(), approve_audit() and approve_report(), which also
+// refuse what is no longer waiting. Every change is kept. Once an Audit is approved, the month's
+// rival line and lessons are worked out again from it; once a summary is, its PDF is made again
+// with the lines as fixed and the email goes.
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -13,6 +15,8 @@ import { RESULTS } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { approveReport, fixSummaryLine, ReportJobError } from '@/report/jobs';
+import { SUMMARY_TARGETS, type SummaryTarget } from '@/report/summary';
 import { RivalJobError, writeRivalActions } from '@/rivals/jobs';
 import { RivalReadError } from '@/rivals/read';
 
@@ -86,4 +90,40 @@ export async function approveAuditAction(auditId: string): Promise<ReviewActionR
   revalidatePath('/team', 'layout');
   revalidatePath('/', 'layout');
   redirect('/team/review?approved=1');
+}
+
+export async function fixSummaryLineAction(reportId: string, target: SummaryTarget, value: string, reason: string): Promise<ReviewActionResult> {
+  const viewer = await getViewer();
+  if (!viewer?.teamRole) return { ok: false, error: 'Only the AdmitLabs team reviews summaries.' };
+  if (!UUID.test(reportId) || !SUMMARY_TARGETS.includes(target)) return { ok: false, error: 'That line is not there.' };
+  const line = typeof value === 'string' ? value.trim() : '';
+  if (!line || line.length > 400) return { ok: false, error: 'Write the line, in 400 characters or fewer.' };
+  const why = typeof reason === 'string' && reason.trim() ? reason.trim().slice(0, 500) : null;
+  try {
+    await fixSummaryLine(await createClient(), reportId, target, line, { reason: why });
+  } catch (error) {
+    if (error instanceof ReportJobError) return { ok: false, error: error.message };
+    throw error;
+  }
+  revalidatePath(`/team/review/summary/${reportId}`);
+  revalidatePath('/team/review');
+  return { ok: true, error: null };
+}
+
+export async function approveSummaryAction(reportId: string): Promise<ReviewActionResult> {
+  const viewer = await getViewer();
+  if (!viewer?.teamRole) return { ok: false, error: 'Only the AdmitLabs team approves summaries.' };
+  if (!UUID.test(reportId)) return { ok: false, error: 'That summary is not there.' };
+  // Checked as the team first; the PDF and the emails need the server's key.
+  const { data: visible } = await (await createClient()).from('reports').select('id').eq('id', reportId).maybeSingle();
+  if (!visible) return { ok: false, error: 'That summary is not there.' };
+  try {
+    await approveReport(createAdminClient(), reportId, { by: viewer.userId });
+  } catch (error) {
+    if (error instanceof ReportJobError) return { ok: false, error: error.message };
+    throw error;
+  }
+  revalidatePath('/team', 'layout');
+  revalidatePath('/', 'layout');
+  redirect('/team/review?approved=summary');
 }

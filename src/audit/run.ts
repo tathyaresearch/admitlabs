@@ -19,6 +19,7 @@ import { collect } from '../providers/collect.ts';
 import { getAnalysisProvider } from '../providers/registry.ts';
 import type { InstitutionRef, ProgramRef } from '../providers/types.ts';
 import { factsFromSignals, findingsFromSignals, type CheckSignal } from './facts.ts';
+import { sendAuditReadyEmails } from './ready-jobs.ts';
 import { OWN_AUDIT_KINDS, prepareAudit, type AuditRecord, type AuditTrigger, type PreviousAudit } from './record.ts';
 
 type Db = SupabaseClient<Database>;
@@ -54,6 +55,8 @@ export interface RunAuditOptions {
   /** For an Audit approved straight away by a team user: who, and when. */
   approvedBy?: string | null;
   approvedAt?: Date;
+  /** False keeps Free's Audit ready email from going (the seed's past Audits). It goes otherwise, once the Audit is approved. */
+  emails?: boolean;
   env?: Env;
 }
 
@@ -274,6 +277,16 @@ export async function runAudit(db: Db, options: RunAuditOptions): Promise<RunAud
   if (saved.error) {
     if (saved.error.message.includes('refresh_used')) throw new RefreshUsedError();
     throw new AuditRunError(`Could not save the Audit: ${saved.error.message}`);
+  }
+
+  // Free's Audit ready email, when the Audit is approved as it is saved (sent automatically). With
+  // Review first on, it goes when the team approves it. The Audit stands whether or not it went.
+  if (own && kind === 'free' && review === 'approved' && options.emails !== false) {
+    try {
+      await sendAuditReadyEmails(db, saved.data, { reviewed: Boolean(options.approvedBy), now: asOf, env });
+    } catch (error) {
+      console.error(`The Audit ready email did not go: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   return { auditId: saved.data, kind, overall: evaluation.overall, programs: named.length, signals: signals.length, review, record };

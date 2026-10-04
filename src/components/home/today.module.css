@@ -1,0 +1,164 @@
+/*
+  Home (spec section 13), as the version 2 mock was approved: the one line from the three words,
+  the three words as tiles, the things to do this month, what changed, then the rivals' one line
+  and one demand highlight. The rest comes from the Audit's own styles (places.module.css), so
+  Home and the Audit read the same. No score and no gauge.
+*/
+
+.answer {
+  max-width: 44rem;
+  font: var(--weight-heading) clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem) / 1.3 var(--font-sans);
+  letter-spacing: var(--tracking-section);
+  text-wrap: pretty;
+}
+
+/* Two cards side by side, as tall as each other: a card with bars lets them take the height to spare. */
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--card-gap);
+}
+
+@container (min-width: 52rem) {
+  .pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The things to do ------------------------------------------------------------------------------ */
+
+.things {
+  padding-block: var(--space-1);
+}
+
+.thingSource {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.thingTitle {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+  color: var(--text);
+  text-decoration: none;
+  text-wrap: pretty;
+}
+
+.thingTitle:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.doneWord {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-label);
+  font-weight: var(--weight-semibold);
+}
+
+.markError {
+  font: var(--type-caption);
+  font-weight: var(--weight-semibold);
+}
+
+/* What changed ---------------------------------------------------------------------------------- */
+
+.changeGroup {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.markLine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.notYet {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.quietLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: fit-content;
+  font: var(--type-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.quietLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The cards ------------------------------------------------------------------------------------------ */
+
+.growCard {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The latest alert sits at the foot of the rivals card. */
+.foot {
+  margin-top: auto;
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.headLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.headLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.oneLine {
+  font: var(--type-card);
+  font-size: 1.0625rem;
+  letter-spacing: var(--tracking-section);
+  text-wrap: pretty;
+}
+
+.metaLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.kpiLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}
+
+.kpiValue {
+  font: var(--type-num-kpi);
+  letter-spacing: var(--tracking-num);
+}

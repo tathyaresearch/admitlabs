@@ -1,19 +1,19 @@
-// "3 things to do this month" (spec sections 12 and 13), one list for the report and for Home
-// on Paid and Client. Built the same way every month:
-//   1. The biggest Audit fix.
-//   2. The top Rivals lesson that is not about the same check.
-//   3. The top content idea from Demand.
-// When one is missing (every check is Strong, no rivals yet, no Demand yet), the next fixes,
-// then the next lessons, then the next ideas fill in, never two about the same check. Each one
-// carries what Home shows beside it: the points it could add (a fix, or a lesson about a check
-// the Audit can fix), how big a job it is, its programs, and for an idea its format and how
-// often its question was asked. Pure.
+// "Do these 3 things this month" (spec sections 12, 13 and 24), one list for Home, the monthly
+// summary and the report on Paid and Client:
+//   1. A fix from the Audit (the top of its one ranking).
+//   2. A lesson from rivals that is not about the same check.
+//   3. One of Make these 3 (the month's first pick).
+// When one is missing (every check is Strong, no rivals yet, no picks yet), the next fixes, then
+// the next lessons, then the next picks fill in, never two about the same check. Ordered by
+// impact; a lesson about a check carries that check's impact, an idea has none and goes last.
+// Free keeps "Fix these first": its top 3 fixes. Each thing carries what Home, the summary and
+// the report show beside it, and what Mark as done saves. Pure.
 
-import { pointsToGainText, type ListItem } from '../audit/view.ts';
-import type { IdeaRow } from '../demand/view.ts';
+import type { FixView } from '../audit/places.ts';
+import type { ListItem } from '../audit/view.ts';
+import type { PickedIdea } from '../demand/picks.ts';
 import { checkAction } from '../domain/checks.ts';
-import { formatCount } from '../domain/format.ts';
-import { LANGUAGE_LABELS, RESULTS, type CheckKey, type CheckResult, type Difficulty, type IdeaFormat, type InstitutionType, type Language } from '../domain/types.ts';
+import { IDEA_FORMAT_LABELS, IMPACTS, PLACE_LABELS, RESULTS, type CheckKey, type CheckResult, type Difficulty, type IdeaFormat, type Impact, type InstitutionType, type Place } from '../domain/types.ts';
 
 export type ThingSource = 'audit' | 'rivals' | 'demand';
 
@@ -21,29 +21,30 @@ export const THING_SOURCES: readonly ThingSource[] = ['audit', 'rivals', 'demand
 
 export const THING_SOURCE_LABELS: Readonly<Record<ThingSource, string>> = {
   audit: 'From your Audit',
-  rivals: 'From Rivals',
-  demand: 'From Demand',
+  rivals: 'From your rivals',
+  demand: 'Make these 3',
 };
 
 export interface Thing {
   source: ThingSource;
   title: string;
+  /** A small label beside where it comes from: "Website · Fees", "Learned from Silverline College", "Reel · BBA". */
+  label: string;
+  /** Why, in a sentence or two. */
   detail: string;
-  /** The check it is about, when it is about one. */
+  /** A fix's id, as Mark as done and Let AdmitLabs fix this name it: 'check:fees_shown' or 'finding:<key>'. */
+  fixId: string | null;
   checkKey: CheckKey | null;
-  /** The rival it is about, when there is one. */
+  place: Place | null;
   rivalId: string | null;
-  /** What it could add to the score: an Audit fix, or a lesson about a check the Audit can fix. */
-  points: number | null;
-  /** How big a job it is, when known. */
+  impact: Impact | null;
   effort: Difficulty | null;
-  /** The programs it is about. */
   programs: string[];
-  /** A content idea's format, and the student question behind it: how often it was asked, and in what language. */
   format: IdeaFormat | null;
-  question: { text: string; count: number; language: Language } | null;
-  /** The month a lesson or an idea belongs to ('YYYY-MM'); null for a fix, which the next Audit checks. */
-  month: string | null;
+  /** For an idea: how often its question was asked, said instead of an impact. */
+  weight: string | null;
+  /** What Mark as done keeps for a lesson or an idea: its words and its month. A fix is marked by its id. */
+  mark: { thing: string; month: string } | null;
 }
 
 /** One of the month's Rivals 3 things to do, as saved. */
@@ -58,100 +59,103 @@ export interface RivalLesson {
   month: string | null;
 }
 
+/** One of Make these 3, as picked for a month. */
+export interface MonthPick {
+  /** 'YYYY-MM' */
+  month: string;
+  rank: number;
+  idea: PickedIdea;
+}
+
 export interface ThingsInput {
-  institutionType: InstitutionType;
-  /** Where the Demand ideas come from, for the idea's line: "Guwahati". */
-  place: string;
-  /** Ranked, biggest first (the Audit's what to fix). */
-  fixes: readonly ListItem[];
-  /** Ranked (the month's Rivals 3 things to do). */
+  /** The Audit's fixes, in its one ranking. */
+  fixes: readonly FixView[];
+  /** The month's Rivals 3 things to do, ranked. */
   lessons: readonly RivalLesson[];
-  /** Ranked (the content ideas for the institution's city). */
-  ideas: readonly IdeaRow[];
+  /** The month's Make these 3. */
+  picks: readonly MonthPick[];
+  /** Rival names by id, for "Learned from Silverline College". */
+  rivalNames: ReadonlyMap<string, string>;
 }
 
-/** Programs named in a fix title. More than three reads as "your programs". */
-const MAX_NAMED_PROGRAMS = 3;
-
-function share(part: ListItem['parts'][number]): number {
-  return part.maxPoints > 0 ? part.points / part.maxPoints : 0;
-}
-
-const RESULT_RANK = new Map<CheckResult, number>(RESULTS.map((result, index) => [result, index]));
-
-/** The weakest result among a fix's parts: what its title should fit. */
-function weakest(item: ListItem): CheckResult | undefined {
-  return item.parts.map((part) => part.result).sort((a, b) => (RESULT_RANK.get(b) ?? 0) - (RESULT_RANK.get(a) ?? 0))[0];
-}
-
-function programsOf(item: ListItem): string[] {
-  return [...new Set(item.parts.flatMap((part) => (part.programName ? [part.programName] : [])))];
-}
-
-export function fixThing(item: ListItem, type: InstitutionType): Thing {
-  const programs = programsOf(item);
-  // The advice from the program with the most to gain.
-  const advice = [...item.parts].filter((part) => part.detail?.howToFix).sort((a, b) => share(a) - share(b))[0]?.detail?.howToFix ?? null;
+export function fixThing(fix: FixView): Thing {
   return {
     source: 'audit',
-    title: checkAction(item.key, programs.length > MAX_NAMED_PROGRAMS ? [] : programs, type, weakest(item)),
-    detail: advice ? `${pointsToGainText(item.points)}. ${advice}` : `${pointsToGainText(item.points)}.`,
-    checkKey: item.key,
+    title: fix.title,
+    label: `${PLACE_LABELS[fix.place]} · ${fix.label}`,
+    detail: fix.why ?? '',
+    fixId: fix.id,
+    checkKey: fix.checkKey,
+    place: fix.place,
     rivalId: null,
-    points: item.points,
-    effort: item.difficulty,
-    programs,
+    impact: fix.impact,
+    effort: fix.effort,
+    programs: [...fix.programs],
     format: null,
-    question: null,
-    month: null,
+    weight: null,
+    mark: null,
   };
 }
 
-/** A lesson about a check carries that check's fix from the Audit: the points it could add, and how big it is. */
-export function lessonThing(lesson: RivalLesson, fixes: readonly ListItem[] = []): Thing {
-  const fix = lesson.checkKey ? fixes.find((item) => item.key === lesson.checkKey) : undefined;
+/** A lesson about a check carries that check's fix from the Audit: its impact, how big it is, its programs. */
+export function lessonThing(lesson: RivalLesson, fixes: readonly FixView[], rivalNames: ReadonlyMap<string, string>): Thing {
+  const fix = lesson.checkKey ? fixes.find((item) => item.checkKey === lesson.checkKey) : undefined;
+  const rival = lesson.rivalId ? rivalNames.get(lesson.rivalId) : undefined;
   return {
     source: 'rivals',
     title: lesson.text,
+    label: rival ? `Learned from ${rival}` : 'Learned from your rivals',
     detail: lesson.detail ?? '',
+    fixId: null,
     checkKey: lesson.checkKey,
+    place: fix?.place ?? null,
     rivalId: lesson.rivalId,
-    points: fix?.points ?? null,
-    effort: lesson.effort ?? fix?.difficulty ?? null,
-    programs: fix ? programsOf(fix) : [],
+    impact: fix?.impact ?? null,
+    effort: lesson.effort ?? fix?.effort ?? null,
+    programs: fix ? [...fix.programs] : [],
     format: null,
-    question: null,
-    month: lesson.month,
+    weight: null,
+    mark: lesson.month ? { thing: lesson.text, month: lesson.month } : null,
   };
 }
 
-export function ideaThing(idea: IdeaRow, place: string): Thing {
-  const question = idea.question;
-  let detail = `For students of ${idea.programName}.`;
-  if (question) {
-    const language = question.language === 'en' ? '' : `, in ${LANGUAGE_LABELS[question.language]}`;
-    const times = question.count === null ? '' : ` about ${formatCount(question.count)} ${question.count === 1 ? 'time' : 'times'}`;
-    detail = `Built on a question asked${times} in ${place}${language}: “${question.text}”`;
-  }
+/** One of Make these 3: what to make, for which program, and how often its question was asked. */
+export function pickThing(pick: MonthPick): Thing {
+  const { idea } = pick;
+  const [first, ...rest] = idea.why.split(/(?<=\.)\s+/);
   return {
     source: 'demand',
-    title: idea.text,
-    detail,
+    title: idea.title,
+    label: idea.format ? `${IDEA_FORMAT_LABELS[idea.format]} · ${idea.programName}` : idea.programName,
+    detail: rest.join(' '),
+    fixId: null,
     checkKey: null,
+    place: null,
     rivalId: null,
-    points: null,
+    impact: null,
     effort: idea.effort,
     programs: [idea.programName],
     format: idea.format,
-    question: question ? { text: question.text, count: question.count ?? 0, language: question.language } : null,
-    month: idea.month,
+    weight: first?.trim() || null,
+    mark: { thing: idea.text, month: pick.month },
   };
 }
 
+const IMPACT_ORDER = (impact: Impact | null) => (impact ? IMPACTS.indexOf(impact) : IMPACTS.length);
+
+/** Impact first (High, Medium, Low, then none), then where it comes from, then the order it was chosen. */
+export function byImpact<T extends Pick<Thing, 'impact' | 'source'>>(things: readonly T[]): T[] {
+  return things
+    .map((thing, index) => ({ thing, index }))
+    .sort((a, b) => IMPACT_ORDER(a.thing.impact) - IMPACT_ORDER(b.thing.impact) || THING_SOURCES.indexOf(a.thing.source) - THING_SOURCES.indexOf(b.thing.source) || a.index - b.index)
+    .map(({ thing }) => thing);
+}
+
+/** Paid and Client: a fix, a lesson and one of Make these 3, ordered by impact. */
 export function threeThings(input: ThingsInput): Thing[] {
-  const fixes = input.fixes.map((item) => fixThing(item, input.institutionType));
-  const lessons = input.lessons.filter((lesson) => lesson.text.trim()).map((lesson) => lessonThing(lesson, input.fixes));
-  const ideas = input.ideas.map((idea) => ideaThing(idea, input.place));
+  const fixes = input.fixes.map(fixThing);
+  const lessons = input.lessons.filter((lesson) => lesson.text.trim()).map((lesson) => lessonThing(lesson, input.fixes, input.rivalNames));
+  const picks = [...input.picks].sort((a, b) => a.rank - b.rank).map(pickThing);
 
   const chosen: Thing[] = [];
   const checks = new Set<CheckKey>();
@@ -165,17 +169,25 @@ export function threeThings(input: ThingsInput): Thing[] {
 
   take(fixes[0]);
   lessons.some(take);
-  ideas.some(take);
-  for (const thing of [...fixes, ...lessons, ...ideas]) take(thing);
-
-  const order = (thing: Thing) => THING_SOURCES.indexOf(thing.source);
-  return chosen.map((thing, index) => ({ thing, index })).sort((a, b) => order(a.thing) - order(b.thing) || a.index - b.index).map(({ thing }) => thing);
+  picks.some(take);
+  for (const thing of [...fixes, ...lessons, ...picks]) take(thing);
+  return byImpact(chosen);
 }
 
-/** Home's order: the points each could add, biggest first; the ones without points keep their place after. */
-export function byPoints<T extends { points: number | null }>(things: readonly T[]): T[] {
-  return things
-    .map((thing, index) => ({ thing, index }))
-    .sort((a, b) => (b.thing.points ?? -1) - (a.thing.points ?? -1) || a.index - b.index)
-    .map(({ thing }) => thing);
+/** Free: "Fix these first", its top 3 fixes. */
+export function freeThings(fixes: readonly FixView[], limit = 3): Thing[] {
+  return fixes.slice(0, limit).map(fixThing);
+}
+
+// The team's view of a prospect still reads the Audit check by check (src/audit/view.ts).
+
+/** Programs named in a fix title. More than three reads as "your programs". */
+const MAX_NAMED_PROGRAMS = 3;
+const RESULT_RANK = new Map<CheckResult, number>(RESULTS.map((result, index) => [result, index]));
+
+/** A check's fix, named for its weakest result, as the Audit names it: "Show your full BBA fees". */
+export function checkFixTitle(item: ListItem, type: InstitutionType): string {
+  const programs = [...new Set(item.parts.flatMap((part) => (part.programName ? [part.programName] : [])))];
+  const weakest = item.parts.map((part) => part.result).sort((a, b) => (RESULT_RANK.get(b) ?? 0) - (RESULT_RANK.get(a) ?? 0))[0];
+  return checkAction(item.key, programs.length > MAX_NAMED_PROGRAMS ? [] : programs, type, weakest);
 }

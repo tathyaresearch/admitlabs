@@ -1,5 +1,5 @@
-// Makes monthly reports by hand: the way to trigger the report run for testing (spec sections 11
-// and 12). Uses the same path as the schedule and the seed.
+// Makes monthly summaries and reports by hand: the way to trigger the report run for testing (spec
+// sections 11, 12, 24 and 25). Uses the same path as the schedule and the seed.
 //
 //   npm run report -- --due                                    every report due today
 //   npm run report -- --due --date 2026-10-01                  every report due on that day
@@ -7,16 +7,20 @@
 //   npm run report -- --institution <slug> --month 2026-09     make (or make again) one report
 //   ... --out report.pdf                                       also save a copy of the PDF here
 //   ... --preview --out report.pdf                             render only: nothing stored or recorded
+//   npm run report -- --institution <slug> --month 2026-09 --approve
+//                                                              Approve and send a waiting summary
 //
 // Due means: a claimed institution on Paid or Client on that day, with an Audit for last month
-// and no report for it yet. Reports are made on the 1st for the month just ended.
+// and no report for it yet. Reports are made on the 1st for the month just ended. With Review first
+// on, a new summary and its report wait in the team's To review; sent automatically, the summary
+// goes by email to the local test inbox as it is made.
 
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { istDate } from '../src/domain/dates.ts';
 import { formatDate, formatMonth, plural } from '../src/domain/format.ts';
-import { canMakeYet, makeReport, renderMonth, reportsDue, ReportJobError } from '../src/report/jobs.ts';
+import { approveReport, canMakeYet, makeReport, renderMonth, reportsDue, ReportJobError, type MadeMonth } from '../src/report/jobs.ts';
 import { ReportLoadError } from '../src/report/load.ts';
 import { reportDayOf } from '../src/report/schedule.ts';
 import { institutionBySlug, serviceClient } from './lib/db.ts';
@@ -30,6 +34,7 @@ const { values } = parseArgs({
     date: { type: 'string' },
     out: { type: 'string' },
     preview: { type: 'boolean', default: false },
+    approve: { type: 'boolean', default: false },
     'dry-run': { type: 'boolean', default: false },
   },
 });
@@ -39,6 +44,9 @@ if (values.month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(values.month)) fail(`--month
 const db = serviceClient();
 
 const size = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} KB`;
+
+/** "waits in To review", or "sent to 3 people". */
+const outcome = (made: MadeMonth) => (made.review === 'waiting' ? 'waits in To review' : `approved, the summary sent to ${plural(made.emails?.sent ?? 0, 'person', 'people')}`);
 
 async function main(): Promise<void> {
   if (values.due) {
@@ -51,7 +59,7 @@ async function main(): Promise<void> {
         continue;
       }
       const made = await makeReport(db, institution.id, month, now, { notify: true });
-      console.log(`  ${institution.name}: ${plural(made.pages, 'page', 'pages')}, ${size(made.size)}, saved as ${made.path}`);
+      console.log(`  ${institution.name}: ${plural(made.pages, 'page', 'pages')}, ${size(made.size)}, saved as ${made.path}, ${outcome(made)}`);
     }
     console.log('');
     return;
@@ -60,12 +68,23 @@ async function main(): Promise<void> {
   if (values.institution) {
     if (!values.month) fail('Say which month: --institution <slug> --month 2026-09');
     const institution = await institutionBySlug(db, values.institution);
+    if (values.approve) {
+      const { data: report, error } = await db.from('reports').select('id, review').eq('institution_id', institution.id).eq('month', `${values.month}-01`).maybeSingle();
+      if (error) fail(`Could not read the report: ${error.message}`);
+      if (!report) fail(`${institution.name} has no report for ${formatMonth(values.month)}.`);
+      const { emails } = await approveReport(db, report.id);
+      console.log(`
+${institution.name}, ${formatMonth(values.month)}: approved, the summary sent to ${plural(emails?.sent ?? 0, 'person', 'people')}.
+`);
+      return;
+    }
     // Made on the 1st after the month by default, or on --date; never later than now.
     const planned = values.date ? istDate(values.date, 7) : reportDayOf(values.month);
     const madeAt = planned.getTime() > Date.now() ? new Date() : planned;
     if (!canMakeYet(values.month, madeAt)) fail(`${formatMonth(values.month)} has not started yet.`);
-    const made = values.preview ? await renderMonth(db, institution.id, values.month, madeAt) : await makeReport(db, institution.id, values.month, madeAt, { notify: true });
-    const where = 'path' in made ? `, saved as ${made.path}` : ', not saved (preview)';
+    const saved = values.preview ? null : await makeReport(db, institution.id, values.month, madeAt, { notify: true });
+    const made = saved ?? (await renderMonth(db, institution.id, values.month, madeAt));
+    const where = saved ? `, saved as ${saved.path}, ${outcome(saved)}` : ', not saved (preview)';
     console.log(`\n${institution.name}, ${formatMonth(values.month)}: ${plural(made.pages, 'page', 'pages')}, ${size(made.size)}${where}.`);
     if (values.out) {
       writeFileSync(resolve(values.out), made.pdf);

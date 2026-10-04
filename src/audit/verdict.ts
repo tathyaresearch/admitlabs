@@ -3,7 +3,7 @@
 //
 //   Strongest pillar is Strong:   "Students can find you. Next step: earning their trust."
 //   Strongest is not Strong yet:  "Your strongest area is being found. Next step: ..."
-//   All three close together:     "Room to grow in all three: being found, trusted and chosen."
+//   All three close, one word:    "Room to grow in all three: being found, trusted and chosen."
 //   All three Strong:             "Students can find you, trust you and choose you. Next step: keeping it that way."
 
 import { SCORING_V1 } from '../config/scoring.v1.ts';
@@ -11,7 +11,7 @@ import { scoreLabel } from '../domain/scores.ts';
 import type { ScoringConfig } from '../domain/scoring-config.ts';
 import { PILLARS, type Pillar } from '../domain/types.ts';
 
-/** Pillars this close (in points) count as level, so none is singled out. */
+/** Pillars this close (in points), with the same word, count as level, so none is singled out. */
 export const CLOSE_PILLARS = 10;
 
 const STRENGTH: Readonly<Record<Pillar, string>> = {
@@ -39,7 +39,9 @@ export function auditVerdict(pillars: Readonly<Record<Pillar, number>>, config: 
   // Ties go to the first pillar in spec order: Discovered, Trusted, Chosen.
   const best = PILLARS.reduce((top, pillar) => (pillars[pillar] > pillars[top] ? pillar : top));
   const weakest = PILLARS.reduce((low, pillar) => (pillars[pillar] < pillars[low] ? pillar : low));
-  if (pillars[best] - pillars[weakest] < CLOSE_PILLARS) return 'Room to grow in all three: being found, trusted and chosen.';
+  // Level only when the three words agree too: the line comes from the words.
+  const oneWord = new Set(PILLARS.map((pillar) => scoreLabel(pillars[pillar], config))).size === 1;
+  if (oneWord && pillars[best] - pillars[weakest] < CLOSE_PILLARS) return 'Room to grow in all three: being found, trusted and chosen.';
 
   return `${strong(best) ? STRENGTH[best] : STRONGEST_AREA[best]} ${NEXT_STEP[weakest]}`;
 }

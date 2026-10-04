@@ -10,9 +10,10 @@ import { lastMonthSummary, parsePickedIdea, type PickedIdea } from '@/demand/pic
 import { latestDemandRows, topicHistory, type TopicMonth } from '@/demand/read';
 import { regionsFor, type DemandRegion } from '@/demand/regions';
 import { demandSignals, programSources, thisMonth, type DemandProgram, type DemandSignals } from '@/demand/signals';
-import { demandView, type DemandRow, type IdeaRow } from '@/demand/view';
+import type { DemandRow } from '@/demand/view';
 import { previousMonth } from '@/domain/dates';
 import type { InstitutionViewer } from '@/lib/auth/guards';
+import type { MonthPick } from '@/report/things';
 import { loadPrograms } from '@/lib/audit/load';
 import { createClient } from '@/lib/supabase/server';
 
@@ -107,14 +108,6 @@ export const loadDemandSignals = cache(async (viewer: InstitutionViewer): Promis
   return demandSignals(programSources(covered, { region: regions.city.region, ...city }, { region: regions.state.region, ...state }), names);
 });
 
-/** The content ideas for the institution's city, across its programs, ranked as version 1 ranked them (Home's things until it shows Make these 3). */
-export async function loadCityIdeas(viewer: InstitutionViewer): Promise<IdeaRow[]> {
-  const institution = viewer.membership.institution;
-  const { covered } = await coveredPrograms(institution.id);
-  const { rows } = await latestDemandRows(await createClient(), regionsFor(institution).city, covered);
-  return demandView(rows, { singleProgram: covered.length === 1, skills: institution.type === 'skilling' }).ideas;
-}
-
 /** How Home's rising trend got here, month by month, in the institution's city. Paid and Client (row level security). */
 export async function loadHighlightHistory(viewer: InstitutionViewer, highlight: Highlight | null): Promise<TopicMonth[]> {
   if (!highlight || viewer.tier === 'free') return [];
@@ -147,6 +140,13 @@ async function loadPicks(institutionId: string): Promise<{ months: Map<string, A
   if (marks.error) throw new Error(`Could not load what was marked as made: ${marks.error.message}`);
   const made = new Set((marks.data ?? []).flatMap((mark) => (mark.thing && mark.month ? [ideaMarkKey(mark.month.slice(0, 7), mark.thing)] : [])));
   return { months, made };
+}
+
+/** The latest month's Make these 3 the viewer may read (Free: the first), for Home's things to do. */
+export async function loadLatestPicks(institutionId: string): Promise<MonthPick[]> {
+  const { months } = await loadPicks(institutionId);
+  const [latest] = [...months.keys()].sort().reverse();
+  return latest ? (months.get(latest) ?? []).map((pick) => ({ month: latest, rank: pick.rank, idea: pick.idea })) : [];
 }
 
 export async function loadDemandPage(viewer: InstitutionViewer): Promise<DemandPageData> {

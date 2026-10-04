@@ -4,7 +4,7 @@ import { describe, test } from 'node:test';
 import { LEAD_RULES } from '../config/leads.ts';
 import { hasDashes } from '../domain/copy.ts';
 import { leadAlertEmail } from './alert.ts';
-import { csvCell, leadsCsv } from './csv.ts';
+import { csvCell, csvPhone, leadsCsv } from './csv.ts';
 import { contactKey, indianPhone, parseLead } from './form.ts';
 import { byLink, leadsSummary, monthWords, soFarWords, type LinkCount } from './summary.ts';
 import { consentLine, thanksLine } from './text.ts';
@@ -151,8 +151,14 @@ describe('Download CSV', () => {
     ]);
     assert.ok(csv.startsWith('﻿Sent,Name,Phone,Email,City,Course,Link,Used on\r\n'));
     const [, first, second] = csv.slice(1).split('\r\n');
-    assert.equal(first, "2026-09-28 14:05,Ankita Baruah,'+919876543210,ankita@mail.example,Guwahati,Data Analytics,Reel: Data Analytics placements,Instagram");
-    assert.equal(second, `2026-09-27 10:30,"Das, Bikash",'+919876543211,,,,,`);
+    assert.equal(first, '2026-09-28 14:05,Ankita Baruah,919876543210,ankita@mail.example,Guwahati,Data Analytics,Reel: Data Analytics placements,Instagram');
+    assert.equal(second, `2026-09-27 10:30,"Das, Bikash",919876543211,,,,,`);
+  });
+
+  test('phone numbers as digits only, so no apostrophe shows', () => {
+    assert.equal(csvPhone('+919876543210'), '919876543210');
+    assert.equal(csvPhone('+910000010037'), '910000010037');
+    assert.equal(csvCell(csvPhone('+919876543210')), '919876543210');
   });
 
   test('a cell that starts like a formula can never run as one', () => {

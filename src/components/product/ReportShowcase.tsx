@@ -1,9 +1,8 @@
 // The sample report section: three of its pages drawn from the same data as the PDF (the black
-// cover, the score summary and the 3 things to do), fanned out on the ivory, and the download of
-// the full sample PDF. The drawn pages are decoration for sighted readers; the words beside them
-// say what they show.
+// cover with Visibility, Trust and Chosen, This month in short, and what to fix with the sources),
+// fanned out on the ivory, and the download of the full sample PDF. The drawn pages are decoration
+// for sighted readers; the words beside them say what they show.
 
-import { ScoreGauge } from '@/components/charts/ScoreGauge';
 import { AnchorButton } from '@/components/ui/Button';
 import { EyeName } from '@/components/ui/Eye';
 import type { ReportData } from '@/report/data';
@@ -46,50 +45,44 @@ function Cover({ data }: { data: ReportData }) {
         {data.sample ? <p className={papers.sample}>{data.sample}</p> : null}
         <span className={papers.spacer} />
         <span className={papers.rule} />
-        <p className={papers.over}>Overall score</p>
-        <p className={papers.score}>
-          <span className={`${papers.scoreNumber} num`}>{data.cover.score}</span>
-          <span className={papers.scoreOut}>/ 100</span>
-        </p>
-        <p className={papers.row} style={{ justifyContent: 'flex-start' }}>
-          <span className={`${papers.labelChip} ${papers.labelSolid}`}>{data.cover.label}</span>
-          {data.cover.change ? <span className={papers.change}>{data.cover.change}</span> : null}
-        </p>
+        <p className={papers.over}>Visibility, Trust and Chosen</p>
+        <div className={papers.bars}>
+          {data.words.map((word) => (
+            <p key={word.pillar} className={papers.barHead}>
+              <span>{word.name}</span>
+              <span className={papers.barValue}>{word.word}</span>
+            </p>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
+/** The report's "This month in short" page: the three words, then the 3 things to do. */
 function Summary({ data }: { data: ReportData }) {
   return (
     <div className={`${papers.page} ${papers.summary}`} data-theme="light">
       <div className={papers.sheet}>
-        <p className={papers.over}>Score summary</p>
-        <p className={papers.title}>Your score in {data.monthLabel.split(' ')[0]}</p>
-        <span className={papers.gauge}>
-          <ScoreGauge score={data.summary.overall} />
-        </span>
+        <p className={papers.over}>This month in short</p>
+        <p className={papers.title}>{data.monthName} in short</p>
+        <p className={papers.verdict}>{data.summary.lines.words}</p>
         <div className={papers.bars}>
-          {data.summary.pillars.map((pillar) => (
-            <div key={pillar.pillar} className={papers.bar}>
-              <p className={papers.barHead}>
-                <span>{pillar.name}</span>
-                <span className={`${papers.barValue} num`}>{pillar.score}</span>
-              </p>
-              <span className={papers.track}>
-                <span className={papers.fill} style={{ display: 'block', width: `${pillar.score}%` }} />
-              </span>
-            </div>
+          {data.words.map((word) => (
+            <p key={word.pillar} className={papers.barHead}>
+              <span>{word.name}</span>
+              <span className={papers.barValue}>{word.word}</span>
+            </p>
           ))}
         </div>
-        <p className={papers.over} style={{ marginTop: '2cqi' }}>
-          What’s working
-        </p>
-        <ol className={papers.list}>
-          {data.working.map((item) => (
-            <li key={item.rank} className={papers.item}>
-              <span className={`${papers.itemNumber} num`}>{item.rank}</span>
-              <span>{item.name}</span>
+        <ol className={papers.block}>
+          {data.summary.lines.things.map((title, index) => (
+            <li key={title} className={papers.blockItem}>
+              <span className={`${papers.blockNumber} num`}>{index + 1}</span>
+              <span>
+                <span className={papers.blockSource}>{THING_SOURCE_LABELS[data.summary.things[index]?.source ?? 'audit']}</span>
+                <span className={papers.blockTitle}>{title}</span>
+              </span>
             </li>
           ))}
         </ol>
@@ -100,21 +93,18 @@ function Summary({ data }: { data: ReportData }) {
   );
 }
 
-/** The report's "3 things to do" page. */
+/** What to fix first, and the sources and dates checked. */
 function Things({ data }: { data: ReportData }) {
   return (
     <div className={`${papers.page} ${papers.things}`} data-theme="light">
       <div className={papers.sheet}>
-        <p className={papers.over}>This month</p>
-        <p className={papers.title}>3 things to do this month</p>
-        <ol className={papers.block}>
-          {data.things.map((thing, index) => (
-            <li key={thing.source} className={papers.blockItem}>
-              <span className={`${papers.blockNumber} num`}>{index + 1}</span>
-              <span>
-                <span className={papers.blockSource}>{THING_SOURCE_LABELS[thing.source]}</span>
-                <span className={papers.blockTitle}>{thing.title}</span>
-              </span>
+        <p className={papers.over}>What to fix</p>
+        <p className={papers.title}>What to fix, by impact</p>
+        <ol className={papers.list}>
+          {data.fixes.slice(0, 3).map((fix) => (
+            <li key={fix.rank} className={papers.item}>
+              <span className={`${papers.itemNumber} num`}>{fix.rank}</span>
+              <span>{fix.title}</span>
             </li>
           ))}
         </ol>
@@ -122,7 +112,7 @@ function Things({ data }: { data: ReportData }) {
           Sources and dates checked
         </p>
         <ul className={papers.list}>
-          {data.sources.notes.map((note) => (
+          {data.sources.map((note) => (
             <li key={note.label} className={papers.source}>
               <span className={papers.itemNumber}>{note.label}</span>
               <span>{note.text}</span>

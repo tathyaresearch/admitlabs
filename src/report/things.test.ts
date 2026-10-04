@@ -1,47 +1,70 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
+import type { FixView } from '../audit/places.ts';
 import type { ItemPart, ListItem } from '../audit/view.ts';
-import type { DemandRow, IdeaRow } from '../demand/view.ts';
+import type { PickedIdea } from '../demand/picks.ts';
 import { hasDashes } from '../domain/copy.ts';
-import type { CheckKey, CheckResult } from '../domain/types.ts';
-import { byPoints, threeThings, type RivalLesson, type ThingsInput } from './things.ts';
+import type { CheckKey, CheckResult, Impact, Place } from '../domain/types.ts';
+import { byImpact, checkFixTitle, fixThing, freeThings, pickThing, threeThings, type MonthPick, type RivalLesson, type ThingsInput } from './things.ts';
 
-function part(programName: string | null, result: CheckResult, points: number, maxPoints: number, howToFix = `Fix it for ${programName ?? 'everyone'}.`): ItemPart {
+// "Do these 3 things this month" (spec 13 and 24): one fix from the Audit, one lesson from rivals,
+// one of Make these 3, ordered by impact; Free keeps its top 3 fixes.
+
+function fix(rank: number, checkKey: CheckKey | null, impact: Impact, extra: Partial<FixView> = {}): FixView {
+  const place: Place = extra.place ?? (checkKey === 'review_rating' || checkKey === 'google_profile' ? 'google' : checkKey ? 'website' : 'people');
   return {
-    checkId: `${programName}-${result}`,
-    programId: programName,
-    programName,
-    result,
-    previousResult: null,
-    points,
-    maxPoints,
-    checkedAt: '2026-09-15T04:30:00.000Z',
-    detail: { finding: 'Found.', whyItMatters: 'It matters.', howToFix, fixSteps: [howToFix], difficulty: 'medium', sourceUrl: 'https://site.example/page' },
-  };
-}
-
-function fix(rank: number, key: CheckKey, points: number, parts: ItemPart[]): ListItem {
-  return { rank, key, name: key, pillar: 'chosen', parts, strength: null, difficulty: 'medium', points };
-}
-
-function idea(text: string, question: Partial<DemandRow> | null = { text: 'What is the fee?', count: 72, language: 'en' }): IdeaRow {
-  return {
-    key: text,
-    text,
-    programName: 'BBA',
-    month: '2026-09',
-    format: 'post',
+    id: checkKey ? `check:${checkKey}` : `finding:thread-${rank}`,
+    kind: checkKey ? 'check' : 'finding',
+    rank,
+    title: `Fix ${checkKey ?? 'the thread'}`,
+    place,
+    label: checkKey ? checkKey.replace('_', ' ') : 'Reddit, complaint',
+    checkKey,
+    findingKey: checkKey ? null : `thread-${rank}`,
+    findingKind: checkKey ? null : 'bad',
+    impact,
     effort: 'easy',
-    question: question ? ({ id: 'q', programKey: 'bba', programName: 'BBA', month: '2026-09', kind: 'question', rank: 1, changePct: null, sourceUrl: 'https://quora.example/q', foundAt: '', meta: {}, text: '', count: 0, language: 'en', ...question } as DemandRow) : null,
-    trend: null,
-    sourceUrl: 'https://quora.example/q',
+    programs: [],
+    results: [],
+    found: [],
+    why: 'It matters to a student.',
+    advice: [{ programs: [], steps: ['Do it.'] }],
+    readyFix: null,
+    open: true,
+    ...extra,
   };
 }
 
-const FIXES: ListItem[] = [
-  fix(1, 'fees_shown', 7.4, [part('BBA', 'missing', 0, 20, 'Put the full BBA fee on the BBA page.'), part('MBA', 'okay', 12, 20, 'Add the MBA hostel fee.')]),
-  fix(2, 'review_rating', 3.2, [part(null, 'okay', 10, 15, 'Reply to every review.')]),
-  fix(3, 'youtube', 1.1, [part(null, 'weak', 3, 10, 'Post one video a month.')]),
+function idea(title: string, extra: Partial<PickedIdea> = {}): PickedIdea {
+  return {
+    title,
+    text: `${title} The longer brief.`,
+    why: 'Asked about 96 times in Guwahati this month. Your BBA page does not answer it yet.',
+    hook: 'A hook.',
+    points: ['One point.'],
+    format: 'reel',
+    effort: 'medium',
+    topic: 'placements',
+    programName: 'BBA',
+    programKey: 'bba',
+    region: 'Guwahati',
+    basedOn: 'Which BBA colleges in Guwahati have real placements?',
+    asked: 96,
+    askedOn: 'question',
+    language: 'en',
+    trend: null,
+    trendWord: null,
+    sourceUrl: 'https://quora.example/q',
+    platform: 'quora',
+    foundAt: '2026-09-28T00:30:00.000Z',
+    ...extra,
+  };
+}
+
+const FIXES: FixView[] = [
+  fix(1, 'fees_shown', 'medium', { title: 'Show your full BBA and MBA fees', label: 'Fees', programs: ['BBA', 'MBA'] }),
+  fix(2, 'review_rating', 'medium', { title: 'Reply to every Google review', label: 'Reviews and rating' }),
+  fix(3, null, 'high', { title: 'Reply to the hostel fee thread on Reddit' }),
 ];
 
 const LESSONS: RivalLesson[] = [
@@ -50,38 +73,89 @@ const LESSONS: RivalLesson[] = [
   { text: 'Reply to every Google review', detail: 'Northbank College is ahead of you here.', checkKey: 'review_rating', rivalId: 'northbank', effort: null, month: '2026-09' },
 ];
 
-const IDEAS: IdeaRow[] = [idea('Post one clear BBA fee breakdown in a single image.'), idea('Show last year’s BBA placements.')];
+const PICKS: MonthPick[] = [
+  { month: '2026-09', rank: 1, idea: idea('Last year’s BBA placements, one student per reel') },
+  { month: '2026-09', rank: 2, idea: idea('Your nursing council recognition, with the link', { format: 'page', programName: 'B.Sc Nursing' }) },
+];
 
-const base: ThingsInput = { institutionType: 'college', place: 'Guwahati', fixes: FIXES, lessons: LESSONS, ideas: IDEAS };
+const NAMES = new Map([
+  ['highfield', 'Highfield University'],
+  ['silverline', 'Silverline College'],
+  ['northbank', 'Northbank College'],
+]);
+
+const base: ThingsInput = { fixes: FIXES, lessons: LESSONS, picks: PICKS, rivalNames: NAMES };
 
 describe('3 things to do this month', () => {
-  test('the biggest Audit fix, the top Rivals lesson on another check, and the top content idea', () => {
+  test('the top fix, the top lesson on another check and the first of Make these 3', () => {
     const things = threeThings(base);
     assert.deepEqual(
       things.map((thing) => [thing.source, thing.title]),
       [
         ['audit', 'Show your full BBA and MBA fees'],
         ['rivals', "Learn from Silverline College's top post"],
-        ['demand', 'Post one clear BBA fee breakdown in a single image.'],
+        ['demand', 'Last year’s BBA placements, one student per reel'],
       ],
     );
     // The first lesson was about fees too, so it is skipped rather than said twice.
     assert.equal(things[1]?.rivalId, 'silverline');
   });
 
-  test('the fix says what it could add, with the advice for the program that has the most to gain', () => {
-    const [first] = threeThings(base);
-    assert.equal(first?.detail, 'Could add up to 7 points. Put the full BBA fee on the BBA page.');
-    assert.equal(first?.checkKey, 'fees_shown');
+  test('ordered by impact: High first, an idea (no impact) last', () => {
+    // The thread is the top fix; the lesson about fees carries the fees fix's Medium.
+    const things = threeThings({ ...base, fixes: [FIXES[2] as FixView, ...FIXES.slice(0, 2)] });
+    assert.deepEqual(
+      things.map((thing) => [thing.source, thing.impact]),
+      [
+        ['audit', 'high'],
+        ['rivals', 'medium'],
+        ['demand', null],
+      ],
+    );
+    const order = byImpact([
+      { source: 'demand', impact: null, name: 'idea' },
+      { source: 'audit', impact: 'low', name: 'small fix' },
+      { source: 'rivals', impact: 'high', name: 'lesson' },
+      { source: 'audit', impact: 'high', name: 'big fix' },
+    ] as const);
+    assert.deepEqual(
+      order.map((thing) => thing.name),
+      ['big fix', 'lesson', 'small fix', 'idea'],
+    );
   });
 
-  test('the idea names the question it answers, how often it was asked and where', () => {
-    const things = threeThings({ ...base, ideas: [idea('Answer the fee question.', { text: 'What is the total fee for BBA?', count: 84, language: 'hi' })] });
-    assert.equal(things[2]?.detail, 'Built on a question asked about 84 times in Guwahati, in Hindi: “What is the total fee for BBA?”');
-    assert.equal(threeThings({ ...base, ideas: [idea('Film a class.', null)] })[2]?.detail, 'For students of BBA.');
+  test('each says where it comes from, with its place and check, or the rival, or the format and program', () => {
+    const [fixed, lesson, made] = threeThings(base);
+    assert.equal(fixed?.label, 'Website · Fees');
+    assert.equal(lesson?.label, 'Learned from Silverline College');
+    assert.equal(made?.label, 'Reel · BBA');
   });
 
-  test('with no rivals or no Demand yet, the next fix fills in', () => {
+  test('a lesson about a check carries that check’s fix: its impact, effort and programs', () => {
+    const things = threeThings({ ...base, fixes: [FIXES[1] as FixView, FIXES[0] as FixView], lessons: [LESSONS[0] as RivalLesson], picks: [] });
+    const lesson = things.find((thing) => thing.source === 'rivals');
+    assert.deepEqual(
+      [lesson?.checkKey, lesson?.impact, lesson?.effort, lesson?.programs],
+      ['fees_shown', 'medium', 'easy', ['BBA', 'MBA']],
+    );
+  });
+
+  test('an idea: how often its question was asked in place of an impact, the rest of why as its detail, and what Mark as made keeps', () => {
+    const thing = pickThing(PICKS[0] as MonthPick);
+    assert.equal(thing.weight, 'Asked about 96 times in Guwahati this month.');
+    assert.equal(thing.detail, 'Your BBA page does not answer it yet.');
+    assert.deepEqual(thing.mark, { thing: 'Last year’s BBA placements, one student per reel The longer brief.', month: '2026-09' });
+    assert.equal(thing.impact, null);
+  });
+
+  test('a fix is marked by its id; a lesson by its words and month', () => {
+    const [fixed, lesson] = threeThings(base);
+    assert.equal(fixed?.fixId, 'check:fees_shown');
+    assert.equal(fixed?.mark, null);
+    assert.deepEqual(lesson?.mark, { thing: "Learn from Silverline College's top post", month: '2026-09' });
+  });
+
+  test('with no rivals or no picks yet, the next fix fills in; never two about the same check', () => {
     assert.deepEqual(
       threeThings({ ...base, lessons: [] }).map((thing) => [thing.source, thing.checkKey]),
       [
@@ -90,18 +164,7 @@ describe('3 things to do this month', () => {
         ['demand', null],
       ],
     );
-    assert.deepEqual(
-      threeThings({ ...base, ideas: [] }).map((thing) => [thing.source, thing.title]),
-      [
-        ['audit', 'Show your full BBA and MBA fees'],
-        ['audit', 'Reply to every Google review'],
-        ['rivals', "Learn from Silverline College's top post"],
-      ],
-    );
-  });
-
-  test('never two things about the same check, even when that leaves fewer than three', () => {
-    const things = threeThings({ ...base, fixes: FIXES.slice(0, 1), lessons: [LESSONS[0] as RivalLesson, LESSONS[2] as RivalLesson], ideas: [] });
+    const things = threeThings({ ...base, fixes: FIXES.slice(0, 1), lessons: [LESSONS[0] as RivalLesson, LESSONS[2] as RivalLesson], picks: [] });
     assert.deepEqual(
       things.map((thing) => [thing.source, thing.checkKey]),
       [
@@ -111,83 +174,35 @@ describe('3 things to do this month', () => {
     );
   });
 
-  test('every check Strong: the lessons and ideas carry the list, still in order of where they come from', () => {
-    const things = threeThings({ ...base, fixes: [] });
-    assert.deepEqual(
-      things.map((thing) => thing.source),
-      ['rivals', 'rivals', 'demand'],
-    );
-    assert.equal(things[0]?.title, 'Show your full BBA fees');
-  });
-
   test('nothing to go on yet: an empty list, never made up', () => {
-    assert.deepEqual(threeThings({ ...base, fixes: [], lessons: [], ideas: [] }), []);
+    assert.deepEqual(threeThings({ ...base, fixes: [], lessons: [], picks: [] }), []);
   });
 
-  test('more than three programs read as "your programs", and program checks without names still read well', () => {
-    const many = fix(1, 'google_search', 5, ['BBA', 'BCA', 'MBA', 'B.Com'].map((name) => part(name, 'weak', 5, 25)));
-    assert.equal(threeThings({ ...base, fixes: [many] })[0]?.title, 'Get found when students search for your programs');
-    const three = fix(1, 'program_page', 5, ['BBA', 'BCA', 'MBA'].map((name) => part(name, 'weak', 5, 15)));
-    assert.equal(threeThings({ ...base, fixes: [three] })[0]?.title, 'Give BBA, BCA and MBA each a page of its own');
-  });
-
-  test('each thing carries what Home shows beside it', () => {
-    const [fixed, lesson, made] = threeThings(base);
+  test('Free: its top 3 fixes, in the Audit’s order', () => {
     assert.deepEqual(
-      [fixed?.points, fixed?.effort, fixed?.programs, fixed?.month],
-      [7.4, 'medium', ['BBA', 'MBA'], null],
+      freeThings(FIXES).map((thing) => thing.title),
+      FIXES.map((item) => item.title),
     );
-    // A lesson about a post has no points; its effort comes from the analysis provider.
-    assert.deepEqual(
-      [lesson?.points, lesson?.effort, lesson?.programs, lesson?.month],
-      [null, 'medium', [], '2026-09'],
-    );
-    assert.deepEqual(
-      [made?.points, made?.effort, made?.format, made?.question, made?.programs, made?.month],
-      [null, 'easy', 'post', { text: 'What is the fee?', count: 72, language: 'en' }, ['BBA'], '2026-09'],
-    );
-  });
-
-  test('a lesson about a check carries the points and the effort of that check’s fix', () => {
-    const things = threeThings({ ...base, fixes: [FIXES[1] as ListItem], lessons: [LESSONS[0] as RivalLesson], ideas: [] });
-    const lesson = things.find((thing) => thing.source === 'rivals');
-    assert.deepEqual(
-      [lesson?.checkKey, lesson?.points, lesson?.effort],
-      ['fees_shown', null, null],
-    );
-    const fees = threeThings({ ...base, fixes: [FIXES[1] as ListItem, FIXES[2] as ListItem, FIXES[0] as ListItem], lessons: [LESSONS[0] as RivalLesson], ideas: [] });
-    assert.deepEqual(
-      fees.map((thing) => [thing.source, thing.checkKey, thing.points, thing.effort, thing.programs]),
-      [
-        ['audit', 'review_rating', 3.2, 'medium', []],
-        ['audit', 'youtube', 1.1, 'medium', []],
-        ['rivals', 'fees_shown', 7.4, 'medium', ['BBA', 'MBA']],
-      ],
-    );
-  });
-
-  test('a fix title fits what was found: no reviews yet means getting the first ones', () => {
-    const none = fix(1, 'review_rating', 8.3, [part(null, 'missing', 0, 25, 'Ask your happy students for a review.')]);
-    assert.equal(threeThings({ ...base, fixes: [none], lessons: [], ideas: [] })[0]?.title, 'Get your first Google reviews');
-  });
-
-  test("Home's order: by the points each could add, the ones without points after, in their place", () => {
-    const order = byPoints([
-      { name: 'idea', points: null },
-      { name: 'small fix', points: 1.2 },
-      { name: 'lesson', points: null },
-      { name: 'big fix', points: 7.4 },
-    ]);
-    assert.deepEqual(
-      order.map((thing) => thing.name),
-      ['big fix', 'small fix', 'idea', 'lesson'],
-    );
+    assert.equal(freeThings(FIXES, 2).length, 2);
+    assert.equal(fixThing(FIXES[2] as FixView).label, 'What people say · Reddit, complaint');
   });
 
   test('plain words only: no dashes anywhere', () => {
     for (const thing of threeThings(base)) {
-      assert.equal(hasDashes(thing.title), false, thing.title);
-      assert.equal(hasDashes(thing.detail), false, thing.detail);
+      for (const text of [thing.title, thing.label, thing.detail, thing.weight ?? '']) assert.equal(hasDashes(text), false, text);
     }
+  });
+});
+
+describe('a check’s fix by name, for the team’s view of a prospect', () => {
+  function part(programName: string | null, result: CheckResult): ItemPart {
+    return { checkId: `${programName}-${result}`, programId: programName, programName, result, previousResult: null, points: 0, maxPoints: 20, checkedAt: '2026-09-15T04:30:00.000Z', detail: null };
+  }
+  const item = (key: CheckKey, parts: ItemPart[]): ListItem => ({ rank: 1, key, name: key, pillar: 'chosen', parts, strength: null, difficulty: 'medium', points: 5 });
+
+  test('named for its programs, and "your programs" past three', () => {
+    assert.equal(checkFixTitle(item('fees_shown', [part('BBA', 'missing'), part('MBA', 'okay')]), 'college'), 'Show your full BBA and MBA fees');
+    assert.equal(checkFixTitle(item('google_search', ['BBA', 'BCA', 'MBA', 'B.Com'].map((name) => part(name, 'weak'))), 'college'), 'Get found when students search for your programs');
+    assert.equal(checkFixTitle(item('review_rating', [part(null, 'missing')]), 'college'), 'Get your first Google reviews');
   });
 });

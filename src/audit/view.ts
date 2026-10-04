@@ -467,13 +467,6 @@ export function pointsToGainText(points: number): string {
   return `Could add up to ${rounded} ${rounded === 1 ? 'point' : 'points'}`;
 }
 
-/** "Worth 6 points of your score", for what's working. */
-export function pointsWorthText(points: number): string {
-  if (points < 0.5) return 'Worth less than 1 point of your score';
-  const rounded = Math.round(points);
-  return `Worth ${rounded} ${rounded === 1 ? 'point' : 'points'} of your score`;
-}
-
 // Points on screen are whole numbers: 7.5 shows as 8. The exact value stays in the data and
 // in every score calculation.
 

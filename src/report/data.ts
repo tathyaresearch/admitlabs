@@ -1,70 +1,47 @@
-// What goes into the monthly report (spec section 12), as one plain snapshot: every number and
-// sentence the PDF prints, already worded. Built from what was known at the end of the month.
+// What goes into the monthly report (spec section 12), as one plain snapshot: every word and
+// number the PDF prints, already worded. Built from what was known at the end of the month, in the
+// spec's order:
+//   1. Cover: the institution, the month, Visibility, Trust and Chosen.
+//   2. This month in short: the monthly summary (section 24).
+//   3. What the internet says: each place, what's good and what to fix, with proof.
+//   4. What to fix: the top 5 in detail, the rest as a short ranked list.
+//   5. Rivals: the month's one line, the ranking with the small score, place by place, alerts.
+//   6. Demand: Make these 3, programs rising and falling, what students ask, the best months.
+//   7. Leads (Client): the month's enquiries by link. Counts only.
+//   8. Progress and sources: the score and the three words month by month, the sources and dates.
 // Pure, so every rule here is tested without a database or a PDF.
-//
-// Short enough to read in 5 minutes: what's working is the top 3, what to fix is the top 5 in
-// detail and the rest as a compact ranked list, Rivals shows up to 5 moves of the month, and
-// Demand shows the city's top 3 rising trends, top 5 questions and 5 content ideas.
 
+import { auditPlaces, type FixView, type StoredFinding } from '../audit/places.ts';
+import { progressMonths } from '../audit/progress.ts';
 import { auditVerdict } from '../audit/verdict.ts';
-import {
-  historyByMonth,
-  overviewView,
-  pointsToGainText,
-  pointsWorthText,
-  programView,
-  workingTop,
-  type ChangeSet,
-  type HistoryRow,
-  type ListItem,
-  type ScoreSet,
-  type StoredAudit,
-} from '../audit/view.ts';
-import { regionPlace, type DemandRegion } from '../demand/regions.ts';
-import { changeWords, countWords, LANGUAGE_TAGS, PLATFORM_LABELS, sourcesCaption } from '../demand/text.ts';
-import { demandView, type DemandRow } from '../demand/view.ts';
-import { CHECKS, checkName } from '../domain/checks.ts';
-import { addedByYou, durationText, feesText, type AddedByYou, type InstitutionDetails, type ProgramDetails } from '../domain/details.ts';
+import type { HistoryRow, StoredAudit } from '../audit/view.ts';
+import { changeWords, countWords, filledInNote, LANGUAGE_TAGS, sourcesCaption } from '../demand/text.ts';
+import type { DemandSignals } from '../demand/signals.ts';
+import { addedByYou, type InstitutionDetails, type ProgramDetails } from '../domain/details.ts';
 import { monthKey } from '../domain/dates.ts';
-import { formatDate, formatMonth, formatMonthShort, hostAndPath, joinNames } from '../domain/format.ts';
+import { formatCount, formatDate, formatMonth, formatMonthName, formatMonthShort, hostAndPath, ordinal, plural } from '../domain/format.ts';
 import { scoreLabel, type ScoreLabel } from '../domain/scores.ts';
-import {
-  EFFORT_LABELS,
-  INSTITUTION_TYPE_LABELS,
-  LANGUAGE_LABELS,
-  LANGUAGES,
-  PILLAR_LABELS,
-  PILLARS,
-  TIER_LABELS,
-  type CheckKey,
-  type CheckResult,
-  type InstitutionType,
-  type Language,
-  type Pillar,
-  type RivalMoveKind,
-  type Tier,
-} from '../domain/types.ts';
-import { platformFromUrl, type Platform } from '../graphics/platforms.ts';
-import { ladder } from '../rivals/compare.ts';
+import { EFFORT_LABELS, IDEA_FORMAT_LABELS, INSTITUTION_TYPE_LABELS, PILLARS, TIER_LABELS, type InstitutionType, type Place, type RivalMoveKind, type Tier } from '../domain/types.ts';
+import type { CheckScore, ScoreSet } from '../rivals/compare.ts';
+import { placeLeadText, rivalPlaces, type PlaceSide } from '../rivals/places.ts';
 import { MOVE_KIND_LABELS } from '../rivals/text.ts';
-import { rivalsVerdict } from '../rivals/verdict.ts';
-import { fixThing, threeThings, type RivalLesson, type Thing } from './things.ts';
+import { fixDetailOf, fixRowOf, placesFor, reportWords, type ReportFix, type ReportFixRow, type ReportPlace, type ReportWord } from './places.ts';
+import { buildSummary, type MonthlySummary, type SummaryLeads } from './summary.ts';
+import { threeThings, type MonthPick, type RivalLesson } from './things.ts';
 
 export const REPORT_LIMITS = {
-  working: 3,
   fixesInDetail: 5,
-  historyMonths: 6,
-  moves: 5,
-  rising: 3,
-  questions: 5,
-  ideas: 5,
-  /** Program results shown one by one on a fix; more than this reads "Varies across 5 programs". */
-  partsShown: 4,
-  /** Programs on the by program page; the rest are counted. */
-  programs: 30,
+  /** The short ranked list after the top 5; the rest are counted. */
+  moreFixes: 12,
+  moves: 4,
+  trends: 4,
+  questions: 4,
+  bestMonths: 4,
+  progressMonths: 6,
+  leadLinks: 8,
 } as const;
 
-/** The quiet line on the last page, for Paid only (not Client). */
+/** The quiet line at the end, for Paid only (not Client). */
 export const PAID_CONTACT = { text: 'Want AdmitLabs to do this for you?', email: 'hello@admitlabs.in' } as const;
 
 /** Printed on the cover and every page of the sample report the product page offers. */
@@ -84,8 +61,12 @@ export interface ReportInstitution {
 export interface ReportRival {
   id: string;
   name: string;
-  /** Its latest rival Audit up to the end of the month. */
-  audit: { runAt: string; scores: ScoreSet; changes: ChangeSet } | null;
+  /** From another city than yours: "Nearby city". */
+  nearby: boolean;
+  /** Its latest rival Audit up to the end of the month, with every check and finding. */
+  audit: { runAt: string; scores: ScoreSet; checks: readonly CheckScore[]; findings: readonly StoredFinding[] } | null;
+  /** Its rival Audits up to the end of the month, for your place among them month by month. */
+  history: ReadonlyArray<{ runAt: string; overall: number }>;
 }
 
 export interface ReportMove {
@@ -95,26 +76,45 @@ export interface ReportMove {
   detectedAt: string;
 }
 
+/** A Client's tracking link: enquiries in the month and in the month before. Counts only. */
+export interface ReportLeadLink {
+  name: string;
+  count: number;
+  before: number;
+}
+
 export interface ReportInput {
   institution: ReportInstitution;
   tier: Exclude<Tier, 'free'>;
   /** 'YYYY-MM'. */
   month: string;
   madeAt: Date;
-  /** The latest own Audit up to the end of the month, with every detail. */
+  /** The latest approved own Audit up to the end of the month, with every detail. */
   audit: StoredAudit;
+  /** Its findings: What people say and Other places. */
+  findings: readonly StoredFinding[];
   programNames: ReadonlyMap<string, string>;
-  /** Own Audits up to the end of the month. */
+  /** Approved own Audits up to the end of the month. */
   history: readonly HistoryRow[];
+  /** Your Audit's checks as the rival comparison reads them. */
+  yourChecks: readonly CheckScore[];
   rivals: readonly ReportRival[];
+  /** The month's one line about rivals. */
+  line: string | null;
   /** Moves found during the month. */
   moves: readonly ReportMove[];
   /** The month's Rivals 3 things to do, ranked. */
   lessons: readonly RivalLesson[];
-  /** Rival Audits and the weekly check, for the sources page. */
+  /** When the weekly check last ran on any rival, for the sources. */
   lastRivalCheck: string | null;
-  /** The institution's city: the latest pull of each program up to the month. */
-  demand: { region: DemandRegion; rows: readonly DemandRow[]; pulledAt: string | null };
+  /** The month's Make these 3. */
+  picks: readonly MonthPick[];
+  /** The city's Demand (the state filling in), as the Demand page reads it. Null when no program is covered. */
+  demand: { place: string; signals: DemandSignals | null };
+  /** A Client's tracking links; null for Paid. */
+  leads: readonly ReportLeadLink[] | null;
+  /** The summary as kept with the report, with any line the team fixed in a review. Built here when not given. */
+  summary?: MonthlySummary | null;
   /** The product page's sample report, made from fictional sample data. */
   sample?: boolean;
   /** What the institution added about itself in Settings. Shown as added by them, never scored. */
@@ -123,109 +123,69 @@ export interface ReportInput {
 
 // Output: what the PDF prints ------------------------------------------------------------------
 
-export interface PartResult {
-  program: string | null;
-  result: CheckResult;
+export interface RivalRankRow {
+  name: string;
+  you: boolean;
+  nearby: boolean;
+  place: number | null;
+  overall: number | null;
+  words: ScoreLabel[];
 }
 
-/** A fix as one short row: the rest of the list, or any fix in a compact report. */
-export interface ReportFixRow {
-  rank: number;
-  /** For the check's icon. */
-  key: CheckKey;
-  /** What to do, the same name as on Home and the Audit. */
-  title: string;
-  /** The check it is about, as a small label. */
-  name: string;
-  /** Short enough for one line: "BBA and MBA", or "5 programs". */
-  programs: string | null;
-  gain: string;
-  /** What it could add, exactly, for the bar beside the words. */
-  points: number;
-  difficulty: string | null;
-}
-
-export interface ReportFix {
-  rank: number;
-  key: CheckKey;
-  /** What to do, the same name as on Home and the Audit. */
-  title: string;
-  /** The check it is about, as a small label. */
-  name: string;
-  /** The same fix as one short row. */
-  row: ReportFixRow;
-  results: PartResult[];
-  /** "Varies across 5 programs" when there are too many to list. */
-  resultsNote: string | null;
-  finding: string | null;
-  howToFix: string | null;
-  gain: string;
-  points: number;
-  difficulty: string | null;
-  /** What the institution added that relates to this fix, with advice only where how to fix shows. */
-  added: AddedByYou | null;
+export interface RivalPlaceCell {
+  word: ScoreLabel | null;
+  /** The share of the place's points, 0 to 1, for the bar. */
+  share: number | null;
+  leads: boolean;
+  /** What people say and Other places: what was found, in words. */
+  note: string | null;
 }
 
 export interface ReportData {
   institution: { name: string; place: string; website: string };
   month: string;
   monthLabel: string;
+  /** "September". */
+  monthName: string;
   madeAt: string;
   madeOn: string;
   tier: Exclude<Tier, 'free'>;
   tierLabel: string;
-  cover: { score: number; label: ScoreLabel; change: string | null; verdict: string; checkedOn: string };
-  summary: {
-    overall: number;
-    label: ScoreLabel;
-    change: string | null;
-    pillars: Array<{ pillar: Pillar; name: string; score: number; label: ScoreLabel; change: string | null }>;
-    /** Up to 6 months, oldest first, one score per month. */
-    history: Array<{ month: string; label: string; score: number }>;
-    note: string | null;
-  };
-  working: Array<{ rank: number; key: CheckKey; name: string; programs: string | null; result: CheckResult; worth: string; finding: string | null }>;
+  checkedOn: string;
+  /** The one line from the three words. */
+  answer: string;
+  words: ReportWord[];
+  /** The score, small: on the summary page and in the progress table. */
+  score: { overall: number; change: string | null };
+  summary: MonthlySummary;
+  places: ReportPlace[];
   fixes: ReportFix[];
-  /** The rest of the ranked list. */
   moreFixes: ReportFixRow[];
-  programs: Array<{
-    name: string;
-    score: number;
-    label: ScoreLabel;
-    change: string | null;
-    pillars: Record<Pillar, number>;
-    topFix: string | null;
-    topFixGain: string | null;
-    /** "2 years, ₹2,40,000 a year, 120 seats", added by the institution. */
-    added: string | null;
-  }>;
-  /** Programs left off the by program page (over the limit). */
-  morePrograms: number;
+  /** Past the short list: in Drishti. */
+  moreFixesCount: number;
   rivals: {
-    verdict: string;
-    rows: Array<{ name: string; you: boolean; rank: number | null; overall: number | null; pillars: Record<Pillar, number> | null; change: string | null }>;
+    line: string | null;
+    ranking: RivalRankRow[];
+    places: Array<{ key: Place; name: string; scored: boolean; lead: string; cells: RivalPlaceCell[] }>;
     moves: Array<{ rival: string; kind: string; text: string; date: string }>;
     moreMoves: number;
   } | null;
   demand: {
     place: string;
-    /** `changePct` and `asked` are the numbers behind the words, for the bars. */
-    rising: Array<{ text: string; change: string; changePct: number | null; count: string; program: string }>;
-    questions: Array<{ text: string; count: string; asked: number; program: string; language: string | null }>;
-    /** "What students ask most, grouped. Hindi and Assamese questions are shown in English." Only the languages asked in. */
-    questionsLead: string;
-    ideas: Array<{ text: string; program: string; basedOn: string | null }>;
-    pulledOn: string | null;
     caption: string;
+    pulledOn: string | null;
+    note: string | null;
+    picks: Array<{ title: string; meta: string; weight: string | null; effort: string | null }>;
+    /** `changePct` is the number behind the word, for the bar. */
+    trends: Array<{ text: string; program: string; kind: 'rising' | 'falling'; word: string | null; change: string | null; changePct: number | null; searches: string | null }>;
+    /** `asked` is the number behind the words, for the bar. */
+    questions: Array<{ text: string; program: string; count: string; asked: number; language: string | null }>;
+    bestMonths: Array<{ program: string; text: string }>;
   } | null;
-  things: Thing[];
-  sources: {
-    /** The day every check was checked, when they share one. */
-    checkedOn: string | null;
-    /** `platform`: where the first link points, for its mark. */
-    checks: Array<{ key: CheckKey; name: string; pillar: string; checkedOn: string; links: string[]; platform: Platform | null }>;
-    notes: Array<{ label: string; text: string }>;
-  };
+  leads: { line: string; total: number; links: ReportLeadLink[]; moreLinks: number } | null;
+  progress: Array<{ month: string; label: string; score: number; words: ScoreLabel[]; change: string | null; place: string | null }>;
+  /** Where everything was found, and when: each place's items carry their own source and date. */
+  sources: Array<{ label: string; text: string }>;
   /** Paid only: "Want AdmitLabs to do this for you? hello@admitlabs.in". */
   contact: { text: string; email: string } | null;
   /** The sample report only: SAMPLE_REPORT_NOTE, on the cover and every page. */
@@ -257,220 +217,190 @@ export function changeSince(change: number | null, since: string): string | null
   return short === 'No change' ? `No change since ${since}` : `${short} since ${since}`;
 }
 
-/** "BBA, MBA and B.Com" for the programs of a program check, or null for an institution check. */
-export function programsOf(item: ListItem): string | null {
-  const names = [...new Set(item.parts.flatMap((part) => (part.programName ? [part.programName] : [])))];
-  return names.length ? joinNames(names) : null;
-}
-
-/** Short enough for one line: "BBA and MBA", or "5 programs". */
-function shortPrograms(item: ListItem): string | null {
-  const names = programsOf(item);
-  const count = new Set(item.parts.flatMap((part) => (part.programName ? [part.programName] : []))).size;
-  return count > 1 && (count > 2 || (names?.length ?? 0) > 28) ? `${count} programs` : names;
-}
-
-function share(part: ListItem['parts'][number]): number {
-  return part.maxPoints > 0 ? part.points / part.maxPoints : 0;
-}
-
-/** One link per site, and how many more pages there: "site.example/programs/bba and 4 more". */
-export function compactLinks(urls: readonly string[]): string[] {
-  const byHost = new Map<string, string[]>();
-  for (const url of [...new Set(urls)].sort()) {
-    const shown = hostAndPath(url);
-    const slash = shown.indexOf('/');
-    const host = slash === -1 ? shown : shown.slice(0, slash);
-    const path = slash === -1 ? '' : shown.slice(slash);
-    const paths = byHost.get(host) ?? [];
-    if (!paths.includes(path)) paths.push(path);
-    byHost.set(host, paths);
-  }
-  return [...byHost.entries()].map(([host, paths]) => {
-    const [first = '', ...rest] = paths;
-    return rest.length ? `${host}${first} and ${rest.length} more` : `${host}${first}`;
-  });
+/** The month's enquiries, for the summary line. */
+export function leadsFacts(links: readonly ReportLeadLink[]): SummaryLeads {
+  const count = links.reduce((sum, link) => sum + link.count, 0);
+  const before = links.reduce((sum, link) => sum + link.before, 0);
+  const [top] = [...links].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  return { count, before, top: top && top.count > 0 ? { name: top.name, count: top.count } : null };
 }
 
 // The build ---------------------------------------------------------------------------------------
 
-function fixRow(item: ListItem, type: InstitutionType): ReportFixRow {
+/** What the institution added that relates to a check's fix: its own details, or its first program's. */
+function addedFor(fix: FixView, input: ReportInput): ReturnType<typeof addedByYou> {
+  const added = input.added;
+  if (!added || !fix.checkKey) return null;
+  const programIds = new Map([...input.programNames.entries()].map(([id, name]) => [name, id]));
+  const programName = fix.results.find((result) => result.program)?.program ?? null;
+  const programId = programName ? programIds.get(programName) : undefined;
+  return addedByYou(fix.checkKey, {
+    institution: added.institution,
+    program: programId ? (added.programs.get(programId) ?? null) : null,
+    programName,
+    institutionType: input.institution.type,
+  });
+}
+
+function rivalsPart(input: ReportInput): ReportData['rivals'] {
+  if (input.rivals.length === 0) return null;
+  const { institution, audit } = input;
+  const sides: PlaceSide[] = [
+    { id: institution.id, name: institution.name, you: true, nearby: false, scores: audit.scores, checks: input.yourChecks, findings: input.findings },
+    ...input.rivals.map(
+      (rival): PlaceSide => ({
+        id: rival.id,
+        name: rival.name,
+        you: false,
+        nearby: rival.nearby,
+        scores: rival.audit?.scores ?? null,
+        checks: rival.audit?.checks ?? [],
+        findings: rival.audit?.findings ?? [],
+      }),
+    ),
+  ];
+  const view = rivalPlaces(sides);
+  const names = new Map(input.rivals.map((rival) => [rival.id, rival.name]));
+  const moves = [...input.moves].sort((a, b) => b.detectedAt.localeCompare(a.detectedAt));
   return {
-    rank: item.rank,
-    key: item.key,
-    title: fixThing(item, type).title,
-    name: item.name,
-    programs: shortPrograms(item),
-    gain: pointsToGainText(item.points).replace('Could add up to', 'Up to').replace('Could add less than', 'Less than'),
-    points: item.points,
-    difficulty: item.difficulty ? `Effort ${EFFORT_LABELS[item.difficulty]}` : null,
+    line: input.line,
+    ranking: view.ranking.map((row) => ({ name: row.name, you: row.you, nearby: row.nearby, place: row.place, overall: row.overall, words: row.words.map((word) => word.word) })),
+    places: view.places.map((place) => ({
+      key: place.key,
+      name: place.name,
+      scored: place.scored,
+      lead: placeLeadText(place, sides),
+      cells: view.ranking.map((row) => {
+        const cell = place.cells[row.id];
+        return { word: cell?.word ?? null, share: cell?.share ?? null, leads: cell?.leads ?? false, note: cell?.note ?? null };
+      }),
+    })),
+    moves: moves.slice(0, REPORT_LIMITS.moves).map((move) => ({ rival: names.get(move.rivalId) ?? 'A rival', kind: MOVE_KIND_LABELS[move.kind], text: move.description, date: formatDate(move.detectedAt) })),
+    moreMoves: Math.max(0, moves.length - REPORT_LIMITS.moves),
   };
 }
 
-/** One of what's working, as the PDF prints it. */
-export function workingRow(item: ListItem): ReportData['working'][number] {
+function demandPart(input: ReportInput): ReportData['demand'] {
+  const signals = input.demand.signals;
+  if (!signals?.month) return null;
+  const questions = signals.asks
+    .flatMap((program) => [...program.topics.flatMap((topic) => topic.questions), ...program.other].map((question) => ({ question, program: program.programName })))
+    .sort((a, b) => (b.question.count ?? -1) - (a.question.count ?? -1) || a.question.text.localeCompare(b.question.text));
+  // A question asked about two programs shows once, under the program it was asked about most.
+  const unique = questions.filter(({ question }, index) => questions.findIndex((other) => other.question.text === question.text) === index);
+  const covered = signals.sources.map((source) => source.program.name);
+  const filled = signals.filledIn;
+  const state = signals.sources.find((source) => source.scope === 'state')?.region ?? null;
   return {
-    rank: item.rank,
-    key: item.key,
-    name: item.name,
-    programs: programsOf(item),
-    result: item.strength ?? 'okay',
-    worth: pointsWorthText(item.points),
-    finding: item.parts.find((part) => part.detail)?.detail?.finding ?? null,
+    place: input.demand.place,
+    caption: signals.platforms.length ? sourcesCaption(signals.platforms, signals.languages) : 'From public sources',
+    pulledOn: signals.pulledAt ? formatDate(signals.pulledAt) : null,
+    note: filled.length && state ? filledInNote(input.demand.place, state, filled, filled.length === covered.length) : null,
+    picks: [...input.picks]
+      .sort((a, b) => a.rank - b.rank)
+      .map((pick) => ({
+        title: pick.idea.title,
+        meta: [pick.idea.format ? IDEA_FORMAT_LABELS[pick.idea.format] : null, pick.idea.programName].filter(Boolean).join(' · '),
+        weight: pick.idea.why.split(/(?<=\.)\s+/)[0]?.trim() || null,
+        effort: pick.idea.effort ? `Effort ${EFFORT_LABELS[pick.idea.effort]}` : null,
+      })),
+    trends: signals.trends.slice(0, REPORT_LIMITS.trends).map((trend) => ({
+      text: trend.text,
+      program: trend.programName,
+      kind: trend.kind,
+      word: trend.word,
+      change: trend.changePct === null ? null : changeWords(trend.changePct),
+      changePct: trend.changePct,
+      searches: trend.searches === null ? null : `About ${formatCount(trend.searches)} searches a month`,
+    })),
+    questions: unique.slice(0, REPORT_LIMITS.questions).map(({ question, program }) => ({
+      text: question.text,
+      program,
+      count: countWords('question', question.count),
+      asked: question.count ?? 0,
+      language: LANGUAGE_TAGS[question.language],
+    })),
+    bestMonths: signals.bestMonths.slice(0, REPORT_LIMITS.bestMonths).map((row) => ({ program: row.programName, text: row.text })),
   };
 }
 
-/** Each program in name order, with its score and the one fix that would help it most. */
-/** A program's basics as the institution added them, in one line. */
-function programAdded(details: ProgramDetails | undefined): string | null {
-  if (!details) return null;
-  const parts = [durationText(details), feesText(details), details.seats !== null ? `${details.seats} seats` : null].filter((part): part is string => Boolean(part));
-  return parts.length ? parts.join(', ') : null;
+function progressPart(input: ReportInput): ReportData['progress'] {
+  const months = progressMonths({
+    history: input.history.filter((row) => monthKey(new Date(row.runAt)) <= input.month),
+    monthOf: (runAt) => monthKey(new Date(runAt)),
+    checks: new Map(),
+    names: input.programNames,
+    type: input.institution.type,
+    rivals: input.rivals.length ? input.rivals.map((rival) => rival.history) : null,
+  });
+  return months.slice(-REPORT_LIMITS.progressMonths).map((row) => ({
+    month: row.month,
+    label: formatMonthShort(row.month),
+    score: row.scores.overall,
+    words: PILLARS.map((pillar) => scoreLabel(row.scores[pillar])),
+    change: shortChange(row.change),
+    place: row.place ? `${ordinal(row.place.rank)} of ${row.place.of}` : null,
+  }));
 }
 
-export function programRows(
-  audit: StoredAudit,
-  options: { institutionType: InstitutionType; programNames: ReadonlyMap<string, string> },
-  added?: ReportInput['added'],
-): ReportData['programs'] {
-  return [...audit.programs]
-    .map((program) => ({ program, name: options.programNames.get(program.programId) ?? 'Program' }))
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, REPORT_LIMITS.programs)
-    .map(({ program, name }) => {
-      const top = programView(audit, program.programId, options)?.fixes[0];
-      return {
-        name,
-        score: program.scores.overall,
-        label: scoreLabel(program.scores.overall),
-        change: shortChange(program.changes.overall),
-        pillars: { discovered: program.scores.discovered, trusted: program.scores.trusted, chosen: program.scores.chosen },
-        topFix: top ? checkName(top.key, options.institutionType) : null,
-        topFixGain: top ? pointsToGainText(top.points) : null,
-        added: programAdded(added?.programs.get(program.programId)),
-      };
-    });
-}
-
-/** What was added that relates to a fix's main part, if anything. */
-type AddedFor = (item: ListItem, part: ListItem['parts'][number]) => AddedByYou | null;
-
-export function fixOf(item: ListItem, type: InstitutionType, addedFor?: AddedFor): ReportFix {
-  const most = [...item.parts].sort((a, b) => share(a) - share(b))[0];
-  const tooMany = item.parts.length > REPORT_LIMITS.partsShown;
-  return {
-    rank: item.rank,
-    key: item.key,
-    title: fixThing(item, type).title,
-    name: item.name,
-    row: fixRow(item, type),
-    results: tooMany ? [] : item.parts.map((part) => ({ program: part.programName, result: part.result })),
-    resultsNote: tooMany ? `Varies across ${item.parts.length} programs` : null,
-    finding: most?.detail?.finding ?? null,
-    howToFix: most?.detail?.howToFix ?? null,
-    gain: pointsToGainText(item.points),
-    points: item.points,
-    difficulty: item.difficulty ? `Effort ${EFFORT_LABELS[item.difficulty]}` : null,
-    added: addedFor && most ? addedFor(item, most) : null,
-  };
+function sourcesPart(input: ReportInput, demand: ReportData['demand']): ReportData['sources'] {
+  const { audit } = input;
+  // One date when every check shares it.
+  const days = new Set(audit.checks.map((check) => formatDate(check.checkedAt)));
+  const sameDay = days.size === 1 ? ([...days][0] as string) : null;
+  const findings = input.findings.filter((finding) => !finding.removed);
+  const notes: Array<{ label: string; text: string }> = [
+    {
+      label: 'Audit',
+      text: [
+        `Your Audit of ${formatDate(audit.runAt)}, from public pages only: ${plural(audit.checks.length, 'result', 'results')} and ${plural(findings.length, 'finding', 'findings')}, each with its link and date in What the internet says.`,
+        sameDay ? `Every check was checked on ${sameDay}.` : null,
+      ]
+        .filter(Boolean)
+        .join(' '),
+    },
+  ];
+  if (input.rivals.length) {
+    const lastAudit = input.rivals.reduce<string | null>((latest, rival) => (rival.audit && (!latest || rival.audit.runAt > latest) ? rival.audit.runAt : latest), null);
+    const lines = [lastAudit ? `Each rival’s own Audit, last run ${formatDate(lastAudit)}.` : 'Rival scores arrive after their first Audit.'];
+    if (input.lastRivalCheck) lines.push(`Moves from the weekly check of their public pages, last run ${formatDate(input.lastRivalCheck)}.`);
+    notes.push({ label: 'Rivals', text: lines.join(' ') });
+  }
+  if (demand) notes.push({ label: 'Demand', text: `${demand.place}${demand.pulledOn ? `, updated ${demand.pulledOn}` : ''}. ${demand.caption}. Grouped only, never one student.` });
+  if (input.leads) notes.push({ label: 'Leads', text: 'Enquiries through your tracking links, counted by link. Never a student’s details.' });
+  return notes;
 }
 
 export function buildReport(input: ReportInput): ReportData {
   const { institution, audit, month } = input;
-  const options = { institutionType: institution.type, programNames: input.programNames };
-  const view = overviewView(audit, options);
+  const previous = [...input.history].reverse().find((row) => row.runAt < audit.runAt) ?? null;
+  const view = auditPlaces(audit, input.findings, {
+    institutionType: institution.type,
+    city: institution.city,
+    programNames: input.programNames,
+    previousRunAt: previous?.runAt ?? null,
+  });
+  const firstAudit = audit.previousAuditId === null && previous === null;
+  const rivalNames = new Map(input.rivals.map((rival) => [rival.id, rival.name]));
+  const things = threeThings({ fixes: view.fixes, lessons: input.lessons, picks: input.picks, rivalNames });
+  const [latestMove] = [...input.moves].sort((a, b) => b.detectedAt.localeCompare(a.detectedAt));
+  const summary =
+    input.summary ??
+    buildSummary({
+      month,
+      words: view.words,
+      firstAudit,
+      previousRunAt: previous?.runAt ?? null,
+      things,
+      move: latestMove ? { rival: rivalNames.get(latestMove.rivalId) ?? 'A rival', description: latestMove.description, detectedAt: latestMove.detectedAt } : null,
+      hasRivals: input.rivals.length > 0,
+      leads: input.leads ? leadsFacts(input.leads) : null,
+    });
 
-  // Change since the Audit before this one, dated so it is never vague.
-  const previous = audit.previousAuditId ? input.history.find((row) => row.id === audit.previousAuditId) : undefined;
   const since = previous ? sinceWhen(previous.runAt, month) : null;
-  const overallChange = view.firstAudit ? 'First Audit' : view.programsChanged || !since ? null : changeSince(view.changes.overall, since);
-  const quietPillars = view.firstAudit || view.programsChanged;
-
-  const history = historyByMonth(input.history, (runAt) => monthKey(new Date(runAt)))
-    .filter((point) => point.month <= month)
-    .slice(-REPORT_LIMITS.historyMonths)
-    .map((point) => ({ month: point.month, label: formatMonthShort(point.month), score: point.score }));
-
   const fixes = view.fixes;
-  const added = input.added;
-  const addedFor: AddedFor | undefined = added
-    ? (item, part) =>
-        addedByYou(item.key, {
-          institution: added.institution,
-          program: part.programId ? (added.programs.get(part.programId) ?? null) : null,
-          programName: part.programName,
-          institutionType: institution.type,
-        })
-    : undefined;
-  const place = regionPlace(input.demand.region);
-  const demand = demandView(input.demand.rows, {
-    singleProgram: new Set(input.demand.rows.map((row) => row.programKey)).size <= 1,
-    skills: institution.type === 'skilling',
-  });
-
-  // Rivals: you and each rival, highest overall first.
-  const scoredRivals = input.rivals.flatMap((rival) => (rival.audit ? [{ name: rival.name, scores: rival.audit.scores }] : []));
-  const byRival = new Map(input.rivals.map((rival) => [rival.id, rival]));
-  const rows = input.rivals.length
-    ? ladder(
-        { id: institution.id, name: institution.name, overall: audit.scores.overall, change: view.firstAudit || view.programsChanged ? null : audit.changes.overall },
-        input.rivals.map((rival) => ({ id: rival.id, name: rival.name, overall: rival.audit?.scores.overall ?? null, change: rival.audit?.changes.overall ?? null })),
-      ).map((row) => {
-        const scores = row.you ? audit.scores : (byRival.get(row.id)?.audit?.scores ?? null);
-        return {
-          name: row.name,
-          you: row.you,
-          rank: row.rank,
-          overall: row.overall,
-          pillars: scores ? { discovered: scores.discovered, trusted: scores.trusted, chosen: scores.chosen } : null,
-          change: shortChange(row.change),
-        };
-      })
-    : [];
-  const moves = [...input.moves].sort((a, b) => b.detectedAt.localeCompare(a.detectedAt));
-
-  const lastRivalAudit = input.rivals.reduce<string | null>((latest, rival) => (rival.audit && (!latest || rival.audit.runAt > latest) ? rival.audit.runAt : latest), null);
-  const platforms = demand.platforms.map((platform) => PLATFORM_LABELS[platform] ?? platform);
-  // Sources: each check, where it was found and when. One date when every check shares it.
-  const checkSources = CHECKS.flatMap((check) => {
-    const parts = audit.checks.filter((stored) => stored.key === check.key);
-    if (!parts.length) return [];
-    const checkedAt = parts.map((part) => part.checkedAt).sort().pop() as string;
-    const urls = parts.flatMap((part) => (part.detail?.sourceUrl ? [part.detail.sourceUrl] : []));
-    return [
-      {
-        key: check.key,
-        name: checkName(check.key, institution.type),
-        pillar: PILLAR_LABELS[check.pillar],
-        checkedOn: formatDate(checkedAt),
-        links: compactLinks(urls),
-        platform: urls.length ? platformFromUrl([...urls].sort()[0] as string) : null,
-      },
-    ];
-  });
-  const days = new Set(checkSources.map((check) => check.checkedOn));
-  const sameDay = days.size === 1 ? ([...days][0] as string) : null;
-  const notes: Array<{ label: string; text: string }> = [
-    {
-      label: 'Audit',
-      text: sameDay
-        ? `Your Audit of ${formatDate(audit.runAt)}, from public pages only. Every check below was checked on ${sameDay}.`
-        : `Your Audit of ${formatDate(audit.runAt)}, from public pages only.`,
-    },
-  ];
-  if (input.rivals.length) {
-    const checks = [lastRivalAudit ? `Each rival's own Audit, last run ${formatDate(lastRivalAudit)}.` : 'Rival scores arrive after their first Audit.'];
-    if (input.lastRivalCheck) checks.push(`Moves from the weekly check of their public pages, last run ${formatDate(input.lastRivalCheck)}.`);
-    notes.push({ label: 'Rivals', text: checks.join(' ') });
-  }
-  if (demand.month) {
-    const pulled = input.demand.pulledAt ? `, updated ${formatDate(input.demand.pulledAt)}` : '';
-    const from = platforms.length ? `, from ${joinNames(platforms)}` : '';
-    // English first, then Hindi and Assamese.
-    const spoken = LANGUAGES.filter((language) => demand.languages.includes(language));
-    const languages = spoken.length ? `, in ${joinNames(spoken.map((language) => LANGUAGE_LABELS[language]))}` : '';
-    notes.push({ label: 'Demand', text: `${place}${pulled}${from}${languages}.` });
-  }
+  const demand = demandPart(input);
+  const leadLinks = input.leads ? [...input.leads].filter((link) => link.count > 0 || link.before > 0).sort((a, b) => b.count - a.count || b.before - a.before || a.name.localeCompare(b.name)) : null;
 
   return typeset({
     institution: {
@@ -480,78 +410,35 @@ export function buildReport(input: ReportInput): ReportData {
     },
     month,
     monthLabel: formatMonth(month),
+    monthName: formatMonthName(month),
     madeAt: input.madeAt.toISOString(),
     madeOn: formatDate(input.madeAt),
     tier: input.tier,
     tierLabel: TIER_LABELS[input.tier],
-    cover: { score: audit.scores.overall, label: view.label, change: overallChange, verdict: auditVerdict(audit.scores), checkedOn: `Checked ${formatDate(audit.runAt)}` },
-    summary: {
-      overall: audit.scores.overall,
-      label: view.label,
-      change: overallChange,
-      pillars: PILLARS.map((pillar) => ({
-        pillar,
-        name: PILLAR_LABELS[pillar],
-        score: audit.scores[pillar],
-        label: scoreLabel(audit.scores[pillar]),
-        change: quietPillars ? null : shortChange(audit.changes[pillar]),
-      })),
-      history,
-      note: view.programsChanged ? 'Your programs changed since the last Audit, so each program shows its own change.' : null,
-    },
-    working: workingTop(view, REPORT_LIMITS.working).map(workingRow),
-    fixes: fixes.slice(0, REPORT_LIMITS.fixesInDetail).map((item) => fixOf(item, institution.type, addedFor)),
-    moreFixes: fixes.slice(REPORT_LIMITS.fixesInDetail).map((item) => fixRow(item, institution.type)),
-    programs: programRows(audit, options, input.added),
-    morePrograms: Math.max(0, audit.programs.length - REPORT_LIMITS.programs),
-    rivals: input.rivals.length
+    checkedOn: `Checked ${formatDate(audit.runAt)}`,
+    answer: auditVerdict(audit.scores),
+    words: reportWords(view.words),
+    score: { overall: audit.scores.overall, change: firstAudit ? 'First Audit' : since ? changeSince(audit.changes.overall, since) : null },
+    summary,
+    places: placesFor(view),
+    fixes: fixes.slice(0, REPORT_LIMITS.fixesInDetail).map((fix, index) => fixDetailOf(fix, index + 1, addedFor(fix, input))),
+    moreFixes: fixes.slice(REPORT_LIMITS.fixesInDetail, REPORT_LIMITS.fixesInDetail + REPORT_LIMITS.moreFixes).map((fix, index) => fixRowOf(fix, REPORT_LIMITS.fixesInDetail + index + 1)),
+    moreFixesCount: Math.max(0, fixes.length - REPORT_LIMITS.fixesInDetail - REPORT_LIMITS.moreFixes),
+    rivals: rivalsPart(input),
+    demand,
+    leads: leadLinks
       ? {
-          verdict: rivalsVerdict(audit.scores, scoredRivals),
-          rows,
-          moves: moves.slice(0, REPORT_LIMITS.moves).map((move) => ({
-            rival: byRival.get(move.rivalId)?.name ?? 'A rival',
-            kind: MOVE_KIND_LABELS[move.kind],
-            text: move.description,
-            date: formatDate(move.detectedAt),
-          })),
-          moreMoves: Math.max(0, moves.length - REPORT_LIMITS.moves),
+          line: summary.lines.enquiries ?? '',
+          total: leadLinks.reduce((sum, link) => sum + link.count, 0),
+          links: leadLinks.slice(0, REPORT_LIMITS.leadLinks),
+          moreLinks: Math.max(0, leadLinks.length - REPORT_LIMITS.leadLinks),
         }
       : null,
-    demand: demand.month
-      ? {
-          place,
-          rising: demand.rising.slice(0, REPORT_LIMITS.rising).map((row) => ({
-            text: row.text,
-            change: changeWords(row.changePct),
-            changePct: row.changePct,
-            count: countWords('rising', row.count),
-            program: row.programName,
-          })),
-          questions: demand.questions.slice(0, REPORT_LIMITS.questions).map((row) => ({
-            text: row.text,
-            count: countWords('question', row.count),
-            asked: row.count ?? 0,
-            program: row.programName,
-            language: LANGUAGE_TAGS[row.language],
-          })),
-          questionsLead: questionsLead(demand.languages),
-          ideas: demand.ideas.slice(0, REPORT_LIMITS.ideas).map((idea) => ({ text: idea.text, program: idea.programName, basedOn: idea.question?.text ?? null })),
-          pulledOn: input.demand.pulledAt ? formatDate(input.demand.pulledAt) : null,
-          caption: sourcesCaption(demand.platforms, demand.languages),
-        }
-      : null,
-    things: threeThings({ institutionType: institution.type, place, fixes, lessons: input.lessons, ideas: demand.ideas }),
-    sources: { checkedOn: sameDay, checks: checkSources, notes },
+    progress: progressPart(input),
+    sources: sourcesPart(input, demand),
     contact: input.tier === 'paid' ? { ...PAID_CONTACT } : null,
     sample: input.sample ? SAMPLE_REPORT_NOTE : null,
   });
-}
-
-/** What the questions list says first: grouped, and which languages are shown in English, if any. */
-export function questionsLead(languages: readonly Language[]): string {
-  // In the languages' own order (Hindi before Assamese), whatever order they come in.
-  const others = LANGUAGES.filter((language) => language !== 'en' && languages.includes(language)).map((language) => LANGUAGE_LABELS[language]);
-  return others.length ? `What students ask most, grouped. ${joinNames(others)} questions are shown in English.` : 'What students ask most, grouped.';
 }
 
 /**

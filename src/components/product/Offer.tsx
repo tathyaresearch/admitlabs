@@ -13,7 +13,7 @@ import site from '@/components/site/site.module.css';
 import { Title, vars } from './Sections';
 import styles from './product.module.css';
 
-const GROUPS: readonly EntitlementGroup[] = ['Audit', 'Rivals', 'Demand', 'Other'];
+const GROUPS: readonly EntitlementGroup[] = ['Audit', 'Rivals', 'Demand', 'Leads', 'Other'];
 
 /** Free and Paid side by side, Paid on ivory, then the fine print and every feature compared. */
 export function Plans() {

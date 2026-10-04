@@ -2,15 +2,15 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { ADMITLABS_EMAIL } from '../config/team.ts';
 import { hasDashes } from '../domain/copy.ts';
-import { ADMITLABS_CAN_FIX } from '../team/share.ts';
 import { sampleShared } from '../team/testing.ts';
-import { buildAuditPdf, TOP_FIX_NOTE } from './audit.ts';
+import { buildAuditPdf } from './audit.ts';
 import { reportTexts } from './data.ts';
 import { renderAuditPdf } from './pdf/audit.ts';
 import { MAX_PAGES, pageCount } from './pdf/render.ts';
 
-// The shared Audit as a PDF (Phase 6): the same content as the shared page, from what a live link
-// returns. Riverbend College (a college) and Cedar Skill Institute (a skilling institute).
+// The shared Audit as a PDF (spec section 13): the same content as the shared page, place by place
+// with the three words, from what a live link returns. Riverbend College (a college) and Cedar Skill
+// Institute (a skilling institute).
 
 const OPTIONS = { madeAt: new Date('2026-10-01T06:30:00Z'), freeAuditUrl: 'http://localhost:3000/signup' };
 const SAMPLES = [
@@ -24,15 +24,18 @@ function fonts(raw: string): string[] {
 
 describe('what goes into the shared Audit PDF', () => {
   for (const [slug, type] of SAMPLES) {
-    test(`how to fix for the top 3 fixes only, the rest without it (${type})`, async () => {
+    test(`the three words, the top 3 fixes in full and the rest by name, in one ranking (${type})`, async () => {
       const data = buildAuditPdf(await sampleShared(slug), OPTIONS);
+      assert.deepEqual(
+        data.words.map((word) => word.name),
+        ['Visibility', 'Trust', 'Chosen'],
+      );
       assert.deepEqual(
         data.topFixes.map((fix) => fix.rank),
         [1, 2, 3],
       );
-      assert.ok(data.topFixes.every((fix) => fix.howToFix && fix.difficulty));
+      assert.ok(data.topFixes.every((fix) => fix.steps.length > 0 && fix.found.length > 0 && fix.why), 'how to fix, what was found and why, for the top 3');
       assert.ok(data.moreFixes.length > 0);
-      assert.ok(data.moreFixes.every((fix) => fix.howToFix === null && fix.difficulty === null));
       assert.deepEqual(
         data.moreFixes.map((fix) => fix.rank),
         data.moreFixes.map((_, index) => index + 4),
@@ -40,17 +43,15 @@ describe('what goes into the shared Audit PDF', () => {
       );
     });
 
-    test(`every check with its result, what was found, the source and the date (${type})`, async () => {
-      const shared = await sampleShared(slug);
-      const data = buildAuditPdf(shared, OPTIONS);
-      const parts = data.checks.flatMap((area) => area.checks.flatMap((check) => check.parts));
-      assert.equal(parts.length, shared.audit.checks.length);
-      assert.ok(parts.every((part) => part.result && part.finding && part.source && part.checkedOn === '18 Sep 2026'));
-      const notes = data.checks.flatMap((area) => area.checks.map((check) => check.note));
-      assert.equal(notes.filter((note) => note === TOP_FIX_NOTE).length, 3);
-      // AdmitLabs can fix the rest is said once, above them, never on each check.
-      assert.equal(notes.filter((note) => note !== null && note !== TOP_FIX_NOTE).length, 0);
-      assert.equal(ADMITLABS_CAN_FIX, 'AdmitLabs can fix any of these.');
+    test(`each place, with what's good and what to fix, each with its source and date (${type})`, async () => {
+      const data = buildAuditPdf(await sampleShared(slug), OPTIONS);
+      assert.deepEqual(
+        data.places.map((place) => place.name),
+        ['Website', 'Google', 'Social media', 'What people say', 'Other places'],
+      );
+      const scored = data.places.filter((place) => place.scored).flatMap((place) => [...place.good, ...place.fixes]);
+      assert.ok(scored.length > 0);
+      assert.ok(scored.every((item) => item.proof?.source && item.proof.date === '18 Sep 2026'));
     });
   }
 

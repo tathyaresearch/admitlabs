@@ -11,9 +11,6 @@ export const findingFixKey = (findingKey: string): string => `finding:${findingK
 /** The Audit with a fix's panel open: "/audit?fix=check%3Afees_shown". */
 export const auditFixPath = (fixKey: string): string => `/audit?fix=${encodeURIComponent(fixKey)}`;
 
-/** The start of a check's fix address, for lists that add the check's key: "/audit?fix=check%3A". */
-export const AUDIT_CHECK_PREFIX = `/audit?fix=${encodeURIComponent('check:')}`;
-
 /** The fix a stored key names, or null when it names none. */
 export function parseFixKey(value: string): FixRef | null {
   const [kind, ...rest] = value.split(':');

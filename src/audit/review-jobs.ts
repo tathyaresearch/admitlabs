@@ -14,6 +14,7 @@ import { factsFromSignals, type CheckSignal } from './facts.ts';
 import type { StoredFinding } from './places.ts';
 import { storedAuditById, storedFindings } from './read.ts';
 import { changesLine, reviewChanges, reviewPayload, ReviewError, type ApprovedBefore, type FreshAdvice, type ReviewChange, type ReviewChanges } from './review.ts';
+import { sendAuditReadyEmails } from './ready-jobs.ts';
 import { AUDIT_READY_TEXT } from './run.ts';
 import type { StoredAudit } from './view.ts';
 
@@ -179,8 +180,12 @@ export async function applyReviewChange(db: Db, auditId: string, change: ReviewC
   }
 }
 
-/** Approve and send: the Audit shows, marks done are checked, and the college hears it is ready. */
-export async function approveAudit(db: Db, auditId: string, options: { by?: string | null; at?: Date } = {}): Promise<void> {
+/**
+ * Approve and send: the Audit shows, marks done are checked, the college hears it is ready, and on
+ * Free the Audit ready email goes (`emails: false` keeps it back: the seed's past). The approval
+ * stands whether or not the email went.
+ */
+export async function approveAudit(db: Db, auditId: string, options: { by?: string | null; at?: Date; emails?: boolean; env?: Env } = {}): Promise<void> {
   const state = await loadReview(db, auditId);
   if (!state) throw new ReviewError('That Audit is not there.');
   if (state.audit.review !== 'waiting') throw new ReviewError('That Audit has been approved already.');
@@ -195,6 +200,13 @@ export async function approveAudit(db: Db, auditId: string, options: { by?: stri
   if (saved.error) {
     if (saved.error.message.includes('not_waiting')) throw new ReviewError('That Audit has been approved already.');
     throw new ReviewError(`It did not approve: ${saved.error.message}`);
+  }
+  if (state.audit.kind === 'free' && options.emails !== false) {
+    try {
+      await sendAuditReadyEmails(db, auditId, { reviewed: true, now: options.at, env: options.env });
+    } catch (error) {
+      console.error(`The Audit ready email did not go: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 }
 
@@ -242,9 +254,12 @@ export async function waitingAudits(db: Db): Promise<WaitingRow[]> {
   return rows;
 }
 
-/** How many own Audits wait for review: the count beside To review in the team's menu. */
+/** How many own Audits and monthly summaries wait for review: the count beside To review in the team's menu. */
 export async function waitingCount(db: Db): Promise<number> {
-  const { count, error } = await db.from('audits').select('id', { count: 'exact', head: true }).eq('review', 'waiting').in('kind', ['free', 'paid', 'client']);
-  if (error) throw new ReviewError(`Could not count what waits for review: ${error.message}`);
-  return count ?? 0;
+  const [audits, summaries] = await Promise.all([
+    db.from('audits').select('id', { count: 'exact', head: true }).eq('review', 'waiting').in('kind', ['free', 'paid', 'client']),
+    db.from('reports').select('id', { count: 'exact', head: true }).eq('review', 'waiting'),
+  ]);
+  if (audits.error || summaries.error) throw new ReviewError(`Could not count what waits for review: ${(audits.error ?? summaries.error)?.message}`);
+  return (audits.count ?? 0) + (summaries.count ?? 0);
 }

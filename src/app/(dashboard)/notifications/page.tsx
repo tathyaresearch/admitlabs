@@ -5,6 +5,7 @@ import { PageHead } from '@/components/ui/Layout';
 import { nextPullOn } from '@/demand/schedule';
 import { ALERT_FILTER_LABELS, ALERT_FILTERS, alertFilter, alertLinkText, type AlertFilter } from '@/domain/alert-kinds';
 import { alertsAhead } from '@/domain/alerts';
+import { effectiveTier } from '@/domain/tiers';
 import { recentGroup, type RecentGroup } from '@/domain/dates';
 import { formatDate } from '@/domain/format';
 import { loadAuditPage } from '@/lib/audit/load';
@@ -63,7 +64,8 @@ export default async function NotificationsPage({ searchParams }: { searchParams
     hasRivals: rivals.length > 0,
     city: institution.city,
     nextUpdate: nextPullOn(now),
-    nextReport: nextReport(now).on,
+    // Made only while the plan is still Paid or Client on the day.
+    nextReport: effectiveTier(viewer.plan, nextReport(now).on) === 'free' ? null : nextReport(now).on,
   });
   const grouped = GROUPS.map((group) => ({ ...group, items: notifications.filter((item) => recentGroup(new Date(item.created_at), now) === group.id) })).filter(
     (group) => group.items.length,

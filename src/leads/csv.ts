@@ -1,6 +1,7 @@
-// The Leads list as a CSV file, for the college's own people (spec section 23). A cell that
-// starts like a spreadsheet formula gets a leading apostrophe, so a name typed into the public
-// form can never run as one. Pure.
+// The Leads list as a CSV file, for the college's own people (spec section 23). Phone numbers are
+// written as digits only (919876543210), so a spreadsheet shows no apostrophe; any other cell that
+// starts like a spreadsheet formula gets a leading apostrophe, so a name typed into the public form
+// can never run as one. Pure.
 
 import { istParts, istTime } from '../domain/dates.ts';
 import { LEAD_SOURCE_LABELS, type LeadSource } from '../domain/types.ts';
@@ -34,8 +35,13 @@ export function csvCell(value: string | null): string {
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
+/** A stored phone number ('+919876543210') as digits only: '919876543210'. Never a formula, so it needs no apostrophe. */
+export function csvPhone(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
 /** The file: a header, then one row per enquiry, newest first as given. With a BOM so spreadsheets read every name right. */
 export function leadsCsv(rows: readonly LeadCsvRow[]): string {
-  const lines = [HEADER, ...rows.map((row) => [sentWords(row.sentAt), row.name, row.phone, row.email, row.city, row.course, row.link, row.usedOn ? LEAD_SOURCE_LABELS[row.usedOn] : null])];
-  return `﻿${lines.map((line) => line.map(csvCell).join(',')).join('\r\n')}\r\n`;
+  const lines = [HEADER, ...rows.map((row) => [sentWords(row.sentAt), row.name, csvPhone(row.phone), row.email, row.city, row.course, row.link, row.usedOn ? LEAD_SOURCE_LABELS[row.usedOn] : null])];
+  return `\uFEFF${lines.map((line) => line.map(csvCell).join(',')).join('\r\n')}\r\n`;
 }

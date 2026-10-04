@@ -1,59 +1,125 @@
-// The report's pages, in the spec's order (section 12): the cover, the score summary with what's
-// working, what to fix, by program, rivals, demand, then the 3 things to do with the sources and
-// dates checked. Ivory pages, a black cover, whole numbers, no dashes. As on the dashboard: the
-// overall score on its gauge, each result on the small gauge, each check and pillar with its icon,
-// and bars for what each fix could add, how fast a trend rises and how often a question is asked.
+// The report's pages, in the spec's order (section 12): a black cover with Visibility, Trust and
+// Chosen, then one run of ivory pages: This month in short (the monthly summary), what the internet
+// says, what to fix, rivals, demand, leads (Client) and progress with the sources. Each part starts
+// where the last one ends, with its head kept on the page of its first block, so a month reads in
+// about 7 pages and never more than 8. Whole numbers, no dashes. As on the dashboard: each result a
+// thin bar with the word, the place and check icons, impact and effort as words, bars for how often
+// a question is asked. The score shows small, in This month in short and in the progress table.
 
-import { createElement as h, type ReactElement } from 'react';
-import { Circle, Line, Link, Page, Polyline, Svg, Text, View } from '@react-pdf/renderer';
+import { createElement as h, type ReactElement, type ReactNode } from 'react';
+import { Link, Page, Text, View } from '@react-pdf/renderer';
+import { previousMonth } from '../../domain/dates.ts';
 import { ADDED_BY_YOU } from '../../domain/details.ts';
-import { ordinal } from '../../domain/format.ts';
-import { nextBandText } from '../../domain/scores.ts';
-import { PILLAR_LABELS, PILLAR_QUESTIONS, PILLARS } from '../../domain/types.ts';
-import { partGap, pillarSpread, type Scored } from '../../rivals/trend.ts';
-import { THING_SOURCE_LABELS, type Thing } from '../things.ts';
-import type { ReportData, ReportFix, ReportFixRow } from '../data.ts';
-import {
-  AmountBar,
-  arrowValue,
-  BigNumber,
-  CheckIcon,
-  clamp,
-  Footer,
-  Keep,
-  LabelChip,
-  Lockup,
-  PageHead,
-  PillarIcon,
-  PlatformIcon,
-  ResultBar,
-  ScoreBar,
-  ScoreGauge,
-  SectionTitle,
-  ValueText,
-} from './parts.ts';
+import { formatMonthName } from '../../domain/format.ts';
+import { IMPACT_LABELS, PILLAR_LABELS, PILLARS } from '../../domain/types.ts';
+import { THING_SOURCE_LABELS } from '../things.ts';
+import type { ReportData } from '../data.ts';
+import type { ReportFix, ReportFixRow, ReportPlace, ReportPlaceItem, ReportProof, ReportWord } from '../places.ts';
+import { AmountBar, arrowValue, BigNumber, CheckIcon, clamp, Footer, Keep, Lockup, PillarIcon, PlatformIcon, ResultBar, SectionTitle, WordBar } from './parts.ts';
 import { COLORS, NUM, PAGE, styles } from './theme.ts';
 
 const CONTENT_WIDTH = PAGE.width - PAGE.side * 2;
-const GRID_GAP = 10;
-const HALF = (CONTENT_WIDTH - GRID_GAP) / 2;
-const THIRD = (CONTENT_WIDTH - GRID_GAP * 2) / 3;
+const GAP = 10;
+const HALF = (CONTENT_WIDTH - GAP) / 2;
+const THIRD = (CONTENT_WIDTH - GAP * 2) / 3;
 
 /**
  * Compact is the second try, used only when a report would run past the page cap: 3 fixes in
- * detail instead of 5 (the rest stay in the ranked list) and shorter limits on long sentences.
+ * detail instead of 5 (the rest join the ranked list), 2 of what's good and 2 to fix in each place
+ * (the rest counted), fewer steps and ready fix lines, and shorter limits on long sentences.
  */
 export interface PageProps {
   data: ReportData;
   compact?: boolean;
 }
 
-/** An ivory page with the footer. */
-export function ContentPage({ data, children }: { data: Pick<ReportData, 'institution' | 'monthLabel'> & { sample?: string | null }; children: ReactElement[] }): ReactElement {
+type Footed = { institution: { name: string }; monthLabel: string; sample?: string | null };
+
+/** An ivory page with the footer. The run of parts flows over as many pages as it needs. */
+export function ContentPage({ data, children }: { data: Footed; children: ReactNode[] }): ReactElement {
   return h(Page, { size: 'A4', style: styles.page }, ...children, h(Footer, { institution: data.institution.name, month: data.monthLabel, note: data.sample ?? null }));
 }
 
-// 1. Cover ------------------------------------------------------------------------------------
+interface HeadProps {
+  eyebrow: string;
+  title: string;
+  lead?: string | null;
+  /** The first part of the run: no rule above it. */
+  first?: boolean;
+}
+
+/** A part's head: a rule, an eyebrow, a title and one line. */
+function PartHead({ eyebrow, title, lead, first = false }: HeadProps): ReactElement {
+  return h(
+    View,
+    { style: { marginTop: first ? 0 : 22, paddingTop: first ? 0 : 12, borderTopWidth: first ? 0 : 1, borderTopColor: COLORS.black, marginBottom: 10 } },
+    h(Text, { style: styles.eyebrow }, eyebrow),
+    h(Text, { style: { fontSize: first ? 20 : 18, fontWeight: 600, letterSpacing: -0.4, lineHeight: 1.15 } }, title),
+    lead ? h(Text, { style: { ...styles.lead, fontSize: 9.5, ...clamp(3) } }, lead) : null,
+  );
+}
+
+/**
+ * A part of the run: its head kept on the page of the first block under it, then the rest. With
+ * no first block (the places, which may run on), the head needs room for what follows instead.
+ */
+export function Part({ head, first, rest = [] }: { head: HeadProps; first: ReactElement | null; rest?: Array<ReactElement | null> }): ReactElement {
+  return h(View, null, first ? h(View, { wrap: false }, h(PartHead, head), first) : h(View, { minPresenceAhead: 160 }, h(PartHead, head)), ...rest);
+}
+
+/** A small label above a list: "What's good". */
+function Label({ children }: { children: string }): ReactElement {
+  return h(Text, { style: { fontSize: 7, fontWeight: 600, letterSpacing: 0.8, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 4 } }, children);
+}
+
+/** A titled list: the title kept on the page of its first row, then the rest; no row is split. */
+function TitledList({ title, lead, rows, after = null, marginTop = 14 }: { title: string; lead?: string | null; rows: ReactElement[]; after?: ReactElement | null; marginTop?: number }): ReactElement {
+  const [first, ...rest] = rows;
+  return h(View, { style: { marginTop } }, h(View, { wrap: false }, h(SectionTitle, { title, lead }), first ?? null), ...rest, after);
+}
+
+/** What was seen, then "site.example/fees · 15 Sep 2026" with the source's mark. */
+function ProofLine({ proof, compact = false }: { proof: ReportProof; compact?: boolean }): ReactElement {
+  const where = [proof.program, proof.source, proof.date, proof.byTeam ? 'Checked by the AdmitLabs team' : null].filter(Boolean).join('  ·  ');
+  return h(
+    View,
+    { style: { marginTop: 2 } },
+    proof.line ? h(Text, { style: { fontSize: 7.8, lineHeight: 1.35, color: COLORS.black, ...clamp(compact ? 1 : 2) } }, proof.line) : null,
+    where
+      ? h(
+          View,
+          { style: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 1 } },
+          proof.source ? h(PlatformIcon, { platform: proof.platform, size: 6.5 }) : null,
+          h(Text, { style: { flex: 1, fontSize: 6.8, color: COLORS.muted, ...clamp(1) } }, where),
+        )
+      : null,
+  );
+}
+
+// 1. Cover --------------------------------------------------------------------------------------
+
+/** Visibility, Trust and Chosen, side by side: each word big, with its question and how it moved. */
+export function WordColumns({ words, dark }: { words: readonly ReportWord[]; dark: boolean }): ReactElement {
+  const ink = dark ? COLORS.ivory : COLORS.black;
+  const quiet = dark ? COLORS.slate : COLORS.muted;
+  return h(
+    View,
+    { style: { flexDirection: 'row', gap: GAP } },
+    ...words.map((word) =>
+      h(
+        View,
+        {
+          key: word.pillar,
+          style: dark ? { width: THIRD, paddingTop: 12, borderTopWidth: 0.75, borderTopColor: COLORS.lineDark } : { width: THIRD, padding: 10, backgroundColor: COLORS.panel, borderRadius: 4 },
+        },
+        h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 5 } }, h(PillarIcon, { pillar: word.pillar, size: 10, color: ink }), h(Text, { style: { fontSize: 9, fontWeight: 600, color: ink } }, word.name)),
+        h(Text, { style: { fontSize: dark ? 30 : 20, fontWeight: 600, letterSpacing: dark ? -0.9 : -0.5, lineHeight: 1, color: ink, marginTop: dark ? 12 : 7 } }, word.word),
+        h(Text, { style: { fontSize: 8, lineHeight: 1.35, color: quiet, marginTop: dark ? 7 : 5, ...clamp(2) } }, word.question),
+        word.moved ? h(Text, { style: { fontSize: 8, fontWeight: 600, lineHeight: 1.35, color: ink, marginTop: 2, ...clamp(1) } }, word.moved) : null,
+      ),
+    ),
+  );
+}
 
 export function CoverPage({ data }: PageProps): ReactElement {
   const quiet = { fontSize: 8, color: COLORS.slate };
@@ -68,7 +134,7 @@ export function CoverPage({ data }: PageProps): ReactElement {
     ),
     h(
       View,
-      { style: { marginTop: 132 } },
+      { style: { marginTop: 120 } },
       h(Text, { style: { fontSize: 11, fontWeight: 500, color: COLORS.slate, marginBottom: 12 } }, data.monthLabel),
       h(Text, { style: { fontSize: 36, fontWeight: 600, letterSpacing: -1, lineHeight: 1.08, ...clamp(3) } }, data.institution.name),
       h(Text, { style: { fontSize: 10, color: COLORS.slate, marginTop: 10 } }, `${data.institution.place}  ·  ${data.institution.website}`),
@@ -84,230 +150,261 @@ export function CoverPage({ data }: PageProps): ReactElement {
     h(View, { style: { flexGrow: 1 } }),
     h(
       View,
-      { style: { borderTopWidth: 1, borderTopColor: COLORS.lineDark, paddingTop: 22 } },
-      h(Text, { style: { fontSize: 7.5, fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase', color: COLORS.slate } }, 'Overall score'),
-      h(
-        View,
-        { style: { flexDirection: 'row', alignItems: 'flex-end', marginTop: 10 } },
-        h(BigNumber, { value: data.cover.score, size: 148, color: COLORS.ivory }),
-        h(Text, { style: { ...NUM, fontSize: 15, color: COLORS.slate, marginLeft: 10, marginBottom: 14 } }, '/ 100'),
-      ),
-      h(
-        View,
-        { style: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16 } },
-        h(LabelChip, { label: data.cover.label, dark: true }),
-        data.cover.change ? h(ValueText, { text: data.cover.change, style: { fontSize: 10, fontWeight: 500 } }) : null,
-      ),
-      h(Text, { style: { fontSize: 15, fontWeight: 500, lineHeight: 1.35, letterSpacing: -0.2, marginTop: 18, maxWidth: 400, ...clamp(3) } }, data.cover.verdict),
+      null,
+      h(Text, { style: { fontSize: 7.5, fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase', color: COLORS.slate, marginBottom: 10 } }, 'Visibility, Trust and Chosen'),
+      h(WordColumns, { words: data.words, dark: true }),
+      h(Text, { style: { fontSize: 15, fontWeight: 500, lineHeight: 1.35, letterSpacing: -0.2, marginTop: 26, maxWidth: 430, ...clamp(3) } }, data.answer),
     ),
     h(
       View,
-      { style: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 40, paddingTop: 12, borderTopWidth: 0.75, borderTopColor: COLORS.lineDark } },
-      h(Text, { style: quiet }, `${data.cover.checkedOn}  ·  Made ${data.madeOn}`),
+      { style: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 34, paddingTop: 12, borderTopWidth: 0.75, borderTopColor: COLORS.lineDark } },
+      h(Text, { style: quiet }, `${data.checkedOn}  ·  Made ${data.madeOn}`),
       h(Text, { style: quiet }, `${data.tierLabel} plan  ·  Public data only`),
     ),
   );
 }
 
-// 2. Score summary and what's working -----------------------------------------------------------
+// 2. This month in short ------------------------------------------------------------------------------
 
-/** Six months of the overall score as a quiet line, with each month's score. */
-function HistoryChart({ points }: { points: ReportData['summary']['history'] }): ReactElement {
-  const width = 280;
-  const height = 92;
-  const top = 16;
-  const bottom = 18;
-  if (points.length < 2) {
-    return h(Text, { style: { ...styles.caption, marginTop: 30 } }, 'Your score history builds from here, one point a month.');
-  }
-  const scores = points.map((point) => point.score);
-  const low = Math.max(0, Math.floor((Math.min(...scores) - 8) / 10) * 10);
-  const high = Math.min(100, Math.ceil((Math.max(...scores) + 8) / 10) * 10);
-  const x = (index: number) => 12 + index * ((width - 24) / (points.length - 1));
-  const y = (score: number) => top + (1 - (score - low) / Math.max(1, high - low)) * (height - top - bottom);
-  const line = points.map((point, index) => `${x(index)},${y(point.score)}`).join(' ');
-  return h(
-    View,
-    { style: { width, height, position: 'relative' } },
-    h(
-      Svg,
-      { width, height },
-      h(Line, { x1: 0, y1: height - bottom, x2: width, y2: height - bottom, stroke: COLORS.lineMedium, strokeWidth: 0.75 }),
-      h(Polyline, { points: line, fill: 'none', stroke: COLORS.black, strokeWidth: 1.4 }),
-      ...points.map((point, index) =>
-        h(Circle, {
-          key: point.month,
-          cx: x(index),
-          cy: y(point.score),
-          r: index === points.length - 1 ? 3.2 : 2.3,
-          fill: index === points.length - 1 ? COLORS.black : COLORS.ivory,
-          stroke: COLORS.black,
-          strokeWidth: 1.1,
-        }),
+function SummaryPart({ data }: PageProps): ReactElement {
+  const { summary } = data;
+  const block = (key: string, title: string, children: ReactNode) => h(View, { key, style: { marginTop: 14 }, wrap: false }, h(SectionTitle, { title }), children);
+  return h(Part, {
+    head: { first: true, eyebrow: 'This month in short', title: `${data.monthName} in short`, lead: summary.lines.words },
+    first: h(
+      View,
+      null,
+      h(WordColumns, { words: data.words, dark: false }),
+      // The score, small.
+      h(
+        Text,
+        { style: { ...styles.caption, marginTop: 8 } },
+        'Overall score ',
+        h(Text, { style: { ...NUM, fontWeight: 600, color: COLORS.black } }, String(data.score.overall)),
+        h(Text, { style: NUM }, ' / 100'),
+        data.score.change ? `.  ${data.score.change}.` : '.',
       ),
     ),
-    ...points.flatMap((point, index) => [
-      h(
-        Text,
-        {
-          key: `score-${point.month}`,
-          style: { ...NUM, position: 'absolute', left: x(index) - 14, width: 28, top: y(point.score) - 13, textAlign: 'center', fontSize: 7.5, fontWeight: index === points.length - 1 ? 600 : 400 },
-        },
-        String(point.score),
-      ),
-      h(
-        Text,
-        { key: `month-${point.month}`, style: { position: 'absolute', left: x(index) - 14, width: 28, top: height - bottom + 5, textAlign: 'center', fontSize: 7, color: COLORS.muted } },
-        point.label,
-      ),
-    ]),
-  );
-}
-
-export function SummaryPage({ data }: PageProps): ReactElement {
-  const summary = data.summary;
-  return h(ContentPage, {
-    data,
-    children: [
-      h(PageHead, {
-        key: 'head',
-        eyebrow: 'Score summary',
-        title: `Your score in ${data.monthLabel.split(' ')[0]}`,
-        lead: 'Overall, and its three parts: can students find you, do they believe you, is it easy to pick you.',
-      }),
-      h(
-        View,
-        { key: 'overall', style: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' } },
+    rest: [
+      block(
+        'things',
+        'Do these 3 things this month',
         h(
           View,
-          null,
-          h(Text, { style: styles.caption }, 'Overall score'),
-          h(View, { style: { marginTop: 8 } }, h(ScoreGauge, { score: summary.overall, width: 168 })),
-          h(
-            View,
-            { style: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 } },
-            h(LabelChip, { label: summary.label }),
-            summary.change ? h(ValueText, { text: summary.change, style: { fontSize: 8.5, fontWeight: 500 } }) : null,
+          { style: { backgroundColor: COLORS.black, borderRadius: 4, paddingHorizontal: 18, paddingVertical: 4 } },
+          ...summary.lines.things.map((title, index) =>
+            h(
+              View,
+              { key: index, style: { flexDirection: 'row', paddingVertical: 7, borderTopWidth: index === 0 ? 0 : 0.75, borderTopColor: COLORS.lineDark } },
+              h(View, { style: { width: 32 } }, h(Text, { style: { ...NUM, fontWeight: 600, fontSize: 20, lineHeight: 1, letterSpacing: -1, color: COLORS.ivory } }, String(index + 1))),
+              h(
+                View,
+                { style: { flex: 1 } },
+                h(Text, { style: { fontSize: 7, fontWeight: 500, letterSpacing: 0.9, textTransform: 'uppercase', color: COLORS.slate } }, THING_SOURCE_LABELS[summary.things[index]?.source ?? 'audit']),
+                h(Text, { style: { fontSize: 10.5, fontWeight: 600, letterSpacing: -0.15, lineHeight: 1.3, color: COLORS.ivory, marginTop: 2, ...clamp(2) } }, title),
+                summary.things[index]?.meta ? h(Text, { style: { fontSize: 8, lineHeight: 1.4, color: COLORS.quietDark, marginTop: 2, ...clamp(1) } }, summary.things[index]?.meta) : null,
+              ),
+            ),
           ),
-          h(Text, { style: { ...styles.caption, marginTop: 6 } }, nextBandText(summary.overall)),
+          ...(summary.lines.things.length === 0 ? [h(Text, { key: 'none', style: { fontSize: 10, color: COLORS.ivory, paddingVertical: 12 } }, 'Nothing pressing this month. Keep what works going.')] : []),
         ),
-        h(View, null, h(Text, { style: { ...styles.caption, marginBottom: 4 } }, 'Overall score, month by month'), h(HistoryChart, { points: summary.history })),
       ),
       h(
         View,
-        { key: 'pillars', style: { flexDirection: 'row', gap: GRID_GAP, marginTop: 20 } },
-        ...summary.pillars.map((pillar) =>
-          h(
-            View,
-            { key: pillar.pillar, style: { width: THIRD, padding: 12, backgroundColor: COLORS.panel, borderRadius: 4 } },
-            h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 5 } }, h(PillarIcon, { pillar: pillar.pillar, size: 10 }), h(Text, { style: { fontSize: 9, fontWeight: 600 } }, pillar.name)),
-            h(View, { style: { marginTop: 8, marginBottom: 8 } }, h(BigNumber, { value: pillar.score, size: 26 })),
-            h(ScoreBar, { score: pillar.score }),
-            h(
-              View,
-              { style: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 } },
-              h(Text, { style: styles.caption }, pillar.label),
-              pillar.change ? h(ValueText, { text: pillar.change, style: { ...styles.caption, color: COLORS.black } }) : null,
-            ),
-          ),
-        ),
-      ),
-      ...(summary.note ? [h(Text, { key: 'note', style: { ...styles.caption, marginTop: 8 } }, summary.note)] : []),
-      h(
-        View,
-        { key: 'working', style: styles.section },
-        h(SectionTitle, { title: 'What’s working', lead: 'The three things doing the most for your score. Keep them up.' }),
-        ...data.working.map((item, index) =>
-          h(
-            Keep,
-            { key: item.rank, style: { flexDirection: 'row', paddingVertical: 10, borderTopWidth: 0.75, borderTopColor: index === 0 ? COLORS.black : COLORS.line } },
-            h(Text, { style: { ...NUM, width: 22, fontSize: 10, fontWeight: 600 } }, String(index + 1)),
-            h(
-              View,
-              { style: { flex: 1, paddingRight: 12 } },
-              h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 6 } }, h(CheckIcon, { check: item.key, size: 10.5 }), h(Text, { style: { fontSize: 10.5, fontWeight: 600 } }, item.name)),
-              item.programs ? h(Text, { style: { ...styles.caption, ...clamp(1) } }, item.programs) : null,
-              item.finding ? h(Text, { style: { ...styles.small, color: COLORS.muted, marginTop: 3, ...clamp(2) } }, item.finding) : null,
-            ),
-            h(View, { style: { width: 128, alignItems: 'flex-end', gap: 5 } }, h(ResultBar, { result: item.result }), h(ValueText, { text: item.worth, style: { ...styles.caption, textAlign: 'right' } })),
-          ),
-        ),
-        ...(data.working.length === 0 ? [h(Text, { key: 'none', style: styles.small }, 'Your first strengths show here once a check reaches Okay.')] : []),
+        { key: 'lines', style: { flexDirection: 'row', gap: GAP, marginTop: 14 }, wrap: false },
+        h(View, { style: { flex: 1 } }, h(SectionTitle, { title: 'One rival move' }), h(Text, { style: { fontSize: 9.5, lineHeight: 1.45, ...clamp(4) } }, summary.lines.move)),
+        summary.lines.enquiries ? h(View, { style: { flex: 1 } }, h(SectionTitle, { title: 'Your enquiries' }), h(Text, { style: { fontSize: 9.5, lineHeight: 1.45, ...clamp(4) } }, summary.lines.enquiries)) : null,
       ),
     ],
   });
 }
 
-// 3. What to fix ----------------------------------------------------------------------------------
+// 3. What the internet says -----------------------------------------------------------------------------
 
-/** The most any fix on the page could add, so each bar is measured against the biggest. */
-export function biggestGain(fixes: ReadonlyArray<{ points: number }>): number {
-  return Math.max(0, ...fixes.map((fix) => fix.points));
-}
-
-export function FixBlock({ fix, first, compact, maxPoints }: { fix: ReportFix; first: boolean; compact: boolean; maxPoints: number }): ReactElement {
-  const single = fix.results.length === 1 && fix.results[0]?.program === null ? fix.results[0] : null;
+function PlaceItem({ item, fix, compact }: { item: ReportPlaceItem; fix: boolean; compact: boolean }): ReactElement {
+  const meta = [item.label, item.kind && !item.result ? item.kind : null, item.impact].filter(Boolean).join('  ·  ');
   return h(
     Keep,
-    { style: { flexDirection: 'row', paddingTop: first ? 2 : 7, paddingBottom: 7, borderTopWidth: first ? 0 : 0.75, borderTopColor: COLORS.line } },
-    h(View, { style: { width: 34 } }, h(BigNumber, { value: fix.rank, size: 24 })),
+    { style: { paddingVertical: 4, borderTopWidth: 0.75, borderTopColor: COLORS.line } },
+    h(
+      View,
+      { style: { flexDirection: 'row', alignItems: 'flex-start', gap: 5 } },
+      item.checkKey ? h(View, { style: { paddingTop: 1 } }, h(CheckIcon, { check: item.checkKey, size: 8 })) : null,
+      h(Text, { style: { flex: 1, fontSize: 8.4, fontWeight: 600, lineHeight: 1.28, ...clamp(2) } }, item.title),
+      !fix && item.result ? h(ResultBar, { result: item.result, size: 'sm' }) : null,
+      !fix && !item.result && item.kind ? h(Text, { style: { fontSize: 7, fontWeight: 500, color: COLORS.muted } }, item.kind) : null,
+    ),
+    fix && (meta || item.result)
+      ? h(
+          View,
+          { style: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6, rowGap: 2, marginTop: 2 } },
+          item.result ? h(ResultBar, { result: item.result, size: 'sm' }) : null,
+          meta ? h(Text, { style: { fontSize: 7, color: COLORS.muted } }, meta) : null,
+        )
+      : null,
+    item.proof ? h(ProofLine, { proof: item.proof, compact: compact || !fix }) : null,
+  );
+}
+
+function PlaceColumn({ title, items, fix, more, empty, compact }: { title: string; items: readonly ReportPlaceItem[]; fix: boolean; more: number; empty: string; compact: boolean }): ReactElement {
+  return h(
+    View,
+    { style: { width: HALF } },
+    h(Label, null, title),
+    ...(items.length ? items.map((item, index) => h(PlaceItem, { key: index, item, fix, compact })) : [h(Text, { key: 'none', style: { ...styles.caption, paddingVertical: 5, borderTopWidth: 0.75, borderTopColor: COLORS.line } }, empty)]),
+    more ? h(Text, { style: { ...styles.caption, marginTop: 3 } }, `And ${more} more in Drishti.`) : null,
+  );
+}
+
+/** One place: its name and what it covers, then what's good beside what to fix, each with its proof. Its name stays with its first items. */
+/** In a compact report, this many of what's good and of what to fix in each place; the rest are counted. */
+const COMPACT_PLACE_ITEMS = 2;
+
+export function PlaceBlock({ place, compact = false, first = false }: { place: ReportPlace; compact?: boolean; first?: boolean }): ReactElement {
+  const empty = place.good.length === 0 && place.fixes.length === 0;
+  const good = compact ? place.good.slice(0, COMPACT_PLACE_ITEMS) : place.good;
+  const fixes = compact ? place.fixes.slice(0, COMPACT_PLACE_ITEMS) : place.fixes;
+  return h(
+    View,
+    { style: { marginTop: first ? 0 : 12 } },
+    h(
+      View,
+      { minPresenceAhead: 110, style: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 6 } },
+      h(Text, { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: -0.1 } }, place.name),
+      h(Text, { style: { flex: 1, fontSize: 7.5, color: COLORS.muted, ...clamp(1) } }, place.covers),
+    ),
+    place.thin && empty
+      ? h(
+          View,
+          { style: { padding: 10, backgroundColor: COLORS.panel, borderRadius: 4 } },
+          h(Text, { style: { fontSize: 9, fontWeight: 600 } }, place.thin.title),
+          h(Text, { style: { ...styles.small, color: COLORS.muted, marginTop: 2, ...clamp(3) } }, place.thin.why),
+        )
+      : h(
+          View,
+          { style: { flexDirection: 'row', gap: GAP } },
+          h(PlaceColumn, { title: 'What’s good', items: good, fix: false, more: place.moreGood + place.good.length - good.length, empty: place.scored ? 'Nothing Strong here yet.' : 'Nothing good found yet.', compact }),
+          h(PlaceColumn, { title: 'What to fix', items: fixes, fix: true, more: place.moreFixes + place.fixes.length - fixes.length, empty: 'Nothing to fix here.', compact }),
+        ),
+  );
+}
+
+/** The five places, under one head: kept for the shared Audit PDF too. */
+export function PlacesPart({ places, compact = false, first = false, lead }: { places: readonly ReportPlace[]; compact?: boolean; first?: boolean; lead: string }): ReactElement {
+  return h(Part, {
+    head: { first, eyebrow: 'What the internet says', title: 'Place by place', lead },
+    first: null,
+    rest: places.map((place, index) => h(PlaceBlock, { key: place.key, place, compact, first: index === 0 })),
+  });
+}
+
+// 4. What to fix --------------------------------------------------------------------------------------------
+
+function ReadyFixBox({ ready, compact, note }: { ready: NonNullable<ReportFix['readyFix']>; compact: boolean; note: string | null }): ReactElement {
+  const limit = compact ? 2 : 3;
+  const line = (text: string, key: number) => h(Text, { key, style: { fontSize: 7.5, lineHeight: 1.35, marginTop: 1.5, ...clamp(1) } }, text);
+  const cell = { flex: 1, paddingRight: 6, fontSize: 7.2, lineHeight: 1.3, ...clamp(1) };
+  const shown = ready.table ? Math.min(ready.table.rows.length, limit - 1) : ready.outline.length ? Math.min(ready.outline.length, limit) : Math.min(ready.lines.length, limit);
+  const total = ready.table ? ready.table.rows.length : ready.outline.length || ready.lines.length;
+  const more = ready.more + (total - shown);
+  return h(
+    View,
+    { style: { marginTop: 6, paddingVertical: 6, paddingHorizontal: 8, backgroundColor: COLORS.panel, borderRadius: 3 } },
+    h(Text, { style: { fontSize: 7.5, fontWeight: 600, ...clamp(1) } }, `Ready fix: ${ready.title}`),
+    ...(ready.table
+      ? [
+          h(View, { key: 'head', style: { flexDirection: 'row', marginTop: 3, paddingBottom: 2, borderBottomWidth: 0.5, borderBottomColor: COLORS.lineMedium } }, ...ready.table.head.map((text, index) => h(Text, { key: index, style: { ...cell, fontWeight: 600, color: COLORS.muted } }, text))),
+          ...ready.table.rows.slice(0, shown).map((row, rowIndex) => h(View, { key: rowIndex, style: { flexDirection: 'row', marginTop: 2 } }, ...row.map((text, index) => h(Text, { key: index, style: cell }, text)))),
+        ]
+      : ready.outline.length
+        ? ready.outline.slice(0, shown).map((item, index) => h(Text, { key: index, style: { fontSize: 7.5, lineHeight: 1.35, marginTop: 1.5, ...clamp(1) } }, h(Text, { style: { fontWeight: 600 } }, `${item.heading}: `), item.line))
+        : ready.lines.slice(0, shown).map(line)),
+    more || note ? h(Text, { style: { fontSize: 6.8, color: COLORS.muted, marginTop: 2 } }, [more ? `And ${more} more ${ready.table ? (more === 1 ? 'row' : 'rows') : more === 1 ? 'line' : 'lines'}.` : null, note].filter(Boolean).join(' ')) : null,
+  );
+}
+
+/** A fix in detail: the fix, where it is, impact and effort, what was found (when asked), the steps and the ready fix. */
+export function FixDetail({ fix, first, compact = false, showFound = false, readyNote = null }: { fix: ReportFix; first: boolean; compact?: boolean; showFound?: boolean; readyNote?: string | null }): ReactElement {
+  const steps = compact ? fix.steps.slice(0, 2) : fix.steps;
+  const moreSteps = fix.moreSteps + (fix.steps.length - steps.length);
+  const meta = [fix.where, `Impact ${IMPACT_LABELS[fix.impact]}`, fix.effort, fix.programs].filter(Boolean).join('  ·  ');
+  return h(
+    Keep,
+    { style: { flexDirection: 'row', paddingTop: first ? 2 : 9, paddingBottom: 9, borderTopWidth: first ? 0 : 0.75, borderTopColor: COLORS.line } },
+    h(View, { style: { width: 30 } }, h(BigNumber, { value: fix.rank, size: 20 })),
     h(
       View,
       { style: { flex: 1 } },
+      h(Text, { style: { fontSize: 11, fontWeight: 600, letterSpacing: -0.1, lineHeight: 1.25, ...clamp(2) } }, fix.title),
       h(
         View,
-        { style: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' } },
-        h(
-          View,
-          { style: { flex: 1, paddingRight: 12 } },
-          // What to do, named as on Home and the Audit.
-          h(Text, { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: -0.1, ...clamp(2) } }, fix.title),
-          // The check it is about, as a small label, and its result: one for an institution check, each
-          // program's for a program check, or how many programs when there are too many to list.
-          h(
-            View,
-            { style: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 10, rowGap: 3, marginTop: 3 } },
-            h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 4 } }, h(CheckIcon, { check: fix.key, size: 8.5 }), h(Text, { style: { fontSize: 8, fontWeight: 600 } }, fix.name)),
-            ...(single
-              ? [h(ResultBar, { key: 'one', result: single.result, size: 'sm' })]
-              : fix.results.map((part, index) =>
-                  h(
-                    View,
-                    { key: index, style: { flexDirection: 'row', alignItems: 'center', gap: 5 } },
-                    part.program ? h(Text, { style: { fontSize: 7.5, color: COLORS.muted } }, part.program) : null,
-                    h(ResultBar, { result: part.result, size: 'sm' }),
-                  ),
-                )),
-            fix.resultsNote ? h(Text, { key: 'note', style: styles.caption }, fix.resultsNote) : null,
-          ),
-        ),
-        h(
-          View,
-          { style: { alignItems: 'flex-end' } },
-          h(
-            View,
-            { style: { flexDirection: 'row', alignItems: 'center', gap: 6 } },
-            h(AmountBar, { value: fix.points, max: maxPoints, width: 44 }),
-            h(ValueText, { text: fix.gain, style: { fontSize: 8.5, fontWeight: 600 } }),
-          ),
-          fix.difficulty ? h(Text, { style: styles.caption }, fix.difficulty) : null,
-        ),
+        { style: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 } },
+        fix.checkKey ? h(CheckIcon, { check: fix.checkKey, size: 8 }) : null,
+        h(Text, { style: { flex: 1, fontSize: 7.5, color: COLORS.muted, ...clamp(1) } }, meta),
       ),
-      fix.finding
-        ? h(Text, { style: { ...styles.small, marginTop: 5, color: COLORS.muted, ...clamp(compact ? 1 : 2) } }, h(Text, { style: { fontWeight: 600, color: COLORS.black } }, 'Found  '), fix.finding)
-        : null,
-      fix.howToFix
-        ? h(Text, { style: { ...styles.small, marginTop: 3, ...clamp(compact ? 2 : 3) } }, h(Text, { style: { fontWeight: 600 } }, 'How to fix  '), fix.howToFix)
-        : null,
+      showFound && fix.found[0] ? h(View, { style: { marginTop: 3 } }, h(ProofLine, { proof: fix.found[0], compact })) : null,
+      showFound && fix.why ? h(Text, { style: { ...styles.small, fontSize: 8, color: COLORS.muted, marginTop: 3, ...clamp(compact ? 1 : 2) } }, h(Text, { style: { fontWeight: 600, color: COLORS.black } }, 'Why it matters  '), fix.why) : null,
+      ...(steps.length
+        ? [
+            h(
+              View,
+              { key: 'steps', style: { marginTop: 5 } },
+              ...steps.map((step, index) =>
+                h(
+                  View,
+                  { key: index, style: { flexDirection: 'row', marginTop: index === 0 ? 0 : 2 } },
+                  h(Text, { style: { ...NUM, width: 12, fontSize: 8, fontWeight: 600 } }, `${index + 1}.`),
+                  h(Text, { style: { flex: 1, fontSize: 8.2, lineHeight: 1.38, ...clamp(compact ? 1 : 2) } }, step),
+                ),
+              ),
+              moreSteps ? h(Text, { style: { ...styles.caption, marginTop: 2 } }, `And ${moreSteps} more ${moreSteps === 1 ? 'step' : 'steps'}${readyNote ? ' in Drishti' : ''}.`) : null,
+            ),
+          ]
+        : []),
+      fix.readyFix ? h(ReadyFixBox, { ready: fix.readyFix, compact, note: readyNote }) : null,
       // What the institution said about itself: labelled, and never part of the score.
       fix.added
         ? h(
             Text,
-            { style: { ...styles.small, marginTop: 3, color: COLORS.muted, ...clamp(compact ? 1 : 2) } },
+            { style: { ...styles.small, fontSize: 8, marginTop: 5, color: COLORS.muted, ...clamp(compact ? 1 : 2) } },
             h(Text, { style: { fontWeight: 600, color: COLORS.black } }, `${ADDED_BY_YOU}  `),
-            `${fix.added.lines.join('. ')}.${fix.howToFix && fix.added.advice ? ` ${fix.added.advice}` : ''}`,
+            `${fix.added.lines.join('. ')}.${fix.added.advice ? ` ${fix.added.advice}` : ''}`,
           )
         : null,
+    ),
+  );
+}
+
+/** The rest of the list, in two columns: one short row each. */
+export function FixRows({ rows }: { rows: readonly ReportFixRow[] }): ReactElement {
+  const half = Math.ceil(rows.length / 2);
+  const columns = [rows.slice(0, half), rows.slice(half)];
+  return h(
+    View,
+    { style: { flexDirection: 'row', gap: GAP }, wrap: false },
+    ...columns.map((column, index) =>
+      h(
+        View,
+        { key: index, style: { width: HALF } },
+        ...column.map((row) =>
+          h(
+            View,
+            { key: row.rank, style: { flexDirection: 'row', alignItems: 'flex-start', gap: 5, paddingVertical: 3.5, borderTopWidth: 0.75, borderTopColor: COLORS.line } },
+            h(Text, { style: { ...NUM, fontSize: 8, fontWeight: 500, width: 14 } }, `${row.rank}.`),
+            h(
+              View,
+              { style: { flex: 1 } },
+              h(Text, { style: { fontSize: 8, fontWeight: 500, lineHeight: 1.3, ...clamp(2) } }, row.title),
+              h(
+                View,
+                { style: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 } },
+                row.checkKey ? h(CheckIcon, { check: row.checkKey, size: 7 }) : null,
+                h(Text, { style: { flex: 1, fontSize: 6.8, color: COLORS.muted, ...clamp(1) } }, [row.where, `Impact ${IMPACT_LABELS[row.impact]}`, row.effort].filter(Boolean).join('  ·  ')),
+              ),
+            ),
+          ),
+        ),
+      ),
     ),
   );
 }
@@ -315,503 +412,361 @@ export function FixBlock({ fix, first, compact, maxPoints }: { fix: ReportFix; f
 /** In a compact report, 3 fixes in detail; the rest join the ranked list. */
 const COMPACT_FIXES = 3;
 
-export function FixesPage({ data, compact = false }: PageProps): ReactElement {
+function FixesPart({ data, compact }: PageProps): ReactElement {
   const detailed = compact ? data.fixes.slice(0, COMPACT_FIXES) : data.fixes;
-  const rows: ReportFixRow[] = [...data.fixes.slice(detailed.length).map((fix) => fix.row), ...data.moreFixes];
-  const columns = [rows.slice(0, Math.ceil(rows.length / 2)), rows.slice(Math.ceil(rows.length / 2))];
-  const maxPoints = biggestGain([...data.fixes, ...data.moreFixes]);
-  return h(ContentPage, {
-    data,
-    children: [
-      h(PageHead, { key: 'head', eyebrow: 'What to fix', title: 'What to fix, ranked', lead: 'Ranked by how much each could add to your score. Start at the top.' }),
-      ...(detailed.length
-        ? detailed.map((fix, index) => h(FixBlock, { key: fix.rank, fix, first: index === 0, compact, maxPoints }))
-        : [h(Text, { key: 'none', style: styles.small }, 'Every check is Strong. Keep it that way.')]),
-      ...(rows.length
-        ? [
-            h(
-              View,
-              { key: 'more', style: { marginTop: 6 }, wrap: false },
-              h(SectionTitle, { title: 'Also worth fixing' }),
-              h(
-                View,
-                { style: { flexDirection: 'row', gap: GRID_GAP } },
-                ...columns.map((column, index) =>
-                  h(
-                    View,
-                    { key: index, style: { width: HALF } },
-                    ...column.map((item) =>
-                      // What to do, named as on Home; under it the check, its programs and the effort.
-                      h(
-                        View,
-                        { key: item.rank, style: { flexDirection: 'row', alignItems: 'flex-start', gap: 5, paddingVertical: 3, borderTopWidth: 0.75, borderTopColor: COLORS.line } },
-                        h(Text, { style: { ...NUM, fontSize: 8, fontWeight: 500, width: 13 } }, `${item.rank}.`),
-                        h(
-                          View,
-                          { style: { flex: 1 } },
-                          h(Text, { style: { fontSize: 8, fontWeight: 500, ...clamp(2) } }, item.title),
-                          h(
-                            View,
-                            { style: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 } },
-                            h(CheckIcon, { check: item.key, size: 7.5 }),
-                            h(Text, { style: { flex: 1, fontSize: 7, color: COLORS.muted, ...clamp(1) } }, [item.name, item.programs, item.difficulty].filter(Boolean).join('  ·  ')),
-                            h(ValueText, { text: item.gain, style: { ...styles.caption, textAlign: 'right' } }),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ]
-        : []),
+  const rows: ReportFixRow[] = [
+    ...data.fixes.slice(detailed.length).map((fix) => ({ rank: fix.rank, title: fix.title, where: fix.where, checkKey: fix.checkKey, impact: fix.impact, effort: fix.effort })),
+    ...data.moreFixes,
+  ];
+  const [head, ...rest] = detailed;
+  const note = 'The whole of it is in Drishti, with Copy.';
+  return h(Part, {
+    head: { eyebrow: 'What to fix', title: 'What to fix, by impact', lead: `The top ${detailed.length} in detail, with the steps and a ready fix to copy. Then the rest, in order.` },
+    first: head ? h(FixDetail, { fix: head, first: true, compact, readyNote: note }) : h(Text, { style: styles.small }, 'Every check is Strong. Keep it that way.'),
+    rest: [
+      ...rest.map((fix) => h(FixDetail, { key: fix.rank, fix, first: false, compact, readyNote: note })),
+      rows.length
+        ? h(
+            View,
+            { key: 'more', style: { marginTop: 8 }, wrap: false },
+            h(SectionTitle, { title: 'Also worth fixing' }),
+            h(FixRows, { rows }),
+            data.moreFixesCount ? h(Text, { style: { ...styles.caption, marginTop: 4 } }, `And ${data.moreFixesCount} more in Drishti.`) : null,
+          )
+        : null,
     ],
   });
 }
 
-// 4. By program -------------------------------------------------------------------------------------
+// 5. Rivals ----------------------------------------------------------------------------------------------
 
-/** Up to this many programs show as cards; more show as table rows. */
-const PROGRAM_CARDS = 6;
+const RANK_COLUMNS = { place: 30, score: 38, word: 60 } as const;
 
-function ProgramCard({ program }: { program: ReportData['programs'][number] }): ReactElement {
-  return h(
-    Keep,
-    { style: { width: HALF, padding: 14, backgroundColor: COLORS.panel, borderRadius: 4 } },
-    h(Text, { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: -0.1, ...clamp(1) } }, program.name),
-    h(
+function RivalsPart({ data, compact }: PageProps): ReactElement {
+  const rivals = data.rivals;
+  const head = { eyebrow: 'Rivals', title: 'You and your rivals' };
+  if (!rivals) {
+    return h(Part, { head, first: h(Text, { style: styles.small }, 'Pick 3 to 5 rivals in Drishti, and next month this shows where you stand against each of them, place by place.') });
+  }
+  const label = (text: string, style: object) => h(Text, { style: { fontSize: 7, fontWeight: 500, color: COLORS.muted, ...style } }, text);
+  const sides = rivals.ranking;
+  const nameWidth = 96;
+  const sideWidth = (CONTENT_WIDTH - nameWidth) / Math.max(1, sides.length);
+  return h(Part, {
+    head,
+    first: h(
       View,
-      { style: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 8 } },
+      { style: { paddingVertical: 10, paddingHorizontal: 12, backgroundColor: COLORS.panel, borderRadius: 4 } },
+      h(Label, null, 'This month’s one line'),
+      h(Text, { style: { fontSize: 11.5, fontWeight: 600, lineHeight: 1.35, letterSpacing: -0.1, ...clamp(3) } }, rivals.line ?? 'Your rivals are being checked. Where you stand shows here next month.'),
+    ),
+    rest: [
+      // The ranking, with the small score and the three words.
       h(
         View,
-        { style: { flexDirection: 'row', alignItems: 'flex-end' } },
-        h(BigNumber, { value: program.score, size: 34 }),
-        h(Text, { style: { ...NUM, fontSize: 8.5, color: COLORS.muted, marginLeft: 4, marginBottom: 4 } }, '/ 100'),
-      ),
-      h(View, { style: { alignItems: 'flex-end', gap: 4 } }, h(LabelChip, { label: program.label }), program.change ? h(ValueText, { text: program.change, style: styles.caption }) : null),
-    ),
-    h(
-      View,
-      { style: { flexDirection: 'row', gap: 8, marginTop: 12 } },
-      ...PILLARS.map((pillar) =>
+        { key: 'ranking', style: { marginTop: 14 }, wrap: false },
+        h(SectionTitle, { title: 'The ranking', lead: 'You and each rival, from the latest Audit of each. Highest first.' }),
         h(
           View,
-          { key: pillar, style: { flex: 1 } },
+          { style: { flexDirection: 'row', paddingVertical: 4, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: COLORS.black } },
+          label('Place', { width: RANK_COLUMNS.place }),
+          label('Institution', { flex: 1 }),
+          label('Score', { width: RANK_COLUMNS.score, textAlign: 'right' }),
+          ...PILLARS.map((pillar) => label(PILLAR_LABELS[pillar], { width: RANK_COLUMNS.word, paddingLeft: 12 })),
+        ),
+        ...sides.map((row, index) =>
           h(
             View,
-            { style: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 } },
-            h(Text, { style: { fontSize: 7.5, color: COLORS.muted } }, PILLAR_LABELS[pillar]),
-            h(Text, { style: { ...NUM, fontSize: 7.5, fontWeight: 600 } }, String(program.pillars[pillar])),
-          ),
-          h(ScoreBar, { score: program.pillars[pillar], height: 2.5 }),
-        ),
-      ),
-    ),
-    h(
-      View,
-      { style: { marginTop: 12, paddingTop: 8, borderTopWidth: 0.75, borderTopColor: COLORS.line } },
-      program.topFix
-        ? h(Text, { style: { ...styles.small, ...clamp(2) } }, h(Text, { style: { fontWeight: 600 } }, 'Top fix  '), `${program.topFix}. ${program.topFixGain ?? ''}.`)
-        : h(Text, { style: styles.small }, 'Every check is Strong for this program.'),
-      program.added
-        ? h(Text, { style: { ...styles.small, marginTop: 3, color: COLORS.muted, ...clamp(1) } }, h(Text, { style: { fontWeight: 600, color: COLORS.black } }, `${ADDED_BY_YOU}  `), program.added)
-        : null,
-    ),
-  );
-}
-
-// One line a program, so up to 30 programs fit on the page.
-const PROGRAM_COLUMNS = [
-  { key: 'name', label: 'Program', width: 0 },
-  { key: 'score', label: 'Score', width: 36 },
-  { key: 'change', label: 'Change', width: 56 },
-  { key: 'discovered', label: 'Discovered', width: 50 },
-  { key: 'trusted', label: 'Trusted', width: 42 },
-  { key: 'chosen', label: 'Chosen', width: 42 },
-  { key: 'fix', label: 'Top fix', width: 104 },
-] as const;
-
-function ProgramTable({ programs }: { programs: ReportData['programs'] }): ReactElement {
-  const cell = (key: (typeof PROGRAM_COLUMNS)[number]['key']) => {
-    const column = PROGRAM_COLUMNS.find((entry) => entry.key === key);
-    const numeric = key === 'score' || key === 'discovered' || key === 'trusted' || key === 'chosen';
-    return column?.width ? { width: column.width, textAlign: numeric ? ('right' as const) : ('left' as const), paddingLeft: numeric ? 0 : 8 } : { flex: 1 };
-  };
-  return h(
-    View,
-    null,
-    h(
-      View,
-      { style: { flexDirection: 'row', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: COLORS.black } },
-      ...PROGRAM_COLUMNS.map((column) => h(Text, { key: column.key, style: { ...cell(column.key), fontSize: 7, fontWeight: 500, color: COLORS.muted } }, column.label)),
-    ),
-    ...programs.map((program, index) =>
-      h(
-        View,
-        { key: index, wrap: false, style: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4, borderBottomWidth: 0.5, borderBottomColor: COLORS.line } },
-        h(Text, { style: { ...cell('name'), fontSize: 8, fontWeight: 500, ...clamp(1) } }, program.name),
-        h(Text, { style: { ...NUM, ...cell('score'), fontSize: 9, fontWeight: 600 } }, String(program.score)),
-        h(ValueText, { text: program.change ?? '', style: { ...cell('change'), fontSize: 7, color: COLORS.muted } }),
-        h(Text, { style: { ...NUM, ...cell('discovered'), fontSize: 8 } }, String(program.pillars.discovered)),
-        h(Text, { style: { ...NUM, ...cell('trusted'), fontSize: 8 } }, String(program.pillars.trusted)),
-        h(Text, { style: { ...NUM, ...cell('chosen'), fontSize: 8 } }, String(program.pillars.chosen)),
-        h(Text, { style: { ...cell('fix'), fontSize: 7, color: COLORS.muted, ...clamp(1) } }, program.topFix ?? 'Every check is Strong'),
-      ),
-    ),
-  );
-}
-
-export function ProgramsPage({ data }: { data: Pick<ReportData, 'institution' | 'monthLabel' | 'programs' | 'morePrograms'>; compact?: boolean }): ReactElement {
-  const cards = data.programs.length <= PROGRAM_CARDS;
-  return h(ContentPage, {
-    data,
-    children: [
-      h(PageHead, { key: 'head', eyebrow: 'By program', title: 'Program by program', lead: 'Each program’s score, and the one fix that would help it most.' }),
-      cards
-        ? h(View, { key: 'grid', style: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP } }, ...data.programs.map((program, index) => h(ProgramCard, { key: index, program })))
-        : h(ProgramTable, { key: 'table', programs: data.programs }),
-      ...(data.morePrograms ? [h(Text, { key: 'more', style: { ...styles.caption, marginTop: 8 } }, `And ${data.morePrograms} more ${data.morePrograms === 1 ? 'program' : 'programs'} in Drishti.`)] : []),
-    ],
-  });
-}
-
-// 5. Rivals -------------------------------------------------------------------------------------------
-
-const RIVAL_COLUMNS = [
-  { key: 'rank', label: 'Rank', width: 34 },
-  { key: 'name', label: 'Institution', width: 0 },
-  { key: 'overall', label: 'Overall', width: 50 },
-  { key: 'discovered', label: 'Discovered', width: 60 },
-  { key: 'trusted', label: 'Trusted', width: 52 },
-  { key: 'chosen', label: 'Chosen', width: 52 },
-  { key: 'change', label: 'Change', width: 58 },
-] as const;
-
-/**
- * Part by part: each part of the score ranked, side by side, as on the dashboard: real names, the
- * score and a thin bar, your row in black, and one plain line about the gap (rule 11).
- */
-function RivalRanks({ rows }: { rows: NonNullable<ReportData['rivals']>['rows'] }): ReactElement | null {
-  const toScored = (row: (typeof rows)[number]): Scored => ({
-    id: row.name,
-    name: row.name,
-    scores: row.pillars && row.overall !== null ? { overall: row.overall, ...row.pillars } : null,
-  });
-  const you = rows.find((row) => row.you);
-  if (!you?.pillars) return null;
-  const spread = pillarSpread(
-    toScored(you),
-    rows.filter((row) => !row.you).map(toScored),
-  );
-  const bar = 18;
-  const gapLine = (row: (typeof spread)[number]): ReactElement | null => {
-    const gap = partGap(row);
-    if (!gap) return null;
-    const number = (value: number) => h(Text, { style: { ...NUM, fontWeight: 600 } }, String(value));
-    const words =
-      gap.kind === 'level' ? [`Level with ${gap.name}`] : gap.kind === 'lead' ? [`You lead ${gap.name} by `, number(gap.points)] : [number(gap.points), ` behind ${gap.name}`];
-    return h(Text, { style: { fontSize: 7.5, marginTop: 2, ...clamp(2) } }, ...words);
-  };
-  return h(
-    View,
-    { wrap: false, style: { flexDirection: 'row', gap: GRID_GAP, marginTop: 4 } },
-    ...spread.map((row) =>
-      h(
-        View,
-        { key: row.pillar, style: { width: THIRD, paddingHorizontal: 8, paddingVertical: 7, gap: 2.5, backgroundColor: COLORS.panel, borderRadius: 4 } },
-        h(
-          View,
-          { style: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' } },
-          h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 4 } }, h(PillarIcon, { pillar: row.pillar, size: 9 }), h(Text, { style: { fontSize: 8.5, fontWeight: 600 } }, PILLAR_LABELS[row.pillar])),
-          row.rank ? h(Text, { style: { fontSize: 7.5, color: COLORS.muted } }, h(Text, { style: { ...NUM, fontWeight: 600, color: COLORS.black } }, ordinal(row.rank)), ` of ${row.of}`) : null,
-        ),
-        h(Text, { style: { fontSize: 7, color: COLORS.muted, marginBottom: 1 } }, PILLAR_QUESTIONS[row.pillar]),
-        ...row.entries.map((entry) => {
-          const place = 1 + row.entries.filter((other) => other.score > entry.score).length;
-          const ink = entry.you ? COLORS.ivory : COLORS.black;
-          const share = Math.max(0, Math.min(1, entry.score / 100));
-          return h(
-            View,
-            { key: entry.id, style: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 2.5, paddingHorizontal: 4, borderRadius: 2, backgroundColor: entry.you ? COLORS.black : undefined } },
-            h(Text, { style: { ...NUM, width: 7, fontSize: 7, color: entry.you ? COLORS.ivory : COLORS.muted } }, String(place)),
-            h(Text, { style: { flex: 1, fontSize: 7.2, fontWeight: entry.you ? 600 : 500, color: ink, ...clamp(1) } }, entry.you ? 'You' : entry.name),
-            h(
-              View,
-              { style: { width: bar, height: 2.5, borderRadius: 1.25, backgroundColor: entry.you ? COLORS.lineDark : COLORS.track } },
-              share > 0 ? h(View, { style: { width: bar * share, height: 2.5, borderRadius: 1.25, backgroundColor: entry.you ? COLORS.ivory : COLORS.muted } }) : null,
-            ),
-            h(Text, { style: { ...NUM, width: 13, textAlign: 'right', fontSize: 8, fontWeight: 600, color: ink } }, String(Math.round(entry.score))),
-          );
-        }),
-        gapLine(row),
-      ),
-    ),
-  );
-}
-
-export function RivalsPage({ data, compact = false }: PageProps): ReactElement {
-  const rivals = data.rivals;
-  const cell = (key: (typeof RIVAL_COLUMNS)[number]['key']) => {
-    const column = RIVAL_COLUMNS.find((entry) => entry.key === key);
-    return column && column.width ? { width: column.width, textAlign: key === 'name' || key === 'rank' ? ('left' as const) : ('right' as const) } : { flex: 1 };
-  };
-  if (!rivals) {
-    return h(ContentPage, {
-      data,
-      children: [
-        h(PageHead, { key: 'head', eyebrow: 'Rivals', title: 'You and your rivals', lead: null }),
-        h(Text, { key: 'none', style: styles.small }, 'Pick 3 to 5 rivals in Drishti, and next month this page shows where you stand against each of them.'),
-      ],
-    });
-  }
-  return h(ContentPage, {
-    data,
-    children: [
-      h(PageHead, { key: 'head', eyebrow: 'Rivals', title: 'You and your rivals', lead: rivals.verdict }),
-      h(SectionTitle, { key: 'table-title', title: 'Head to head', lead: 'Overall scores and the three parts, from the latest Audit of each. Highest first.' }),
-      h(
-        View,
-        { key: 'table' },
-        h(
-          View,
-          { style: { flexDirection: 'row', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: COLORS.black } },
-          ...RIVAL_COLUMNS.map((column) => h(Text, { key: column.key, style: { ...cell(column.key), fontSize: 7.5, fontWeight: 500, color: COLORS.muted } }, column.label)),
-        ),
-        ...rivals.rows.map((row, index) => {
-          const ink = COLORS.black;
-          const number = (value: number | null | undefined) => (value === null || value === undefined ? '' : String(value));
-          return h(
-            View,
-            {
-              key: index,
-              wrap: false,
-              style: {
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 8,
-                paddingHorizontal: 8,
-                backgroundColor: row.you ? COLORS.panel : undefined,
-                borderBottomWidth: 0.75,
-                borderBottomColor: COLORS.line,
-                color: ink,
-              },
-            },
-            h(Text, { style: { ...NUM, ...cell('rank'), fontSize: 9, fontWeight: 600, color: ink } }, row.rank === null ? '' : String(row.rank)),
+            { key: index, style: { flexDirection: 'row', alignItems: 'center', paddingVertical: 5.5, paddingHorizontal: 6, backgroundColor: row.you ? COLORS.panel : undefined, borderBottomWidth: 0.75, borderBottomColor: COLORS.line } },
+            h(Text, { style: { ...NUM, width: RANK_COLUMNS.place, fontSize: 9, fontWeight: 600 } }, row.place === null ? '' : String(row.place)),
             h(
               Text,
-              { style: { ...cell('name'), fontSize: 9.5, fontWeight: row.you ? 600 : 500, color: ink, ...clamp(1) } },
+              { style: { flex: 1, fontSize: 9, fontWeight: row.you ? 600 : 500, ...clamp(1) } },
               row.name,
-              row.you ? h(Text, { style: { fontSize: 7.5, fontWeight: 400, color: COLORS.muted } }, '   You') : null,
+              row.you ? h(Text, { style: { fontSize: 7, fontWeight: 400, color: COLORS.muted } }, '   You') : null,
+              row.nearby ? h(Text, { style: { fontSize: 7, fontWeight: 400, color: COLORS.muted } }, '   Nearby city') : null,
             ),
-            h(Text, { style: { ...NUM, ...cell('overall'), fontSize: 10, fontWeight: 600, color: ink } }, number(row.overall)),
-            h(Text, { style: { ...NUM, ...cell('discovered'), fontSize: 9, color: ink } }, number(row.pillars?.discovered)),
-            h(Text, { style: { ...NUM, ...cell('trusted'), fontSize: 9, color: ink } }, number(row.pillars?.trusted)),
-            h(Text, { style: { ...NUM, ...cell('chosen'), fontSize: 9, color: ink } }, number(row.pillars?.chosen)),
-            h(ValueText, { text: row.overall === null ? 'Not scored yet' : (row.change ?? ''), style: { ...cell('change'), fontSize: 8, color: COLORS.muted } }),
-          );
-        }),
+            h(Text, { style: { ...NUM, width: RANK_COLUMNS.score, textAlign: 'right', fontSize: 8, color: COLORS.muted } }, row.overall === null ? '' : String(row.overall)),
+            ...(row.words.length
+              ? row.words.map((word, wordIndex) => h(Text, { key: wordIndex, style: { width: RANK_COLUMNS.word, paddingLeft: 12, fontSize: 8.5, fontWeight: word === 'Strong' ? 600 : 400 } }, word))
+              : [h(Text, { key: 'none', style: { width: RANK_COLUMNS.word * 3, paddingLeft: 12, fontSize: 7.5, color: COLORS.muted } }, 'Not checked yet')]),
+          ),
+        ),
       ),
-      ...(compact
-        ? []
-        : [
-            h(
-              View,
-              { key: 'pillars', style: styles.section, wrap: false },
-              h(SectionTitle, { title: 'Part by part', lead: 'Each part of the score ranked, from the latest Audit of each. Your row is in black.' }),
-              h(RivalRanks, { rows: rivals.rows }),
-            ),
-          ]),
+      // Place by place: each side's result where a place is scored, what was found where it is not.
       h(
         View,
-        { key: 'moves', style: styles.section },
-        h(SectionTitle, {
-          title: `Key moves in ${data.monthLabel.split(' ')[0]}`,
-          lead: rivals.moves.length ? 'What your rivals changed on their public pages, newest first.' : null,
-        }),
-        ...(rivals.moves.length
+        { key: 'places', style: { marginTop: 16 }, wrap: false },
+        h(SectionTitle, { title: 'Place by place', lead: 'Who leads where. Each side’s result is its share of the place’s points, from its own Audit.' }),
+        h(
+          View,
+          { style: { flexDirection: 'row', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: COLORS.black } },
+          label('Place', { width: nameWidth }),
+          ...sides.map((side, index) => h(Text, { key: index, style: { width: sideWidth, paddingRight: 6, fontSize: 7, fontWeight: side.you ? 600 : 500, color: side.you ? COLORS.black : COLORS.muted, ...clamp(2) } }, side.you ? 'You' : side.name)),
+        ),
+        ...rivals.places.map((place) =>
+          h(
+            View,
+            { key: place.key, style: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 5.5, borderBottomWidth: 0.75, borderBottomColor: COLORS.line } },
+            h(View, { style: { width: nameWidth, paddingRight: 6 } }, h(Text, { style: { fontSize: 8.5, fontWeight: 600 } }, place.name), h(Text, { style: { fontSize: 7, color: COLORS.muted, marginTop: 1, ...clamp(2) } }, place.lead)),
+            ...place.cells.map((cell, index) =>
+              h(
+                View,
+                { key: index, style: { width: sideWidth, paddingRight: 6 } },
+                place.scored
+                  ? cell.word
+                    ? h(WordBar, { word: cell.word, share: cell.share ?? 0, strong: cell.leads })
+                    : h(Text, { style: { fontSize: 7, color: COLORS.muted } }, 'Not checked yet')
+                  : h(Text, { style: { fontSize: 7, lineHeight: 1.3, ...clamp(compact ? 2 : 3) } }, cell.note ?? 'Not checked yet'),
+              ),
+            ),
+          ),
+        ),
+      ),
+      // Alerts: what they changed this month.
+      h(TitledList, {
+        key: 'moves',
+        marginTop: 16,
+        title: `Alerts in ${data.monthName}`,
+        lead: rivals.moves.length ? 'What your rivals changed on their public pages, newest first. Learn from them, never copy.' : null,
+        rows: rivals.moves.length
           ? rivals.moves.map((move, index) =>
               h(
                 Keep,
-                { key: index, style: { flexDirection: 'row', paddingVertical: 8, borderTopWidth: 0.75, borderTopColor: index === 0 ? COLORS.black : COLORS.line } },
-                h(Text, { style: { width: 76, ...styles.caption } }, move.date),
+                { key: index, style: { flexDirection: 'row', paddingVertical: 5.5, borderTopWidth: 0.75, borderTopColor: index === 0 ? COLORS.black : COLORS.line } },
+                h(Text, { style: { width: 70, ...styles.caption } }, move.date),
                 h(
                   View,
                   { style: { flex: 1 } },
-                  h(Text, { style: { fontSize: 9.5, fontWeight: 600, ...clamp(1) } }, move.rival, h(Text, { style: { fontSize: 7.5, fontWeight: 400, color: COLORS.muted } }, `   ${move.kind}`)),
-                  h(Text, { style: { ...styles.small, marginTop: 2, ...clamp(2) } }, move.text),
+                  h(Text, { style: { fontSize: 9, fontWeight: 600, ...clamp(1) } }, move.rival, h(Text, { style: { fontSize: 7.5, fontWeight: 400, color: COLORS.muted } }, `   ${move.kind}`)),
+                  h(Text, { style: { ...styles.small, marginTop: 1, ...clamp(compact ? 1 : 2) } }, move.text),
                 ),
               ),
             )
-          : [h(Text, { key: 'none', style: styles.small }, `No new moves found in ${data.monthLabel.split(' ')[0]}. Drishti checks their public pages every week.`)]),
-        ...(rivals.moreMoves ? [h(Text, { key: 'more', style: { ...styles.caption, marginTop: 6 } }, `And ${rivals.moreMoves} more in Drishti.`)] : []),
-      ),
+          : [h(Text, { key: 'none', style: styles.small }, `No new moves found in ${data.monthName}. Drishti checks their public pages every week.`)],
+        after: rivals.moreMoves ? h(Text, { style: { ...styles.caption, marginTop: 4 } }, `And ${rivals.moreMoves} more in Drishti.`) : null,
+      }),
     ],
   });
 }
 
-// 6. Demand ---------------------------------------------------------------------------------------------
+// 6. Demand ----------------------------------------------------------------------------------------------
 
-export function DemandPage({ data, compact = false }: PageProps): ReactElement {
+function DemandPart({ data, compact }: PageProps): ReactElement {
   const demand = data.demand;
   if (!demand) {
-    return h(ContentPage, {
-      data,
-      children: [
-        h(PageHead, { key: 'head', eyebrow: 'Demand', title: 'What students want', lead: null }),
-        h(Text, { key: 'none', style: styles.small }, 'Demand covers the programs on Drishti’s list. Add one in Settings to see what students ask about it.'),
-      ],
-    });
+    return h(Part, { head: { eyebrow: 'Demand', title: 'What students want' }, first: h(Text, { style: styles.small }, 'Demand covers the programs on Drishti’s list. Add one in Settings to see what students ask about it.') });
   }
   const lead = [demand.caption, demand.pulledOn ? `Updated ${demand.pulledOn}` : null, 'Grouped only, never one student'].filter(Boolean).join('.  ');
-  const fastest = Math.max(0, ...demand.rising.map((trend) => trend.changePct ?? 0));
+  const fastest = Math.max(0, ...demand.trends.map((trend) => (trend.kind === 'rising' ? (trend.changePct ?? 0) : 0)));
   const mostAsked = Math.max(0, ...demand.questions.map((question) => question.asked));
-  return h(ContentPage, {
-    data,
-    children: [
-      h(PageHead, { key: 'head', eyebrow: 'Demand', title: `What students in ${demand.place} want`, lead: `${lead}.` }),
-      h(SectionTitle, { key: 'rising-title', title: 'Rising', lead: 'The courses and careers students search for more this month.' }),
-      h(
+  const row = (index: number) => ({ flexDirection: 'row' as const, alignItems: 'center' as const, paddingVertical: 4.5, borderTopWidth: 0.75, borderTopColor: index === 0 ? COLORS.black : COLORS.line });
+  const picks = demand.picks.length
+    ? h(
         View,
-        { key: 'rising', style: { flexDirection: 'row', gap: GRID_GAP } },
-        ...demand.rising.map((trend, index) =>
-          h(
-            View,
-            { key: index, style: { width: THIRD, padding: 12, backgroundColor: COLORS.panel, borderRadius: 4 } },
-            // A change is a number in Inter ("↑ 47%"); a new trend says so in words.
-            arrowValue(trend.change) ? h(BigNumber, { value: arrowValue(trend.change) ?? '', size: 20 }) : h(Text, { style: { fontSize: 20, fontWeight: 600, lineHeight: 1 } }, trend.change || 'New'),
-            trend.changePct !== null && fastest > 0 ? h(View, { style: { marginTop: 8 } }, h(AmountBar, { value: trend.changePct, max: fastest, width: THIRD - 24 })) : null,
-            h(Text, { style: { fontSize: 9.5, fontWeight: 600, marginTop: 8, lineHeight: 1.3, ...clamp(3) } }, trend.text),
-            h(Text, { style: { ...styles.caption, marginTop: 4, ...clamp(2) } }, `${trend.count}  ·  ${trend.program}`),
-          ),
-        ),
-      ),
-      h(
-        View,
-        { key: 'questions', style: styles.section },
-        h(SectionTitle, { title: 'Top questions', lead: demand.questionsLead }),
-        ...demand.questions.map((question, index) =>
-          h(
-            Keep,
-            { key: index, style: { flexDirection: 'row', paddingVertical: 6, borderTopWidth: 0.75, borderTopColor: index === 0 ? COLORS.black : COLORS.line } },
-            h(Text, { style: { ...NUM, width: 20, fontSize: 9, fontWeight: 600 } }, String(index + 1)),
+        null,
+        h(SectionTitle, { title: 'Make these 3 this month', lead: 'Each answers what students here ask most, that your website does not answer yet.' }),
+        h(
+          View,
+          { style: { flexDirection: 'row', gap: GAP } },
+          ...demand.picks.map((pick, index) =>
             h(
               View,
-              { style: { flex: 1 } },
-              h(Text, { style: { fontSize: 9.5, fontWeight: 500, lineHeight: 1.35, ...clamp(compact ? 1 : 2) } }, question.text),
+              { key: index, style: { width: THIRD, padding: 10, backgroundColor: COLORS.panel, borderRadius: 4 } },
+              h(BigNumber, { value: index + 1, size: 16 }),
+              h(Text, { style: { fontSize: 9, fontWeight: 600, lineHeight: 1.3, marginTop: 6, ...clamp(3) } }, pick.title),
+              h(Text, { style: { fontSize: 7, color: COLORS.muted, marginTop: 4, ...clamp(1) } }, [pick.meta, pick.effort].filter(Boolean).join('  ·  ')),
+              pick.weight ? h(Text, { style: { fontSize: 7.5, lineHeight: 1.35, marginTop: 3, ...clamp(compact ? 2 : 3) } }, pick.weight) : null,
+            ),
+          ),
+        ),
+      )
+    : h(Text, { style: styles.small }, 'Make these 3 arrives with the next monthly update.');
+  return h(Part, {
+    head: { eyebrow: 'Demand', title: `What students in ${demand.place} want`, lead: `${lead}.${demand.note ? ` ${demand.note}` : ''}` },
+    first: picks,
+    rest: [
+      demand.trends.length
+        ? h(TitledList, {
+            key: 'trends',
+            title: 'Programs rising and falling',
+            lead: 'What students search for more, and less, this month.',
+            rows: demand.trends.map((trend, index) =>
               h(
-                View,
-                { style: { flexDirection: 'row', alignItems: 'center', gap: 10 } },
-                h(Text, { style: { ...styles.caption, flex: 1, ...clamp(1) } }, [question.count, question.program, question.language].filter(Boolean).join('  ·  ')),
-                mostAsked > 0 ? h(AmountBar, { value: question.asked, max: mostAsked, width: 96 }) : null,
+                Keep,
+                { key: index, style: row(index) },
+                h(
+                  View,
+                  { style: { flex: 1, paddingRight: 10 } },
+                  h(Text, { style: { fontSize: 8.8, fontWeight: 600, ...clamp(1) } }, trend.text),
+                  h(Text, { style: { fontSize: 7, color: COLORS.muted, ...clamp(1) } }, [trend.program, trend.searches].filter(Boolean).join('  ·  ')),
+                ),
+                h(
+                  Text,
+                  { style: { width: 92, fontSize: 8, fontWeight: 500 } },
+                  trend.word ?? '',
+                  trend.change && arrowValue(trend.change) ? h(Text, { style: { ...NUM, color: COLORS.muted } }, `  ${arrowValue(trend.change)}`) : null,
+                ),
+                h(View, { style: { width: 64 } }, trend.kind === 'rising' && trend.changePct !== null && fastest > 0 ? h(AmountBar, { value: trend.changePct, max: fastest, width: 64 }) : null),
               ),
             ),
-          ),
-        ),
-      ),
-      h(
-        View,
-        { key: 'ideas', style: styles.section },
-        h(SectionTitle, { title: 'Content ideas', lead: 'Each one answers a real question students ask.' }),
-        ...demand.ideas.map((idea, index) =>
-          h(
-            Keep,
-            { key: index, style: { flexDirection: 'row', paddingVertical: 6, borderTopWidth: 0.75, borderTopColor: index === 0 ? COLORS.black : COLORS.line } },
-            h(Text, { style: { ...NUM, width: 20, fontSize: 9, fontWeight: 600 } }, String(index + 1)),
-            h(
-              View,
-              { style: { flex: 1 } },
-              h(Text, { style: { fontSize: 9.5, lineHeight: 1.35, ...clamp(compact ? 1 : 2) } }, idea.text),
-              h(Text, { style: { ...styles.caption, ...clamp(1) } }, idea.basedOn ? `Answers “${idea.basedOn}”  ·  ${idea.program}` : idea.program),
+          })
+        : null,
+      demand.questions.length
+        ? h(TitledList, {
+            key: 'questions',
+            title: 'What students ask',
+            lead: 'Asked most first, across your programs. Questions asked in Hindi or Assamese are shown in English.',
+            rows: demand.questions.map((question, index) =>
+              h(
+                Keep,
+                { key: index, style: row(index) },
+                h(Text, { style: { ...NUM, width: 16, fontSize: 8.5, fontWeight: 600 } }, String(index + 1)),
+                h(
+                  View,
+                  { style: { flex: 1, paddingRight: 10 } },
+                  h(Text, { style: { fontSize: 8.8, fontWeight: 500, lineHeight: 1.3, ...clamp(compact ? 1 : 2) } }, question.text),
+                  h(Text, { style: { fontSize: 7, color: COLORS.muted, ...clamp(1) } }, [question.program, question.count, question.language].filter(Boolean).join('  ·  ')),
+                ),
+                mostAsked > 0 ? h(AmountBar, { value: question.asked, max: mostAsked, width: 80 }) : null,
+              ),
             ),
-          ),
-        ),
-      ),
+          })
+        : null,
+      demand.bestMonths.length
+        ? h(TitledList, {
+            key: 'months',
+            title: 'The best months to post',
+            lead: 'When students here look most, for each program.',
+            rows: demand.bestMonths.map((entry, index) =>
+              h(
+                Keep,
+                { key: index, style: { ...row(index), paddingVertical: 3.5 } },
+                h(Text, { style: { width: 170, fontSize: 8.5, fontWeight: 600, ...clamp(1) } }, entry.program),
+                h(Text, { style: { flex: 1, fontSize: 8.5, ...clamp(1) } }, entry.text),
+              ),
+            ),
+          })
+        : null,
     ],
   });
 }
 
-// 7. 3 things to do, and the sources ------------------------------------------------------------------
+// 7. Leads (Client) ------------------------------------------------------------------------------------------
 
-function thingsLead(things: readonly Thing[]): string {
-  const sources = things.map((thing) => thing.source).join(',');
-  return sources === 'audit,rivals,demand'
-    ? 'One from your Audit, one from your rivals and one from what students ask. In this order.'
-    : 'The steps that could make the most difference this month. In this order.';
+function LeadsPart({ data }: PageProps): ReactElement | null {
+  const leads = data.leads;
+  if (!leads) return null;
+  const beforeName = formatMonthName(previousMonth(data.month));
+  const label = (text: string, style: object) => h(Text, { style: { fontSize: 7, fontWeight: 500, color: COLORS.muted, ...style } }, text);
+  return h(Part, {
+    head: { eyebrow: 'Leads', title: 'What your content brought in', lead: leads.line },
+    first: h(
+      View,
+      null,
+      h(
+        View,
+        { style: { flexDirection: 'row', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: COLORS.black } },
+        label('Link', { flex: 1 }),
+        label(data.monthName, { width: 80, textAlign: 'right' }),
+        label(beforeName, { width: 80, textAlign: 'right' }),
+      ),
+      ...leads.links.map((link, index) =>
+        h(
+          View,
+          { key: index, style: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4.5, borderBottomWidth: 0.75, borderBottomColor: COLORS.line } },
+          h(Text, { style: { flex: 1, fontSize: 8.8, fontWeight: 500, ...clamp(1) } }, link.name),
+          h(Text, { style: { ...NUM, width: 80, textAlign: 'right', fontSize: 9, fontWeight: 600 } }, String(link.count)),
+          h(Text, { style: { ...NUM, width: 80, textAlign: 'right', fontSize: 8.5, color: COLORS.muted } }, String(link.before)),
+        ),
+      ),
+      leads.moreLinks ? h(Text, { style: { ...styles.caption, marginTop: 4 } }, `And ${leads.moreLinks} more links in Drishti.`) : null,
+      h(Text, { style: { ...styles.caption, marginTop: 6 } }, 'Counts only. A student’s details stay in Drishti, for your own people.'),
+    ),
+  });
 }
 
-export function ClosingPage({ data, compact = false }: PageProps): ReactElement {
-  return h(ContentPage, {
-    data,
-    children: [
-      h(PageHead, { key: 'head', eyebrow: 'This month', title: '3 things to do this month', lead: thingsLead(data.things) }),
+// 8. Progress and sources ---------------------------------------------------------------------------------------
+
+const PROGRESS_COLUMNS = [
+  { key: 'month', label: 'Month', width: 58 },
+  { key: 'score', label: 'Score', width: 40 },
+  { key: 'discovered', label: 'Visibility', width: 66 },
+  { key: 'trusted', label: 'Trust', width: 66 },
+  { key: 'chosen', label: 'Chosen', width: 66 },
+  { key: 'change', label: 'Change', width: 0 },
+  { key: 'place', label: 'Among rivals', width: 80 },
+] as const;
+
+function ProgressPart({ data }: PageProps): ReactElement {
+  const cell = (key: (typeof PROGRESS_COLUMNS)[number]['key']) => {
+    const column = PROGRESS_COLUMNS.find((entry) => entry.key === key);
+    return column?.width ? { width: column.width } : { flex: 1 };
+  };
+  return h(Part, {
+    head: { eyebrow: 'Progress and sources', title: 'Month by month', lead: 'Your score, small, and the three words each month, with your place among your rivals.' },
+    first: h(
+      View,
+      null,
       h(
         View,
-        { key: 'things', wrap: false, style: { backgroundColor: COLORS.black, borderRadius: 4, paddingHorizontal: 20, paddingVertical: 4 } },
-        ...data.things.map((thing, index) =>
-          h(
-            View,
-            { key: index, style: { flexDirection: 'row', paddingVertical: 9, borderTopWidth: index === 0 ? 0 : 0.75, borderTopColor: COLORS.lineDark } },
-            h(View, { style: { width: 40 } }, h(Text, { style: { ...NUM, fontWeight: 600, fontSize: 28, lineHeight: 1, letterSpacing: -1, color: COLORS.ivory } }, String(index + 1))),
-            h(
-              View,
-              { style: { flex: 1 } },
-              h(Text, { style: { fontSize: 7, fontWeight: 500, letterSpacing: 0.9, textTransform: 'uppercase', color: COLORS.slate } }, THING_SOURCE_LABELS[thing.source]),
-              h(Text, { style: { fontSize: 12, fontWeight: 600, letterSpacing: -0.15, lineHeight: 1.3, color: COLORS.ivory, marginTop: 3, ...clamp(2) } }, thing.title),
-              thing.detail ? h(Text, { style: { fontSize: 8.5, lineHeight: 1.45, color: COLORS.quietDark, marginTop: 3, ...clamp(compact ? 2 : 3) } }, thing.detail) : null,
-            ),
-          ),
-        ),
-        ...(data.things.length === 0 ? [h(Text, { key: 'none', style: { fontSize: 10, color: COLORS.ivory, paddingVertical: 12 } }, 'Nothing pressing this month. Keep what works going.')] : []),
+        { style: { flexDirection: 'row', paddingVertical: 4, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: COLORS.black } },
+        ...PROGRESS_COLUMNS.map((column) => h(Text, { key: column.key, style: { ...cell(column.key), fontSize: 7, fontWeight: 500, color: COLORS.muted } }, column.label)),
       ),
+      ...data.progress.map((row, index) =>
+        h(
+          View,
+          { key: row.month, style: { flexDirection: 'row', alignItems: 'center', paddingVertical: 5, paddingHorizontal: 6, backgroundColor: index === data.progress.length - 1 ? COLORS.panel : undefined, borderBottomWidth: 0.75, borderBottomColor: COLORS.line } },
+          h(Text, { style: { ...cell('month'), fontSize: 8.5, fontWeight: 600 } }, row.label),
+          h(Text, { style: { ...NUM, ...cell('score'), fontSize: 8, color: COLORS.muted } }, String(row.score)),
+          ...PILLARS.map((pillar, wordIndex) => h(Text, { key: pillar, style: { ...cell(pillar), fontSize: 8.5, fontWeight: row.words[wordIndex] === 'Strong' ? 600 : 400 } }, row.words[wordIndex] ?? '')),
+          h(Text, { style: { ...cell('change'), fontSize: 8, color: COLORS.muted } }, row.change ? (arrowValue(row.change) ?? row.change) : 'First Audit'),
+          h(Text, { style: { ...cell('place'), fontSize: 8, color: COLORS.muted } }, row.place ?? ''),
+        ),
+      ),
+    ),
+    rest: [
       h(
         View,
-        { key: 'sources', style: { marginTop: 18 } },
+        { key: 'sources', style: { marginTop: 16 }, wrap: false },
         h(SectionTitle, { title: 'Sources and dates checked' }),
-        ...data.sources.notes.map((note) =>
+        ...data.sources.map((note) =>
           h(
             Keep,
             { key: note.label, style: { flexDirection: 'row', paddingVertical: 2.5 } },
             h(Text, { style: { width: 58, fontSize: 7.5, fontWeight: 600 } }, note.label),
-            h(Text, { style: { flex: 1, fontSize: 7.5, lineHeight: 1.4, color: COLORS.muted, ...clamp(2) } }, note.text),
-          ),
-        ),
-        h(
-          View,
-          { style: { flexDirection: 'row', marginTop: 8, paddingVertical: 4, borderBottomWidth: 0.75, borderBottomColor: COLORS.black } },
-          h(Text, { style: { width: 96, fontSize: 7, fontWeight: 500, color: COLORS.muted } }, 'Check'),
-          data.sources.checkedOn ? null : h(Text, { style: { width: 62, fontSize: 7, fontWeight: 500, color: COLORS.muted } }, 'Checked'),
-          h(Text, { style: { flex: 1, fontSize: 7, fontWeight: 500, color: COLORS.muted } }, 'Where it was found'),
-        ),
-        ...data.sources.checks.map((check, index) =>
-          h(
-            Keep,
-            { key: index, style: { flexDirection: 'row', paddingVertical: 2, borderBottomWidth: 0.5, borderBottomColor: COLORS.line } },
-            h(View, { style: { width: 96, flexDirection: 'row', gap: 4 } }, h(View, { style: { paddingTop: 1 } }, h(CheckIcon, { check: check.key, size: 7.5 })), h(Text, { style: { flex: 1, fontSize: 7, lineHeight: 1.35, fontWeight: 500 } }, check.name)),
-            data.sources.checkedOn ? null : h(Text, { style: { width: 62, fontSize: 7, lineHeight: 1.35, color: COLORS.muted } }, check.checkedOn),
-            h(
-              View,
-              { style: { flex: 1, flexDirection: 'row', gap: 4 } },
-              check.links.length ? h(View, { style: { paddingTop: 1 } }, h(PlatformIcon, { platform: check.platform, size: 7.5 })) : null,
-              h(Text, { style: { flex: 1, fontSize: 7, lineHeight: 1.35, color: COLORS.muted, ...clamp(compact ? 1 : 2) } }, check.links.join(';  ') || 'Not found on a public page'),
-            ),
+            h(Text, { style: { flex: 1, fontSize: 7.5, lineHeight: 1.4, color: COLORS.muted, ...clamp(3) } }, note.text),
           ),
         ),
       ),
-      ...(data.contact
-        ? [
+      data.contact
+        ? h(
+            Keep,
+            { key: 'contact', style: { marginTop: 18 } },
             h(
-              Keep,
-              { key: 'contact', style: { marginTop: 18 } },
-              h(
-                Text,
-                { style: { fontSize: 8.5, color: COLORS.muted } },
-                `${data.contact.text} `,
-                h(Link, { src: `mailto:${data.contact.email}`, style: { color: COLORS.black, fontWeight: 500, textDecoration: 'none' } }, data.contact.email),
-              ),
+              Text,
+              { style: { fontSize: 8.5, color: COLORS.muted } },
+              `${data.contact.text} `,
+              h(Link, { src: `mailto:${data.contact.email}`, style: { color: COLORS.black, fontWeight: 500, textDecoration: 'none' } }, data.contact.email),
             ),
-          ]
-        : []),
+          )
+        : null,
+    ],
+  });
+}
+
+/** Everything after the cover, in one run of ivory pages. */
+export function ReportPages({ data, compact = false }: PageProps): ReactElement {
+  return h(ContentPage, {
+    data,
+    children: [
+      h(SummaryPart, { key: 'summary', data, compact }),
+      h(PlacesPart, { key: 'places', places: data.places, compact, lead: 'What students find about you in 5 places: what’s good and what to fix, each with where it was found and when.' }),
+      h(FixesPart, { key: 'fixes', data, compact }),
+      h(RivalsPart, { key: 'rivals', data, compact }),
+      h(DemandPart, { key: 'demand', data, compact }),
+      h(LeadsPart, { key: 'leads', data, compact }),
+      h(ProgressPart, { key: 'progress', data, compact }),
     ],
   });
 }

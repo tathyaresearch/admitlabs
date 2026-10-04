@@ -330,12 +330,13 @@ export async function sampleRivalLessons(slug: string, day: string): Promise<Riv
 }
 
 /**
- * The month's Demand for the institution's city, one pull per program on the pull day, as the
- * monthly job collects it: grouped items, ranked, plus the content ideas.
+ * The month's Demand for the institution's city (or its state, which fills in where the city has
+ * too little), one pull per program on the pull day, as the monthly job collects it: grouped
+ * items, ranked, plus the content ideas.
  */
-export async function sampleDemand(slug: string, month: string): Promise<{ region: DemandRegion; rows: DemandRow[]; pulledAt: string }> {
+export async function sampleDemand(slug: string, month: string, scope: 'city' | 'state' = 'city'): Promise<{ region: DemandRegion; rows: DemandRow[]; pulledAt: string }> {
   const sample = sampleInstitution(slug);
-  const region = regionsFor(sample).city;
+  const region = regionsFor(sample)[scope];
   const pulledAt = pullDayOf(month);
   const rows: DemandRow[] = [];
   for (const program of sample.programs) {

@@ -88,7 +88,10 @@ function SidebarPicture({ name }: { name: string }) {
 /** The hero: Home, as the dashboard shows it, in an app window. */
 export function AppWindow({ showcase }: { showcase: Showcase }) {
   const { audit, institution, home: picture, rivals, demand, report } = showcase;
-  const steps: NextStep[] = report.things.map((thing, index) => ({ key: `${thing.source}-${index}`, source: thing.source, title: thing.title, detail: thing.detail, href: null }));
+  const steps: NextStep[] = report.summary.lines.things.map((title, index) => {
+    const source = report.summary.things[index]?.source ?? 'audit';
+    return { key: `${source}-${index}`, source, title, detail: report.summary.things[index]?.meta ?? '', href: null };
+  });
   const move = rivals.moves[0];
   const latestMove = move ? { rivalName: rivals.names.get(move.rivalId) ?? '', description: move.description, sourceUrl: move.sourceUrl, detectedAt: move.detectedAt } : null;
   return (

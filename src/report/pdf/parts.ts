@@ -1,18 +1,17 @@
 // Small building blocks for the report pages, written with createElement (Node runs this file
 // as plain TypeScript, without a JSX step). A result is always a thin bar of the points it earns
-// plus the word, never colour, in one style for every result, as on the dashboard. The score
-// gauge, icons and logos are drawn from the same geometry as the dashboard's (src/graphics).
+// plus the word, never colour, in one style for every result, as on the dashboard. The icons,
+// logos and the eye are drawn from the same geometry as the dashboard's (src/graphics).
 
 import { createElement as h, type ReactElement, type ReactNode } from 'react';
-import { Circle, Line, Path, Svg, Text, View, type Styles } from '@react-pdf/renderer';
-import { bandStarts, bandTicks, resultShare, type ScoreLabel } from '../../domain/scores.ts';
+import { Circle, Path, Svg, Text, View, type Styles } from '@react-pdf/renderer';
+import { resultShare, type ScoreLabel } from '../../domain/scores.ts';
 import { RESULT_LABELS, type CheckKey, type CheckResult, type Pillar } from '../../domain/types.ts';
 import { BRAND_INK, BRAND_MARKS, YOUTUBE_PLAY } from '../../graphics/brands.ts';
 import { EYE_EM, EYE_IRIS, EYE_LASHES, EYE_LIDS, eyeBox } from '../../graphics/eye.ts';
-import { GAUGE_HEADROOM, GAUGE_VIEWBOX, SCORE_GAUGE, SCORE_TEXT, scoreGauge } from '../../graphics/gauge.ts';
 import { CHECK_ICONS, LINE_ICONS, PILLAR_ICONS, type IconRef } from '../../graphics/icons.ts';
 import { PLATFORM_ICONS, type Platform } from '../../graphics/platforms.ts';
-import { COLORS, FONT, FONT_NUMERIC, FONT_SEMI_CONDENSED, NUM, styles } from './theme.ts';
+import { COLORS, FONT_NUMERIC, FONT_SEMI_CONDENSED, NUM, styles } from './theme.ts';
 
 export type Style = Styles[string];
 
@@ -61,37 +60,22 @@ export function ResultBar({
 }
 
 /**
- * The overall score as the large half-circle gauge: filled to the score, with a tick where each
- * score band starts and over it what it means ("Okay" over "from 40"), and the number drawn
- * with it, as on the dashboard: centred in the bowl on the arc's baseline, "/100" after it on the
- * same line, "0" and "100" under the two ends.
+ * A place's word for one side (Strong, Okay or Weak): a thin bar of the share of the place's points
+ * it earned, then the word, in bold where that side leads the place.
  */
-export function ScoreGauge({ score, width = 168, dark = false }: { score: number; width?: number; dark?: boolean }): ReactElement {
-  const value = Math.max(0, Math.min(100, Math.round(score)));
-  const shape = scoreGauge(value, bandStarts());
-  const words = new Map(bandTicks().map((tick) => [tick.start, tick.lines]));
-  const height = ((SCORE_GAUGE.height + GAUGE_HEADROOM) * width) / SCORE_GAUGE.width;
-  const ink = dark ? COLORS.ivory : COLORS.black;
-  const muted = dark ? COLORS.slate : COLORS.muted;
-  const numeric = { fontFamily: FONT_NUMERIC, fontFeatureSettings: ['tnum'] };
-  const end = (at: readonly [number, number], label: string) =>
-    h(Text, { x: at[0], y: at[1], textAnchor: 'middle', style: { ...numeric, fontSize: SCORE_TEXT.end, fontWeight: 400 }, fill: muted }, label);
-  // Text inside a drawing does not take the page's font: name it, or the PDF falls back to Helvetica.
-  const tickWord = (x: number, y: number, text: string) => h(Text, { x, y, textAnchor: 'middle', style: { fontFamily: FONT, fontSize: SCORE_TEXT.tick, fontWeight: 500 }, fill: muted }, text);
+export function WordBar({ word, share, strong = false }: { word: ScoreLabel; share: number; strong?: boolean }): ReactElement {
+  const width = 15;
+  const height = 2.5;
+  const fill = Math.max(0, Math.min(1, share));
   return h(
-    Svg,
-    { width, height, viewBox: GAUGE_VIEWBOX },
-    h(Path, { d: shape.track, fill: 'none', stroke: dark ? COLORS.lineDark : COLORS.track, strokeWidth: SCORE_GAUGE.stroke }),
-    shape.value ? h(Path, { d: shape.value, fill: 'none', stroke: ink, strokeWidth: SCORE_GAUGE.stroke }) : null,
-    ...shape.notches.map((notch, index) => h(Line, { key: index, ...notch, stroke: muted, strokeWidth: 1.5 })),
-    ...shape.tickLabels.flatMap((tick) => {
-      const lines = words.get(tick.start);
-      return lines ? [tickWord(tick.x, tick.y1, lines[0]), tickWord(tick.x, tick.y2, lines[1])] : [];
-    }),
-    h(Text, { x: shape.number.x, y: shape.number.y, textAnchor: 'middle', style: { ...numeric, fontSize: shape.number.size, fontWeight: 600 }, fill: ink }, String(value)),
-    h(Text, { x: shape.number.ofX, y: shape.number.y, style: { ...numeric, fontSize: SCORE_TEXT.of, fontWeight: 500 }, fill: muted }, '/100'),
-    end(shape.ends.zero, '0'),
-    end(shape.ends.hundred, '100'),
+    View,
+    { style: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, paddingVertical: 1.5 } },
+    h(
+      View,
+      { style: { width, height, borderRadius: height / 2, backgroundColor: COLORS.track } },
+      fill > 0 ? h(View, { style: { width: width * fill, height, borderRadius: height / 2, backgroundColor: COLORS.black } }) : null,
+    ),
+    h(Text, { style: { fontSize: 7.5, fontWeight: strong ? 600 : 400, lineHeight: 1 } }, word),
   );
 }
 
@@ -139,39 +123,7 @@ export function AmountBar({ value, max, width, height = 3 }: { value: number; ma
   );
 }
 
-/** Strong, Okay or Weak. Strong is inverted. */
-export function LabelChip({ label, dark = false }: { label: ScoreLabel; dark?: boolean }): ReactElement {
-  const inverted = label === 'Strong';
-  const ink = dark ? COLORS.ivory : COLORS.black;
-  const paper = dark ? COLORS.black : COLORS.ivory;
-  return h(
-    View,
-    {
-      style: {
-        alignSelf: 'flex-start',
-        paddingVertical: 3,
-        paddingHorizontal: 6,
-        borderRadius: 2,
-        borderWidth: 0.75,
-        borderColor: inverted ? ink : dark ? COLORS.slate : COLORS.lineMedium,
-        backgroundColor: inverted ? ink : undefined,
-      },
-    },
-    h(Text, { style: { fontSize: 8, fontWeight: 500, lineHeight: 1, color: inverted ? paper : ink } }, label),
-  );
-}
-
-/** The page head: eyebrow, title and one line on what the page shows. */
-export function PageHead({ eyebrow, title, lead }: { eyebrow: string; title: string; lead?: string | null }): ReactElement {
-  return h(
-    View,
-    { style: styles.head },
-    h(Text, { style: styles.eyebrow }, eyebrow),
-    h(Text, { style: styles.title }, title),
-    lead ? h(Text, { style: styles.lead }, lead) : null,
-  );
-}
-
+/** A section title and one line on what it shows. */
 export function SectionTitle({ title, lead }: { title: string; lead?: string | null }): ReactElement {
   return h(View, { style: { marginBottom: 6 } }, h(Text, { style: styles.sectionTitle }, title), lead ? h(Text, { style: styles.sectionLead }, lead) : null);
 }
@@ -185,33 +137,6 @@ export function BigNumber({ value, size, color }: { value: string | number; size
 export function arrowValue(text: string): string | null {
   const change = /^(Up|Down) ([\d,]+%?)$/.exec(text);
   return change ? `${change[1] === 'Up' ? '↑' : '↓'} ${change[2]}` : null;
-}
-
-/**
- * The report data's value words, shown as values with the number in Inter, as on the dashboard:
- * a change ("Up 3", "Down 2 since August") reads "↑ 3", "↓ 2 since August"; points ("Up to 4
- * points", "Worth 10 points of your score") read "+4 points", "10 points". Anything else, like
- * "No change" or a sentence, stays as it is.
- */
-export function ValueText({ text, style }: { text: string; style?: Style }): ReactElement {
-  const change = /^(Up|Down) ([\d,]+%?)(.*)$/.exec(text);
-  if (change) return h(Text, { style }, h(Text, { style: NUM }, `${change[1] === 'Up' ? '↑' : '↓'} ${change[2]}`), change[3]);
-  const gain = /^(?:Could add up to|Up to) ([\d,]+) (points?)$/.exec(text);
-  if (gain) return h(Text, { style }, h(Text, { style: NUM }, `+${gain[1]}`), ` ${gain[2]}`);
-  const worth = /^Worth ([\d,]+) (points?)(?: of your score)?$/.exec(text);
-  if (worth) return h(Text, { style }, h(Text, { style: NUM }, worth[1]), ` ${worth[2]}`);
-  if (/^(?:Could add less than|Less than|Worth less than) 1 point/.test(text)) return h(Text, { style }, 'Under ', h(Text, { style: NUM }, '1'), ' point');
-  return h(Text, { style }, text);
-}
-
-/** A thin score bar: black fill on a light track. */
-export function ScoreBar({ score, dark = false, height = 3 }: { score: number; dark?: boolean; height?: number }): ReactElement {
-  const width = `${Math.max(0, Math.min(100, score))}%`;
-  return h(
-    View,
-    { style: { height, borderRadius: height / 2, backgroundColor: dark ? COLORS.lineDark : COLORS.track, overflow: 'hidden' } },
-    h(View, { style: { width, height, borderRadius: height / 2, backgroundColor: dark ? COLORS.ivory : COLORS.black } }),
-  );
 }
 
 /** The footer on every page after the cover. */

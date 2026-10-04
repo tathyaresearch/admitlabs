@@ -11,7 +11,7 @@ import { nextPullOn } from '@/demand/schedule';
 import { alertsAhead } from '@/domain/alerts';
 import { institutionDetailLines, isEmptyProgram, programDetailLines, EMPTY_PROGRAM_DETAILS } from '@/domain/details';
 import { formatDate } from '@/domain/format';
-import { planReminder } from '@/domain/tiers';
+import { effectiveTier, planReminder } from '@/domain/tiers';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { LEAD_RULES } from '@/config/leads';
 import { requireInstitutionViewer, type InstitutionViewer } from '@/lib/auth/guards';
@@ -22,7 +22,7 @@ import { loadChangeState, loadRivalList, type RivalInfo } from '@/lib/rivals/loa
 import { createClient } from '@/lib/supabase/server';
 import { nextReport } from '@/report/schedule';
 import { canChangeRivals, type RivalChangeState } from '@/rivals/rules';
-import { removeMemberAction, revokeInviteAction } from './actions';
+import { removeMemberAction, revokeInviteAction, setSummaryEmailAction } from './actions';
 import { InstitutionDetailsForm, ProgramDetailsForm } from './DetailsForms';
 import { DeleteStudentForm, LeadSettingsForm } from './LeadsForms';
 import { DetailsForm, FreeProgramForm, InviteForm, ProgramsForm } from './SettingsForms';
@@ -400,16 +400,23 @@ async function LeadsGroup({ viewer }: { viewer: InstitutionViewer }) {
 
 // Notifications ----------------------------------------------------------------------------------
 
-function NotificationsGroup({ viewer, audit, rivals }: { viewer: InstitutionViewer; audit: AuditPageData; rivals: readonly RivalInfo[] }) {
+async function NotificationsGroup({ viewer, audit, rivals }: { viewer: InstitutionViewer; audit: AuditPageData; rivals: readonly RivalInfo[] }) {
   const now = new Date();
+  const { institution, role } = viewer.membership;
   const ahead = alertsAhead({
     tier: viewer.tier,
     nextAudit: audit.nextAudit,
     hasRivals: rivals.length > 0,
-    city: viewer.membership.institution.city,
+    city: institution.city,
     nextUpdate: nextPullOn(now),
-    nextReport: nextReport(now).on,
+    // Made only while the plan is still Paid or Client on the day.
+    nextReport: effectiveTier(viewer.plan, nextReport(now).on) === 'free' ? null : nextReport(now).on,
   });
+  const supabase = await createClient();
+  const { data: people } = await supabase.rpc('institution_people', { p_institution: institution.id });
+  const free = viewer.tier === 'free';
+  // Each person their own; the owner anyone's. The AdmitLabs team, viewing as, changes nothing.
+  const canChange = (userId: string) => !viewer.viewingAs && (userId === viewer.userId || role === 'owner');
   return (
     <>
       <Head title="Notifications">What arrives in Notifications, and when. Each new one also shows as a count beside Notifications in the menu.</Head>
@@ -425,6 +432,38 @@ function NotificationsGroup({ viewer, audit, rivals }: { viewer: InstitutionView
             <Icon name="arrowRight" size={14} />
           </Link>
         </div>
+      </Card>
+      <div className={styles.subhead} id="emails">
+        <h3 className={styles.subheadTitle}>{free ? 'The Audit ready email' : 'The monthly summary by email'}</h3>
+        <p className={styles.tabNote}>
+          {free
+            ? 'When each free Audit is ready: Visibility, Trust and Chosen, and what to fix first. Each person turns theirs on or off.'
+            : 'On the 1st: how you are doing, the 3 things to do this month, one rival move and the month’s PDF. Each person turns theirs on or off.'}
+        </p>
+      </div>
+      <Card padding="md">
+        <ul className={styles.people}>
+          {(people ?? []).map((person) => (
+            <li key={person.user_id} className={styles.person}>
+              <span className={styles.personEmail}>
+                {person.email}
+                <span className={styles.personRole}>
+                  {MEMBERSHIP_ROLE_LABELS[person.role]}
+                  {person.user_id === viewer.userId ? ', you' : ''}. {person.summary_email ? 'Gets it' : 'Turned off'}
+                </span>
+              </span>
+              {canChange(person.user_id) ? (
+                <form action={setSummaryEmailAction}>
+                  <input type="hidden" name="user" value={person.user_id} />
+                  <input type="hidden" name="on" value={person.summary_email ? 'false' : 'true'} />
+                  <Button type="submit" variant={person.summary_email ? 'quiet' : 'secondary'} size="sm">
+                    {person.summary_email ? 'Turn off' : 'Turn on'}
+                  </Button>
+                </form>
+              ) : null}
+            </li>
+          ))}
+        </ul>
       </Card>
     </>
   );

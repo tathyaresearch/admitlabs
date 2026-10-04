@@ -20,7 +20,7 @@ export interface EntitlementCell {
   text: string;
 }
 
-export type EntitlementGroup = 'Audit' | 'Rivals' | 'Demand' | 'Other';
+export type EntitlementGroup = 'Audit' | 'Rivals' | 'Demand' | 'Leads' | 'Other';
 
 export interface EntitlementRow {
   key: EntitlementKey;
@@ -30,22 +30,30 @@ export interface EntitlementRow {
 }
 
 export const ENTITLEMENT_KEYS = [
-  'audit_scores',
-  'audit_area_by_area',
-  'audit_whats_working',
+  'audit_words',
+  'audit_places',
+  'audit_found',
+  'audit_good',
   'audit_what_to_fix',
+  'audit_people_other',
   'audit_programs',
   'audit_score_history',
+  'audit_fix_request',
   'rivals_suggested',
   'rivals_ahead_or_behind',
+  'rivals_line',
   'rivals_full_comparison',
   'rivals_change',
   'demand_make_three',
   'demand_programs',
   'demand_everything_else',
+  'leads',
   'alerts',
+  'audit_ready_email',
+  'monthly_summary',
   'monthly_report',
   'team_acts_on_it',
+  'team_work',
 ] as const;
 export type EntitlementKey = (typeof ENTITLEMENT_KEYS)[number];
 
@@ -54,22 +62,29 @@ const NO: EntitlementCell = { access: 'none', text: 'No' };
 const BLURRED: EntitlementCell = { access: 'placeholder', text: 'A preview' };
 const all = (cell: EntitlementCell) => ({ free: cell, paid: cell, client: cell });
 
+/**
+ * Rows where a higher plan gets something else instead, so it is not a step up: a Client has the
+ * team working on every fix, and Paid and Client get the monthly summary instead of Free's email.
+ */
+export const INSTEAD: ReadonlySet<EntitlementKey> = new Set(['audit_fix_request', 'audit_ready_email']);
+
 export const ENTITLEMENTS: readonly EntitlementRow[] = [
-  { key: 'audit_scores', group: 'Audit', label: 'Overall score and its 3 parts', cells: all(YES) },
+  { key: 'audit_words', group: 'Audit', label: 'Visibility, Trust and Chosen', cells: all(YES) },
+  { key: 'audit_places', group: 'Audit', label: 'Every place: each check’s result', cells: all(YES) },
   {
-    key: 'audit_area_by_area',
+    key: 'audit_found',
     group: 'Audit',
-    label: 'Every check',
+    label: 'What we found, with proof',
     cells: {
-      free: { access: 'partial', text: 'The result of each' },
-      paid: { access: 'full', text: 'What was found, with sources' },
-      client: { access: 'full', text: 'What was found, with sources' },
+      free: { access: 'partial', text: 'For its top 3 fixes and strengths' },
+      paid: { access: 'full', text: 'Everything' },
+      client: { access: 'full', text: 'Everything' },
     },
   },
   {
-    key: 'audit_whats_working',
+    key: 'audit_good',
     group: 'Audit',
-    label: "What's working",
+    label: 'What’s good',
     cells: {
       free: { access: 'partial', limit: 3, text: 'Top 3' },
       paid: { access: 'full', text: 'Full' },
@@ -79,13 +94,14 @@ export const ENTITLEMENTS: readonly EntitlementRow[] = [
   {
     key: 'audit_what_to_fix',
     group: 'Audit',
-    label: 'What to fix',
+    label: 'What to fix: steps, ready fix, effort, impact',
     cells: {
       free: { access: 'partial', limit: 3, text: 'Top 3' },
       paid: { access: 'full', text: 'Full ranked list' },
       client: { access: 'full', text: 'Full ranked list' },
     },
   },
+  { key: 'audit_people_other', group: 'Audit', label: 'What people say and Other places', cells: { free: BLURRED, paid: YES, client: YES } },
   {
     key: 'audit_programs',
     group: 'Audit',
@@ -96,15 +112,17 @@ export const ENTITLEMENTS: readonly EntitlementRow[] = [
       client: { access: 'full', text: 'All' },
     },
   },
-  { key: 'audit_score_history', group: 'Audit', label: 'Progress, month by month', cells: { free: NO, paid: YES, client: YES } },
-  { key: 'rivals_suggested', group: 'Rivals', label: 'Suggested rivals', cells: all(YES) },
-  { key: 'rivals_ahead_or_behind', group: 'Rivals', label: 'Ahead or behind (overall only)', cells: all(YES) },
+  { key: 'audit_score_history', group: 'Audit', label: 'Progress month by month, with the score', cells: { free: NO, paid: YES, client: YES } },
   {
-    key: 'rivals_full_comparison',
-    group: 'Rivals',
-    label: 'Full comparison, best content, moves, ads',
-    cells: { free: BLURRED, paid: YES, client: YES },
+    key: 'audit_fix_request',
+    group: 'Audit',
+    label: 'Let AdmitLabs fix this',
+    cells: { free: YES, paid: YES, client: { access: 'none', text: 'No: the team already works on it' } },
   },
+  { key: 'rivals_suggested', group: 'Rivals', label: 'Suggested rivals, your city first', cells: all(YES) },
+  { key: 'rivals_ahead_or_behind', group: 'Rivals', label: 'Ahead or behind each rival', cells: all(YES) },
+  { key: 'rivals_line', group: 'Rivals', label: 'This month’s one line', cells: all(YES) },
+  { key: 'rivals_full_comparison', group: 'Rivals', label: 'Ranking, place by place, what to learn, alerts', cells: { free: BLURRED, paid: YES, client: YES } },
   {
     key: 'rivals_change',
     group: 'Rivals',
@@ -136,9 +154,22 @@ export const ENTITLEMENTS: readonly EntitlementRow[] = [
     },
   },
   { key: 'demand_everything_else', group: 'Demand', label: 'Everything else', cells: { free: BLURRED, paid: YES, client: YES } },
+  { key: 'leads', group: 'Leads', label: 'Leads: the enquiries your content brings', cells: { free: NO, paid: NO, client: YES } },
   { key: 'alerts', group: 'Other', label: 'Alerts (rival moves, demand spikes)', cells: { free: NO, paid: YES, client: YES } },
+  {
+    key: 'audit_ready_email',
+    group: 'Other',
+    label: 'Email when a new free Audit is ready',
+    cells: {
+      free: YES,
+      paid: { access: 'none', text: 'No: the monthly summary covers it' },
+      client: { access: 'none', text: 'No: the monthly summary covers it' },
+    },
+  },
+  { key: 'monthly_summary', group: 'Other', label: 'Monthly summary by email', cells: { free: NO, paid: YES, client: YES } },
   { key: 'monthly_report', group: 'Other', label: 'Monthly PDF report', cells: { free: NO, paid: YES, client: YES } },
   { key: 'team_acts_on_it', group: 'Other', label: 'AdmitLabs team acts on it', cells: { free: NO, paid: NO, client: YES } },
+  { key: 'team_work', group: 'Other', label: 'Your AdmitLabs team: what the team did, and does next', cells: { free: NO, paid: NO, client: YES } },
 ];
 
 const BY_KEY = new Map<EntitlementKey, EntitlementRow>(ENTITLEMENTS.map((row) => [row.key, row]));
@@ -175,18 +206,21 @@ export function accessRank(access: Access): number {
 
 /** Rows where Paid gives more than Free: "what Paid unlocks". */
 export function paidUnlocks(): EntitlementRow[] {
-  return ENTITLEMENTS.filter((row) => accessRank(row.cells.paid.access) > accessRank(row.cells.free.access));
+  return ENTITLEMENTS.filter((row) => !INSTEAD.has(row.key) && accessRank(row.cells.paid.access) > accessRank(row.cells.free.access));
 }
 
 /**
- * The Plan page's comparison, grouped as a reader looks for it: Audit, Rivals, Demand, Reports
- * (the monthly report and alerts), then the AdmitLabs service. Every row appears once (a test
- * checks it). The product page keeps the groups above.
+ * The Plan page's comparison, grouped as a reader looks for it: Audit, Rivals, Demand, Leads,
+ * Reports and emails, then the AdmitLabs service. Every row appears once (a test checks it).
  */
 export const PLAN_PAGE_GROUPS: ReadonlyArray<{ title: string; keys: readonly EntitlementKey[] }> = [
-  { title: 'Audit', keys: ['audit_scores', 'audit_area_by_area', 'audit_whats_working', 'audit_what_to_fix', 'audit_programs', 'audit_score_history'] },
-  { title: 'Rivals', keys: ['rivals_suggested', 'rivals_ahead_or_behind', 'rivals_full_comparison', 'rivals_change'] },
+  {
+    title: 'Audit',
+    keys: ['audit_words', 'audit_places', 'audit_found', 'audit_good', 'audit_what_to_fix', 'audit_people_other', 'audit_programs', 'audit_score_history', 'audit_fix_request'],
+  },
+  { title: 'Rivals', keys: ['rivals_suggested', 'rivals_ahead_or_behind', 'rivals_line', 'rivals_full_comparison', 'rivals_change'] },
   { title: 'Demand', keys: ['demand_make_three', 'demand_programs', 'demand_everything_else'] },
-  { title: 'Reports', keys: ['monthly_report', 'alerts'] },
-  { title: 'AdmitLabs service', keys: ['team_acts_on_it'] },
+  { title: 'Leads', keys: ['leads'] },
+  { title: 'Reports and emails', keys: ['monthly_summary', 'monthly_report', 'audit_ready_email', 'alerts'] },
+  { title: 'AdmitLabs service', keys: ['team_acts_on_it', 'team_work'] },
 ];

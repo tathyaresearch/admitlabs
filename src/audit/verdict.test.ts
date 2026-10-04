@@ -43,6 +43,11 @@ describe('the verdict: strength first, then the next step', () => {
     assert.equal(v(60, 50, 55), 'Your strongest area is being found. Next step: earning their trust.');
   });
 
+  test('close pillars with different words are not level: the line follows the words', () => {
+    assert.equal(v(72, 66, 74), 'Students find it easy to choose you. Next step: earning their trust.');
+    assert.equal(v(71, 65, 68), 'Students can find you. Next step: earning their trust.');
+  });
+
   test('ties go to spec order: Discovered, then Trusted, then Chosen', () => {
     assert.equal(v(72, 72, 40), 'Students can find you. Next step: making it easy to choose you.');
     assert.equal(v(80, 50, 50), 'Students can find you. Next step: earning their trust.');

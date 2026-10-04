@@ -19,7 +19,7 @@ export const metadata = { title: 'Plan' };
 
 const ROWS = new Map(ENTITLEMENTS.map((row) => [row.key, row]));
 
-const GROUP_ICONS: Readonly<Record<string, IconName>> = { Audit: 'audit', Rivals: 'rivals', Demand: 'demand', Reports: 'reports', 'AdmitLabs service': 'team' };
+const GROUP_ICONS: Readonly<Record<string, IconName>> = { Audit: 'audit', Rivals: 'rivals', Demand: 'demand', Leads: 'enquiry', 'Reports and emails': 'reports', 'AdmitLabs service': 'team' };
 
 /** The line under each plan's name: what it costs, or how it comes. */
 function priceLine(tier: Tier) {
@@ -34,9 +34,17 @@ function priceLine(tier: Tier) {
   return 'With your AdmitLabs service';
 }
 
-/** A tick when it is included, a short value when it is partly included, nothing when it is not. */
+/** A tick when it is included, a short value when it is partly included, nothing when it is not (or why, when the plan gets something else instead). */
 function PlanCell({ cell }: { cell: EntitlementCell }) {
-  if (cell.access === 'none') return <span className="visually-hidden">Not included</span>;
+  if (cell.access === 'none') {
+    return cell.text === 'No' ? (
+      <span className="visually-hidden">Not included</span>
+    ) : (
+      <span className={styles.quietValue}>
+        <CellText text={cell.text} />
+      </span>
+    );
+  }
   if (cell.text === 'Yes' || cell.text === 'Full') {
     return (
       <>

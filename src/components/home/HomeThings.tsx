@@ -1,60 +1,91 @@
 'use client';
 
-// Home's things to do: "Do these 3 things this month" (Paid and Client) or "Fix these first"
-// (Free). Each one says where it comes from, the check and the programs it is about, what to do
-// and why, the points it could add (or how often students asked) and how big a job it is. The
-// owner marks one done: a fix then waits for the next Audit, which checks it. Everyone else
-// sees what was marked.
+// Home's things to do (spec section 13), as the version 2 mock was approved: "Do these 3 things
+// this month" (Paid and Client: a fix from the Audit, a lesson from rivals and one of Make these
+// 3, by impact) or "Fix these first" (Free: the top 3 fixes). Each says where it comes from, its
+// place and check (or the rival, or the format and program) as a small label, its impact (or how
+// often students asked), its effort and programs; then Mark as done (Mark as made for an idea)
+// and, on a fix for Free and Paid, Let AdmitLabs fix this. Everyone else sees what was done.
 
 import Link from 'next/link';
 import { useOptimistic, useState, useTransition } from 'react';
-import { Icon, type IconName } from '@/components/ui/Icon';
-import { CheckIcon } from '@/components/ui/Marks';
-import { EFFORT_LABELS, IDEA_FORMAT_LABELS, type CheckKey, type Difficulty, type IdeaFormat } from '@/domain/types';
-import type { ThingSource } from '@/report/things';
-import styles from './homepage.module.css';
+import { ImpactTags } from '@/components/audit/PlaceBits';
+import { FixActions, type FixActionHandlers, type FixActionState } from '@/components/audit/FixActions';
+import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
+import type { Difficulty, Impact } from '@/domain/types';
+import { THING_SOURCE_LABELS, type ThingSource } from '@/report/things';
+import audit from '@/components/audit/places.module.css';
+import styles from './today.module.css';
 
 export interface HomeThing {
-  /** What a mark of it is about: 'check:fees_shown', or '2026-09:<its words>'. */
   key: string;
   source: ThingSource;
   title: string;
-  /** The check it is about, as a small label (the fix's one name is its title). */
-  check: { key: CheckKey; name: string } | null;
-  programs: readonly string[];
-  format: IdeaFormat | null;
-  detail: string;
-  /** What it could add to the score; null when it moves no check directly. */
-  points: number | null;
-  /** Said instead of points: "Asked about 97 times in Guwahati". */
-  weight: string | null;
-  effort: Difficulty | null;
+  label: string;
   href: string;
-  /** What Mark as done saves. */
-  mark: { check: CheckKey | null; thing: string | null; month: string | null };
-  /** Marked done and not yet checked by an Audit. */
+  impact: Impact | null;
+  effort: Difficulty | null;
+  programs: readonly string[];
+  /** For an idea: how often its question was asked, said instead of an impact. */
+  weight: string | null;
+  /** A fix: marked and asked about by its id. */
+  fixId: string | null;
+  /** A lesson or an idea: what Mark as done saves. */
+  mark: { thing: string; month: string } | null;
+  /** A lesson or an idea marked done. A fix's mark is in the fix state. */
   done: boolean;
 }
 
-export interface MarkRequest {
-  check: CheckKey | null;
-  thing: string | null;
-  month: string | null;
+interface ThingMark {
+  check: null;
+  thing: string;
+  month: string;
   done: boolean;
 }
 
-const SOURCES: Readonly<Record<ThingSource, { word: string; icon: IconName }>> = {
-  audit: { word: 'From your Audit', icon: 'audit' },
-  rivals: { word: 'From your rivals', icon: 'rivals' },
-  demand: { word: 'From what students ask', icon: 'demand' },
-};
-
-function Points({ points }: { points: number }) {
-  const rounded = Math.round(points);
-  if (points < 0.5) return <>Could add less than 1 point</>;
+/** Mark as done for a lesson, Mark as made for an idea: kept with its month. */
+function MarkThing({ item, canMark, onMark }: { item: HomeThing; canMark: boolean; onMark: (input: ThingMark) => Promise<{ ok: boolean; error: string | null }> }) {
+  const [done, setDone] = useOptimistic(item.done, (_current: boolean, next: boolean) => next);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const idea = item.source === 'demand';
+  const toggle = (next: boolean) =>
+    startTransition(async () => {
+      if (!item.mark) return;
+      setDone(next);
+      const result = await onMark({ check: null, thing: item.mark.thing, month: item.mark.month, done: next });
+      setError(result.ok ? null : result.error);
+    });
+  if (!item.mark) return null;
+  if (!canMark) {
+    return done ? (
+      <span className={styles.doneWord}>
+        <Icon name="checkCircle" size={16} />
+        {idea ? 'Marked as made' : 'Marked done'}
+      </span>
+    ) : null;
+  }
   return (
     <>
-      Could add <span className="num">+{rounded}</span> {rounded === 1 ? 'point' : 'points'}
+      {done ? (
+        <span className={styles.doneWord}>
+          <Icon name="checkCircle" size={16} />
+          {idea ? 'Made' : 'Done'}
+          <button type="button" className={audit.linkButton} onClick={() => toggle(false)} disabled={pending}>
+            Undo
+          </button>
+        </span>
+      ) : (
+        <Button variant="secondary" size="sm" icon="check" onClick={() => toggle(true)} disabled={pending}>
+          {idea ? 'Mark as made' : 'Mark as done'}
+        </Button>
+      )}
+      {error ? (
+        <span className={styles.markError} role="alert">
+          {error}
+        </span>
+      ) : null}
     </>
   );
 }
@@ -62,142 +93,65 @@ function Points({ points }: { points: number }) {
 export function HomeThings({
   id,
   title,
-  description,
+  help,
   items,
-  canMark,
-  nextAudit,
-  onMark,
+  fixState,
+  fixHandlers,
+  onMarkThing,
   empty,
 }: {
   id: string;
   title: string;
-  description: string;
+  help: string;
   items: readonly HomeThing[];
-  /** The owner, signed in as themselves. */
-  canMark: boolean;
-  /** "15 Oct 2026": when the next Audit checks a fix marked done, when it runs on this plan. */
-  nextAudit: string | null;
-  onMark: (request: MarkRequest) => Promise<{ ok: boolean; error: string | null }>;
+  fixState: FixActionState;
+  fixHandlers: FixActionHandlers;
+  onMarkThing: (input: ThingMark) => Promise<{ ok: boolean; error: string | null }>;
   empty: string;
 }) {
-  const [done, setDone] = useOptimistic(
-    new Set(items.flatMap((item) => (item.done ? [item.key] : []))),
-    (current: ReadonlySet<string>, change: { key: string; done: boolean }) => {
-      const next = new Set(current);
-      if (change.done) next.add(change.key);
-      else next.delete(change.key);
-      return next;
-    },
-  );
-  const [error, setError] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-
-  const toggle = (item: HomeThing) => {
-    const next = !done.has(item.key);
-    startTransition(async () => {
-      setDone({ key: item.key, done: next });
-      const result = await onMark({ ...item.mark, done: next });
-      setError(result.ok ? null : result.error);
-    });
-  };
-
-  const checkNote = nextAudit ? `Your next Audit, on ${nextAudit}, will check it.` : 'Your next Audit will check it.';
-
   return (
-    <section id={id} className={styles.block} aria-labelledby={`${id}-title`}>
-      <div className={styles.blockHead}>
-        <h2 id={`${id}-title`} className={styles.blockTitle}>
-          <Icon name="wrench" size={20} className={styles.blockIcon} />
-          {title}
-        </h2>
-        <p className={styles.blockText}>{description}</p>
+    <section className={audit.block} aria-labelledby={`${id}-title`}>
+      <div className={audit.sectionHead}>
+        <div className={audit.sectionText}>
+          <h2 id={`${id}-title`} className={audit.sectionTitle}>
+            <Icon name="check" size={18} className={audit.sectionIcon} />
+            {title}
+          </h2>
+          <p className={audit.sectionHelp}>{help}</p>
+        </div>
       </div>
-      {error ? (
-        <p className={styles.error} role="alert">
-          {error}
-        </p>
-      ) : null}
       {items.length ? (
-        <ol className={styles.things}>
-          {items.map((item, index) => {
-            const isDone = done.has(item.key);
-            const source = SOURCES[item.source];
-            const note = isDone ? (item.mark.check ? checkNote : null) : null;
-            return (
-              <li key={item.key} className={styles.thing} data-done={isDone ? 'true' : undefined}>
-                <span className={`${styles.thingNumber} num`} aria-hidden="true">
-                  {isDone ? <Icon name="check" size={14} /> : index + 1}
+        <ol className={[audit.card, audit.fixes, styles.things].join(' ')}>
+          {items.map((item, index) => (
+            <li key={item.key} className={audit.fixRow}>
+              <span className={`${audit.fixIndex} num`} aria-hidden="true">
+                {index + 1}
+              </span>
+              <span className={audit.fixBody}>
+                <span className={audit.fixLabel}>
+                  <span className={styles.thingSource}>{THING_SOURCE_LABELS[item.source]}</span>
+                  <span>{item.label}</span>
                 </span>
-                <div className={styles.thingMain}>
-                  <div className={styles.thingBody}>
-                    <p className={styles.thingSource}>
-                      <Icon name={source.icon} size={14} />
-                      <span>{source.word}</span>
-                      {item.check ? (
-                        <>
-                          <span className={styles.dot} aria-hidden="true" />
-                          <span className={styles.thingCheck}>
-                            <CheckIcon check={item.check.key} size={14} />
-                            {item.check.name}
-                          </span>
-                        </>
-                      ) : null}
-                      {item.programs.length ? (
-                        <>
-                          <span className={styles.dot} aria-hidden="true" />
-                          <span>{item.programs.join(', ')}</span>
-                        </>
-                      ) : null}
-                      {item.format ? <span className={styles.format}>{IDEA_FORMAT_LABELS[item.format]}</span> : null}
-                    </p>
-                    <p className={styles.thingTitle}>
-                      {isDone ? <span className="visually-hidden">Done: </span> : null}
-                      {item.title}
-                    </p>
-                    {item.detail ? <p className={styles.thingDetail}>{item.detail}</p> : null}
-                    <div className={styles.thingActions}>
-                      {canMark ? (
-                        <button type="button" className={styles.doneButton} aria-pressed={isDone} onClick={() => toggle(item)}>
-                          <span className={styles.doneBox} aria-hidden="true">
-                            {isDone ? <Icon name="check" size={12} /> : null}
-                          </span>
-                          {isDone ? 'Done' : 'Mark as done'}
-                        </button>
-                      ) : isDone ? (
-                        <span className={styles.doneTag}>
-                          <Icon name="check" size={12} />
-                          Marked done
-                        </span>
-                      ) : null}
-                      <Link href={item.href} className={styles.goLink}>
-                        See how
-                        <Icon name="arrowRight" size={16} />
-                      </Link>
-                      {note ? <span className={styles.doneNote}>{note}</span> : null}
-                    </div>
-                  </div>
-                  <div className={styles.thingSide}>
-                    {item.points !== null ? (
-                      <span className={styles.thingPoints}>
-                        <Points points={item.points} />
-                      </span>
-                    ) : item.weight ? (
-                      <span className={styles.thingPoints}>{item.weight}</span>
-                    ) : null}
-                    {item.effort ? (
-                      <span className={styles.effort}>
-                        <span className={styles.effortLabel}>Effort</span>
-                        {EFFORT_LABELS[item.effort]}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
+                <Link href={item.href} className={styles.thingTitle}>
+                  {item.title}
+                </Link>
+                <span className={audit.tags}>
+                  {item.weight ? <span className={audit.asked}>{item.weight}</span> : null}
+                  <ImpactTags impact={item.impact} effort={item.effort} programs={item.programs} />
+                </span>
+              </span>
+              <span className={audit.fixActions}>
+                {item.fixId ? (
+                  <FixActions fix={{ id: item.fixId, title: item.title }} state={fixState} handlers={fixHandlers} />
+                ) : (
+                  <MarkThing item={item} canMark={fixState.canMark} onMark={onMarkThing} />
+                )}
+              </span>
+            </li>
+          ))}
         </ol>
       ) : (
-        <p className={styles.blockText}>{empty}</p>
+        <p className={audit.quiet}>{empty}</p>
       )}
     </section>
   );

@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { buildReport, REPORT_LIMITS, type ReportData } from '../data.ts';
+import { PLACE_LIMITS } from '../places.ts';
 import { sampleReportInput } from '../testing.ts';
-import { MAX_PAGES, pageCount, renderReport } from './render.ts';
+import { MAX_PAGES, pageCount, renderLayout, renderReport } from './render.ts';
 
-// The PDF itself: a real render of the sample report, and of the heaviest month the caps allow.
+// The PDF itself: a real render of a month, and of the heaviest month the limits allow.
 
 function fonts(raw: string): string[] {
   return [...new Set([...raw.matchAll(/\/BaseFont\s*\/(?:[A-Z]{6}\+)?([^\s/>]+)/g)].map((match) => match[1] as string))];
@@ -12,68 +13,72 @@ function fonts(raw: string): string[] {
 
 const long = (text: string, times: number) => Array.from({ length: times }, () => text).join(' ');
 
-/** Every list at its cap, with long names and sentences everywhere. */
+/** Every list at its limit, with long names and sentences everywhere. */
 function heaviest(data: ReportData): ReportData {
   const fix = data.fixes[0] as ReportData['fixes'][number];
-  const program = data.programs[0] as ReportData['programs'][number];
-  const row = data.rivals?.rows[0] as NonNullable<ReportData['rivals']>['rows'][number];
-  const move = data.rivals?.moves[0] as NonNullable<ReportData['rivals']>['moves'][number];
-  const check = data.sources.checks[4] as ReportData['sources']['checks'][number];
+  const place = data.places[0] as ReportData['places'][number];
+  const item = (place.fixes[0] ?? place.good[0]) as ReportData['places'][number]['fixes'][number];
+  const rivals = data.rivals as NonNullable<ReportData['rivals']>;
+  const demand = data.demand as NonNullable<ReportData['demand']>;
+  const longItem = { ...item, title: long('Get found when students search for Hotel Management and Data Analytics', 1), proof: item.proof && { ...item.proof, line: long('Admission information for B.Sc Data Analytics is general, with no clear steps.', 3) } };
   return {
     ...data,
     institution: { ...data.institution, name: 'Brahmaputra Valley Institute of Management and Technology' },
+    summary: {
+      ...data.summary,
+      lines: {
+        words: long('Trust is up from Weak in August.', 2),
+        things: [1, 2, 3].map(() => long('Get found when students search for Data Analytics, Digital Marketing and Hotel Management', 1)),
+        move: long('Silverline College: Announced 2027 admission dates. Forms open on 5 January 2027.', 2),
+        enquiries: long('Your content brought 23 enquiries in September, 6 more than in August.', 2),
+      },
+    },
+    places: data.places.map((entry) => ({ ...entry, good: Array.from({ length: PLACE_LIMITS.good }, () => longItem), fixes: Array.from({ length: PLACE_LIMITS.fixes }, () => longItem), moreGood: 4, moreFixes: 4 })),
     fixes: [1, 2, 3, 4, 5].map((rank) => ({
       ...fix,
       rank,
       title: 'Get found when students search for Hotel Management, B.Sc Data Analytics and Digital Marketing',
-      row: { ...fix.row, rank, title: 'Get found when students search for Hotel Management, B.Sc Data Analytics and Digital Marketing', name: 'Placement proof', programs: '4 programs' },
-      results: [
-        { program: 'B.Sc Data Analytics', result: 'missing' },
-        { program: 'Hotel Management', result: 'weak' },
-        { program: 'B.Sc Nursing', result: 'okay' },
-        { program: 'Digital Marketing', result: 'okay' },
-      ],
-      finding: long('Admission information for B.Sc Data Analytics is general, with no clear steps.', 2),
-      howToFix: long('Turn general admission information into numbered steps, with the documents needed and the dates.', 2),
+      programs: '4 programs',
+      steps: Array.from({ length: PLACE_LIMITS.steps }, () => long('Turn general admission information into numbered steps, with the documents needed and the dates.', 2)),
+      moreSteps: 6,
+      readyFix: { title: 'How to apply for B.Sc Data Analytics', lines: [], table: { head: ['Step', 'What to do', 'When'], rows: [1, 2, 3].map((step) => [String(step), long('Fill the form online with every document', 2), '[date] to [date]']) }, outline: [], more: 4 },
+      added: { lines: ['Admissions: +91 00000 12345, admissions@brahmaputra-valley.example'], advice: long('Put this admissions contact on every page, next to the enquiry form.', 2) },
     })),
-    moreFixes: Array.from({ length: 12 }, (_, index) => ({ rank: index + 6, key: 'program_page', title: 'Give Hotel Management, B.Sc Data Analytics and Digital Marketing each a page of its own', name: 'Program page', programs: '5 programs', gain: 'Up to 2 points', points: 2, difficulty: 'Effort Medium' })),
-    programs: Array.from({ length: REPORT_LIMITS.programs }, (_, index) => ({ ...program, name: `Hotel Management and Catering Technology with Culinary Arts ${index + 1}` })),
-    morePrograms: 10,
+    moreFixes: Array.from({ length: REPORT_LIMITS.moreFixes }, (_, index) => ({ rank: index + 6, title: 'Give Hotel Management, B.Sc Data Analytics and Digital Marketing each a page of its own', where: 'Website, Program pages', checkKey: 'program_page', impact: 'low', effort: 'Effort Medium' })),
+    moreFixesCount: 9,
     rivals: {
-      verdict: long("You're ahead of Highfield University and Northbank College.", 2),
-      rows: Array.from({ length: 7 }, (_, index) => ({ ...row, name: `Brahmaputra Valley Institute ${index + 1}`, rank: index + 1, you: index === 3 })),
-      moves: Array.from({ length: 5 }, () => ({ ...move, text: long('Announced 2027 admission dates. Forms open on 5 January 2027.', 2) })),
-      moreMoves: 4,
+      ...rivals,
+      line: long('This month, Silverline College is ahead on placement proof and Instagram.', 2),
+      ranking: Array.from({ length: 6 }, (_, index) => ({ ...(rivals.ranking[0] as (typeof rivals.ranking)[number]), name: `Brahmaputra Valley Institute ${index + 1}`, place: index + 1, you: index === 3, nearby: index === 5 })),
+      places: rivals.places.map((entry) => ({ ...entry, cells: Array.from({ length: 6 }, () => ({ word: 'Okay' as const, share: 0.5, leads: false, note: long('1 good, no complaints, 1 unanswered', 2) })) })),
+      moves: Array.from({ length: REPORT_LIMITS.moves }, () => ({ ...(rivals.moves[0] as (typeof rivals.moves)[number]), text: long('Announced 2027 admission dates. Forms open on 5 January 2027.', 2) })),
+      moreMoves: 6,
     },
-    demand: data.demand && {
-      ...data.demand,
-      rising: data.demand.rising.map((trend, index) => ({ ...trend, text: `Hotel management careers on cruise lines and in resorts ${index + 1}` })),
-      questions: data.demand.questions.map((question) => ({ ...question, text: long('Which data analytics course in Guwahati has placement support?', 2) })),
-      ideas: data.demand.ideas.map((idea) => ({ ...idea, text: long('Share placement support in numbers: learners, interviews and offers.', 2), basedOn: 'Which data analytics course in Guwahati has placement support?' })),
+    demand: {
+      ...demand,
+      trends: Array.from({ length: REPORT_LIMITS.trends }, (_, index) => ({ ...(demand.trends[0] as (typeof demand.trends)[number]), text: `Hotel management careers on cruise lines and in resorts ${index + 1}` })),
+      questions: Array.from({ length: REPORT_LIMITS.questions }, () => ({ ...(demand.questions[0] as (typeof demand.questions)[number]), text: long('Which data analytics course in Guwahati has placement support?', 2) })),
+      picks: demand.picks.map((pick) => ({ ...pick, title: long('Last year’s placements, one student per reel, with the company', 2), weight: long('Asked about 96 times in Guwahati this month.', 2) })),
     },
-    things: data.things.map((thing) => ({ ...thing, title: long('Get found when students search for Data Analytics, Digital Marketing and Hotel Management', 1), detail: long('Could add up to 5 points. Give Data Analytics its own detailed page with the program name.', 3) })),
-    sources: {
-      checkedOn: null,
-      notes: data.sources.notes.map((note) => ({ ...note, text: long(note.text, 2) })),
-      checks: data.sources.checks.map((original) => ({ ...original, links: [`${check.links[0]} and 4 more`, 'maps.example/place/brahmaputra/reviews'] })),
-    },
+    leads: { line: long('Your content brought 23 enquiries in September, 6 more than in August.', 2), total: 23, links: Array.from({ length: REPORT_LIMITS.leadLinks }, (_, index) => ({ name: `Reel: Data Analytics placements ${index + 1}`, count: 4, before: 3 })), moreLinks: 3 },
+    sources: data.sources.map((note) => ({ ...note, text: long(note.text, 2) })),
   };
 }
 
 describe('the monthly report PDF', () => {
-  test('a valid A4 PDF of 7 pages, readable in 5 minutes', async () => {
+  test(`a valid A4 PDF, about 7 pages and never more than ${MAX_PAGES}`, async () => {
     const pdf = await renderReport(buildReport(await sampleReportInput()));
     const raw = pdf.toString('latin1');
     assert.equal(raw.slice(0, 5), '%PDF-');
-    assert.equal(pageCount(pdf), 7);
+    assert.ok(pageCount(pdf) >= 6 && pageCount(pdf) <= MAX_PAGES, `${pageCount(pdf)} pages`);
     assert.match(raw, /\/MediaBox\s*\[0 0 595\.28\d* 841\.89\d*\]/);
   });
 
   test('words in Bricolage Grotesque, numbers in Inter, both embedded in the file', async () => {
-    const pdf = await renderReport(buildReport(await sampleReportInput({ tier: 'client' })));
+    const pdf = await renderReport(buildReport(await sampleReportInput({ tier: 'client', leads: [{ name: 'Instagram bio', count: 6, before: 5 }] })));
     const raw = pdf.toString('latin1');
     const used = fonts(raw);
-    assert.ok(used.length >= 5, used.join(', '));
+    assert.ok(used.length >= 4, used.join(', '));
     assert.ok(
       used.every((name) => name.startsWith('BricolageGrotesque') || name.startsWith('Inter')),
       used.join(', '),
@@ -82,8 +87,11 @@ describe('the monthly report PDF', () => {
     assert.equal((raw.match(/\/FontFile2/g) ?? []).length, used.length, 'every font is embedded');
   });
 
-  test(`the heaviest month still stays at ${MAX_PAGES} pages or fewer`, async () => {
-    const pdf = await renderReport(heaviest(buildReport(await sampleReportInput())));
+  test(`the heaviest month still stays at ${MAX_PAGES} pages or fewer, in its compact form`, async () => {
+    const data = heaviest(buildReport(await sampleReportInput({ tier: 'client' })));
+    const pdf = await renderReport(data);
     assert.ok(pageCount(pdf) <= MAX_PAGES, `${pageCount(pdf)} pages`);
+    // The full form runs over, so the compact one is the one kept.
+    assert.ok(pageCount(await renderLayout(data, false)) >= pageCount(pdf));
   });
 });

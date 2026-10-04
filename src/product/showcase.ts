@@ -57,10 +57,17 @@ async function sampleTopicHistory(topic: Pick<DemandRow, 'programKey' | 'kind' |
   });
 }
 
+/** A rival's change since its Audit before, from its history. */
+function lastChange(history: ReadonlyArray<{ overall: number }>): number | null {
+  const [before, latest] = history.slice(-2);
+  return before && latest ? latest.overall - before.overall : null;
+}
+
 async function build(): Promise<Showcase> {
   const input = await sampleReportInput();
   const { institution, audit } = input;
-  const demand = demandView(input.demand.rows, { singleProgram: false, skills: institution.type === 'skilling' });
+  const pulled = await sampleDemand(SAMPLE_REPORT.slug, input.month);
+  const demand = demandView(pulled.rows, { singleProgram: false, skills: institution.type === 'skilling' });
   const scored = input.rivals.flatMap((rival) => (rival.audit ? [{ name: rival.name, scores: rival.audit.scores }] : []));
   const rivalSlugs = SAMPLE_RIVALS.filter(([tracker]) => tracker === SAMPLE_REPORT.slug).map(([, rival]) => rival);
   const moves = sampleMoves(rivalSlugs, istDate(`${input.month}-01`), new Date(monthEnd(input.month).getTime() - 1));
@@ -72,7 +79,7 @@ async function build(): Promise<Showcase> {
     rivals: {
       rows: ladder(
         { id: institution.id, name: institution.name, overall: audit.scores.overall, change: audit.changes.overall },
-        input.rivals.map((rival) => ({ id: rival.id, name: rival.name, overall: rival.audit?.scores.overall ?? null, change: rival.audit?.changes.overall ?? null })),
+        input.rivals.map((rival) => ({ id: rival.id, name: rival.name, overall: rival.audit?.scores.overall ?? null, change: rival.audit ? lastChange(rival.history) : null })),
       ),
       spread: pillarSpread(
         { id: institution.id, name: institution.name, scores: audit.scores },
@@ -84,9 +91,9 @@ async function build(): Promise<Showcase> {
     },
     demand: {
       view: demand,
-      place: regionPlace(input.demand.region),
-      today: input.demand.pulledAt ? new Date(input.demand.pulledAt) : input.madeAt,
-      topHistory: demand.topTrend ? await sampleTopicHistory(demand.topTrend, input.month, input.demand.rows) : [],
+      place: regionPlace(pulled.region),
+      today: new Date(pulled.pulledAt),
+      topHistory: demand.topTrend ? await sampleTopicHistory(demand.topTrend, input.month, pulled.rows) : [],
     },
     report: buildReport(input),
   });

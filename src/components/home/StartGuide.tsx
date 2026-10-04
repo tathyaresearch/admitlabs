@@ -1,9 +1,10 @@
-// Start here: Home's first visit guide, until the person closes it. Three short steps, each with
-// where it is done: your score, your first fix, your rivals. A step that is done shows a tick.
+// Start here: Home's first visit guide, until the person closes it (spec section 13). Three short
+// steps, each with where it is done: see what was found, your first fix, your rivals. A step that
+// is done shows a tick.
 
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
-import { CHECKS } from '@/domain/checks';
+import { IMPACT_LABELS, type Impact } from '@/domain/types';
 import styles from './homepage.module.css';
 
 interface Step {
@@ -14,16 +15,17 @@ interface Step {
 }
 
 export function StartGuide({
-  score,
+  words,
   firstFix,
   fixMarked,
   rivalsPicked,
   owner,
   onClose,
 }: {
-  score: number;
-  /** The fix that could add the most, and where it opens. Null when every check is Strong. */
-  firstFix: { title: string; points: number; href: string } | null;
+  /** "Visibility Strong, Trust Okay, Chosen Strong". */
+  words: string;
+  /** The first fix in the Audit's ranking, and where it opens. Null when nothing needs fixing. */
+  firstFix: { title: string; impact: Impact; href: string } | null;
   /** That first fix is marked done. */
   fixMarked: boolean;
   rivalsPicked: boolean;
@@ -31,26 +33,25 @@ export function StartGuide({
   owner: boolean;
   onClose: () => Promise<void>;
 }) {
-  const points = firstFix ? Math.round(firstFix.points) : 0;
   const steps: Step[] = [
     {
       done: true,
-      title: `Your score: ${score} out of 100`,
-      text: `It comes from ${CHECKS.length} checks of what students see: can they find you, do they believe you, is it easy to pick you.`,
-      link: { href: '/audit', text: 'See every check' },
+      title: 'See what was found',
+      text: `${words}. Each word comes from what students see about you in 5 places, with the proof for each.`,
+      link: { href: '/audit', text: 'See your Audit' },
     },
     firstFix
       ? {
           done: fixMarked,
           title: 'Your first fix',
-          text: `${firstFix.title}. It could add up to ${points} ${points === 1 ? 'point' : 'points'}.`,
+          text: `${firstFix.title}. Impact ${IMPACT_LABELS[firstFix.impact]}, with the steps and a ready fix to copy.`,
           link: { href: firstFix.href, text: 'See how' },
         }
-      : { done: true, title: 'Your first fix', text: 'Every check is Strong. Keep it that way.', link: null },
+      : { done: true, title: 'Your first fix', text: 'Nothing needs fixing right now. Keep it that way.', link: null },
     rivalsPicked
-      ? { done: true, title: 'Rivals picked', text: 'You see who is ahead of you. They never know who tracks them.', link: { href: '/rivals', text: 'See your rivals' } }
+      ? { done: true, title: 'Rivals picked', text: 'You see who is ahead of you in your city. They never know who tracks them.', link: { href: '/rivals', text: 'See your rivals' } }
       : owner
-        ? { done: false, title: 'Pick your rivals', text: 'Pick 3 to 5 you compete with. They never know who tracks them.', link: { href: '/rivals/choose', text: 'Pick rivals' } }
+        ? { done: false, title: 'Pick your rivals', text: 'Pick 3 to 5 in your city you compete with. They never know who tracks them.', link: { href: '/rivals/choose', text: 'Pick rivals' } }
         : { done: false, title: 'Your rivals', text: 'The owner of your account picks 3 to 5 you compete with.', link: { href: '/rivals', text: 'See Rivals' } },
   ];
   return (

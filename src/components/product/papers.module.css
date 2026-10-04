@@ -121,51 +121,6 @@
   background: var(--line-medium);
 }
 
-.score {
-  display: flex;
-  align-items: flex-end;
-  gap: 2cqi;
-}
-
-/* The summary page's gauge: the dashboard's own, which the PDF draws the same way. */
-.gauge {
-  --gauge-max: none;
-  display: block;
-  width: 56cqi;
-}
-
-.scoreNumber {
-  font-size: 26cqi;
-  font-weight: var(--weight-heading);
-  line-height: 0.85;
-  letter-spacing: var(--tracking-num-hero);
-}
-
-.scoreOut {
-  margin-bottom: 1.5cqi;
-  font-size: 4cqi;
-  color: var(--text-muted);
-}
-
-.labelChip {
-  padding: 0.8cqi 1.8cqi;
-  border: 1px solid var(--line-strong);
-  border-radius: 0.6cqi;
-  font-size: 2.8cqi;
-  font-weight: var(--weight-medium);
-}
-
-.labelSolid {
-  background: var(--surface-inverse);
-  color: var(--text-inverse);
-  border-color: var(--surface-inverse);
-}
-
-.change {
-  font-size: 3cqi;
-  font-weight: var(--weight-medium);
-}
-
 .verdict {
   font-size: 4.2cqi;
   font-weight: var(--weight-medium);
@@ -185,11 +140,6 @@
   margin-top: 2cqi;
 }
 
-.bar {
-  display: grid;
-  gap: 1.2cqi;
-}
-
 .barHead {
   display: flex;
   justify-content: space-between;
@@ -198,19 +148,6 @@
 
 .barValue {
   font-weight: var(--weight-heading);
-}
-
-.track {
-  height: 1.4cqi;
-  border-radius: 1cqi;
-  background: var(--chart-track);
-  overflow: hidden;
-}
-
-.fill {
-  height: 100%;
-  border-radius: 1cqi;
-  background: var(--text);
 }
 
 .list {

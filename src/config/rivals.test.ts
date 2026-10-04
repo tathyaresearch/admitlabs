@@ -23,6 +23,7 @@ describe('rival rules', () => {
     assert.equal(entitlement('rivals_change', 'paid').every, 'month');
     assert.equal(entitlement('rivals_change', 'client').access, 'full');
     assert.equal(entitlement('rivals_full_comparison', 'free').access, 'placeholder');
+    assert.equal(entitlement('rivals_line', 'free').access, 'full');
     assert.equal(SCHEDULES.free.rivalMoveAlerts, false);
     assert.equal(SCHEDULES.paid.rivalMovesEveryDays, 7);
     assert.equal(SCHEDULES.client.rivalMoveAlerts, true);
