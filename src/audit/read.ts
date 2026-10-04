@@ -145,37 +145,70 @@ export async function ownHistory(db: Db, institutionId: string, before?: Date): 
   }));
 }
 
+const FINDING_FIELDS = 'id, audit_id, place, kind, finding_key, line, source_name, source_url, checked_at, repeats, listing, fix_title, fix_why, fix_steps, ready_fix, effort, impact, fix_rank, removed_at';
+
+type FindingRow = Pick<
+  Database['public']['Tables']['audit_findings']['Row'],
+  | 'id'
+  | 'audit_id'
+  | 'place'
+  | 'kind'
+  | 'finding_key'
+  | 'line'
+  | 'source_name'
+  | 'source_url'
+  | 'checked_at'
+  | 'repeats'
+  | 'listing'
+  | 'fix_title'
+  | 'fix_why'
+  | 'fix_steps'
+  | 'ready_fix'
+  | 'effort'
+  | 'impact'
+  | 'fix_rank'
+  | 'removed_at'
+>;
+
+function toStoredFinding(row: FindingRow): StoredFinding {
+  return {
+    id: row.id,
+    place: row.place,
+    kind: row.kind,
+    findingKey: row.finding_key,
+    line: row.line,
+    sourceName: row.source_name,
+    sourceUrl: row.source_url,
+    checkedAt: row.checked_at,
+    repeats: row.repeats,
+    listing: (row.listing as ListingProblem | null) ?? null,
+    fix:
+      row.fix_title && row.effort && row.impact
+        ? { title: row.fix_title, why: row.fix_why, steps: row.fix_steps ?? [], readyFix: parseReadyFix(row.ready_fix), effort: row.effort, impact: row.impact }
+        : null,
+    fixRank: row.fix_rank,
+    removed: row.removed_at !== null,
+  };
+}
+
 /**
  * An Audit's findings the reader may see (Free: the ones among its top 3 fixes), in the order
  * they were found. Findings the team took out come back only when `withRemoved` (the team's review).
  */
 export async function storedFindings(db: Db, auditId: string, options: { withRemoved?: boolean } = {}): Promise<StoredFinding[]> {
-  let query = db
-    .from('audit_findings')
-    .select('id, place, kind, finding_key, line, source_name, source_url, checked_at, repeats, listing, fix_title, fix_why, fix_steps, ready_fix, effort, impact, fix_rank, removed_at')
-    .eq('audit_id', auditId);
+  let query = db.from('audit_findings').select(FINDING_FIELDS).eq('audit_id', auditId);
   if (!options.withRemoved) query = query.is('removed_at', null);
   const { data, error } = await query.order('place').order('checked_at').order('finding_key');
   if (error) throw new AuditReadError(`Could not load what was found: ${error.message}`);
-  return (data ?? []).map((row): StoredFinding => {
-    const readyFix = parseReadyFix(row.ready_fix);
-    return {
-      id: row.id,
-      place: row.place,
-      kind: row.kind,
-      findingKey: row.finding_key,
-      line: row.line,
-      sourceName: row.source_name,
-      sourceUrl: row.source_url,
-      checkedAt: row.checked_at,
-      repeats: row.repeats,
-      listing: (row.listing as ListingProblem | null) ?? null,
-      fix:
-        row.fix_title && row.effort && row.impact
-          ? { title: row.fix_title, why: row.fix_why, steps: row.fix_steps ?? [], readyFix, effort: row.effort, impact: row.impact }
-          : null,
-      fixRank: row.fix_rank,
-      removed: row.removed_at !== null,
-    };
-  });
+  return (data ?? []).map(toStoredFinding);
+}
+
+/** The findings of several Audits the reader may see, by Audit: you and your rivals, side by side. Never one taken out. */
+export async function findingsByAudit(db: Db, auditIds: readonly string[]): Promise<Map<string, StoredFinding[]>> {
+  const byAudit = new Map<string, StoredFinding[]>(auditIds.map((id) => [id, []]));
+  if (auditIds.length === 0) return byAudit;
+  const { data, error } = await db.from('audit_findings').select(FINDING_FIELDS).in('audit_id', [...auditIds]).is('removed_at', null).order('checked_at').order('finding_key');
+  if (error) throw new AuditReadError(`Could not load what was found: ${error.message}`);
+  for (const row of data ?? []) byAudit.get(row.audit_id)?.push(toStoredFinding(row));
+  return byAudit;
 }

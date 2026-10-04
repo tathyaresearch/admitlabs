@@ -1,6 +1,6 @@
 // Rival work, run on the server with the service key: the monthly rival Audits, the weekly
-// check for moves and best content, the Rivals 3 things to do, and the first look at a rival
-// someone has just picked. The one path for the app, the scripts and the seed.
+// check for moves and best content, the month's one line and the Rivals 3 things to do, and the
+// first look at a rival someone has just picked. The one path for the app, the scripts and the seed.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AuditRunError, runAudit } from '../audit/run.ts';
@@ -12,6 +12,7 @@ import { getAnalysisProvider, getProvider } from '../providers/registry.ts';
 import type { RivalContentValue, RivalMoveValue } from '../providers/signals.ts';
 import type { InstitutionRef, Signal } from '../providers/types.ts';
 import { compareChecks } from './compare.ts';
+import { lineFacts } from './line.ts';
 import { rivalOpportunities } from './opportunities.ts';
 import { checkScores, latestOwnAudit, latestRivalAudits, programInfo } from './read.ts';
 import { isRivalAuditDue, monthColumn, mondayOf, monthStartOf } from './schedule.ts';
@@ -205,6 +206,55 @@ export async function rivalChecksDue(db: Db, now: Date): Promise<Array<{ id: str
   return rivals.filter((rival) => !done.has(rival.id));
 }
 
+// The month's one line -------------------------------------------------------------------
+
+/**
+ * The month's one line about rivals (spec 8.4), for every plan: from the institution's latest
+ * approved Audit and each rival's latest rival Audit, as known at `asOf`, written by the AI writer
+ * and kept for the month. Returns false when there is nothing to compare yet.
+ */
+export async function writeRivalLine(db: Db, institutionId: string, asOf: Date, env?: Env): Promise<boolean> {
+  const [institution, links] = await Promise.all([
+    db.from('institutions').select('id, type, city').eq('id', institutionId).maybeSingle(),
+    db.from('rivals').select('rival_institution_id, institutions!rivals_rival_institution_id_fkey(name, city)').eq('institution_id', institutionId),
+  ]);
+  const me = must(institution, 'institution');
+  const rivals = must(links, 'rival links').map((row) => ({ id: row.rival_institution_id, name: row.institutions?.name ?? 'A rival', city: row.institutions?.city ?? '' }));
+  if (rivals.length === 0) return false;
+  const own = await latestOwnAudit(db, institutionId, asOf);
+  if (!own) return false;
+  const rivalIds = rivals.map((rival) => rival.id);
+  const [theirs, programs] = await Promise.all([latestRivalAudits(db, rivalIds, asOf), programInfo(db, [institutionId, ...rivalIds])]);
+  const checks = await checkScores(db, [own.id, ...[...theirs.values()].map((audit) => audit.id)], programs);
+  const yours = checks.get(own.id) ?? [];
+  const facts = lineFacts(
+    rivals.flatMap((rival) => {
+      const audit = theirs.get(rival.id);
+      return audit ? [{ id: rival.id, name: rival.name, overall: audit.scores.overall, comparisons: compareChecks(yours, checks.get(audit.id) ?? []) }] : [];
+    }),
+  );
+  if (!facts) return false;
+  const line = await getAnalysisProvider(env ?? process.env).rivalLine({
+    institutionType: me.type,
+    city: me.city,
+    allLocal: rivals.every((rival) => rival.city === me.city),
+    facts,
+  });
+  const saved = await db.from('rival_lines').upsert(
+    {
+      institution_id: institutionId,
+      month: monthColumn(asOf),
+      line,
+      rival_institution_id: facts.kind === 'ahead' ? facts.rival.id : null,
+      check_keys: facts.kind === 'ahead' ? facts.checks : [],
+      written_at: asOf.toISOString(),
+    },
+    { onConflict: 'institution_id,month' },
+  );
+  if (saved.error) throw new RivalJobError(`Could not save the month's line: ${saved.error.message}`);
+  return true;
+}
+
 // 3 things to do --------------------------------------------------------------------------
 
 function planRecord(row: { tier: PlanRecord['tier']; starts_at: string; ends_at: string | null } | null): PlanRecord | null {
@@ -212,12 +262,14 @@ function planRecord(row: { tier: PlanRecord['tier']; starts_at: string; ends_at:
 }
 
 /**
- * The Rivals 3 things to do for the month of `asOf` (Paid and Client only), built from what
- * was known then: the institution's latest Audit, each rival's latest rival Audit, the best
- * posts of the month and the moves of the last 30 days. Replaces the month's earlier list.
- * Returns how many were written (0 on Free, or with no rivals).
+ * The month's one line (every plan) and the Rivals 3 things to do for the month of `asOf` (Paid
+ * and Client only), built from what was known then: the institution's latest approved Audit, each
+ * rival's latest rival Audit, the best posts of the month and the moves of the last 30 days.
+ * Replaces the month's earlier list. Returns how many things to do were written (0 on Free, or
+ * with no rivals).
  */
 export async function writeRivalActions(db: Db, institutionId: string, asOf: Date, env?: Env): Promise<number> {
+  await writeRivalLine(db, institutionId, asOf, env);
   const [institution, plan, links] = await Promise.all([
     db.from('institutions').select('id, type').eq('id', institutionId).maybeSingle(),
     db.from('plans').select('tier, starts_at, ends_at').eq('institution_id', institutionId).maybeSingle(),

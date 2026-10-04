@@ -1882,6 +1882,62 @@ export type Database = {
           },
         ]
       }
+      rival_lines: {
+        Row: {
+          check_keys: Database["public"]["Enums"]["check_key"][]
+          institution_id: string
+          line: string
+          month: string
+          rival_institution_id: string | null
+          written_at: string
+        }
+        Insert: {
+          check_keys?: Database["public"]["Enums"]["check_key"][]
+          institution_id: string
+          line: string
+          month: string
+          rival_institution_id?: string | null
+          written_at?: string
+        }
+        Update: {
+          check_keys?: Database["public"]["Enums"]["check_key"][]
+          institution_id?: string
+          line?: string
+          month?: string
+          rival_institution_id?: string | null
+          written_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rival_lines_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rival_lines_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rival_lines_rival_institution_id_fkey"
+            columns: ["rival_institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rival_lines_rival_institution_id_fkey"
+            columns: ["rival_institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rival_moves: {
         Row: {
           description: string

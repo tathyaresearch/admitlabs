@@ -78,24 +78,7 @@ export function checksAcross(you: AcrossSide, rivals: readonly RivalComparisons[
   });
 }
 
-/** Who leads, in a few words: "Silverline College", "You lead", "You, level with Highfield University", "All level". */
-export function leadText(row: Pick<AcrossRow, 'lead' | 'leaders'>, sides: readonly AcrossSide[]): string {
-  const names = row.leaders.map((id) => sides.find((side) => side.id === id)?.name ?? 'A rival');
-  const rivals = sides.filter((side) => !side.you).length;
-  switch (row.lead) {
-    case 'rival':
-      return joinNames(names);
-    case 'you':
-      return 'You lead';
-    case 'level':
-      if (names.length === rivals && rivals > 1) return 'All level';
-      return `You, level with ${names.length === 1 ? names[0] : `${names.length} rivals`}`;
-    default:
-      return 'Not compared yet';
-  }
-}
-
-/** The same in a sentence, for the panel: "Silverline College leads here." */
+/** Who leads a check, in a sentence, for the panel: "Silverline College leads here." */
 export function leadSentence(row: Pick<AcrossRow, 'lead' | 'leaders'>, sides: readonly AcrossSide[]): string {
   const names = row.leaders.map((id) => sides.find((side) => side.id === id)?.name ?? 'A rival');
   switch (row.lead) {

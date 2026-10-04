@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
 import type { ScoreSet, Standing } from './compare.ts';
-import { freeRivalsVerdict, rivalsVerdict, rivalVerdict } from './verdict.ts';
+import { freeRivalsVerdict, rivalsVerdict } from './verdict.ts';
 
 const s = (overall: number, discovered: number, trusted: number, chosen: number): ScoreSet => ({ overall, discovered, trusted, chosen });
 
@@ -144,24 +144,5 @@ describe('Where you stand on Free: ahead or behind only', () => {
   test('every combination reads well', () => {
     const options: Standing[] = ['ahead', 'behind', 'level'];
     for (const a of options) for (const b of options) for (const c of options) readsWell(freeRivalsVerdict(rivals({ Alpha: a, Beta: b, Gamma: c })));
-  });
-});
-
-describe("One rival's page: you against them", () => {
-  test('Eastgate against Silverline', () => {
-    assert.equal(rivalVerdict(EASTGATE, SILVERLINE), 'You lead on being found. Next step: catching them on being chosen.');
-  });
-
-  test('ahead overall, with a pillar still to catch', () => {
-    assert.equal(rivalVerdict(EASTGATE, HIGHFIELD), "You're ahead overall. Next step: keeping your lead.");
-    assert.equal(rivalVerdict(s(60, 70, 55, 55), s(58, 50, 62, 60)), "You're ahead overall. Next step: catching them on being trusted.");
-  });
-
-  test('behind on all three: plenty to learn', () => {
-    assert.equal(rivalVerdict(LOOMCRAFT, BRIGHTPATH), "They're ahead on all three for now, so there is plenty to learn. Next step: catching them on being chosen.");
-  });
-
-  test('always a strength and a next step', () => {
-    for (const a of [30, 50, 70]) for (const b of [30, 50, 70]) readsWell(rivalVerdict(s(a, a, b, 50), s(b, b, a, 50)));
   });
 });

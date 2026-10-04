@@ -81,9 +81,12 @@ export async function rivalAuditHistory(db: Db, rivalIds: readonly string[]): Pr
   return history;
 }
 
-/** An institution's latest own Audit (Free, Paid or Client), up to `before` when given. */
+/**
+ * An institution's latest own Audit (Free, Paid or Client) that the college may see: approved,
+ * never one still waiting for the team's review. Up to `before` when given.
+ */
 export async function latestOwnAudit(db: Db, institutionId: string, before?: Date): Promise<AuditScores | null> {
-  let query = db.from('audits').select(AUDIT_COLUMNS).eq('institution_id', institutionId).in('kind', ['free', 'paid', 'client']);
+  let query = db.from('audits').select(AUDIT_COLUMNS).eq('institution_id', institutionId).in('kind', ['free', 'paid', 'client']).eq('review', 'approved');
   if (before) query = query.lte('run_at', before.toISOString());
   const { data, error } = await query.order('run_at', { ascending: false }).limit(1).maybeSingle();
   if (error) throw new RivalReadError(`Could not read the Audit: ${error.message}`);

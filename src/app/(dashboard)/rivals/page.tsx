@@ -1,35 +1,33 @@
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { SectionHead } from '@/components/audit/AuditHeader';
-import { MonthTable } from '@/components/charts/MonthTable';
-import { PartRanks } from '@/components/charts/PartRanks';
-import { NextSteps } from '@/components/home/NextSteps';
-import { RivalsCard } from '@/components/home/RivalsCard';
-import { AcrossChecks } from '@/components/rivals/AcrossChecks';
-import { ActivityTabs } from '@/components/rivals/Activity';
-import { lessonSteps } from '@/components/rivals/Lessons';
-import { RivalCheckPanel } from '@/components/rivals/RivalCheckPanel';
-import { RivalUnlockCard } from '@/components/rivals/RivalUnlockCard';
+import { SectionTitle } from '@/components/audit/PlaceBits';
 import { PaidAction } from '@/components/plan/PaidAction';
-import { StandTable } from '@/components/rivals/StandTable';
+import { AlertList, FreeStandings, LessonList, PlaceDetail, PlacesBoard, Ranking, RivalLine } from '@/components/rivals/City';
+import { RivalCheckPanel } from '@/components/rivals/RivalCheckPanel';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState, Notice } from '@/components/ui/Feedback';
+import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
-import { RIVAL_RULES } from '@/config/rivals';
 import { formatDate, plural } from '@/domain/format';
+import { PLACES, type Place } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { loadRivalsPage } from '@/lib/rivals/load';
-import { checksAcross, type AcrossSide } from '@/rivals/across';
-import { freeRivalsVerdict, rivalsVerdict } from '@/rivals/verdict';
-import audit from '@/components/audit/audit.module.css';
-import styles from '@/components/rivals/rivals.module.css';
+import { openingPlace, placeChecks, placeLesson } from '@/rivals/places';
+import audit from '@/components/audit/places.module.css';
 
 export const metadata = { title: 'Rivals' };
 
-const QUESTION = "Who's ahead of us?";
+const QUESTION = 'Who’s ahead in our city?';
 
-// Rivals answers "Who's ahead of us?": the answer and where you stand, how you compare part by
-// part, check by check and month by month, what to learn from them, then what they are doing.
+/** "3 rivals in Guwahati", or "3 rivals: 1 in Tezpur, 2 from a Nearby city". */
+function rivalsCaption(count: number, nearby: number, city: string): string {
+  if (nearby === 0) return `${plural(count, 'rival', 'rivals')} in ${city}`;
+  return `${plural(count, 'rival', 'rivals')}: ${count - nearby} in ${city}, ${nearby} from a Nearby city`;
+}
+
+// Rivals answers "Who's ahead in our city?" (spec 8.4), as the version 2 mock was approved: the
+// month's one line, the ranking, place by place (each place opens check by check), what to learn
+// from them and the alerts. Free sees ahead or behind each rival and the line, then what Paid adds.
 export default async function RivalsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
@@ -51,46 +49,76 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
   const change = data.change;
   const changeAction =
     owner && (change.kind === 'available' || change.kind === 'anytime') ? (
-      <div className={audit.actions}>
-        <ButtonLink href="/rivals/choose" variant="secondary" size="sm" icon="rivals">
-          Change rivals
-        </ButtonLink>
-        <p className={audit.actionNote}>{change.kind === 'anytime' ? 'Change them any time.' : 'You can change them once a month.'}</p>
-      </div>
-    ) : owner && change.kind === 'used' ? (
-      <div className={audit.actions}>
-        <p className={audit.actionNote}>
-          Changed on {formatDate(change.changedOn)}. You can change them again from {formatDate(change.nextOn)}.
-        </p>
-      </div>
+      <ButtonLink href="/rivals/choose" variant="secondary" size="sm" icon="rivals">
+        Change rivals
+      </ButtonLink>
     ) : undefined;
+  const changeNote =
+    owner && change.kind === 'used'
+      ? `Changed on ${formatDate(change.changedOn)}. You can change them again from ${formatDate(change.nextOn)}`
+      : owner && change.kind === 'available'
+        ? 'You can change them once a month'
+        : null;
 
   const notice =
     params.saved === '1' ? (
       <Notice tone="inverse" icon="check" title="Your rivals are saved.">
-        {viewer.tier === 'free' ? 'Drishti has checked each one. Where you stand is below.' : 'Drishti has checked each one. Their scores and activity are below.'}
+        {viewer.tier !== 'free' ? 'Drishti has checked each one. How you compare is below.' : data.free?.hasAudit === false ? 'Drishti has checked each one. Where you stand shows once your first Audit is ready.' : 'Drishti has checked each one. Where you stand is below.'}
       </Notice>
     ) : undefined;
+  const nearby = data.rivals.filter((rival) => rival.city !== institution.city).length;
 
   if (data.free) {
-    const standings = data.free.standings;
     return (
       <div className={audit.page}>
         <div className={audit.top}>
           <PageHead
             title="Rivals"
             question={QUESTION}
-            caption={[plural(data.rivals.length, 'rival', 'rivals'), 'Checked on the 1st of each month', 'Free keeps the rivals you picked']}
+            caption={[rivalsCaption(data.rivals.length, nearby, institution.city), 'Checked on the 1st of each month', 'Free keeps the rivals you picked']}
           />
           {notice}
         </div>
-        <RivalsCard
-          ladder={null}
-          standings={standings.map((rival) => ({ id: rival.id, name: rival.name, standing: rival.standing }))}
-          verdict={freeRivalsVerdict(standings)}
-          rivalsHref={null}
-        />
-        <RivalUnlockCard {...data.free.teaser} action={<PaidAction viewer={viewer} />} />
+        {data.line ? <RivalLine line={data.line} /> : null}
+        {data.free.hasAudit || notice ? null : (
+          <Notice icon="stopwatch" title="Your first Audit is being checked by the AdmitLabs team.">
+            Where you stand against each rival shows once it is ready. Drishti has already checked your rivals.
+          </Notice>
+        )}
+        <section className={audit.block} aria-labelledby="stand-title">
+          <SectionTitle id="stand-title" icon="rivals" title="Ahead or behind" help="Each rival against you, from your latest Audit and theirs." />
+          <FreeStandings standings={data.free.standings.map((rival) => ({ ...rival, nearby: rival.city !== institution.city }))} hasAudit={data.free.hasAudit} />
+        </section>
+        <section className={audit.unlock} aria-labelledby="unlock-title">
+          <div>
+            <h2 id="unlock-title" className={audit.unlockTitle}>
+              Paid shows how you compare
+            </h2>
+            <ul className={audit.unlockList}>
+              <li>
+                <Icon name="lock" size={14} />
+                The ranking, with each rival&apos;s Visibility, Trust and Chosen
+              </li>
+              <li>
+                <Icon name="lock" size={14} />
+                Place by place and check by check, with what was found for each
+              </li>
+              <li>
+                <Icon name="lock" size={14} />
+                What to learn from them, 3 lessons a month
+              </li>
+              <li>
+                <Icon name="lock" size={14} />
+                {data.free.teaser.moves
+                  ? `Alerts: ${plural(data.free.teaser.moves, 'move', 'moves')} by your rivals in the last 30 days, and every new one as it happens`
+                  : 'Alerts when a rival starts a program, changes fees, starts ads or gets many new reviews'}
+              </li>
+            </ul>
+          </div>
+          <div className={audit.unlockAction}>
+            <PaidAction viewer={viewer} />
+          </div>
+        </section>
       </div>
     );
   }
@@ -98,19 +126,18 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
   const full = data.full;
   if (!full) return null;
   const names = new Map(data.rivals.map((rival) => [rival.id, rival.name]));
-  const scored = full.rows.flatMap((row) => (row.audit ? [{ name: row.rival.name, scores: row.audit.scores }] : []));
-  // Check by check: you, then each scored rival from the highest score down.
-  const youSide: AcrossSide = { id: institution.id, name: institution.name, you: true };
-  const compared = full.ladder.flatMap((entry) => {
-    const row = full.rows.find((candidate) => candidate.rival.id === entry.id && candidate.audit);
-    return row ? [{ side: { id: row.rival.id, name: row.rival.name, you: false }, comparisons: row.comparisons }] : [];
-  });
-  const sides = [youSide, ...compared.map((entry) => entry.side)];
-  const across = full.you && compared.length ? checksAcross(youSide, compared) : null;
+  const requested = typeof params.place === 'string' && (PLACES as readonly string[]).includes(params.place) ? (params.place as Place) : null;
+  const opened = requested ?? openingPlace(full.view, institution.id);
+  const openedPlace = full.view.places.find((place) => place.key === opened);
+  const rows = placeChecks(full.across, opened);
+  const lesson = openedPlace
+    ? placeLesson({ place: openedPlace, rows, sides: full.sides, posts: full.posts, institutionType: institution.type })
+    : null;
   const caption = [
-    plural(data.rivals.length, 'rival', 'rivals'),
-    data.lastScored ? `Scores checked ${formatDate(data.lastScored)}` : 'Scores are being checked',
-    full.activity.lastChecked ? `Moves checked ${formatDate(full.activity.lastChecked)}` : 'Moves are checked every Monday',
+    rivalsCaption(data.rivals.length, nearby, institution.city),
+    full.lastScored ? `Checked ${formatDate(full.lastScored)}` : 'Being checked now',
+    full.lastChecked ? `Alerts checked ${formatDate(full.lastChecked)}` : 'Alerts checked every Monday',
+    ...(changeNote ? [changeNote] : []),
   ];
 
   return (
@@ -120,80 +147,54 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
         {notice}
       </div>
 
-      {full.you ? (
-        <section className={audit.summary} aria-labelledby="stand-title">
-          <h2 id="stand-title" className="visually-hidden">
-            Where you stand
-          </h2>
-          <p className={audit.lead}>{rivalsVerdict(full.you.scores, scored)}</p>
-          <StandTable ladder={full.ladder} rows={full.rows} you={full.you.scores} />
-        </section>
-      ) : (
+      {data.line ? <RivalLine line={data.line} /> : null}
+      {full.you ? null : (
         <Notice icon="info" title="Your first Audit is on its way.">
-          Where you stand shows once your own Audit is ready.
+          How you compare shows once your own Audit is ready.
         </Notice>
       )}
 
-      {full.you ? (
-        <section className={audit.section} aria-labelledby="parts-title">
-          <SectionHead id="parts-title" title="Part by part" help="Each part of the score ranked, from the latest Audit of each. Your row is highlighted." />
-          <div className={styles.pillarCard}>
-            <PartRanks rows={full.spread} />
-          </div>
-        </section>
-      ) : null}
-
-      {across ? (
-        <section className={audit.section} aria-labelledby="checks-title">
-          <SectionHead
-            id="checks-title"
-            title="Check by check"
-            help="Every check, you and each rival side by side, and who leads. Open one to see what was found for each, and what to learn from the one ahead."
-          />
-          <AcrossChecks rows={across} sides={sides} institutionType={institution.type} />
-        </section>
-      ) : null}
-
-      {full.you ? (
-        <section className={audit.section} aria-labelledby="months-title">
-          <SectionHead
-            id="months-title"
-            title="Month by month"
-            help={`Your overall score and your rivals', over the last ${RIVAL_RULES.trendMonths} months. Rivals are checked on the 1st of each month.`}
-          />
-          {full.trend.months.length > 1 ? (
-            <div className={styles.pillarCard}>
-              <MonthTable trend={full.trend} label="Overall score by month, you and your rivals" />
-            </div>
-          ) : (
-            <p className={audit.quietNote}>This starts next month, once there are two months to compare.</p>
-          )}
-        </section>
-      ) : null}
-
-      <NextSteps
-        id="learn"
-        icon="rivals"
-        title="What to learn from your rivals"
-        description="Learned from your rivals this month. Take the idea, never copy."
-        steps={lessonSteps(full.actions, names, institution.type)}
-        empty={<p className={audit.quietNote}>What to learn from your rivals arrives with your next Audit.</p>}
-      />
-
-      <section className={audit.section} aria-labelledby="activity-title">
-        <SectionHead id="activity-title" title="What they're doing" help="Their moves, best content and ads. Every item links to where it was found." />
-        <ActivityTabs
-          activity={full.activity}
-          moves={full.activity.moves}
-          names={names}
-          postLimit={RIVAL_RULES.postsOnOverview}
-          movesNote="New programs, fee changes, new pages and admission dates from the last 30 days. Drishti checks every Monday and alerts you when it finds one."
+      <section className={audit.block} aria-labelledby="ranking-title">
+        <SectionTitle
+          id="ranking-title"
+          icon="rivals"
+          title="The ranking"
+          help={`You and your rivals${nearby ? '' : ` in ${institution.city}`}, from each one’s latest Audit. The score is small on purpose: the words say more.`}
         />
+        <Ranking rows={full.view.ranking} rivalHref={(id) => `/rivals/${id}`} />
       </section>
 
-      {across ? (
+      <section className={audit.block} aria-labelledby="places-title">
+        <SectionTitle
+          id="places-title"
+          icon="globe"
+          title="Place by place"
+          help="The same five places as your Audit. Open a place to see each check, what was found for each side, and what to learn from the one ahead."
+        />
+        <PlacesBoard view={full.view} opened={opened} />
+        {openedPlace ? (
+          <PlaceDetail place={openedPlace} view={full.view} rows={rows} sides={full.sides} lesson={lesson} institutionType={institution.type} city={institution.city} />
+        ) : null}
+      </section>
+
+      <section className={audit.block} aria-labelledby="learn-title">
+        <SectionTitle id="learn-title" icon="spark" title="What to learn from them" help="Learned from your rivals this month. Take the idea, never copy." />
+        <LessonList lessons={full.lessons} names={names} empty={<p className={audit.quiet}>What to learn from your rivals arrives with your next Audit.</p>} />
+      </section>
+
+      <section className={audit.block} aria-labelledby="alerts-title">
+        <SectionTitle
+          id="alerts-title"
+          icon="bell"
+          title="Alerts"
+          help="The last 30 days: new programs, fee changes, new pages, admission dates, ads and big jumps in reviews. Each links to where it was found."
+        />
+        <AlertList alerts={full.alerts} names={names} empty="Nothing new from your rivals in the last 30 days. Drishti checks every Monday and tells you when it finds something." />
+      </section>
+
+      {full.across.length ? (
         <Suspense fallback={null}>
-          <RivalCheckPanel rows={across} sides={sides} institutionType={institution.type} />
+          <RivalCheckPanel rows={full.across} sides={full.acrossSides} institutionType={institution.type} />
         </Suspense>
       ) : null}
     </div>

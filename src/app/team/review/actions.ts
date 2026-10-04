@@ -3,6 +3,7 @@
 // The team's review (spec section 25): a change to a waiting Audit, and Approve and send. Team
 // only: checked here, and again by row level security and inside record_review() and
 // approve_audit(), which also refuse an Audit that is no longer waiting. Every change is kept.
+// Once approved, the month's rival line and lessons are worked out again from the new Audit.
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -10,7 +11,10 @@ import { applyReviewChange, approveAudit, ReviewError } from '@/audit/review-job
 import type { ReviewChange } from '@/audit/review';
 import { RESULTS } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { RivalJobError, writeRivalActions } from '@/rivals/jobs';
+import { RivalReadError } from '@/rivals/read';
 
 export interface ReviewActionResult {
   ok: boolean;
@@ -62,12 +66,24 @@ export async function approveAuditAction(auditId: string): Promise<ReviewActionR
   const viewer = await getViewer();
   if (!viewer?.teamRole) return { ok: false, error: 'Only the AdmitLabs team approves Audits.' };
   if (!UUID.test(auditId)) return { ok: false, error: 'That Audit is not there.' };
+  const db = await createClient();
   try {
-    await approveAudit(await createClient(), auditId);
+    await approveAudit(db, auditId);
   } catch (error) {
     if (error instanceof ReviewError) return { ok: false, error: error.message };
     throw error;
   }
+  // The rival line and lessons from the Audit the college sees now. The approval stands either way.
+  const { data: approved } = await db.from('audits').select('institution_id').eq('id', auditId).maybeSingle();
+  if (approved) {
+    try {
+      await writeRivalActions(createAdminClient(), approved.institution_id, new Date());
+    } catch (error) {
+      if (!(error instanceof RivalJobError || error instanceof RivalReadError)) throw error;
+      console.error(`The rival line after approval did not finish: ${error.message}`);
+    }
+  }
   revalidatePath('/team', 'layout');
+  revalidatePath('/', 'layout');
   redirect('/team/review?approved=1');
 }

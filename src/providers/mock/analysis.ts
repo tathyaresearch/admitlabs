@@ -7,7 +7,7 @@ import { writeFindingFix } from './finding-fix.ts';
 import { writeFixAdvice } from './fix-advice.ts';
 import { rngFor } from './random.ts';
 import { writeReadyFix } from './ready-fix.ts';
-import { writeRivalAction } from './rival-actions.ts';
+import { writeRivalAction, writeRivalLine } from './rival-actions.ts';
 
 const GENERAL_REASONS = [
   'Real people and a clear outcome early on. The idea to take away is showing proof, not the post itself.',
@@ -76,5 +76,9 @@ export const mockAnalysis: AnalysisProvider = {
 
   async rivalActions({ institutionType, opportunities }) {
     return opportunities.map((item) => writeRivalAction(item, institutionType));
+  },
+
+  async rivalLine(input) {
+    return writeRivalLine(input);
   },
 };

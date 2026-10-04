@@ -1,9 +1,10 @@
 // Loads what the Rivals screens need, as the signed-in user: row level security decides what
-// comes back. Free gets the rival list, one word per rival (ahead or behind) and counts for the
-// unlock card; Paid and Client get the full comparison. Nothing here widens what the database
-// returns.
+// comes back. Free gets the rival list, one word per rival (ahead or behind), the month's one
+// line and counts for what Paid adds; Paid and Client get the ranking, place by place, check by
+// check, lessons and alerts. Nothing here widens what the database returns.
 
 import { cache } from 'react';
+import { findingsByAudit } from '@/audit/read';
 import { historyByMonth } from '@/audit/view';
 import { RIVAL_RULES } from '@/config/rivals';
 import { monthKey } from '@/domain/dates';
@@ -11,11 +12,13 @@ import type { CheckKey, ContentPlatform, Difficulty, InstitutionType, RivalMoveK
 import { loadHistory } from '@/lib/audit/load';
 import type { InstitutionViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
+import { checksAcross, type AcrossRow, type AcrossSide } from '@/rivals/across';
 import { compareChecks, ladder, type CheckComparison, type LadderRow, type Standing } from '@/rivals/compare';
+import { rivalPlaces, type PlaceSide, type RivalPlacesView } from '@/rivals/places';
 import { checkScores, latestOwnAudit, latestRivalAudits, programInfo, rivalAuditHistory, type AuditScores } from '@/rivals/read';
 import { rivalChangeState, type RivalChangeState } from '@/rivals/rules';
 import { reviewTrend, type ReviewTrend } from '@/rivals/timing';
-import { pillarSpread, scoreTrend, type PillarSpread, type ScoreTrend } from '@/rivals/trend';
+import { scoreTrend, type ScoreTrend } from '@/rivals/trend';
 import { freeRivalsVerdict, rivalsVerdict } from '@/rivals/verdict';
 
 const DAY_MS = 86_400_000;
@@ -84,34 +87,45 @@ export interface Activity {
   lastChecked: string | null;
 }
 
-export interface RivalScores {
-  rival: RivalInfo;
-  audit: AuditScores | null;
-  comparisons: CheckComparison[];
+/** You and your rivals side by side: each side's latest Audit, compared check by check. */
+export interface Comparison {
+  /** You first, then each rival, for the places. */
+  sides: PlaceSide[];
+  view: RivalPlacesView;
+  /** Every check across you and the rivals compared with you. */
+  across: AcrossRow[];
+  acrossSides: AcrossSide[];
+  /** Each rival's comparison with you, by rival id. */
+  comparisons: Map<string, CheckComparison[]>;
+  you: AuditScores | null;
+  /** Each rival's latest rival Audit, by rival id. */
+  audits: Map<string, AuditScores>;
 }
 
-export interface FullRivals {
-  you: AuditScores | null;
-  rows: RivalScores[];
-  ladder: LadderRow[];
-  /** Each pillar with you and every scored rival on it. */
-  spread: PillarSpread[];
-  /** The overall score by month, you and each rival. */
-  trend: ScoreTrend;
-  actions: ActionRow[];
-  activity: Activity;
+export interface FullRivals extends Comparison {
+  /** When rival scores were last checked (the newest rival Audit). */
+  lastScored: string | null;
+  lessons: ActionRow[];
+  /** The last 30 days, newest first. */
+  alerts: MoveRow[];
+  /** The latest month's best posts, for what to learn on Social media. */
+  posts: PostRow[];
+  /** When Drishti last ran the weekly check on any of these rivals. */
+  lastChecked: string | null;
 }
 
 export interface FreeRivals {
   standings: Array<RivalInfo & { standing: Standing }>;
   teaser: { moves: number; posts: number; ads: number };
+  /** Your own first Audit is ready: until then nobody is ahead or behind yet. */
+  hasAudit: boolean;
 }
 
 export interface RivalsPage {
   rivals: RivalInfo[];
   change: RivalChangeState;
-  /** When rival scores were last checked (the newest rival Audit). */
-  lastScored: string | null;
+  /** The month's one line, or null until it is written for the rivals you have now. */
+  line: string | null;
   full: FullRivals | null;
   free: FreeRivals | null;
 }
@@ -232,24 +246,67 @@ export async function loadActions(institutionId: string): Promise<ActionRow[]> {
     .map((row) => ({ rank: row.rank, text: row.text, detail: row.detail, rivalId: row.rival_institution_id, checkKey: row.check_key, effort: row.effort, month: row.month }));
 }
 
-/** Your latest Audit and each rival's latest rival Audit, compared check by check. */
-async function loadScores(institutionId: string, rivals: readonly RivalInfo[]): Promise<{ you: AuditScores | null; rows: RivalScores[] }> {
+/**
+ * You and these rivals side by side: your latest approved Audit and each rival's latest rival
+ * Audit, with every check and what was found, compared check by check and place by place.
+ */
+async function loadComparison(institution: { id: string; name: string; city: string }, rivals: readonly RivalInfo[]): Promise<Comparison> {
   const supabase = await createClient();
   const rivalIds = rivals.map((rival) => rival.id);
-  const [you, theirs, programs] = await Promise.all([
-    latestOwnAudit(supabase, institutionId),
-    latestRivalAudits(supabase, rivalIds),
-    programInfo(supabase, [institutionId, ...rivalIds]),
-  ]);
-  const checks = await checkScores(supabase, [...(you ? [you.id] : []), ...[...theirs.values()].map((audit) => audit.id)], programs);
+  const [you, audits, programs] = await Promise.all([latestOwnAudit(supabase, institution.id), latestRivalAudits(supabase, rivalIds), programInfo(supabase, [institution.id, ...rivalIds])]);
+  const auditIds = [...(you ? [you.id] : []), ...[...audits.values()].map((audit) => audit.id)];
+  const [checks, findings] = await Promise.all([checkScores(supabase, auditIds, programs), findingsByAudit(supabase, auditIds)]);
   const yours = you ? (checks.get(you.id) ?? []) : [];
-  return {
-    you,
-    rows: rivals.map((rival) => {
-      const audit = theirs.get(rival.id) ?? null;
-      return { rival, audit, comparisons: audit && you ? compareChecks(yours, checks.get(audit.id) ?? []) : [] };
+  const comparisons = new Map(
+    rivals.flatMap((rival) => {
+      const audit = audits.get(rival.id);
+      return audit && you ? [[rival.id, compareChecks(yours, checks.get(audit.id) ?? [])] as const] : [];
     }),
+  );
+  const sides: PlaceSide[] = [
+    { id: institution.id, name: institution.name, you: true, nearby: false, scores: you?.scores ?? null, checks: yours, findings: you ? (findings.get(you.id) ?? []) : [] },
+    ...rivals.map((rival): PlaceSide => {
+      const audit = audits.get(rival.id);
+      return {
+        id: rival.id,
+        name: rival.name,
+        you: false,
+        nearby: rival.city !== institution.city,
+        scores: audit?.scores ?? null,
+        checks: audit ? (checks.get(audit.id) ?? []) : [],
+        findings: audit ? (findings.get(audit.id) ?? []) : [],
+      };
+    }),
+  ];
+  const view = rivalPlaces(sides);
+  // Check by check: you, then each compared rival in the ranking's order.
+  const youSide: AcrossSide = { id: institution.id, name: institution.name, you: true };
+  const compared = view.ranking.flatMap((row) => {
+    const items = comparisons.get(row.id);
+    return !row.you && items ? [{ side: { id: row.id, name: row.name, you: false }, comparisons: items }] : [];
+  });
+  return {
+    sides,
+    view,
+    across: you && compared.length ? checksAcross(youSide, compared) : [],
+    acrossSides: [youSide, ...compared.map((entry) => entry.side)],
+    comparisons,
+    you,
+    audits,
   };
+}
+
+/**
+ * The month's one line (written by the AI writer with the rival job, for every plan), the newest
+ * one. Null when there is none yet, or when it names a rival you no longer track.
+ */
+export async function loadRivalLine(institutionId: string, rivalIds: readonly string[]): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('rival_lines').select('line, rival_institution_id, month').eq('institution_id', institutionId).order('month', { ascending: false }).limit(1).maybeSingle();
+  if (error) throw new Error(`Could not load the month's line: ${error.message}`);
+  if (!data) return null;
+  if (data.rival_institution_id && !rivalIds.includes(data.rival_institution_id)) return null;
+  return data.line;
 }
 
 /** Each rival's overall score at each of its rival Audits, oldest first: your place month by month. Paid and Client. */
@@ -278,13 +335,16 @@ export async function loadRivalsPage(viewer: InstitutionViewer): Promise<RivalsP
   const institution = viewer.membership.institution;
   const rivals = await loadRivalList(institution.id);
   const change = await loadChangeState(institution.id, viewer.tier, rivals.length > 0);
-  if (rivals.length === 0) return { rivals, change, lastScored: null, full: null, free: null };
+  if (rivals.length === 0) return { rivals, change, line: null, full: null, free: null };
+  const rivalIds = rivals.map((rival) => rival.id);
 
   if (viewer.tier === 'free') {
     const supabase = await createClient();
-    const [standings, teaser] = await Promise.all([
+    const [standings, teaser, line, own] = await Promise.all([
       supabase.rpc('rival_standings', { p_institution: institution.id }),
       supabase.rpc('rival_teaser', { p_institution: institution.id }),
+      loadRivalLine(institution.id, rivalIds),
+      latestOwnAudit(supabase, institution.id),
     ]);
     if (standings.error) throw new Error(`Could not load where you stand: ${standings.error.message}`);
     if (teaser.error) throw new Error(`Could not load rival counts: ${teaser.error.message}`);
@@ -293,45 +353,29 @@ export async function loadRivalsPage(viewer: InstitutionViewer): Promise<RivalsP
     return {
       rivals,
       change,
-      lastScored: null,
+      line,
       full: null,
       free: {
         standings: rivals.map((rival) => ({ ...rival, standing: words.get(rival.id) ?? 'unscored' })),
         teaser: { moves: counts.moves ?? 0, posts: counts.posts ?? 0, ads: counts.ads ?? 0 },
+        hasAudit: own !== null,
       },
     };
   }
 
-  const [scores, actions, activity, trend] = await Promise.all([
-    loadScores(institution.id, rivals),
+  const [comparison, lessons, activity, line] = await Promise.all([
+    loadComparison(institution, rivals),
     loadActions(institution.id),
-    loadActivity(
-      rivals.map((rival) => rival.id),
-      { postsPerRival: RIVAL_RULES.postsPerMonth },
-    ),
-    loadTrend(institution.id, institution.name, rivals),
+    loadActivity(rivalIds, { postsPerRival: RIVAL_RULES.postsPerMonth }),
+    loadRivalLine(institution.id, rivalIds),
   ]);
-  const lastScored = scores.rows.reduce<string | null>((latest, row) => (row.audit && (!latest || row.audit.runAt > latest) ? row.audit.runAt : latest), null);
+  const lastScored = [...comparison.audits.values()].reduce<string | null>((latest, audit) => (!latest || audit.runAt > latest ? audit.runAt : latest), null);
   return {
     rivals,
     change,
-    lastScored,
+    line,
     free: null,
-    full: {
-      you: scores.you,
-      rows: scores.rows,
-      ladder: ladder(
-        { id: institution.id, name: institution.name, overall: scores.you?.scores.overall ?? null, change: scores.you?.changes.overall ?? null },
-        scores.rows.map((row) => ({ id: row.rival.id, name: row.rival.name, overall: row.audit?.scores.overall ?? null, change: row.audit?.changes.overall ?? null })),
-      ),
-      spread: pillarSpread(
-        { id: institution.id, name: institution.name, scores: scores.you?.scores ?? null },
-        scores.rows.map((row) => ({ id: row.rival.id, name: row.rival.name, scores: row.audit?.scores ?? null })),
-      ),
-      trend,
-      actions,
-      activity,
-    },
+    full: { ...comparison, lastScored, lessons, alerts: activity.moves, posts: activity.posts, lastChecked: activity.lastChecked },
   };
 }
 
@@ -420,14 +464,13 @@ export async function loadSuggestions(institutionId: string): Promise<Suggestion
   }));
 }
 
-export interface RivalDetail {
+export interface RivalDetail extends Comparison {
   rival: RivalInfo;
-  you: AuditScores | null;
-  audit: AuditScores | null;
-  comparisons: CheckComparison[];
-  activity: Activity;
+  nearby: boolean;
+  /** Their best posts of the latest month. */
+  posts: PostRow[];
   /** Every move on record for this rival, newest first (the admission push can be older than 30 days). */
-  allMoves: MoveRow[];
+  alerts: MoveRow[];
   reviews: ReviewTrend;
   /** Your overall score and theirs, month by month. */
   trend: ScoreTrend;
@@ -440,8 +483,8 @@ export async function loadRivalDetail(viewer: InstitutionViewer, rivalId: string
   if (!rival) return null;
   const supabase = await createClient();
   const institution = viewer.membership.institution;
-  const [scores, activity, moves, reviews, trend] = await Promise.all([
-    loadScores(institution.id, [rival]),
+  const [comparison, activity, moves, reviews, trend] = await Promise.all([
+    loadComparison(institution, [rival]),
     loadActivity([rival.id]),
     supabase.from('rival_moves').select('id, rival_institution_id, kind, description, source_url, detected_at').eq('rival_institution_id', rival.id).order('detected_at', { ascending: false }),
     supabase.rpc('rival_review_trend', { p_rival: rival.id }),
@@ -449,14 +492,12 @@ export async function loadRivalDetail(viewer: InstitutionViewer, rivalId: string
   ]);
   if (moves.error) throw new Error(`Could not load moves: ${moves.error.message}`);
   if (reviews.error) throw new Error(`Could not load the review trend: ${reviews.error.message}`);
-  const row = scores.rows[0];
   return {
+    ...comparison,
     rival,
-    you: scores.you,
-    audit: row?.audit ?? null,
-    comparisons: row?.comparisons ?? [],
-    activity,
-    allMoves: (moves.data ?? []).map((move) => ({
+    nearby: rival.city !== institution.city,
+    posts: activity.posts,
+    alerts: (moves.data ?? []).map((move) => ({
       id: move.id,
       rivalId: move.rival_institution_id,
       kind: move.kind,

@@ -11,9 +11,10 @@ import { Icon } from '@/components/ui/Icon';
 import { CheckIcon } from '@/components/ui/Marks';
 import { SidePanel } from '@/components/ui/Overlay';
 import { ResultBar } from '@/components/ui/Results';
-import { checkLooksAt, checkName } from '@/domain/checks';
+import { checkLooksAt } from '@/domain/checks';
 import { PILLAR_LABELS, PILLAR_QUESTIONS, type InstitutionType } from '@/domain/types';
 import { leadSentence, type AcrossCell, type AcrossRow, type AcrossSide } from '@/rivals/across';
+import { rivalCheckName } from '@/rivals/text';
 import panel from '@/components/audit/panel.module.css';
 import styles from './rivals.module.css';
 import { auditFixPath, checkFixKey } from '@/domain/fix-key';
@@ -90,7 +91,7 @@ export function RivalCheckPanel({ rows, sides, institutionType }: { rows: readon
         row ? (
           <span className={panel.title}>
             <CheckIcon check={row.key} size={20} />
-            {checkName(row.key, institutionType)}
+            {rivalCheckName(row.key, institutionType)}
           </span>
         ) : (
           ''

@@ -1,5 +1,5 @@
 import { PaidAction } from '@/components/plan/PaidAction';
-import { RivalChooser } from '@/components/rivals/RivalChooser';
+import { RivalChooser, type ChooserRow } from '@/components/rivals/RivalChooser';
 import { Notice } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
 import { RIVAL_RULES } from '@/config/rivals';
@@ -11,7 +11,7 @@ import { loadPrograms } from '@/lib/audit/load';
 import { loadChangeState, loadRivalList, loadSuggestions } from '@/lib/rivals/load';
 import { canChangeRivals, type RivalChangeState } from '@/rivals/rules';
 import { suggestionReason } from '@/rivals/text';
-import audit from '@/components/audit/audit.module.css';
+import audit from '@/components/audit/places.module.css';
 
 export const metadata = { title: 'Choose rivals' };
 
@@ -25,6 +25,8 @@ function saveNote(change: RivalChangeState, tier: string, now: Date): string {
   return 'You can change them any time.';
 }
 
+// Choosing rivals answers "Who should Drishti track for you?" (spec 8.2): your city first, then,
+// when it has fewer than 3, the nearest bigger city's, marked Nearby city; or one you add.
 export default async function ChooseRivalsPage() {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
@@ -51,16 +53,27 @@ export default async function ChooseRivalsPage() {
         </Notice>
       );
   } else {
+    // Your rivals first, then the suggestions, each in its city's group.
+    const current: ChooserRow[] = rivals.map((rival) => ({
+      id: rival.id,
+      name: rival.name,
+      sub: `${INSTITUTION_TYPE_LABELS[rival.type]}, ${rival.city}. One of your rivals now.`,
+      nearby: rival.city !== institution.city,
+    }));
+    const suggested: ChooserRow[] = suggestions.map((rival) => ({
+      id: rival.id,
+      name: rival.name,
+      sub: suggestionReason(rival.type, rival.city, rival.sharedPrograms),
+      nearby: !rival.sameCity,
+    }));
+    const rows = [...current, ...suggested];
     body = (
       <RivalChooser
         institution={{ type: institution.type, website: institution.website, city: institution.city, state: institution.state }}
-        current={rivals.map((rival) => ({ id: rival.id, name: rival.name, sub: `${INSTITUTION_TYPE_LABELS[rival.type]}, ${rival.city}` }))}
-        suggestions={suggestions.map((rival) => ({
-          id: rival.id,
-          name: rival.name,
-          sub: `${INSTITUTION_TYPE_LABELS[rival.type]}, ${rival.city}`,
-          reason: suggestionReason(rival.sameCity, rival.sharedPrograms, rival.state),
-        }))}
+        nearCity={suggestions.find((rival) => !rival.sameCity)?.city ?? null}
+        local={rows.filter((row) => !row.nearby)}
+        nearby={rows.filter((row) => row.nearby)}
+        picked={rivals.map((rival) => rival.id)}
         programs={programs.filter((program) => !program.archived).map((program) => ({ id: program.id, name: program.name }))}
         saveNote={saveNote(change, viewer.tier, now)}
       />
@@ -69,12 +82,14 @@ export default async function ChooseRivalsPage() {
 
   return (
     <div className={audit.page}>
-      <PageHead
-        back={rivals.length ? { href: '/rivals', label: 'Rivals' } : undefined}
-        title={rivals.length ? 'Change your rivals' : 'Choose your rivals'}
-        question="Who should Drishti track for you?"
-        caption={[`${RIVAL_RULES.min} to ${RIVAL_RULES.max} institutions`, 'Public information only. Rivals never know who tracks them.']}
-      />
+      <div className={audit.top}>
+        <PageHead
+          back={rivals.length ? { href: '/rivals', label: 'Rivals' } : undefined}
+          title={rivals.length ? 'Change your rivals' : 'Choose your rivals'}
+          question="Who should Drishti track for you?"
+          caption={[`Pick ${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals`, viewer.tier === 'free' ? 'Free keeps the rivals you pick' : 'Public information only. Rivals never know who tracks them.']}
+        />
+      </div>
       {body}
     </div>
   );

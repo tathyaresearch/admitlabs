@@ -21,6 +21,7 @@ import type {
   Impact,
   InstitutionType,
 } from '../domain/types.ts';
+import type { LineFacts } from '../rivals/line.ts';
 import type { Opportunity } from '../rivals/opportunities.ts';
 import type { RivalContentValue } from './signals.ts';
 
@@ -130,6 +131,16 @@ export interface RivalActionsInput {
   opportunities: readonly Opportunity[];
 }
 
+export interface RivalLineInput {
+  institutionType: InstitutionType;
+  /** The institution's city, for "no rival in Guwahati". */
+  city: string;
+  /** Every rival is in the institution's city (none from a Nearby city). */
+  allLocal: boolean;
+  /** Who is ahead and on what (src/rivals/line.ts). */
+  facts: LineFacts;
+}
+
 /** One of the Rivals "3 things to do": a short title, a line on why, and how big a job it is. */
 export interface RivalActionText {
   text: string;
@@ -151,4 +162,6 @@ export interface AnalysisProvider {
   findingFix(input: FindingFixInput): Promise<FindingFixText | null>;
   /** The Rivals 3 things to do, one per opportunity, in the same order. Learn, never copy. */
   rivalActions(input: RivalActionsInput): Promise<RivalActionText[]>;
+  /** The month's one line about rivals: who is ahead of you, and on what. One plain sentence. */
+  rivalLine(input: RivalLineInput): Promise<string>;
 }

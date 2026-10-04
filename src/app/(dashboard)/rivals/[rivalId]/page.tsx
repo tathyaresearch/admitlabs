@@ -1,217 +1,180 @@
 import { notFound, redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { SectionHead } from '@/components/audit/AuditHeader';
-import { HeadToHead } from '@/components/charts/HeadToHead';
+import { SectionTitle, Tag } from '@/components/audit/PlaceBits';
 import { MonthTable } from '@/components/charts/MonthTable';
-import { NextSteps, type NextStep } from '@/components/home/NextSteps';
-import { ActivityTabs } from '@/components/rivals/Activity';
-import { CompareChecks, sideText } from '@/components/rivals/CompareChecks';
-import { lessonSteps } from '@/components/rivals/Lessons';
+import { PostCards } from '@/components/rivals/Activity';
+import { AlertList, LessonList, PlaceDetail, PlacesBoard, Ranking } from '@/components/rivals/City';
 import { RivalCheckPanel } from '@/components/rivals/RivalCheckPanel';
 import { Notice } from '@/components/ui/Feedback';
-import { KpiCard, KpiNote, KpiNumber } from '@/components/ui/Kpi';
 import { PageHead } from '@/components/ui/Layout';
-import { Delta, ScoreLabel } from '@/components/ui/Results';
-import { Tabs, type TabItem } from '@/components/ui/Tabs';
-import { checkName } from '@/domain/checks';
-import { formatDate, hostAndPath } from '@/domain/format';
-import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS } from '@/domain/types';
+import { formatDate, formatMonth, hostAndPath } from '@/domain/format';
+import { INSTITUTION_TYPE_LABELS, PLACES, type Place } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
-import { loadActions, loadRivalDetail } from '@/lib/rivals/load';
-import { checksAcross, type AcrossSide } from '@/rivals/across';
+import { loadActions, loadRivalDetail, type ActionRow } from '@/lib/rivals/load';
 import { whereTheyLead, whereYouLead } from '@/rivals/compare';
-import { admissionPushText, reviewTrendNote } from '@/rivals/text';
+import { openingPlace, placeChecks, placeLesson, rivalSummary } from '@/rivals/places';
+import { admissionPushText, reviewTrendNote, rivalCheckName, sideWords } from '@/rivals/text';
 import { admissionPush } from '@/rivals/timing';
-import { rivalVerdict } from '@/rivals/verdict';
-import audit from '@/components/audit/audit.module.css';
-import styles from '@/components/rivals/rivals.module.css';
+import audit from '@/components/audit/places.module.css';
+import city from '@/components/rivals/city.module.css';
 
 export const metadata = { title: 'Rival' };
 
-// One rival answers "Where do they lead us?": the answer and the scores side by side, what to
-// learn from them, then check by check and what they are doing. Every set of tabs opens on one
-// with something in it.
-export default async function RivalPage({ params }: { params: Promise<{ rivalId: string }> }) {
+// One rival answers "Where do they lead us?" (spec 8.4): how they lead you in a sentence, you and
+// them with the three words, when their admissions open and their Google rating, place by place
+// with every check side by side, what to learn from them, their alerts and best posts, and the
+// score month by month. Paid and Client: Free sees ahead or behind on the Rivals page.
+export default async function RivalPage({ params, searchParams }: { params: Promise<{ rivalId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const viewer = await requireInstitutionViewer();
-  // Free sees ahead or behind only, on the Rivals page. The full view of a rival is Paid.
   if (viewer.tier === 'free') redirect('/rivals');
-  const { rivalId } = await params;
+  const [{ rivalId }, query] = await Promise.all([params, searchParams]);
   const institution = viewer.membership.institution;
   const [detail, lessons] = await Promise.all([loadRivalDetail(viewer, rivalId), loadActions(institution.id)]);
   if (!detail) notFound();
 
-  const { rival, audit: theirs, you } = detail;
+  const { rival, you } = detail;
+  const theirs = detail.audits.get(rival.id) ?? null;
+  const comparisons = detail.comparisons.get(rival.id) ?? [];
+  const theyLead = whereTheyLead(comparisons);
+  const youLead = whereYouLead(comparisons);
   const names = new Map([[rival.id, rival.name]]);
-  const push = admissionPush(detail.allMoves, new Date());
-  const shared = [...new Set(detail.comparisons.flatMap((item) => item.programs))];
-  const theyLead = whereTheyLead(detail.comparisons);
-  const youLead = whereYouLead(detail.comparisons);
-  const youSide: AcrossSide = { id: institution.id, name: institution.name, you: true };
-  const rivalSide: AcrossSide = { id: rival.id, name: rival.name, you: false };
-  const across = checksAcross(youSide, [{ side: rivalSide, comparisons: detail.comparisons }]);
+  const push = admissionPush(detail.alerts, new Date());
   const reviews = detail.reviews.latest?.rating === null ? null : detail.reviews.latest;
+  const requested = typeof query.place === 'string' && (PLACES as readonly string[]).includes(query.place) ? (query.place as Place) : null;
+  const opened = requested ?? openingPlace(detail.view, institution.id);
+  const openedPlace = detail.view.places.find((place) => place.key === opened);
+  const rows = placeChecks(detail.across, opened);
+  const lesson = openedPlace ? placeLesson({ place: openedPlace, rows, sides: detail.sides, posts: detail.posts, institutionType: institution.type }) : null;
 
-  // Check by check opens where they lead you when they do, otherwise on every check.
-  const compareTabs: TabItem[] = [
-    ...(theyLead.length ? [{ id: 'they', label: 'Where they lead', count: theyLead.length, content: <CompareChecks comparisons={theyLead} institutionType={institution.type} rivalName={rival.name} /> }] : []),
-    ...(youLead.length ? [{ id: 'you', label: 'Where you lead', count: youLead.length, content: <CompareChecks comparisons={youLead} institutionType={institution.type} rivalName={rival.name} /> }] : []),
-    { id: 'all', label: 'All checks', count: detail.comparisons.length, content: <CompareChecks comparisons={detail.comparisons} institutionType={institution.type} rivalName={rival.name} /> },
-  ];
-
-  // What to learn from them: this month's lessons from this rival, or else where they lead you.
-  const fromThem = lessonSteps(
-    lessons.filter((lesson) => lesson.rivalId === rival.id),
-    names,
-    institution.type,
-  );
-  const leadSteps: NextStep[] = theyLead.slice(0, 3).map((item) => ({
-    key: item.key,
-    kicker: `${PILLAR_LABELS[item.pillar]}${item.programs.length ? `, ${item.programs.join(', ')}` : ''}`,
-    title: checkName(item.key, institution.type),
-    detail: `${rival.name}: ${sideText(item.them)}. You: ${sideText(item.you)}.`,
-    href: `?check=${item.key}`,
+  // What to learn from them: this month's lessons from them, or else where they lead you.
+  const fromThem = lessons.filter((item) => item.rivalId === rival.id);
+  const whereAhead: ActionRow[] = theyLead.slice(0, 3).map((item, index) => ({
+    rank: index + 1,
+    text: rivalCheckName(item.key, institution.type, institution.city),
+    detail: `${rival.name}: ${sideWords(item.them)}. You: ${sideWords(item.you)}.`,
+    rivalId: rival.id,
+    checkKey: item.key,
+    effort: null,
+    month: '',
   }));
-
-  const headToHead =
-    theirs && you ? (
-      <HeadToHead
-        rivalName={rival.name}
-        youName="You"
-        rows={[
-          { label: 'Overall', you: you.scores.overall, rival: theirs.scores.overall },
-          { label: PILLAR_LABELS.discovered, you: you.scores.discovered, rival: theirs.scores.discovered },
-          { label: PILLAR_LABELS.trusted, you: you.scores.trusted, rival: theirs.scores.trusted },
-          { label: PILLAR_LABELS.chosen, you: you.scores.chosen, rival: theirs.scores.chosen },
-        ]}
-      />
-    ) : null;
 
   return (
     <div className={audit.page}>
-      <PageHead
-        back={{ href: '/rivals', label: 'Rivals' }}
-        title={rival.name}
-        question={`Where does ${rival.name} lead us?`}
-        caption={[
-          `${INSTITUTION_TYPE_LABELS[rival.type]} in ${rival.city}, ${rival.state}`,
-          <a key="site" href={rival.website} target="_blank" rel="noreferrer">
-            {hostAndPath(rival.website)}
-            <span className="visually-hidden"> (opens in a new tab)</span>
-          </a>,
-          theirs ? `Checked ${formatDate(theirs.runAt)}` : 'Being checked now',
-        ]}
-      />
+      <div className={audit.top}>
+        <PageHead
+          back={{ href: '/rivals', label: 'Rivals' }}
+          title={rival.name}
+          question={`Where does ${rival.name} lead us?`}
+          caption={[
+            `${INSTITUTION_TYPE_LABELS[rival.type]} in ${rival.city}${detail.nearby ? ', a Nearby city' : ''}`,
+            <a key="site" href={rival.website} target="_blank" rel="noreferrer">
+              {hostAndPath(rival.website)}
+              <span className="visually-hidden"> (opens in a new tab)</span>
+            </a>,
+            theirs ? `Checked ${formatDate(theirs.runAt)}` : 'Being checked now',
+          ]}
+        />
+      </div>
 
-      {theirs ? (
-        <section className={audit.summary} aria-labelledby="rival-summary-title">
-          <h2 id="rival-summary-title" className="visually-hidden">
-            {rival.name} against you
-          </h2>
-          {you ? <p className={audit.lead}>{rivalVerdict(you.scores, theirs.scores)}</p> : null}
-          <div className={styles.rivalKpis}>
-            <KpiCard label="Their score">
-              <KpiNumber value={theirs.scores.overall} suffix="/100" numericSuffix spoken=" out of 100" />
-              <div className={styles.kpiMeta}>
-                <ScoreLabel score={theirs.scores.overall} />
-                {theirs.changes.overall !== null ? <Delta change={theirs.changes.overall} since="last month" size="sm" /> : null}
-              </div>
-            </KpiCard>
-            {you ? (
-              <KpiCard label="Your score">
-                <KpiNumber value={you.scores.overall} suffix="/100" numericSuffix spoken=" out of 100" />
-                <div className={styles.kpiMeta}>
-                  <ScoreLabel score={you.scores.overall} />
-                  {you.changes.overall !== null ? <Delta change={you.changes.overall} since="last Audit" size="sm" /> : null}
-                </div>
-              </KpiCard>
-            ) : null}
-            <KpiCard label="They lead on" className={styles.kpiWide}>
-              <KpiNumber value={theyLead.length} suffix={theyLead.length === 1 ? 'check' : 'checks'} />
-              <KpiNote>You lead on {youLead.length}. Level on the rest.</KpiNote>
-            </KpiCard>
-            <KpiCard label="Admissions open" className={styles.kpiHalf}>
-              <p className={styles.kpiText}>{admissionPushText(push?.detectedAt ?? null)}</p>
-              <KpiNote>{push?.description ?? 'Drishti looks for their admission dates on their website every Monday.'}</KpiNote>
-            </KpiCard>
-            <KpiCard label="Google reviews" className={styles.kpiHalf}>
-              {reviews?.rating ? (
-                <KpiNumber value={reviews.rating.toFixed(1)} suffix={`from ${reviews.reviewCount} ${reviews.reviewCount === 1 ? 'review' : 'reviews'}`} />
-              ) : (
-                <p className={styles.kpiText}>None found yet</p>
-              )}
-              <KpiNote>{reviewTrendNote(detail.reviews)}</KpiNote>
-            </KpiCard>
-          </div>
-          {you ? (
-            <div className={styles.pillarCard}>
-              <p className={styles.standLabel}>How you compare</p>
-              {/* Month by month once there are two months to compare; until then, part by part alone. */}
-              {detail.trend.months.length > 1 ? (
-                <Tabs
-                  label="How you compare"
-                  items={[
-                    { id: 'pillars', label: 'Part by part', content: headToHead },
-                    {
-                      id: 'months',
-                      label: 'Month by month',
-                      content: <MonthTable trend={detail.trend} label={`Overall score by month, you and ${rival.name}`} />,
-                    },
-                  ]}
-                />
-              ) : (
-                headToHead
-              )}
-            </div>
-          ) : null}
-        </section>
+      {theirs && you ? (
+        <p className={city.bigLine}>{rivalSummary({ theyLead: theyLead.map((item) => item.key), youLead: youLead.length, institutionType: institution.type })}</p>
       ) : (
-        <Notice icon="info" title={`Drishti is checking ${rival.name} now.`}>
-          Their score shows here once the first check is done.
+        <Notice icon="info" title={theirs ? 'Your first Audit is on its way.' : `Drishti is checking ${rival.name} now.`}>
+          How you compare shows once both Audits are ready.
         </Notice>
       )}
 
-      {theirs && you ? (
-        <NextSteps
-          id="learn"
-          icon="rivals"
-          title={`What to learn from ${rival.name}`}
-          description={
-            fromThem.length
-              ? 'Learned from them this month. Take the idea, never copy.'
-              : leadSteps.length
-                ? 'Where they lead you, biggest first. Open one to see what was found for each of you.'
-                : 'When they lead you on a check, it shows here first.'
-          }
-          steps={fromThem.length ? fromThem : leadSteps}
-          empty={<p className={audit.quietNote}>They do not lead you on any check right now. Where you lead them is below, in Check by check.</p>}
-        />
-      ) : null}
+      <section className={audit.block} aria-labelledby="sides-title">
+        <SectionTitle id="sides-title" icon="rivals" title="You and them" help="From each one’s latest Audit. The score is small on purpose: the words say more." />
+        <Ranking rows={detail.view.ranking} />
+        <div className={city.facts}>
+          <div className={audit.card}>
+            <p className={audit.columnTitle}>Admissions open</p>
+            <p className={city.factValue}>{admissionPushText(push?.detectedAt ?? null)}</p>
+            <p className={audit.quiet}>{push?.description ?? 'Drishti looks for their admission dates on their website every Monday.'}</p>
+          </div>
+          <div className={audit.card}>
+            <p className={audit.columnTitle}>Google reviews</p>
+            {reviews?.rating ? (
+              <p className={city.factValue}>
+                <span className="num">{reviews.rating.toFixed(1)}</span> from <span className="num">{reviews.reviewCount}</span> {reviews.reviewCount === 1 ? 'review' : 'reviews'}
+              </p>
+            ) : (
+              <p className={city.factValue}>None found yet</p>
+            )}
+            <p className={audit.quiet}>{reviewTrendNote(detail.reviews)}</p>
+          </div>
+        </div>
+      </section>
 
       {theirs && you ? (
-        <section className={audit.section} aria-labelledby="compare-title">
-          <SectionHead
-            id="compare-title"
-            title="Check by check"
-            help={`${shared.length ? `Program checks compare the programs you both offer: ${shared.join(', ')}. ` : ''}Open one to see what was found for each of you.`}
+        <section className={audit.block} aria-labelledby="places-title">
+          <SectionTitle
+            id="places-title"
+            icon="globe"
+            title="Place by place"
+            help="The same five places as your Audit. Open a place to see every check side by side, what was found for each of you, and what to learn from them."
           />
-          <Tabs label="Check by check" items={compareTabs} />
+          <PlacesBoard view={detail.view} opened={opened} />
+          {openedPlace ? (
+            <PlaceDetail place={openedPlace} view={detail.view} rows={rows} sides={detail.sides} lesson={lesson} institutionType={institution.type} city={institution.city} />
+          ) : null}
         </section>
       ) : null}
 
-      <section className={audit.section} aria-labelledby="activity-title">
-        <SectionHead id="activity-title" title="What they're doing" help="Their moves, best content and ads. Every item links to where it was found." />
-        <ActivityTabs
-          activity={detail.activity}
-          moves={detail.allMoves}
-          names={names}
-          showRival={false}
-          movesNote="Every move Drishti has found on their website, newest first. Checked every Monday."
-        />
+      {theirs && you ? (
+        <section className={audit.block} aria-labelledby="learn-title">
+          <SectionTitle
+            id="learn-title"
+            icon="spark"
+            title={`What to learn from ${rival.name}`}
+            help={fromThem.length ? 'Learned from them this month. Take the idea, never copy.' : 'Where they lead you, biggest first. Open one to see what was found for each of you.'}
+          />
+          <LessonList
+            lessons={fromThem.length ? fromThem : whereAhead}
+            names={names}
+            empty={<p className={audit.quiet}>They do not lead you on any check right now. Keep it going.</p>}
+          />
+        </section>
+      ) : null}
+
+      <section className={audit.block} aria-labelledby="alerts-title">
+        <SectionTitle id="alerts-title" icon="bell" title="Their alerts" help="Everything Drishti has seen them change, newest first. Checked every Monday." />
+        <AlertList alerts={detail.alerts} names={names} showRival={false} empty="Nothing seen yet. Drishti checks their website, Google profile and ads every Monday." />
       </section>
 
-      <Suspense fallback={null}>
-        <RivalCheckPanel rows={across} sides={[rivalSide, youSide]} institutionType={institution.type} />
-      </Suspense>
+      <section className={audit.block} aria-labelledby="posts-title">
+        <SectionTitle
+          id="posts-title"
+          icon="share"
+          title="Their best posts"
+          help={detail.posts[0] ? `Their best posts from ${formatMonth(detail.posts[0].month.slice(0, 7))}, and what to learn from each. Take the idea, never copy the post.` : 'Their best posts each month, and what to learn from each.'}
+        />
+        <div className={audit.card}>
+          <PostCards posts={detail.posts} names={names} showRival={false} />
+        </div>
+      </section>
+
+      {you && detail.trend.months.length > 1 ? (
+        <section className={audit.block} aria-labelledby="months-title">
+          <SectionTitle id="months-title" icon="demand" title="Month by month" help={`Your score and theirs, from each month’s Audit. ${rival.name} is checked on the 1st of each month.`} />
+          <div className={audit.card}>
+            <MonthTable trend={detail.trend} label={`Score by month, you and ${rival.name}`} />
+          </div>
+        </section>
+      ) : null}
+
+      {detail.nearby ? (
+        <p className={audit.quiet}>
+          <Tag>Nearby city</Tag> {rival.name} is in {rival.city}, the nearest bigger city to {institution.city}.
+        </p>
+      ) : null}
+
+      {detail.across.length ? (
+        <Suspense fallback={null}>
+          <RivalCheckPanel rows={detail.across} sides={detail.acrossSides} institutionType={institution.type} />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

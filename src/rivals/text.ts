@@ -1,8 +1,9 @@
 // Words for the Rivals screens and alerts. Plain language, short sentences, no dashes.
 
+import { checkName } from '../domain/checks.ts';
 import { formatDate, joinNames } from '../domain/format.ts';
-import type { RivalMoveKind } from '../domain/types.ts';
-import type { Lead, Standing } from './compare.ts';
+import { INSTITUTION_TYPE_LABELS, RESULT_LABELS, type CheckKey, type InstitutionType, type RivalMoveKind } from '../domain/types.ts';
+import type { SideSummary, Standing } from './compare.ts';
 import type { ReviewTrend } from './timing.ts';
 
 export const MOVE_KIND_LABELS: Readonly<Record<RivalMoveKind, string>> = {
@@ -22,19 +23,40 @@ export const STANDING_LABELS: Readonly<Record<Standing, string>> = {
   unscored: 'Checking now',
 };
 
-/** Who leads on a check, from your side. */
-export const LEAD_WORDS: Readonly<Record<Lead, string>> = {
-  them: 'They lead',
-  you: 'You lead',
-  level: 'Level',
-  unknown: 'Not compared',
+/** Who a suggested rival is, and why: "Skilling institute, Guwahati. Also offers Digital Marketing and Hotel Management." */
+export function suggestionReason(type: InstitutionType, city: string, sharedPrograms: readonly string[]): string {
+  return `${INSTITUTION_TYPE_LABELS[type]}, ${city}. Also offers ${joinNames(sharedPrograms)}.`;
+}
+
+/** A check inside a sentence about a rival: "This month, Silverline College is ahead on Instagram and Google reviews." */
+const CHECK_PHRASES: Readonly<Record<CheckKey, string>> = {
+  program_page: 'program pages',
+  fees_shown: 'fees on their website',
+  placement_proof: 'placement proof',
+  admission_steps: 'admission steps',
+  easy_enquiry: 'how easy it is to enquire',
+  mobile_friendly: 'their website on a phone',
+  page_speed: 'website speed',
+  approvals: 'showing their approvals',
+  faculty_leaders: 'showing their faculty',
+  google_search: 'Google search',
+  google_profile: 'their Google profile',
+  review_rating: 'Google reviews',
+  ai_answers: 'AI answers',
+  instagram_activity: 'Instagram',
+  youtube: 'YouTube',
+  other_socials: 'Facebook',
+  students_in_content: 'students in their posts',
 };
 
-/** Why a rival is suggested: "Same city. Shared programs: BBA and B.Com." */
-export function suggestionReason(sameCity: boolean, sharedPrograms: readonly string[], state: string): string {
-  const where = sameCity ? 'Same city.' : `Same state, ${state}.`;
-  const shared = sharedPrograms.length === 1 ? `Shared program: ${sharedPrograms[0]}.` : `Shared programs: ${joinNames(sharedPrograms)}.`;
-  return `${where} ${shared}`;
+/** A check's name in a table of you and your rivals, where "your" would point at the wrong side. */
+export function rivalCheckName(key: CheckKey, type: InstitutionType, city?: string | null): string {
+  return key === 'students_in_content' ? 'Students in posts' : checkName(key, type, city);
+}
+
+export function checkPhrase(key: CheckKey, type: InstitutionType): string {
+  if (key === 'approvals' && type === 'skilling') return 'showing their skilling recognition';
+  return CHECK_PHRASES[key];
 }
 
 /** Lower case the first letter unless the first word is an acronym (BBA, MBA). */
@@ -73,4 +95,11 @@ export function reviewTrendNote(trend: ReviewTrend): string {
 /** "Started 20 Sep 2026" or "Not seen yet". */
 export function admissionPushText(detectedAt: string | null): string {
   return detectedAt ? `Started ${formatDate(detectedAt)}` : 'Not seen yet';
+}
+
+/** A side's result on a check in words: "Strong", "Weak (weakest: BCA)", "Not checked". */
+export function sideWords(side: SideSummary): string {
+  if (side.kind === 'single') return RESULT_LABELS[side.result];
+  if (side.kind === 'varies') return `${RESULT_LABELS[side.weakest.result]}${side.weakest.programName ? ` (weakest: ${side.weakest.programName})` : ''}`;
+  return 'Not checked';
 }

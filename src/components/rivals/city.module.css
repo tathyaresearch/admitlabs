@@ -1,0 +1,624 @@
+/*
+  Rivals in your city (spec 8.4), as the version 2 mock was approved: the month's one line, the
+  ranking with the three words and a small score, place by place (a table on a wide screen, one
+  card per place on a phone), the opened place check by check, lessons and alerts, and the
+  chooser grouped by city. Monochrome: words, thin bars and the ivory pill for who leads.
+*/
+
+/* The month's one line --------------------------------------------------------------------------- */
+
+.bigLine {
+  font: var(--weight-title) clamp(1.25rem, 1.05rem + 0.9vw, 1.75rem) / 1.25 var(--font-sans);
+  letter-spacing: var(--tracking-title);
+  max-width: 44rem;
+  text-wrap: pretty;
+}
+
+/* The ranking ------------------------------------------------------------------------------------ */
+
+.ranking {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.rankRow {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+  grid-template-areas:
+    'place name score'
+    'place words words';
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.rankRow + .rankRow {
+  margin-top: var(--space-1);
+}
+
+.rankYou {
+  background: var(--surface-nested);
+}
+
+@container (min-width: 46rem) {
+  .rankRow {
+    grid-template-columns: 1.75rem minmax(0, 1fr) minmax(0, 1.4fr) 3rem;
+    grid-template-areas: 'place name words score';
+  }
+}
+
+.rankPlace {
+  grid-area: place;
+  font: var(--type-num);
+  font-weight: var(--weight-semibold);
+}
+
+.sideName {
+  grid-area: name;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  font: var(--type-strong);
+}
+
+.sideLink {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+
+.sideLink:hover {
+  text-decoration-color: currentColor;
+}
+
+.rankWords {
+  grid-area: words;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-5);
+  font: var(--type-small);
+  font-weight: var(--weight-semibold);
+}
+
+.rankWord {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.rankWordName {
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+
+.rankScore {
+  grid-area: score;
+  font: var(--type-num);
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.rankNote {
+  grid-area: words;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* Place by place: a table on a wide page, a card per place on a phone ------------------------------ */
+
+/* Two classes each, so these win over the cards' own display whatever order the CSS loads in. */
+.board {
+  display: grid;
+  gap: var(--card-gap);
+}
+
+.board > .gridOnly {
+  display: none;
+}
+
+@container (min-width: 46rem) {
+  .board > .gridOnly {
+    display: grid;
+  }
+
+  .board > .cardsOnly {
+    display: none;
+  }
+}
+
+.gridCard {
+  contain: inline-size;
+}
+
+.gridScroll {
+  overflow-x: auto;
+  contain: paint;
+}
+
+.placeGrid {
+  width: 100%;
+  min-width: 36rem;
+  border-collapse: collapse;
+  font: var(--type-small);
+}
+
+/* You and one rival fit a phone without scrolling. */
+.placeGrid.placeGridNarrow {
+  min-width: 0;
+}
+
+.placeGrid th,
+.placeGrid td {
+  padding: var(--space-3);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+.placeGrid thead th {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.placeGrid tbody th {
+  font: var(--type-strong);
+  font-size: var(--size-small);
+}
+
+.placeGrid tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.gridPlace {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+  color: inherit;
+}
+
+a.gridPlace {
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+
+a.gridPlace:hover {
+  text-decoration-color: currentColor;
+}
+
+.gridOpen {
+  background: var(--surface-nested);
+}
+
+.gridLead {
+  background: var(--surface-nested);
+}
+
+.gridCell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.gridWord {
+  font-weight: var(--weight-semibold);
+}
+
+.gridNote {
+  color: var(--text-muted);
+}
+
+.leadsMark {
+  padding: 0 var(--space-2);
+  font: var(--type-caption-strong);
+  color: var(--text-inverse);
+  background: var(--surface-inverse);
+  border-radius: var(--radius-full);
+}
+
+.placeCards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--card-gap);
+}
+
+.placeCardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.placeCardTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-card);
+  font-size: 1rem;
+  letter-spacing: var(--tracking-section);
+  color: inherit;
+}
+
+a.placeCardTitle {
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+
+.sideRows {
+  display: grid;
+  gap: var(--space-1);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.sideRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-2);
+  font: var(--type-small);
+  border-radius: var(--radius-sm);
+}
+
+.sideRowYou {
+  background: var(--surface-nested);
+}
+
+.sideRowName {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--weight-medium);
+}
+
+/* The opened place ------------------------------------------------------------------------------- */
+
+.opened {
+  scroll-margin-top: var(--space-8);
+}
+
+.checkLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+
+.checkLink:hover {
+  text-decoration-color: currentColor;
+}
+
+.learn {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  font: var(--type-body);
+  background: var(--surface-nested);
+  border-radius: var(--radius-md);
+}
+
+.learnLabel {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.sideFindings {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@container (min-width: 46rem) {
+  .sideFindings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.sideFinding {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+.sideFindingHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-strong);
+}
+
+.findingList {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.findingRow {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* Lessons and alerts ------------------------------------------------------------------------------ */
+
+.lessons {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.lesson {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+}
+
+.lesson + .lesson {
+  border-top: 1px solid var(--line);
+}
+
+.lesson:first-child {
+  padding-top: 0;
+}
+
+.lesson:last-child {
+  padding-bottom: 0;
+}
+
+.lessonIndex {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  font: var(--type-num-caption);
+  font-weight: var(--weight-semibold);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-md);
+}
+
+.lessonBody {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+}
+
+.lessonFrom {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.lessonTitle {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+  text-wrap: pretty;
+}
+
+.alerts {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.alertRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1) var(--space-5);
+  padding: var(--space-3) 0;
+}
+
+.alertRow + .alertRow {
+  border-top: 1px solid var(--line);
+}
+
+.alertRow:first-child {
+  padding-top: 0;
+}
+
+@container (min-width: 40rem) {
+  .alertRow {
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+  }
+}
+
+.alertDay {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.alertBody {
+  display: grid;
+  gap: var(--space-1);
+  font: var(--type-body);
+}
+
+.alertHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.alertSource {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  font: var(--type-caption);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.alertSource a {
+  color: inherit;
+}
+
+/* Free: ahead or behind, then what Paid adds --------------------------------------------------------- */
+
+.standings {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.standing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) 0;
+}
+
+.standing + .standing {
+  border-top: 1px solid var(--line);
+}
+
+.standing:first-child {
+  padding-top: 0;
+}
+
+.standing:last-child {
+  padding-bottom: 0;
+}
+
+.standingWord {
+  font: var(--type-strong);
+}
+
+/* One rival's page --------------------------------------------------------------------------------- */
+
+.facts {
+  display: grid;
+  gap: var(--card-gap);
+}
+
+@container (min-width: 46rem) {
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.factValue {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+}
+
+/* The chooser ------------------------------------------------------------------------------------- */
+
+.chooseList {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.chooseRow + .chooseRow {
+  border-top: 1px solid var(--line);
+}
+
+.chooseLabel {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  cursor: pointer;
+}
+
+.chooseRow:first-child .chooseLabel {
+  padding-top: 0;
+}
+
+.chooseRow:last-child .chooseLabel {
+  padding-bottom: 0;
+}
+
+.chooseLabel:has(input:disabled) {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.checkInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.checkBox {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 2px;
+  color: transparent;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-xs);
+}
+
+.checkInput:checked + .checkBox {
+  color: var(--text-inverse);
+  background: var(--surface-inverse);
+  border-color: var(--surface-inverse);
+}
+
+.checkInput:focus-visible + .checkBox {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.chooseText {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.chooseName {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-strong);
+}
+
+.chooseFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
+}
+
+.chooseCount {
+  margin-left: auto;
+  padding-top: var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.chooseSave {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-2);
+  max-width: 24rem;
+  text-align: right;
+}

@@ -10,14 +10,15 @@
 --   D: Otherton (same state), unclaimed. BCA. One rival Audit (45).
 --   E: Rivalton, unclaimed. MBA only.   G: Rivalton, unclaimed. BBA. Never scored.
 --   P: Rivalton, a team prospect. BBA. U: a university in Rivalton. BBA. S: Farton, another state. BBA.
+--   Rivalton is the nearest bigger city for Otherton. A and B each have the month's one line.
 
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(56);
+select plan(60);
 
 -- A made-up state, so the sample institutions (all in Assam) never show up in these suggestions.
-insert into public.cities (name, state) values ('Rivalton', 'Test State'), ('Otherton', 'Test State'), ('Farton', 'Far State') on conflict do nothing;
+insert into public.cities (name, state, near) values ('Rivalton', 'Test State', null), ('Otherton', 'Test State', 'Rivalton'), ('Farton', 'Far State', null) on conflict do nothing;
 insert into public.scoring_config (version, weights, result_shares, thresholds, labels, active)
 values (1, '{}', '{}', '{}', '[]', false) on conflict (version) do nothing;
 
@@ -128,6 +129,10 @@ insert into public.rival_ads (rival_institution_id, promise, source_url) values
 insert into public.rival_checks (rival_institution_id, week, checked_at) values
   ('22000000-0000-4000-8000-00000000000c', '2026-09-28', '2026-09-28 03:30:00+00');
 
+insert into public.rival_lines (institution_id, month, line, rival_institution_id, check_keys) values
+  ('22000000-0000-4000-8000-00000000000a', '2026-09-01', 'This month, Rivals C is ahead on fees on their website.', '22000000-0000-4000-8000-00000000000c', '{fees_shown}'),
+  ('22000000-0000-4000-8000-00000000000b', '2026-09-01', 'This month, no rival in Rivalton is ahead of you on any check.', null, '{}');
+
 insert into public.actions (institution_id, month, rank, text, feature) values
   ('22000000-0000-4000-8000-00000000000a', '2026-09-01', 1, 'Audit thing', 'audit'),
   ('22000000-0000-4000-8000-00000000000a', '2026-09-01', 1, 'Rival thing for A', 'rivals'),
@@ -183,8 +188,18 @@ select results_eq(
 );
 select results_eq(
   $$select institution_id::text from public.rival_suggestions('22000000-0000-4000-8000-00000000000a')$$,
-  $$values ('22000000-0000-4000-8000-000000000013'::text), ('22000000-0000-4000-8000-00000000000b'), ('22000000-0000-4000-8000-000000000012')$$,
-  'Suggestions leave out rivals already tracked and rank by shared programs'
+  $$values ('22000000-0000-4000-8000-000000000013'::text), ('22000000-0000-4000-8000-00000000000b'), ('22000000-0000-4000-8000-000000000012'), ('22000000-0000-4000-8000-000000000015')$$,
+  'Suggestions leave out rivals already tracked and rank by shared programs, of any type'
+);
+select results_eq(
+  $$select line from public.rival_lines$$,
+  $$values ('This month, Rivals C is ahead on fees on their website.'::text)$$,
+  'Free reads its own month''s line, and nobody else''s'
+);
+select throws_ok(
+  $$insert into public.rival_lines (institution_id, month, line) values ('22000000-0000-4000-8000-00000000000a', '2026-10-01', 'Made up.')$$,
+  '42501', null,
+  'Only the server writes the line'
 );
 select throws_ok(
   $$select public.save_rivals(array['22000000-0000-4000-8000-00000000000c', '22000000-0000-4000-8000-00000000000d', '22000000-0000-4000-8000-000000000013']::uuid[], '[]')$$,
@@ -218,8 +233,8 @@ select results_eq(
     ('22000000-0000-4000-8000-00000000000c', true, array['BBA']),
     ('22000000-0000-4000-8000-000000000011', true, array['BBA']),
     ('22000000-0000-4000-8000-000000000012', true, array['BBA']),
-    ('22000000-0000-4000-8000-00000000000d', false, array['BCA'])$$,
-  'Suggestions: same type, shared programs, same city first, then the state. No prospects, other types, other states or no overlap'
+    ('22000000-0000-4000-8000-000000000015', true, array['BBA'])$$,
+  'Suggestions: your city first, any type, most shared programs first, up to 6. No prospects, other states, no overlap, and no Nearby city with 3 or more in yours'
 );
 select throws_ok(
   $$select public.save_rivals(array['22000000-0000-4000-8000-00000000000a', '22000000-0000-4000-8000-00000000000c']::uuid[], '[]')$$,
@@ -227,7 +242,7 @@ select throws_ok(
   'At least 3 rivals'
 );
 select throws_ok(
-  $$select public.save_rivals(array['22000000-0000-4000-8000-00000000000a', '22000000-0000-4000-8000-00000000000b', '22000000-0000-4000-8000-00000000000c', '22000000-0000-4000-8000-000000000011', '22000000-0000-4000-8000-000000000012', '22000000-0000-4000-8000-00000000000d']::uuid[], '[]')$$,
+  $$select public.save_rivals(array['22000000-0000-4000-8000-00000000000a', '22000000-0000-4000-8000-00000000000b', '22000000-0000-4000-8000-00000000000c', '22000000-0000-4000-8000-000000000011', '22000000-0000-4000-8000-000000000012', '22000000-0000-4000-8000-000000000015']::uuid[], '[]')$$,
   'P0001', 'rival_count',
   'At most 5 rivals'
 );
@@ -334,6 +349,12 @@ select is((select count(*)::integer from public.rival_changes where not first_se
 select set_config('request.jwt.claims', '{"sub":"12000000-0000-4000-8000-000000000006","role":"authenticated"}', true);
 
 select isnt_empty($$select 1 from public.rivals where rival_institution_id = '22000000-0000-4000-8000-00000000000a'$$, 'The team sees every rival link');
+select is((select count(*)::integer from public.rival_lines where institution_id in ('22000000-0000-4000-8000-00000000000a', '22000000-0000-4000-8000-00000000000b')), 2, 'The team reads every month''s line');
+select results_eq(
+  $$select institution_id::text, same_city, shared_programs from public.rival_suggestions('22000000-0000-4000-8000-00000000000d')$$,
+  $$values ('22000000-0000-4000-8000-00000000000a'::text, false, array['BCA']), ('22000000-0000-4000-8000-000000000013', false, array['BCA'])$$,
+  'With fewer than 3 in its city, the nearest bigger city''s are suggested too, not the same city'
+);
 select throws_ok(
   $$select public.record_rival_check('{}')$$,
   '42501', null,

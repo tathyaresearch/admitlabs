@@ -3,13 +3,24 @@ import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
 import { istDate } from '../domain/dates.ts';
 import { SAMPLE_MOVES } from '../sample/rivals.ts';
-import { admissionPushText, LEAD_WORDS, MOVE_KIND_LABELS, moveNotice, reviewTrendNote, STANDING_LABELS, suggestionReason } from './text.ts';
+import { CHECK_KEYS } from '../domain/types.ts';
+import { admissionPushText, checkPhrase, MOVE_KIND_LABELS, moveNotice, reviewTrendNote, STANDING_LABELS, suggestionReason } from './text.ts';
 
 describe('why a rival is suggested', () => {
-  test('city first, then state, with the shared programs', () => {
-    assert.equal(suggestionReason(true, ['BBA', 'B.Com'], 'Assam'), 'Same city. Shared programs: BBA and B.Com.');
-    assert.equal(suggestionReason(false, ['MBA'], 'Assam'), 'Same state, Assam. Shared program: MBA.');
-    assert.equal(suggestionReason(true, ['BBA', 'BCA', 'B.Com'], 'Assam'), 'Same city. Shared programs: BBA, BCA and B.Com.');
+  test('who they are, where, and the programs they also offer', () => {
+    assert.equal(suggestionReason('skilling', 'Guwahati', ['Digital Marketing', 'Hotel Management']), 'Skilling institute, Guwahati. Also offers Digital Marketing and Hotel Management.');
+    assert.equal(suggestionReason('college', 'Tezpur', ['BBA']), 'College, Tezpur. Also offers BBA.');
+    assert.equal(suggestionReason('university', 'Guwahati', ['BBA', 'BCA', 'B.Com']), 'University, Guwahati. Also offers BBA, BCA and B.Com.');
+  });
+});
+
+describe('a check inside a sentence', () => {
+  test('every check has its phrase, plain and in lower case unless a name', () => {
+    for (const key of CHECK_KEYS) assert.ok(checkPhrase(key, 'college').length > 2, key);
+    assert.equal(checkPhrase('instagram_activity', 'college'), 'Instagram');
+    assert.equal(checkPhrase('review_rating', 'university'), 'Google reviews');
+    assert.equal(checkPhrase('approvals', 'college'), 'showing their approvals');
+    assert.equal(checkPhrase('approvals', 'skilling'), 'showing their skilling recognition');
   });
 });
 
@@ -54,7 +65,7 @@ describe('the review trend and the admission push, in words', () => {
 
 describe('labels', () => {
   test('plain words, no dashes', () => {
-    for (const text of [...Object.values(MOVE_KIND_LABELS), ...Object.values(STANDING_LABELS), ...Object.values(LEAD_WORDS)]) {
+    for (const text of [...Object.values(MOVE_KIND_LABELS), ...Object.values(STANDING_LABELS)]) {
       assert.equal(hasDashes(text), false, text);
       assert.match(text, /^[A-Z]/, text);
     }

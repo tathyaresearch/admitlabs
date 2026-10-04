@@ -70,12 +70,6 @@
   color: var(--text);
 }
 
-.actions {
-  display: grid;
-  justify-items: end;
-  gap: var(--space-2);
-}
-
 .actionNote {
   max-width: 18rem;
   font: var(--type-caption);
@@ -90,9 +84,6 @@
 }
 
 @media (max-width: 40rem) {
-  .actions {
-    justify-items: start;
-  }
 
   .actionNote {
     text-align: left;

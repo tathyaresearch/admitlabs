@@ -6,8 +6,8 @@ import { checkAction } from '../../domain/checks.ts';
 import { formatCount, joinNames } from '../../domain/format.ts';
 import type { CheckKey, Difficulty, InstitutionType, RivalMoveKind } from '../../domain/types.ts';
 import type { Opportunity } from '../../rivals/opportunities.ts';
-import { moveNotice } from '../../rivals/text.ts';
-import type { RivalActionText } from '../analysis.ts';
+import { checkPhrase, moveNotice } from '../../rivals/text.ts';
+import type { RivalActionText, RivalLineInput } from '../analysis.ts';
 
 /** Why it matters to a student, in one sentence. */
 const GAP_WHY: Readonly<Record<CheckKey, string>> = {
@@ -63,4 +63,10 @@ export function writeRivalAction(item: Opportunity, type: InstitutionType): Riva
       return { text: action.text, detail: `${moveNotice(item.rival.name, item.description)} ${action.next}`, effort: action.effort };
     }
   }
+}
+
+/** The month's one line: "This month, Silverline College is ahead on Instagram and Google reviews." */
+export function writeRivalLine({ institutionType, city, allLocal, facts }: RivalLineInput): string {
+  if (facts.kind === 'none') return allLocal ? `This month, no rival in ${city} is ahead of you on any check.` : 'This month, none of your rivals is ahead of you on any check.';
+  return `This month, ${facts.rival.name} is ahead on ${joinNames(facts.checks.map((key) => checkPhrase(key, institutionType)))}.`;
 }

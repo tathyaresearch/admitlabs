@@ -236,6 +236,7 @@ function RivalsGroup({ viewer, rivals, change }: { viewer: InstitutionViewer; ri
                   {rival.name}
                   <span className={styles.rowSub}>
                     {INSTITUTION_TYPE_LABELS[rival.type]}, {rival.city}
+                    {rival.city === viewer.membership.institution.city ? null : '. Nearby city'}
                   </span>
                 </span>
                 {viewer.tier === 'free' ? null : (

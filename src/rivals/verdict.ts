@@ -107,22 +107,3 @@ export function freeRivalsVerdict(rivals: ReadonlyArray<{ name: string; standing
         : `Next step: catching ${joinNames(aheadOfYou)}.`;
   return `${strength} ${next}`;
 }
-
-/**
- * One rival's page: you against them.
- * "You lead on being found. Next step: catching them on being chosen."
- */
-export function rivalVerdict(you: ScoreSet, them: ScoreSet): string {
-  const youLead = PILLARS.filter((pillar) => you[pillar] > them[pillar]);
-  const strength =
-    you.overall > them.overall
-      ? "You're ahead overall."
-      : youLead.length > 0
-        ? `You lead on ${joinNames(youLead.map((pillar) => PILLAR_PHRASE[pillar]))}.`
-        : you.overall === them.overall
-          ? "You're level overall."
-          : "They're ahead on all three for now, so there is plenty to learn.";
-  const gap = biggestGap(you, them);
-  const next = gap ? `Next step: catching them on ${PILLAR_PHRASE[gap.pillar]}.` : 'Next step: keeping your lead.';
-  return `${strength} ${next}`;
-}

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { CHECKS, getCheck } from '../domain/checks.ts';
 import type { CheckKey, CheckResult } from '../domain/types.ts';
-import { checksAcross, leadSentence, leadText, type AcrossRow, type AcrossSide } from './across.ts';
+import { checksAcross, leadSentence, type AcrossRow, type AcrossSide } from './across.ts';
 import { compareChecks, type CheckScore } from './compare.ts';
 
 let next = 0;
@@ -74,7 +74,6 @@ describe('check by check across all your rivals', () => {
     const instagram = row(rows, 'instagram_activity');
     assert.equal(instagram.lead, 'rival');
     assert.deepEqual(instagram.leaders, ['silverline']);
-    assert.equal(leadText(instagram, SIDES), 'Silverline College');
     assert.equal(leadSentence(instagram, SIDES), 'Silverline College leads here.');
   });
 
@@ -85,7 +84,6 @@ describe('check by check across all your rivals', () => {
     ]);
     const instagram = row(rows, 'instagram_activity');
     assert.deepEqual(instagram.leaders, ['silverline', 'highfield']);
-    assert.equal(leadText(instagram, SIDES), 'Silverline College and Highfield University');
     assert.equal(leadSentence(instagram, SIDES), 'Silverline College and Highfield University lead here.');
   });
 
@@ -97,7 +95,6 @@ describe('check by check across all your rivals', () => {
     const youtube = row(rows, 'youtube');
     assert.equal(youtube.lead, 'you');
     assert.deepEqual(youtube.leaders, []);
-    assert.equal(leadText(youtube, SIDES), 'You lead');
     assert.equal(leadSentence(youtube, SIDES), 'You lead every rival here.');
   });
 
@@ -110,7 +107,6 @@ describe('check by check across all your rivals', () => {
       'youtube',
     );
     assert.equal(one.lead, 'level');
-    assert.equal(leadText(one, [YOU, SILVERLINE, HIGHFIELD]), 'You, level with Silverline College');
     assert.equal(leadSentence(one, [YOU, SILVERLINE, HIGHFIELD]), 'You are level with Silverline College here.');
 
     const all = row(
@@ -120,7 +116,8 @@ describe('check by check across all your rivals', () => {
       ]),
       'youtube',
     );
-    assert.equal(leadText(all, [YOU, SILVERLINE, HIGHFIELD]), 'All level');
+    assert.equal(all.lead, 'level');
+    assert.equal(leadSentence(all, [YOU, SILVERLINE, HIGHFIELD]), 'You are level with Silverline College and Highfield University here.');
   });
 
   test('your result covers every program compared with any rival, the weakest named', () => {
@@ -145,6 +142,6 @@ describe('check by check across all your rivals', () => {
     assert.equal(instagram.lead, 'unknown');
     assert.equal(instagram.cells.you, null);
     assert.equal(instagram.cells.silverline, null);
-    assert.equal(leadText(instagram, SIDES), 'Not compared yet');
+    assert.equal(leadSentence(instagram, SIDES), 'Not compared yet. It shows once both sides have been checked.');
   });
 });

@@ -40,6 +40,9 @@ export const realAnalysis: AnalysisProvider = {
   async rivalActions() {
     return notConnected();
   },
+  async rivalLine() {
+    return notConnected();
+  },
 };
 
 export const realEmail: EmailProvider = {
