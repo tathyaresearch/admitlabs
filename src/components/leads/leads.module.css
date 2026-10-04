@@ -1,0 +1,89 @@
+/*
+  Leads for an AdmitLabs Client (spec section 23), as the version 2 mock was approved: three
+  number cards, the links with a thin bar for this month's count, and every enquiry as a table
+  that turns into a card each on a phone. Monochrome: the number always sits beside its bar.
+*/
+
+.kpis {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--card-gap);
+}
+
+@container (min-width: 46rem) {
+  .kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.kpiText {
+  font: var(--type-card);
+  font-size: 1.0625rem;
+  letter-spacing: var(--tracking-section);
+  text-wrap: pretty;
+}
+
+.linkName {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.countBar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.countTrack {
+  width: 4rem;
+  height: 4px;
+  background: var(--chart-track);
+  border-radius: var(--radius-full);
+}
+
+.countTrack > span {
+  display: block;
+  height: 100%;
+  background: var(--text);
+  border-radius: inherit;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.email {
+  white-space: nowrap;
+}
+
+/* On a phone each enquiry is a card: a long email breaks rather than push the page sideways. */
+@media (max-width: 40rem) {
+  .email {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+.inlineLink {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.actionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.actionLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

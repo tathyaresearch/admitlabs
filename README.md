@@ -183,6 +183,18 @@ npm run demand -- --first --institution <slug>
 - Then every institution that has signed up gets the month's Make these 3, if it has none yet.
 - A new signup, or a program added in Settings, gets any region and program nobody needed before straight away, without alerts, and its 3 for the latest update (a program added later waits for the next update's 3). `--first` does the same by hand.
 
+## Leads
+
+"What did our content bring in?" (spec section 23), for AdmitLabs Clients: the enquiries their content brings, link by link. The one place in Drishti with a student's own details, because students send them to that college themselves, with a consent line. A lawyer checks it before it goes live (see Must do before launch); until then it runs on sample data only.
+
+- **Tracking links:** the team makes them on a Client's page in the team area (Leads links): a name ("Reel: BBA placements"), where it is used (Instagram, YouTube, Facebook, website, WhatsApp, other) and one program; copies the link; sees each one's enquiries this month and in all; archives one, and its form says it is closed (`create_lead_link`, `archive_lead_link`, `lead_link_counts`).
+- **The form** at `admitlabs.in/enquire/<code>` (locally http://admitlabs.localhost:3000/enquire/bp9d3r8w), hosted by Drishti: an ivory card with the college's name and the program; name, phone, email (optional), course (the link's program to start) and city (optional); the consent line above the button, "Your details go to Brightpath Skills Academy so they can contact you about admission.", kept with each enquiry exactly as shown; then "Thanks. Brightpath Skills Academy will contact you soon." Never indexed. It takes enquiries only through `submit_lead`, and only for a live link of a Client. Spam: a hidden field and a signed start time (at least 3 seconds to fill it) on the server; one enquiry per phone or email per college a day (India time) and at most 20 a link an hour in the database (`LEAD_RULES` in `src/config/leads.ts`; a test keeps the two the same). A second one from the same phone or email the same day is thanked, not kept twice. Not found while Drishti is closed.
+- **The alert email,** straight away for each new enquiry (it never waits for a review), to the addresses in Settings, Leads, else the admissions email added in Settings, else the owner's (`lead_alert_recipients`). It goes to the local test inbox in this build (`src/leads/alert.ts`, laid out by `src/email/layout.ts`), and `email_log` keeps who it went to and whether it went, never the message. A failed email never fails the student's enquiry.
+- **The Leads page** (`/leads`, in the menu for a Client, and for one whose service ended while its enquiries are kept): enquiries this month against last month up to the same day ("By this day in September there were 3", so the start of a month never reads as a fall), last month in all against the month before, the link that brought the most, every link with this month, last month and in all, then every enquiry, newest first (the newest 25, then Show all), with Download CSV (`/leads/csv`; a cell that starts like a formula gets an apostrophe). On a phone each enquiry is a card. Not a CRM: no calls, stages or notes.
+- **Who sees what:** only the college's own people read an enquiry, members too. The team sees counts by link, never a student's details, in view as too (no list, no CSV). Rivals see nothing.
+- **Keeping and deleting** (Settings, Leads, the owner): up to 3 alert addresses; keep enquiries 6, 12 or 24 months (12 to start), then they are deleted for good, and a shorter time deletes the older ones straight away (`save_lead_settings`); find a student by phone or email and delete one enquiry or all of theirs (`delete_leads`). Every day, `npm run leads -- --purge` deletes every enquiry past its keeping time (`purge_old_leads`, server only; `--date 2027-09-01` to run it as of a day).
+- **When a Client's service ends:** its forms close at once, and its enquiries stay with the college until their keeping time runs out.
+
 ## Monthly report
 
 One PDF a month (spec section 12), readable in 5 minutes: 7 pages, never more than 8. A black cover, then ivory pages in the dashboard's style, set in Bricolage Grotesque with numbers in Inter (both embedded from `src/report/fonts`, with their licences): your score and what's working, what to fix (the top 5 in detail, the rest ranked), program by program, you and your rivals with the month's key moves, what students in your city want, the 3 things to do this month, and the sources and dates checked. On Paid only, the last page ends with one quiet line: "Want AdmitLabs to do this for you? hello@admitlabs.in".
@@ -309,6 +321,7 @@ The AdmitLabs website (spec section 22), later served at admitlabs.in, is part o
 | `npm run tier -- ...` | Switches a local institution's tier (see above) |
 | `npm run rivals -- ...` | Runs rival Audits, weekly checks and what to learn from rivals by hand (see above) |
 | `npm run demand -- ...` | Runs the monthly Demand pulls by hand (see above) |
+| `npm run leads -- --purge` | Deletes every enquiry past its keeping time, the daily job (see Leads) |
 | `npm run report -- ...` | Makes monthly reports by hand (see above) |
 | `npm run motion:record` | Records the Drishti reveals into `brand/motion` (with `npm run dev` running; needs ffmpeg and Edge or Chrome). See `brand/motion/README.md` |
 
@@ -316,16 +329,18 @@ The AdmitLabs website (spec section 22), later served at admitlabs.in, is part o
 
 ```
 supabase/        config, migrations (schema, row level security, owner actions), database tests, email template
-scripts/         env, seed, audit, tier, rivals, demand, report, dash check, reveal recording (TypeScript run directly by Node)
+scripts/         env, seed, audit, tier, rivals, demand, leads, report, dash check, reveal recording (TypeScript run directly by Node)
 brand/motion/    the Drishti reveals as MP4 and GIF, made by npm run motion:record
 src/app/         routes: (site)/site (the website), (product)/drishti, signup, login, (dashboard), onboarding, team, share, design-system
-src/components/  ui, charts, audit, rivals, demand, report, team and share screens, sign up and log in, the website, institution inputs and the app shell
+src/components/  ui, charts, audit, rivals, demand, leads, report, team and share screens, sign up and log in, the website, institution inputs and the app shell
 src/domain/      pure logic: the scoring engine (domain/scoring), checks, schedules, onboarding checks, dates, tiers
 src/config/      every adjustable value: scoring, plans, entitlements, schedules, providers, cities, programs
 src/providers/   the provider interface, mock providers, and real provider slots
 src/audit/       one Audit end to end (collect, score, save) and what the Audit screens show
 src/rivals/      comparisons, verdicts, change rules, what to learn from rivals, and the rival jobs
 src/demand/      regions, the pull schedule, ranking and spikes, the page's signals, Make these 3, and the pulls
+src/leads/       Leads: the enquiry form's rules, the page's numbers, the CSV, the alert email and the jobs
+src/email/       the emails' black and ivory layout
 src/report/      the monthly report (its schedule, the 3 things to do, the snapshot, the PDF, the job) and the shared Audit PDF
 src/team/        team tools: the bulk list reader, list filters, plan rules and the shared Audit
 src/graphics/    the gauges, line icons, the Drishti eye, brand logos (with their sources) and platform marks, shared by the screens and the PDFs
@@ -334,7 +349,7 @@ src/site/        the website: its words, what its pictures show, the Work with u
 src/sample/      the fictional sample world, and that world worked out in memory (world.ts, report.ts)
 ```
 
-`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/report`, `src/team`, `src/graphics`, `src/product`, `src/site` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, for shared Audit PDFs and for the sample report (`serverExternalPackages` in `next.config.ts`). Never in the browser.
+`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/leads`, `src/email`, `src/report`, `src/team`, `src/graphics`, `src/product`, `src/site` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, for shared Audit PDFs and for the sample report (`serverExternalPackages` in `next.config.ts`). Never in the browser.
 
 ## How scores work
 

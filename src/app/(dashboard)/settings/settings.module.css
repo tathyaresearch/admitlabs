@@ -371,3 +371,9 @@
 .programDetail[open] .programIcon {
   transform: rotate(180deg);
 }
+
+/* Leads: the enquiries found for one student, before they are deleted. */
+.found {
+  display: grid;
+  gap: var(--space-3);
+}

@@ -26,6 +26,7 @@
     "tier": "node --env-file=.env.local scripts/tier.ts",
     "rivals": "node --env-file=.env.local scripts/rivals.ts",
     "demand": "node --env-file=.env.local scripts/demand.ts",
+    "leads": "node --env-file=.env.local scripts/leads.ts",
     "report": "node --env-file=.env.local scripts/report.ts",
     "motion:record": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/record-reveal.ts"
   },

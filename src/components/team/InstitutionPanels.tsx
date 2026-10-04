@@ -6,8 +6,10 @@
 import { useActionState, useOptimistic, useState, useTransition } from 'react';
 import type { ActionState } from '@/app/team/institutions/[id]/actions';
 import { Button } from '@/components/ui/Button';
-import { RadioGroup, TextAreaField, TextField } from '@/components/ui/Form';
+import { RadioGroup, SelectField, TextAreaField, TextField } from '@/components/ui/Form';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { LEAD_RULES } from '@/config/leads';
+import { LEAD_SOURCE_LABELS, LEAD_SOURCES } from '@/domain/types';
 import { paidEndText, paidStartFrom, paidStartRange } from '@/team/plans';
 import { WORK_RULES } from '@/team/work';
 import styles from './team.module.css';
@@ -70,6 +72,26 @@ export function WorkForm({ action, today }: { action: Action; today: string }) {
       <div className={styles.inlineForm}>
         <Button type="submit" size="sm" icon="plus" loading={pending}>
           Add to the log
+        </Button>
+      </div>
+      <Reply state={state} />
+    </form>
+  );
+}
+
+/** Makes a tracking link for a Client: a name, where it will be used, and one of its programs. */
+export function LeadLinkForm({ action, programs }: { action: Action; programs: ReadonlyArray<{ id: string; name: string }> }) {
+  const [state, submit, pending] = useActionState(action, IDLE);
+  return (
+    <form key={state.status === 'done' ? state.attempt : 'lead-link'} action={submit} className={styles.facts}>
+      <TextField id="lead-link-name" name="name" label="Name" hint="Where it goes, so everyone knows it: Instagram bio, Reel: BBA placements." maxLength={LEAD_RULES.linkNameMax} required />
+      <div className={styles.workFields}>
+        <SelectField id="lead-link-used" name="used_on" label="Used on" defaultValue="instagram" options={LEAD_SOURCES.map((source) => ({ value: source, label: LEAD_SOURCE_LABELS[source] }))} />
+        <SelectField id="lead-link-program" name="program" label="Program" defaultValue={programs[0]?.id} options={programs.map((program) => ({ value: program.id, label: program.name }))} />
+      </div>
+      <div className={styles.inlineForm}>
+        <Button type="submit" size="sm" icon="plus" loading={pending}>
+          Make the link
         </Button>
       </div>
       <Reply state={state} />

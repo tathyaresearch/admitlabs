@@ -33,6 +33,16 @@ export const INSTITUTION_NAV: readonly NavSection[] = [
   },
 ];
 
+/** Leads (spec section 23), for an AdmitLabs Client, or one whose enquiries are still kept: after Demand. */
+export const LEADS_ITEM: NavItem = { href: '/leads', label: 'Leads', icon: 'enquiry' };
+
+export function institutionNav(leads: boolean): readonly NavSection[] {
+  if (!leads) return INSTITUTION_NAV;
+  return INSTITUTION_NAV.map((section, index) =>
+    index === 0 ? { ...section, items: section.items.flatMap((item) => (item.href === '/demand' ? [item, LEADS_ITEM] : [item])) } : section,
+  );
+}
+
 export const TEAM_NAV: readonly NavSection[] = [
   {
     label: 'AdmitLabs team',
@@ -52,6 +62,9 @@ export const MOBILE_BAR_MAX = 5;
 
 /** The four destinations on the phone bottom bar of a dashboard. Everything else sits under More. */
 export const MOBILE_PRIMARY: readonly string[] = ['/', '/audit', '/rivals', '/demand'];
+
+/** A Client's four: Leads in place of Demand, which moves under More. */
+export const LEADS_MOBILE_PRIMARY: readonly string[] = ['/', '/audit', '/rivals', '/leads'];
 
 /** The team's four on the phone bottom bar. */
 export const TEAM_MOBILE_PRIMARY: readonly string[] = ['/team', '/team/review', '/team/enquiries', '/team/bulk'];

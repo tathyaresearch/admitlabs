@@ -2346,6 +2346,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      archive_lead_link: { Args: { p_link: string }; Returns: undefined }
       archive_program: { Args: { p_program: string }; Returns: undefined }
       ask_admitlabs_fix: {
         Args: { p_fix_key: string; p_fix_title: string; p_institution: string }
@@ -2361,9 +2362,25 @@ export type Database = {
         }[]
       }
       close_start_guide: { Args: { p_institution: string }; Returns: undefined }
+      create_lead_link: {
+        Args: {
+          p_institution: string
+          p_name: string
+          p_program: string
+          p_used_on: Database["public"]["Enums"]["lead_source"]
+        }
+        Returns: {
+          code: string
+          id: string
+        }[]
+      }
       create_share_link: {
         Args: { p_audit: string; p_days: number }
         Returns: string
+      }
+      delete_leads: {
+        Args: { p_contact?: string; p_institution: string; p_lead?: string }
+        Returns: number
       }
       demand_highlight: {
         Args: { p_institution: string }
@@ -2402,6 +2419,40 @@ export type Database = {
         }[]
       }
       invite_member: { Args: { p_email: string }; Returns: string }
+      lead_alert_recipients: {
+        Args: { p_institution: string }
+        Returns: string[]
+      }
+      lead_form: {
+        Args: { p_code: string }
+        Returns: {
+          closed_reason: string
+          institution_name: string
+          link_id: string
+          open: boolean
+          program_id: string
+          program_name: string
+          programs: Json
+        }[]
+      }
+      lead_link_counts: {
+        Args: { p_institution: string; p_now?: string }
+        Returns: {
+          archived_at: string
+          code: string
+          created_at: string
+          last_month: number
+          last_month_to_date: number
+          link_id: string
+          month_before: number
+          name: string
+          program_id: string
+          program_name: string
+          this_month: number
+          total: number
+          used_on: Database["public"]["Enums"]["lead_source"]
+        }[]
+      }
       mark_done: {
         Args: {
           p_check?: Database["public"]["Enums"]["check_key"]
@@ -2441,6 +2492,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["enquiry_kind"]
         }[]
       }
+      purge_old_leads: { Args: { p_now?: string }; Returns: number }
       record_actions: {
         Args: {
           p_feature: Database["public"]["Enums"]["feature"]
@@ -2503,6 +2555,14 @@ export type Database = {
         Args: { p_institution: string }
         Returns: Record<string, unknown>
       }
+      save_lead_settings: {
+        Args: {
+          p_alert_emails: string[]
+          p_institution: string
+          p_keep_months: number
+        }
+        Returns: number
+      }
       save_rivals: {
         Args: { p_added: Json; p_picked: string[] }
         Returns: string[]
@@ -2539,6 +2599,17 @@ export type Database = {
           p_role: Database["public"]["Enums"]["enquiry_role"]
         }
         Returns: undefined
+      }
+      submit_lead: {
+        Args: {
+          p_city?: string
+          p_code: string
+          p_email?: string
+          p_name: string
+          p_phone: string
+          p_program?: string
+        }
+        Returns: string
       }
       team_people: {
         Args: never

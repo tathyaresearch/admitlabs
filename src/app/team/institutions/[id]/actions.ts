@@ -7,7 +7,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { AuditRunError, runAudit } from '@/audit/run';
+import { LEAD_RULES } from '@/config/leads';
 import { TEAM_RULES } from '@/config/team';
+import { LEAD_SOURCES, type LeadSource } from '@/domain/types';
 import { istParts } from '@/domain/dates';
 import { effectiveTier, type PlanRecord } from '@/domain/tiers';
 import { tidyText } from '@/domain/onboarding';
@@ -102,6 +104,40 @@ export async function removeWorkAction(institutionId: string, workId: string): P
 function todayInIndia(): string {
   const { year, month, day } = istParts(new Date());
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+// Leads tracking links (a Client's) ------------------------------------------------------------------
+
+/** A tracking link for a Client's content: a name, where it is used, one program. Counts only come back. */
+export async function createLeadLinkAction(institutionId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
+  if (!(await teamUser())) return reply(previous, 'error', NOT_TEAM);
+  const name = tidyText(String(formData.get('name') ?? '').replace(/\s+/g, ' ').trim());
+  const usedOn = String(formData.get('used_on') ?? '');
+  const program = String(formData.get('program') ?? '');
+  if (name.length < 2) return reply(previous, 'error', 'Name the link, like "Reel: BBA placements".');
+  if (name.length > LEAD_RULES.linkNameMax) return reply(previous, 'error', `Keep the name under ${LEAD_RULES.linkNameMax} characters.`);
+  if (!(LEAD_SOURCES as readonly string[]).includes(usedOn)) return reply(previous, 'error', 'Say where the link will be used.');
+  if (!program) return reply(previous, 'error', 'Choose the program the link is for.');
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('create_lead_link', { p_institution: institutionId, p_name: name, p_used_on: usedOn as LeadSource, p_program: program });
+  if (error) {
+    const message = error.message.includes('not_client')
+      ? 'Only an AdmitLabs Client has tracking links.'
+      : error.message.includes('bad_program')
+        ? 'Choose one of their programs.'
+        : 'The link could not be made. Try again.';
+    return reply(previous, 'error', message);
+  }
+  revalidatePath(pagePath(institutionId));
+  return reply(previous, 'done', 'Link made. Copy it below.');
+}
+
+/** Its form says it is closed from now on. The enquiries it brought stay with the college. */
+export async function archiveLeadLinkAction(institutionId: string, linkId: string): Promise<void> {
+  if (!(await teamUser())) return;
+  const supabase = await createClient();
+  await supabase.rpc('archive_lead_link', { p_link: linkId });
+  revalidatePath(pagePath(institutionId));
 }
 
 // Share links ------------------------------------------------------------------------------------

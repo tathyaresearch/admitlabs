@@ -44,6 +44,10 @@ describe('routing by address', () => {
   test('the product page and the website on the dashboard address move to the website', () => {
     assert.deepEqual(at('app.admitlabs.in', '/drishti'), { kind: 'redirect', url: 'https://admitlabs.in/drishti', permanent: false });
     assert.deepEqual(at('localhost:3000', '/drishti', LOCAL), { kind: 'redirect', url: 'http://admitlabs.localhost:3000/drishti', permanent: false });
+    // A Client's enquiry form lives on the website's address.
+    assert.deepEqual(at('app.admitlabs.in', '/enquire/bp9d3r8w'), { kind: 'redirect', url: 'https://admitlabs.in/enquire/bp9d3r8w', permanent: false });
+    assert.deepEqual(at('admitlabs.in', '/enquire/bp9d3r8w'), { kind: 'site', path: '/site/enquire/bp9d3r8w' });
+    assert.deepEqual(at('admitlabs.in', '/leads'), { kind: 'redirect', url: 'https://app.admitlabs.in/leads', permanent: false });
     assert.deepEqual(at('app.admitlabs.in', '/site'), { kind: 'redirect', url: 'https://admitlabs.in/', permanent: false });
     assert.deepEqual(at('app.admitlabs.in', '/site/work-with-us?a=1'), { kind: 'redirect', url: 'https://admitlabs.in/work-with-us?a=1', permanent: false });
   });
@@ -124,10 +128,12 @@ describe('routing while the dashboard is closed', () => {
   });
 
   test('every other dashboard page asks for a website page that is not there: not found', () => {
-    for (const path of ['/audit', '/audit/abc', '/rivals', '/demand', '/reports/2026-08', '/reports/2026-08.pdf', '/plan', '/settings', '/notifications', '/work', '/onboarding', '/team', '/team/institutions/abc/pdf', '/share/token123', '/share/token123/pdf', '/design-system']) {
+    for (const path of ['/audit', '/audit/abc', '/rivals', '/demand', '/leads', '/leads/csv', '/reports/2026-08', '/reports/2026-08.pdf', '/plan', '/settings', '/notifications', '/work', '/onboarding', '/team', '/team/institutions/abc/pdf', '/share/token123', '/share/token123/pdf', '/design-system']) {
       assert.deepEqual(closed('admitlabs.in', path), { kind: 'site', path: `/site${path}` }, path);
     }
     assert.deepEqual(closed('admitlabs.in', '/site/to-dashboard/login'), { kind: 'site', path: '/site/site/to-dashboard/login' });
+    // The enquiry forms too: the page says not found while Drishti is closed.
+    assert.deepEqual(closed('admitlabs.in', '/enquire/bp9d3r8w'), { kind: 'site', path: '/site/enquire/bp9d3r8w' });
     assert.deepEqual(closed('admitlabs-abc123.vercel.app', '/team'), { kind: 'site', path: '/site/team' });
   });
 

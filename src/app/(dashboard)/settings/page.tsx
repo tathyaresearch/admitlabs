@@ -13,32 +13,36 @@ import { institutionDetailLines, isEmptyProgram, programDetailLines, EMPTY_PROGR
 import { formatDate } from '@/domain/format';
 import { planReminder } from '@/domain/tiers';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
+import { LEAD_RULES } from '@/config/leads';
 import { requireInstitutionViewer, type InstitutionViewer } from '@/lib/auth/guards';
 import { loadAuditPage, nextAuditText, type AuditPageData } from '@/lib/audit/load';
 import { loadAddedDetails, type AddedDetails } from '@/lib/details/load';
+import { loadHasLeads } from '@/lib/leads/load';
 import { loadChangeState, loadRivalList, type RivalInfo } from '@/lib/rivals/load';
 import { createClient } from '@/lib/supabase/server';
 import { nextReport } from '@/report/schedule';
 import { canChangeRivals, type RivalChangeState } from '@/rivals/rules';
 import { removeMemberAction, revokeInviteAction } from './actions';
 import { InstitutionDetailsForm, ProgramDetailsForm } from './DetailsForms';
+import { DeleteStudentForm, LeadSettingsForm } from './LeadsForms';
 import { DetailsForm, FreeProgramForm, InviteForm, ProgramsForm } from './SettingsForms';
 import styles from './settings.module.css';
 
 export const metadata = { title: 'Settings' };
 
 // Settings answers "How is our account set up?" in plain groups (B9): Institution (with what you
-// add about yourselves), Programs, Rivals, Team, Plan and Notifications. The groups are a list on
-// the left (a row on a phone); each opens at its own address, so a page can link straight to one.
-// Only the owner changes things; everyone else reads them.
+// add about yourselves), Programs, Rivals, Leads (an AdmitLabs Client's), Team, Plan and
+// Notifications. The groups are a list on the left (a row on a phone); each opens at its own
+// address, so a page can link straight to one. Only the owner changes things; everyone else reads them.
 
-const GROUPS = ['institution', 'programs', 'rivals', 'team', 'plan', 'notifications'] as const;
+const GROUPS = ['institution', 'programs', 'rivals', 'leads', 'team', 'plan', 'notifications'] as const;
 type Group = (typeof GROUPS)[number];
 
 const GROUP_INFO: Readonly<Record<Group, { name: string; hint: string; icon: IconName }>> = {
   institution: { name: 'Institution', hint: 'Name, city and public links', icon: 'institution' },
   programs: { name: 'Programs', hint: 'What you offer', icon: 'briefcase' },
   rivals: { name: 'Rivals', hint: 'Who you compare with', icon: 'rivals' },
+  leads: { name: 'Leads', hint: 'Enquiry emails and keeping', icon: 'enquiry' },
   team: { name: 'Team', hint: 'Who can see this dashboard', icon: 'team' },
   plan: { name: 'Plan', hint: 'Your plan and its dates', icon: 'plan' },
   notifications: { name: 'Notifications', hint: 'What arrives, and when', icon: 'bell' },
@@ -357,6 +361,43 @@ function PlanGroup({ viewer, audit }: { viewer: InstitutionViewer; audit: AuditP
   );
 }
 
+// Leads ------------------------------------------------------------------------------------------
+
+async function LeadsGroup({ viewer }: { viewer: InstitutionViewer }) {
+  const { institution, role } = viewer.membership;
+  const owner = role === 'owner' && !viewer.viewingAs;
+  const supabase = await createClient();
+  const [settings, recipients] = await Promise.all([
+    supabase.from('lead_settings').select('keep_months').eq('institution_id', institution.id).maybeSingle(),
+    viewer.viewingAs ? Promise.resolve({ data: [] as string[] }) : supabase.rpc('lead_alert_recipients', { p_institution: institution.id }),
+  ]);
+  const keepMonths = settings.data?.keep_months ?? LEAD_RULES.keepMonthsDefault;
+  const emails = recipients.data ?? [];
+  return (
+    <>
+      <Head title="Leads">Who gets an email for each new enquiry, how long enquiries are kept, and deleting a student’s data when they ask. Only {institution.name}’s own people see an enquiry: the AdmitLabs team sees counts.</Head>
+      <Readonly owner={owner} />
+      <Card padding="md">
+        {owner ? (
+          <LeadSettingsForm emails={emails} keepMonths={keepMonths} />
+        ) : (
+          <FactList
+            items={[
+              { label: 'Each new enquiry goes by email to', value: emails.length ? emails.join(', ') : 'Set by the owner' },
+              { label: 'Enquiries are kept for', value: `${keepMonths} months, then deleted for good` },
+            ]}
+          />
+        )}
+      </Card>
+      <div className={styles.subhead} id="delete">
+        <h3 className={styles.subheadTitle}>Delete a student’s data</h3>
+        <p className={styles.tabNote}>When a student asks, find every enquiry they sent by their phone number or email, and delete it for good. It cannot be undone.</p>
+      </div>
+      <Card padding="md">{owner ? <DeleteStudentForm /> : <p className={styles.plainText}>Only the owner of this account can delete a student’s data.</p>}</Card>
+    </>
+  );
+}
+
 // Notifications ----------------------------------------------------------------------------------
 
 function NotificationsGroup({ viewer, audit, rivals }: { viewer: InstitutionViewer; audit: AuditPageData; rivals: readonly RivalInfo[] }) {
@@ -393,10 +434,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
   const asked = one((await searchParams).group);
-  const group: Group = GROUPS.includes(asked as Group) ? (asked as Group) : 'institution';
-  const [audit, added, rivals] = await Promise.all([loadAuditPage(viewer), loadAddedDetails(institution.id), loadRivalList(institution.id)]);
+  const wanted: Group = GROUPS.includes(asked as Group) ? (asked as Group) : 'institution';
+  const [audit, added, rivals, hasLeads] = await Promise.all([loadAuditPage(viewer), loadAddedDetails(institution.id), loadRivalList(institution.id), loadHasLeads(viewer)]);
+  const groups = GROUPS.filter((id) => id !== 'leads' || hasLeads);
   const change = await loadChangeState(institution.id, viewer.tier, rivals.length > 0);
 
+  const group: Group = groups.includes(wanted) ? wanted : 'institution';
   let body: ReactNode;
   switch (group) {
     case 'programs':
@@ -404,6 +447,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       break;
     case 'rivals':
       body = <RivalsGroup viewer={viewer} rivals={rivals} change={change} />;
+      break;
+    case 'leads':
+      body = <LeadsGroup viewer={viewer} />;
       break;
     case 'team':
       body = <TeamGroup viewer={viewer} />;
@@ -424,7 +470,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       <div className={styles.settings}>
         <nav aria-label="Settings groups">
           <ul className={styles.sections}>
-            {GROUPS.map((id) => (
+            {groups.map((id) => (
               <li key={id}>
                 <Link href={id === 'institution' ? '/settings' : `/settings?group=${id}`} className={styles.section} aria-current={id === group ? 'page' : undefined} scroll={false}>
                   <span className={styles.sectionName}>

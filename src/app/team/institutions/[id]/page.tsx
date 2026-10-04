@@ -6,7 +6,8 @@ import { PartResults } from '@/components/audit/Parts';
 import { AddedTag } from '@/components/details/Added';
 import { HomeSummary } from '@/components/home/HomeSummary';
 import { NextSteps, type NextStep } from '@/components/home/NextSteps';
-import { ActionButton, CopyLink, NoteForm, PaidStartForm, ReviewFirstSetting, WorkForm } from '@/components/team/InstitutionPanels';
+import { Tag } from '@/components/audit/PlaceBits';
+import { ActionButton, CopyLink, LeadLinkForm, NoteForm, PaidStartForm, ReviewFirstSetting, WorkForm } from '@/components/team/InstitutionPanels';
 import { AnchorButton, Button, ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/Feedback';
 import { KpiCard, KpiNote, KpiNumber, KpiWord } from '@/components/ui/Kpi';
@@ -17,15 +18,17 @@ import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { TEAM_RULES } from '@/config/team';
 import { istParts, monthKey } from '@/domain/dates';
 import { EMPTY_PROGRAM_DETAILS as EMPTY_PROGRAM, institutionDetailLines, programDetailLines } from '@/domain/details';
-import { formatDate, formatDateTime, formatMonth, hostAndPath } from '@/domain/format';
+import { formatDate, formatDateTime, formatMonth, hostAndPath, plural } from '@/domain/format';
 import { scoreLabel } from '@/domain/scores';
 import { effectiveTier, type PlanRecord } from '@/domain/tiers';
-import { EFFORT_LABELS, INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS, type InstitutionType } from '@/domain/types';
+import { EFFORT_LABELS, INSTITUTION_TYPE_LABELS, LEAD_SOURCE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS, type InstitutionType } from '@/domain/types';
+import { byLink, type LinkCount } from '@/leads/summary';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
 import { loadAddedDetails, type AddedDetails } from '@/lib/details/load';
+import { loadLinkCounts } from '@/lib/leads/load';
 import { loadTeamInstitution, type LinkRow, type TeamInstitution, type WorkRow } from '@/lib/team/load';
-import { APP_URL } from '@/lib/urls';
+import { APP_URL, SITE_URL } from '@/lib/urls';
 import { fixThing } from '@/report/things';
 import { TEAM_STATUS_LABELS, type TeamStatus } from '@/team/filters';
 import { planActions, planDetail } from '@/team/plans';
@@ -33,6 +36,8 @@ import { linkState, linkStateText, sharePath } from '@/team/share';
 import { isOverdue, workByMonth } from '@/team/work';
 import { viewAsAction } from '../../view-as-actions';
 import {
+  archiveLeadLinkAction,
+  createLeadLinkAction,
   addNoteAction,
   auditNowAction,
   endPlanAction,
@@ -69,7 +74,7 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
   if (!UUID.test(id)) notFound();
   const institution = await loadTeamInstitution(id);
   if (!institution) notFound();
-  const added = institution.claimed ? await loadAddedDetails(institution.id) : null;
+  const [added, leadLinks] = institution.claimed ? await Promise.all([loadAddedDetails(institution.id), loadLinkCounts(institution.id)]) : [null, [] as LinkCount[]];
 
   const now = new Date();
   const plan: PlanRecord | null = institution.plan
@@ -98,6 +103,9 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
   const tabs: TabItem[] = [
     ...(client || institution.work.length
       ? [{ id: 'work', label: 'Work log', count: institution.work.length, content: <WorkTab institution={institution} client={client} now={now} /> }]
+      : []),
+    ...(client || leadLinks.length
+      ? [{ id: 'leads', label: 'Leads links', count: leadLinks.length, content: <LeadLinksTab institution={institution} links={leadLinks} client={client} /> }]
       : []),
     { id: 'audits', label: 'Audits', count: institution.teamAudits.length + Math.min(institution.history.length, OWN_AUDITS_SHOWN), content: <AuditsTab institution={institution} /> },
     { id: 'programs', label: 'Programs', count: institution.programs.length, content: <ProgramsTab institution={institution} /> },
@@ -380,6 +388,64 @@ function WorkTab({ institution, client, now }: { institution: TeamInstitution; c
         </>
       ) : (
         <p className={styles.empty}>Nothing logged yet. Add each piece of work as it is done, so they see what the service does for them.</p>
+      )}
+    </div>
+  );
+}
+
+/** A Client's tracking links (spec section 23): make one, copy it, see what each brought, archive it. Counts only. */
+function LeadLinksTab({ institution, links, client }: { institution: TeamInstitution; links: readonly LinkCount[]; client: boolean }) {
+  const programs = institution.programs.filter((program) => !program.archived);
+  return (
+    <div className={styles.tabStack}>
+      <p className={styles.formNote}>
+        {client
+          ? `Each link opens a short form for ${institution.name} and one of its programs. Enquiries go to ${institution.name} only: the team sees counts, never a student’s details.`
+          : 'Their AdmitLabs service has ended, so their forms are closed. Counts only.'}
+      </p>
+      {client ? (
+        <div className={styles.noteCard}>
+          <LeadLinkForm action={createLeadLinkAction.bind(null, institution.id)} programs={programs} />
+        </div>
+      ) : null}
+      {links.length ? (
+        <div className={styles.rows}>
+          {byLink(links).map((link) => {
+            const url = `${SITE_URL}/enquire/${link.code}`;
+            return (
+              <div key={link.id} className={`${styles.item} ${styles.workItem}`}>
+                <div className={styles.workMain}>
+                  <p className={styles.itemBody}>
+                    {link.name} {link.archivedAt ? <Tag>Closed</Tag> : null}
+                  </p>
+                  <p className={styles.itemMeta}>
+                    <span>{LEAD_SOURCE_LABELS[link.usedOn]}</span>
+                    <span>{link.programName}</span>
+                    <span>Since {formatDate(link.createdAt)}</span>
+                    <span>
+                      {plural(link.thisMonth, 'enquiry', 'enquiries')} this month, {link.total} in all
+                    </span>
+                  </p>
+                  <p className={styles.itemMeta}>
+                    <span>{hostAndPath(url)}</span>
+                  </p>
+                </div>
+                {link.archivedAt ? null : (
+                  <div className={styles.workActions}>
+                    <CopyLink url={url} />
+                    <form action={archiveLeadLinkAction.bind(null, institution.id, link.id)}>
+                      <Button type="submit" size="sm" variant="quiet">
+                        Archive
+                      </Button>
+                    </form>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className={styles.empty}>No links yet. Make one for each place their content goes: the Instagram bio, a reel, a YouTube video.</p>
       )}
     </div>
   );
