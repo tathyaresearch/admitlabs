@@ -1,95 +1,28 @@
 // The shared Audit page: a prospect's team Audit, opened from a private link with no sign in. It
-// answers "How does <name> look to students?": the score and pillars, the top 3 fixes with how to
-// make them (the database sends how to fix for these only), the free Audit, then the rest folded:
-// what's working, more to fix (one line says AdmitLabs can fix any of them) and every check with
-// what was found, the source and the date.
+// answers "How does <name> look to students?" the way the Audit does (spec section 13): the three
+// words, the top 3 fixes explained in full (the database sends how to fix for these only), the
+// free Audit, then the five places as tabs, each with what was found, its link and date, what's
+// good and what to fix, and one line saying AdmitLabs can fix any of them. Read only: nothing to
+// mark or ask.
 
-import type { ReactNode } from 'react';
-import type { ItemPart, ListItem } from '@/audit/view';
-import { fixStep } from '@/components/audit/AuditScreen';
-import { PartResults } from '@/components/audit/Parts';
-import { HomeSummary } from '@/components/home/HomeSummary';
-import { NextSteps, type NextStep } from '@/components/home/NextSteps';
+import { FixDetails } from '@/components/audit/FixPanel';
+import { PlaceTab } from '@/components/audit/PlacesAudit';
+import { SectionTitle, WordsMeaning, WordTiles } from '@/components/audit/PlaceBits';
 import { ProductLockup } from '@/components/ui/Brand';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
-import { CheckIcon, Mark, PillarIcon } from '@/components/ui/Marks';
-import { PointsValue, ResultBar } from '@/components/ui/Results';
+import { Tabs } from '@/components/ui/Tabs';
 import { ADMITLABS_EMAIL } from '@/config/team';
-import { formatDate, hostAndPath, plural } from '@/domain/format';
-import { INSTITUTION_TYPE_LABELS, PILLAR_LABELS, type InstitutionType } from '@/domain/types';
-import { PLATFORM_ICONS, platformFromUrl } from '@/graphics/platforms';
-import { ADMITLABS_CAN_FIX, sharedView, type SharedAudit } from '@/team/share';
+import { formatDate, hostAndPath } from '@/domain/format';
+import { INSTITUTION_TYPE_LABELS, PLACE_LABELS } from '@/domain/types';
+import { ADMITLABS_CAN_FIX, sharedPlaces, type SharedAudit } from '@/team/share';
+import places from '@/components/audit/places.module.css';
 import styles from './share.module.css';
 
-function share(part: ItemPart): number {
-  return part.maxPoints > 0 ? part.points / part.maxPoints : 0;
-}
-
-/** The part with the most to gain: its finding and advice speak for the item. */
-function mainPart(item: ListItem): ItemPart | undefined {
-  return [...item.parts].sort((a, b) => share(a) - share(b))[0];
-}
-
-function Source({ part }: { part: ItemPart }) {
-  const url = part.detail?.sourceUrl;
-  return (
-    <span className={styles.source}>
-      {url ? (
-        <a href={url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
-          <Mark icon={PLATFORM_ICONS[platformFromUrl(url) ?? 'website']} size={13} />
-          {hostAndPath(url)}
-          <span className="visually-hidden"> (opens in a new tab)</span>
-        </a>
-      ) : null}
-      <span>Checked {formatDate(part.checkedAt)}</span>
-    </span>
-  );
-}
-
-/** One of the top 3 fixes: what was found, how to fix it and where it was found. */
-function topStep(item: ListItem, institutionType: InstitutionType): NextStep {
-  const part = mainPart(item);
-  return {
-    ...fixStep(item, institutionType, null),
-    detail: part?.detail?.finding ?? '',
-    extra: part ? (
-      <>
-        {part.detail?.howToFix ? (
-          <span className={styles.howTo}>
-            <span className={styles.label}>How to fix </span>
-            {part.detail.howToFix}
-          </span>
-        ) : null}
-        <Source part={part} />
-      </>
-    ) : null,
-  };
-}
-
-/** A section folded away, opened by its title. */
-function Fold({ id, title, meta, children }: { id: string; title: string; meta: string; children: ReactNode }) {
-  return (
-    <details className={styles.fold} aria-labelledby={`${id}-title`}>
-      <summary className={styles.foldSummary}>
-        <span className={styles.foldText}>
-          <span id={`${id}-title`} className={styles.foldTitle}>
-            {title}
-          </span>
-          <span className={styles.foldMeta}>{meta}</span>
-        </span>
-        <Icon name="chevronDown" size={18} className={styles.foldIcon} />
-      </summary>
-      <div className={styles.foldBody}>{children}</div>
-    </details>
-  );
-}
-
 export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfHref: string }) {
-  const { view, topFixes, moreFixes, working } = sharedView(shared);
-  const topKeys = new Set(topFixes.map((item) => item.key));
+  const view = sharedPlaces(shared);
   const { institution } = shared;
+  const more = view.fixes.length > view.topFixes.length;
 
   return (
     <div className={styles.page}>
@@ -114,16 +47,31 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
           ]}
         />
 
-        <HomeSummary view={view} checkedAt={shared.audit.runAt} showChange={false} />
+        <section className={places.block} aria-label="Visibility, Trust and Chosen">
+          <WordTiles words={view.words} compact />
+          <WordsMeaning />
+        </section>
 
-        {topFixes.length ? (
-          <NextSteps
-            id="fix-first"
-            icon="wrench"
-            title="What to fix first"
-            description="The three changes that could add the most to the score, with how to make them."
-            steps={topFixes.map((item) => topStep(item, institution.type))}
-          />
+        {view.topFixes.length ? (
+          <section className={places.block} aria-labelledby="fix-first-title">
+            <SectionTitle id="fix-first-title" icon="wrench" title="What to fix first" help="The three changes with the most impact, from every place, each with how to make it." />
+            <ol className={styles.topFixes}>
+              {view.topFixes.map((fix, index) => (
+                <li key={fix.id} className={places.card}>
+                  <div className={styles.topFixHead}>
+                    <span className={`${styles.topFixIndex} num`}>{index + 1}</span>
+                    <span className={styles.topFixText}>
+                      <span className={styles.topFixTitle}>{fix.title}</span>
+                      <span className={styles.topFixWhere}>
+                        {PLACE_LABELS[fix.place]}, {fix.label}
+                      </span>
+                    </span>
+                  </div>
+                  <FixDetails entry={fix} ownDetails={false} />
+                </li>
+              ))}
+            </ol>
+          </section>
         ) : null}
 
         <section className={`invert ${styles.closing}`} aria-labelledby="closing-title">
@@ -145,98 +93,18 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
           </div>
         </section>
 
-        <div className={styles.folds}>
-          {working.length ? (
-            <Fold id="working" title="What's working" meta="The things doing the most for the score.">
-              <div className={styles.rows}>
-                {working.map((item) => {
-                  const part = item.parts.find((entry) => entry.detail);
-                  return (
-                    <div key={item.rank} className={styles.row}>
-                      <div className={styles.rowHead}>
-                        <span className={styles.rowName}>
-                          <CheckIcon check={item.key} size={16} />
-                          {item.name}
-                          <ResultBar result={item.strength ?? 'okay'} size="sm" />
-                        </span>
-                        <span className={styles.rowValue}>
-                          <PointsValue kind="earned" points={item.points} />
-                        </span>
-                      </div>
-                      {part?.detail?.finding ? <p className={styles.text}>{part.detail.finding}</p> : null}
-                    </div>
-                  );
-                })}
-              </div>
-            </Fold>
-          ) : null}
-
-          {moreFixes.length ? (
-            <Fold id="more" title="More to fix" meta={`${plural(moreFixes.length, 'more thing', 'more things')} to fix, with what was found for each.`}>
-              <p className={styles.canFix}>{ADMITLABS_CAN_FIX}</p>
-              <div className={styles.rows}>
-                {moreFixes.map((item) => {
-                  const part = mainPart(item);
-                  return (
-                    <div key={item.rank} className={styles.row}>
-                      <div className={styles.rowHead}>
-                        <span className={styles.rowName}>
-                          <CheckIcon check={item.key} size={16} />
-                          <span>
-                            <span className="num">{item.rank}</span> {item.name}
-                          </span>
-                          <PartResults parts={item.parts} showNames={item.parts.length > 1} />
-                        </span>
-                        <span className={styles.rowValue}>
-                          <PointsValue kind="gain" points={item.points} />
-                        </span>
-                      </div>
-                      {part?.detail?.finding ? <p className={styles.text}>{part.detail.finding}</p> : null}
-                    </div>
-                  );
-                })}
-              </div>
-            </Fold>
-          ) : null}
-
-          <Fold id="checked" title="Everything we checked" meta="Every check, with what was found, where and when. Public pages only.">
-            {view.areas.map((area) => (
-              <div key={area.pillar} className={styles.pillar}>
-                <h3 className={styles.pillarTitle}>
-                  <PillarIcon pillar={area.pillar} size={16} />
-                  {PILLAR_LABELS[area.pillar]}
-                </h3>
-                <div className={styles.rows}>
-                  {area.rows
-                    .filter((row) => row.parts.length)
-                    .map((row) => (
-                      <div key={row.key} className={styles.row}>
-                        <div className={styles.rowHead}>
-                          <span className={styles.rowName}>
-                            <CheckIcon check={row.key} size={16} />
-                            {row.name}
-                          </span>
-                          {topKeys.has(row.key) ? <span className={styles.rowNote}>In the top 3 fixes</span> : null}
-                        </div>
-                        {row.parts.map((part) => (
-                          <div key={part.checkId} className={styles.part}>
-                            <span className={styles.partResult}>
-                              {part.programName ? <span className={styles.partProgram}>{part.programName}</span> : null}
-                              <ResultBar result={part.result} points={part.points} max={part.maxPoints} size="sm" />
-                            </span>
-                            <span className={styles.partText}>
-                              {part.detail?.finding ? <span className={styles.text}>{part.detail.finding}</span> : null}
-                              <Source part={part} />
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                </div>
-              </div>
-            ))}
-          </Fold>
-        </div>
+        <section className={places.block} aria-labelledby="places-title">
+          <SectionTitle id="places-title" icon="globe" title="What the internet says, place by place" help="Each place: what we found, with the link and date; what’s good; and what to fix. Public pages only." />
+          <Tabs
+            label="Places"
+            items={view.places.map((place) => ({
+              id: place.key,
+              label: place.name,
+              count: place.fixes.length,
+              content: <PlaceTab place={place} free={false} links={false} fixNote={more ? ADMITLABS_CAN_FIX : undefined} />,
+            }))}
+          />
+        </section>
       </main>
 
       <footer className={styles.foot}>

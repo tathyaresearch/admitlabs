@@ -16,13 +16,14 @@ import { createClient } from '@/lib/supabase/server';
 /** The marks still waiting (and the month's other things), plus those the Audit `checkedBy` checked. */
 export async function loadMarks(institutionId: string, checkedBy: string | null): Promise<DoneMark[]> {
   const supabase = await createClient();
-  let query = supabase.from('done_marks').select('id, check_key, thing, month, marked_at, checked_by_audit').eq('institution_id', institutionId);
+  let query = supabase.from('done_marks').select('id, check_key, finding_key, thing, month, marked_at, checked_by_audit').eq('institution_id', institutionId);
   query = checkedBy ? query.or(`checked_by_audit.is.null,checked_by_audit.eq.${checkedBy}`) : query.is('checked_by_audit', null);
   const { data, error } = await query.order('marked_at', { ascending: false });
   if (error) throw new Error(`Could not load what was marked done: ${error.message}`);
   return (data ?? []).map((row) => ({
     id: row.id,
     checkKey: row.check_key,
+    findingKey: row.finding_key,
     thing: row.thing,
     month: row.month ? row.month.slice(0, 7) : null,
     markedAt: row.marked_at,

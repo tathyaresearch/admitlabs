@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
 import { formatDateTime, plural } from '@/domain/format';
 import { PAID_PRICE } from '@/domain/tiers';
+import { PLACE_LABELS } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
 import { loadEnquiries, type EnquiryRow, type FixAsk, type FormEnquiry, type PaidAsk } from '@/lib/team/enquiries';
@@ -78,6 +79,7 @@ function FixRequest({ enquiry }: { enquiry: FixAsk }) {
       </div>
       <p className={team.itemMeta}>
         <span>Sent {formatDateTime(enquiry.createdAt)}, from their Audit</span>
+        {enquiry.place ? <span>{PLACE_LABELS[enquiry.place]}</span> : null}
       </p>
       <p className={team.itemBody}>{enquiry.fixTitle}</p>
       <p className={styles.contact}>

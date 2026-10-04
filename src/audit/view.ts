@@ -6,6 +6,7 @@
 // program's checks with the same engine functions.
 
 import { SCORING_V1 } from '../config/scoring.v1.ts';
+import type { ReadyFix } from '../domain/ready-fix.ts';
 import { CHECKS, checkLooksAt, checkName, type CheckLevel } from '../domain/checks.ts';
 import { itemPoints, rankFixes, rankOkay, rankWorking, type RankedItem } from '../domain/scoring/rank.ts';
 import type { CheckOutcome } from '../domain/scoring/score.ts';
@@ -33,6 +34,10 @@ export interface CheckDetail {
   fixSteps: string[];
   difficulty: Difficulty | null;
   sourceUrl: string;
+  /** A text or layout to copy. Null when Strong, or for an Audit saved before ready fixes. */
+  readyFix?: ReadyFix | null;
+  /** The name the AdmitLabs team gave this fix in a review, in place of the usual one. */
+  fixTitle?: string | null;
 }
 
 export interface StoredCheck {
@@ -47,6 +52,8 @@ export interface StoredCheck {
   fixRank: number | null;
   previousResult: CheckResult | null;
   checkedAt: string;
+  /** When the AdmitLabs team changed this result in a review. */
+  teamCheckedAt?: string | null;
   /** Null when the plan does not include this check's details. */
   detail: CheckDetail | null;
 }
@@ -330,42 +337,6 @@ export function workingTop(view: Pick<AuditView, 'working' | 'okay'>, limit: num
   return [...view.working, ...view.okay].slice(0, limit).map((item, index) => ({ ...item, rank: index + 1 }));
 }
 
-/** One line of a check's results in its panel. */
-export interface PanelLine {
-  key: string;
-  /** The programs on this line; empty for a check on the whole institution. */
-  programs: string[];
-  result: CheckResult;
-  points: number;
-  maxPoints: number;
-  /** The result at the last Audit, when it has moved since. */
-  previousResult: CheckResult | null;
-}
-
-/**
- * A check's results, one line per program. Programs that are Strong with the same points (and
- * were Strong before) share one line, after the rest.
- */
-export function panelLines(parts: readonly ItemPart[]): PanelLine[] {
-  const steady = parts.filter((part) => part.programName && part.result === 'strong' && (part.previousResult === null || part.previousResult === 'strong'));
-  const first = steady[0];
-  const shared = first && steady.length > 1 && steady.every((part) => part.points === first.points && part.maxPoints === first.maxPoints) ? steady : [];
-  const lines: PanelLine[] = parts
-    .filter((part) => !shared.includes(part))
-    .map((part) => ({
-      key: part.checkId,
-      programs: part.programName ? [part.programName] : [],
-      result: part.result,
-      points: part.points,
-      maxPoints: part.maxPoints,
-      previousResult: part.previousResult !== null && part.previousResult !== part.result ? part.previousResult : null,
-    }));
-  if (first && shared.length) {
-    lines.push({ key: 'strong', programs: shared.map((part) => part.programName as string), result: 'strong', points: first.points, maxPoints: first.maxPoints, previousResult: null });
-  }
-  return lines;
-}
-
 /**
  * How to fix a check, in short steps: said once when every program needs the same, otherwise per
  * program. The hardest effort counts. An Audit saved before steps has its paragraph as the one step.
@@ -505,16 +476,6 @@ export function pointsWorthText(points: number): string {
 
 // Points on screen are whole numbers: 7.5 shows as 8. The exact value stays in the data and
 // in every score calculation.
-
-/** "8 of 25 points". */
-export function pointsEarnedText(points: number, maxPoints: number): string {
-  return `${Math.round(points)} of ${maxPoints} points`;
-}
-
-/** "8/25", for the list of checks. */
-export function pointsFraction(points: number, maxPoints: number): string {
-  return `${Math.round(points)}/${maxPoints}`;
-}
 
 export interface MovedCheck {
   key: CheckKey;

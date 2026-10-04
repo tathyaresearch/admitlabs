@@ -88,6 +88,7 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["difficulty"] | null
           finding: string
           fix_steps: string[] | null
+          fix_title: string | null
           how_to_fix: string | null
           ready_fix: Json | null
           source_url: string
@@ -98,6 +99,7 @@ export type Database = {
           difficulty?: Database["public"]["Enums"]["difficulty"] | null
           finding: string
           fix_steps?: string[] | null
+          fix_title?: string | null
           how_to_fix?: string | null
           ready_fix?: Json | null
           source_url: string
@@ -108,6 +110,7 @@ export type Database = {
           difficulty?: Database["public"]["Enums"]["difficulty"] | null
           finding?: string
           fix_steps?: string[] | null
+          fix_title?: string | null
           how_to_fix?: string | null
           ready_fix?: Json | null
           source_url?: string
@@ -2274,8 +2277,30 @@ export type Database = {
         }
         Returns: string
       }
+      approve_audit: {
+        Args: {
+          p_at?: string
+          p_audit: string
+          p_by?: string
+          p_link: string
+          p_notice: string
+        }
+        Returns: undefined
+      }
       archive_program: { Args: { p_program: string }; Returns: undefined }
+      ask_admitlabs_fix: {
+        Args: { p_fix_key: string; p_fix_title: string; p_institution: string }
+        Returns: string
+      }
       ask_for_paid: { Args: { p_institution: string }; Returns: string }
+      audit_waiting: {
+        Args: { p_institution: string }
+        Returns: {
+          first: boolean
+          run_at: string
+          trigger: Database["public"]["Enums"]["audit_trigger"]
+        }[]
+      }
       close_start_guide: { Args: { p_institution: string }; Returns: undefined }
       create_share_link: {
         Args: { p_audit: string; p_days: number }
@@ -2311,6 +2336,14 @@ export type Database = {
         Returns: Record<string, unknown>
       }
       end_plan: { Args: { p_institution: string }; Returns: undefined }
+      findings_teaser: {
+        Args: { p_institution: string }
+        Returns: {
+          found: number
+          place: Database["public"]["Enums"]["finding_place"]
+          to_fix: number
+        }[]
+      }
       institution_people: {
         Args: { p_institution: string }
         Returns: {
@@ -2324,6 +2357,7 @@ export type Database = {
       mark_done: {
         Args: {
           p_check?: Database["public"]["Enums"]["check_key"]
+          p_finding?: string
           p_institution: string
           p_month?: string
           p_thing?: string
@@ -2344,6 +2378,13 @@ export type Database = {
           p_youtube: string
         }
         Returns: string
+      }
+      open_fix_asks: {
+        Args: { p_institution: string }
+        Returns: {
+          asked_at: string
+          fix_key: string
+        }[]
       }
       open_paid_ask: {
         Args: { p_institution: string }
@@ -2375,6 +2416,7 @@ export type Database = {
         }
         Returns: string
       }
+      record_review: { Args: { payload: Json }; Returns: undefined }
       record_rival_ad: { Args: { payload: Json }; Returns: string }
       record_rival_check: { Args: { payload: Json }; Returns: number }
       remove_member: { Args: { p_user: string }; Returns: undefined }
@@ -2463,6 +2505,7 @@ export type Database = {
       undo_done: {
         Args: {
           p_check?: Database["public"]["Enums"]["check_key"]
+          p_finding?: string
           p_institution: string
           p_month?: string
           p_thing?: string

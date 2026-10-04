@@ -1,0 +1,1008 @@
+/*
+  The Audit by place (spec 7.6 to 7.8), as the version 2 mock was approved: the three words, Fix
+  these first, the five places as tabs (what we found full width, then what is good and what to
+  fix), the fix panel with its ready fix, and Free. Monochrome, no gradients: words, thin bars and
+  the ivory and black flip do the work, and every shape has its word or number beside it.
+*/
+
+/* Page rhythm ------------------------------------------------------------------------------------ */
+
+.page {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-10);
+}
+
+.top {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.block {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.quiet {
+  font: var(--type-small);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.strongText {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.underline {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: var(--text);
+}
+
+.num {
+  text-align: right;
+}
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  font: var(--type-label);
+  color: var(--text);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Section heads --------------------------------------------------------------------------------- */
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-6);
+}
+
+.sectionText {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-section);
+  letter-spacing: var(--tracking-section);
+}
+
+.sectionIcon {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.sectionHelp {
+  font: var(--type-body);
+  color: var(--text-muted);
+  max-width: 48rem;
+  text-wrap: pretty;
+}
+
+.sectionAction {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Cards ------------------------------------------------------------------------------------------- */
+
+.card {
+  container-type: inline-size;
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+@media (min-width: 48rem) {
+  .card {
+    padding: var(--card-padding);
+  }
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-card);
+  font-size: 1rem;
+  letter-spacing: var(--tracking-section);
+}
+
+.twoUp {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--card-gap);
+  min-width: 0;
+}
+
+/* Side by side, each card keeps its own height: no stretched cards. */
+.twoUp {
+  align-items: start;
+}
+
+@container (min-width: 46rem) {
+  .twoUp {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.columnTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.miniTitle {
+  margin-bottom: var(--space-2);
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.plainList {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  font: var(--type-body);
+}
+
+/* Tags ------------------------------------------------------------------------------------------- */
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 1px var(--space-2);
+  font: var(--type-caption-strong);
+  white-space: nowrap;
+  color: var(--text);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-full);
+}
+
+.tagStrong {
+  color: var(--text-inverse);
+  background: var(--surface-inverse);
+  border-color: var(--surface-inverse);
+}
+
+/* The three words ----------------------------------------------------------------------------------- */
+
+.wordTiles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--card-gap);
+}
+
+@container (min-width: 40rem) {
+  .wordTiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.wordTile {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  padding: var(--card-padding-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+@media (min-width: 48rem) {
+  .wordTile {
+    padding: var(--space-5) var(--space-6);
+  }
+}
+
+.wordName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-label);
+  color: var(--text-muted);
+}
+
+.wordValue {
+  font: var(--weight-title) clamp(1.875rem, 1.5rem + 1.3vw, 2.5rem) / 1.05 var(--font-sans);
+  letter-spacing: var(--tracking-title);
+}
+
+.wordTilesCompact .wordValue {
+  font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem);
+}
+
+.wordQuestion {
+  font: var(--type-body);
+  color: var(--text-muted);
+}
+
+.wordMoved {
+  font: var(--type-small);
+  font-weight: var(--weight-medium);
+}
+
+.wordFix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  font: var(--type-small);
+  border-top: 1px solid var(--line);
+}
+
+.wordFixLabel {
+  color: var(--text-muted);
+}
+
+/* Stacked on a phone: each word a short row, the word on the right. */
+@container (max-width: 39.99rem) {
+  .wordTile {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'name value'
+      'question value'
+      'moved moved'
+      'fix fix';
+    column-gap: var(--space-4);
+  }
+
+  .wordName {
+    grid-area: name;
+  }
+
+  .wordValue {
+    grid-area: value;
+    align-self: center;
+    font-size: 1.625rem;
+  }
+
+  .wordQuestion {
+    grid-area: question;
+  }
+
+  .wordMoved {
+    grid-area: moved;
+  }
+
+  .wordFix {
+    grid-area: fix;
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+  }
+}
+
+/* The things to do ------------------------------------------------------------------------------- */
+
+.fixes {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.fixRow {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-4) 0;
+}
+
+.fixRow + .fixRow {
+  border-top: 1px solid var(--line);
+}
+
+.fixRow:has(.fixChevron),
+.fixRow:not(:has(.fixIndex)) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.fixRow:has(.fixIndex):has(.fixChevron) {
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+}
+
+.fixRow:has(.fixIndex):has(.fixActions) {
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+}
+
+.fixIndex {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  font: var(--type-num-caption);
+  font-weight: var(--weight-semibold);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-md);
+}
+
+.fixBody {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.fixBody:hover .fixTitle {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.fixLabel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.fixTitle {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+  text-wrap: pretty;
+}
+
+.fixActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  grid-column: 2;
+}
+
+.fixChevron {
+  align-self: center;
+  color: var(--text-muted);
+}
+
+.asked {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* What changed ---------------------------------------------------------------------------------- */
+
+.changedGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+@container (min-width: 40rem) {
+  .changedGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.movedRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.moved {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.movedAfter {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+/* Places -------------------------------------------------------------------------------------------- */
+
+.tabPlace {
+  display: grid;
+  gap: var(--space-5);
+  padding-top: var(--space-5);
+}
+
+.placeHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-6);
+}
+
+.placeHeadText {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.placeTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-section);
+  letter-spacing: var(--tracking-section);
+}
+
+.placeCovers {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.placeCounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.notScored {
+  padding: 0 var(--space-2);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-full);
+}
+
+/* What we found ------------------------------------------------------------------------------------ */
+
+.found {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.foundRow {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+}
+
+.foundRow + .foundRow {
+  border-top: 1px solid var(--line);
+}
+
+.foundHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.foundName {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-strong);
+}
+
+.foundWeakest {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+@container (min-width: 50rem) {
+  .foundWide .foundRow {
+    grid-template-columns: minmax(14rem, 0.8fr) minmax(0, 1.6fr);
+    column-gap: var(--space-6);
+    align-items: start;
+  }
+
+  .foundWide .foundHead {
+    display: grid;
+    gap: var(--space-2);
+    justify-content: start;
+    justify-items: start;
+  }
+}
+
+.locked {
+  font: var(--type-small);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.proof {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.proofLine {
+  font: var(--type-body);
+  text-wrap: pretty;
+}
+
+.proofCompact .proofLine {
+  font: var(--type-small);
+}
+
+.proofProgram {
+  font-weight: var(--weight-semibold);
+}
+
+.proofMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.proofLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.byTeam {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+/* What's good --------------------------------------------------------------------------------------- */
+
+.good {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.goodRow {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.goodIcon {
+  margin-top: 3px;
+}
+
+.goodTitle {
+  display: block;
+  font: var(--type-strong);
+}
+
+.goodLine {
+  display: block;
+  font: var(--type-small);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* Little said ------------------------------------------------------------------------------------- */
+
+.thin {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+}
+
+.thinTitle {
+  font: var(--type-card);
+}
+
+.thinText {
+  font: var(--type-body);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.thinLabel {
+  margin-top: var(--space-1);
+  font: var(--type-caption-strong);
+}
+
+.thinList {
+  display: grid;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  margin: 0;
+  font: var(--type-small);
+}
+
+.thinNext {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* The fix panel ------------------------------------------------------------------------------------ */
+
+.panel {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.panelPart {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.panelTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-card);
+}
+
+.panelTitle :global(.num) {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: var(--size-caption);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-sm);
+}
+
+.panelProofs {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.panelText {
+  font: var(--type-body);
+  text-wrap: pretty;
+}
+
+.steps {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+  margin: 0;
+  font: var(--type-body);
+}
+
+.added {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.panelFooter {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.panelButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* The ready fix ----------------------------------------------------------------------------------- */
+
+.ready {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.readyHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.readyTitle {
+  font: var(--type-strong);
+}
+
+.readyText {
+  font: var(--type-body);
+  white-space: pre-wrap;
+  text-wrap: pretty;
+}
+
+.readyOutline {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+  margin: 0;
+}
+
+.readyHeading {
+  display: block;
+  font: var(--type-strong);
+}
+
+.readyLine {
+  display: block;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.readyTableWrap {
+  display: grid;
+  gap: var(--space-2);
+  overflow-x: auto;
+  contain: paint;
+}
+
+.readyTable {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--type-small);
+}
+
+.readyTable th,
+.readyTable td {
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.readyTable th {
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.readyNote,
+.readyFoot {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* Free --------------------------------------------------------------------------------------------- */
+
+.unlock {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--card-padding-sm);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--card-radius);
+}
+
+@media (min-width: 48rem) {
+  .unlock {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: var(--card-padding);
+  }
+}
+
+.unlockTitle {
+  margin-bottom: var(--space-3);
+  font: var(--type-section);
+}
+
+.unlockList {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  font: var(--type-body);
+}
+
+.unlockList li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.unlockAction {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 18rem;
+}
+
+.preview {
+  display: grid;
+  gap: var(--space-2);
+  filter: blur(3px);
+  user-select: none;
+}
+
+.previewRow {
+  padding: var(--space-2) 0;
+  font: var(--type-body);
+  border-bottom: 1px solid var(--line);
+}
+
+/* The college waiting --------------------------------------------------------------------------------- */
+
+.waiting {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--card-padding-sm);
+  color: var(--text);
+  background: var(--surface);
+  border-radius: var(--card-radius);
+}
+
+@media (min-width: 48rem) {
+  .waiting {
+    padding: var(--space-10) var(--space-8);
+  }
+}
+
+.waitingTitle {
+  max-width: 34rem;
+  font: var(--weight-title) clamp(1.5rem, 1.2rem + 1.2vw, 2rem) / 1.15 var(--font-sans);
+  letter-spacing: var(--tracking-title);
+  text-wrap: balance;
+}
+
+.waitingText {
+  max-width: 38rem;
+  font: var(--type-lead);
+  color: var(--text-muted);
+}
+
+/* Links inside the lists, and What do these mean? ---------------------------------------------------- */
+
+.wordFixLink,
+.foundLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+
+.wordFixLink:hover,
+.foundLink:hover {
+  text-decoration-color: currentColor;
+}
+
+.meaning {
+  justify-self: start;
+  max-width: 46rem;
+}
+
+.meaningSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-small);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+}
+
+.meaningSummary::-webkit-details-marker {
+  display: none;
+}
+
+.meaningBody {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.meaningList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.meaningList dt {
+  font-weight: var(--weight-semibold);
+}
+
+.meaningList dd {
+  margin: 0;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* Marked done, and a request that did not go -------------------------------------------------------- */
+
+.markedDone {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-label);
+  font-weight: var(--weight-semibold);
+}
+
+.actionError {
+  font: var(--type-small);
+  color: var(--text);
+}
+
+/* The fix panel's parts beyond the mock ------------------------------------------------------------- */
+
+.panelHeading {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.panelStrong {
+  font: var(--type-card);
+}
+
+.panelResults {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.panelResults li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font: var(--type-small);
+}
+
+.panelAdvice + .panelAdvice {
+  margin-top: var(--space-4);
+}
+
+.panelFor {
+  margin-bottom: var(--space-2);
+  font: var(--type-small);
+  font-weight: var(--weight-semibold);
+}

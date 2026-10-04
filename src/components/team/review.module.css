@@ -1,0 +1,250 @@
+/*
+  The team's review before sending (spec section 25), as the version 2 mock was approved: To
+  review, one review with its results and lines to fix, and Approve and send in a bar.
+*/
+
+.reviewList {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.reviewRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+}
+
+.reviewRow + .reviewRow {
+  border-top: 1px solid var(--line);
+}
+
+@container (min-width: 50rem) {
+  .reviewRow {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--space-6);
+  }
+}
+
+.reviewMain {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.reviewCollege {
+  font: var(--type-card);
+}
+
+.reviewWhat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.reviewWait {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-small);
+  white-space: nowrap;
+}
+
+.editList {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.editRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-md);
+}
+
+.editRow + .editRow {
+  border-top: 1px solid var(--line);
+}
+
+.editRowOn {
+  background: var(--surface-nested);
+}
+
+@container (min-width: 56rem) {
+  .editRow {
+    grid-template-columns: 12rem 11rem minmax(0, 1fr) auto;
+    align-items: start;
+  }
+}
+
+.editName {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font: var(--type-strong);
+}
+
+.editName > svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+.editNameText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.editProgram {
+  display: block;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.editResult {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.select {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 8.5rem;
+  min-height: 2rem;
+  padding: 0 var(--space-2);
+  font: var(--type-small);
+  background: var(--field);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.editLine {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.editNote {
+  display: block;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.editActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.withBar {
+  padding-bottom: var(--space-20);
+}
+
+.approveBar {
+  position: sticky;
+  bottom: var(--space-4);
+  z-index: var(--z-sticky);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--card-radius);
+}
+
+.approveText {
+  font: var(--type-body);
+  max-width: 40rem;
+}
+
+/* On a phone the bar stays small: the count of changes and the button on one row. */
+@media (max-width: 47.99rem) {
+  .approveBar {
+    bottom: calc(var(--bottombar-height) + var(--space-3));
+    flex-wrap: nowrap;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .approveMore {
+    display: none;
+  }
+}
+
+/* The real controls: a result to choose, a line to rewrite, a finding to take out. */
+
+.selectInput {
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  font: var(--type-label);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.findingTags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.editForm {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.editField {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.editLabel {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.textInput {
+  width: 100%;
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  font: var(--type-body);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+}
+
+.editButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.editError {
+  font: var(--type-small);
+  color: var(--text);
+}
+
+.approveAction {
+  display: inline-grid;
+  justify-items: end;
+  gap: var(--space-1);
+}

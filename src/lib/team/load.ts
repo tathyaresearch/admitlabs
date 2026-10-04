@@ -168,6 +168,10 @@ export interface TeamInstitution {
   claimed: boolean;
   claimedAt: string | null;
   isProspect: boolean;
+  /** How their new Audits and summaries go out: Review first (true, to start) or Send automatically. */
+  reviewFirst: boolean;
+  /** Their oldest own Audit waiting in To review, if any. */
+  waitingAuditId: string | null;
   plan: { tier: Tier; startsAt: string; endsAt: string | null; setBy: string | null } | null;
   /** Their own latest Audit once signed up; otherwise the latest team Audit (or rival Audit). */
   audit: StoredAudit | null;
@@ -189,14 +193,14 @@ export async function loadTeamInstitution(id: string): Promise<TeamInstitution |
   const supabase = await createClient();
   const { data: institution, error } = await supabase
     .from('institutions')
-    .select('id, slug, name, type, city, state, website, instagram, created_at, institution_status(claimed, claimed_at, is_prospect), plans(tier, starts_at, ends_at, set_by), programs(id, name, archived_at)')
+    .select('id, slug, name, type, city, state, website, instagram, created_at, institution_status(claimed, claimed_at, is_prospect, review_first), plans(tier, starts_at, ends_at, set_by), programs(id, name, archived_at)')
     .eq('id', id)
     .maybeSingle();
   if (error) throw new Error(`Could not load the institution: ${error.message}`);
   if (!institution) return null;
   const claimed = Boolean(institution.institution_status?.claimed);
 
-  const [audit, teamAudit, rivalAudit, history, teamAudits, people, invites, notes, work, links, tracked, team] = await Promise.all([
+  const [audit, teamAudit, rivalAudit, history, teamAudits, people, invites, notes, work, links, tracked, team, waiting] = await Promise.all([
     claimed ? latestStoredAudit(supabase, id) : Promise.resolve(null),
     claimed ? Promise.resolve(null) : latestStoredAudit(supabase, id, undefined, ['team']),
     claimed ? Promise.resolve(null) : latestStoredAudit(supabase, id, undefined, ['rival']),
@@ -221,8 +225,11 @@ export async function loadTeamInstitution(id: string): Promise<TeamInstitution |
     supabase.from('share_links').select('token, audit_id, created_at, expires_at, stopped_at, created_by').eq('institution_id', id).order('created_at', { ascending: false }),
     supabase.from('rivals').select('institution_id', { count: 'exact', head: true }).eq('rival_institution_id', id),
     loadTeamPeople(),
+    claimed
+      ? supabase.from('audits').select('id').eq('institution_id', id).eq('review', 'waiting').in('kind', ['free', 'paid', 'client']).order('run_at').limit(1).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
-  for (const result of [teamAudits, invites, notes, work, links, tracked]) if (result.error) throw new Error(`Could not load the institution: ${result.error.message}`);
+  for (const result of [teamAudits, invites, notes, work, links, tracked, waiting]) if (result.error) throw new Error(`Could not load the institution: ${result.error.message}`);
   if (people.error) throw new Error(`Could not load people: ${people.error.message}`);
 
   const emails = new Map(team.flatMap((person) => (person.userId ? [[person.userId, person.email] as const] : [])));
@@ -241,6 +248,8 @@ export async function loadTeamInstitution(id: string): Promise<TeamInstitution |
     claimed,
     claimedAt: institution.institution_status?.claimed_at ?? null,
     isProspect: Boolean(institution.institution_status?.is_prospect),
+    reviewFirst: institution.institution_status?.review_first ?? true,
+    waitingAuditId: waiting.data?.id ?? null,
     plan: plan ? { tier: plan.tier, startsAt: plan.starts_at, endsAt: plan.ends_at, setBy: plan.set_by ? (emails.get(plan.set_by) ?? null) : null } : null,
     audit: audit ?? teamAudit ?? rivalAudit,
     history: history.map((row) => ({ id: row.id, runAt: row.runAt, ...row.scores })),

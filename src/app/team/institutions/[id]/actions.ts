@@ -151,9 +151,11 @@ export async function auditNowAction(institutionId: string, previous: ActionStat
   const now = new Date();
   const client = Boolean(status.data?.claimed) && effectiveTier(planRecord(plan.data), now) === 'client';
   const admin = createAdminClient();
+  let waits = false;
   try {
     if (client) {
-      await runAudit(admin, { institutionId, asOf: now, trigger: 'manual', createdBy: viewer.userId });
+      const run = await runAudit(admin, { institutionId, asOf: now, trigger: 'manual', createdBy: viewer.userId });
+      waits = run.review === 'waiting';
       await writeRivalActions(admin, institutionId, now);
     } else {
       await runAudit(admin, { institutionId, asOf: now, trigger: 'manual', kind: 'team', createdBy: viewer.userId });
@@ -164,12 +166,32 @@ export async function auditNowAction(institutionId: string, previous: ActionStat
   }
   revalidatePath(pagePath(institutionId));
   revalidatePath('/team');
+  if (waits) revalidatePath('/team/review');
   const done = client
-    ? 'Their Audit is refreshed. They see it now, with the usual notice.'
+    ? waits
+      ? 'Their new Audit waits in To review. They see it once it is approved.'
+      : 'Their Audit is refreshed. They see it now, with the usual notice.'
     : status.data?.claimed
       ? 'Team Audit saved. Only the team sees it.'
       : 'Team Audit saved. It stays private until you share it.';
   return reply(previous, 'done', done);
+}
+
+// Review first --------------------------------------------------------------------------------------
+
+/**
+ * How a college's new Audits and monthly summaries go out (spec section 25): Review first, where
+ * each waits in To review until the team approves it, or Send automatically. Team only: row level
+ * security lets only the team write institution_status. An Audit already waiting still waits.
+ */
+export async function setReviewFirstAction(institutionId: string, on: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!(await teamUser())) return { ok: false, error: NOT_TEAM };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('institution_status').update({ review_first: on === true }).eq('institution_id', institutionId).eq('claimed', true).select('institution_id');
+  if (error || !data?.length) return { ok: false, error: 'The setting did not save. Try again.' };
+  revalidatePath(pagePath(institutionId));
+  revalidatePath('/team/review');
+  return { ok: true };
 }
 
 // Plans (Admin) --------------------------------------------------------------------------------------
@@ -183,16 +205,17 @@ function planError(message: string): string {
   return 'The plan could not be changed. Try again.';
 }
 
-/** The day a Paid or Client plan starts, its first Audit runs (spec section 11). */
-async function firstAudit(institutionId: string, userId: string): Promise<string | null> {
+/** The day a Paid or Client plan starts, its first Audit runs (spec section 11). With Review first on, it waits in To review. */
+async function firstAudit(institutionId: string, userId: string): Promise<{ problem: string | null; waits: boolean }> {
   const admin = createAdminClient();
   const now = new Date();
   try {
-    await runAudit(admin, { institutionId, asOf: now, trigger: 'scheduled', createdBy: userId });
+    const run = await runAudit(admin, { institutionId, asOf: now, trigger: 'scheduled', createdBy: userId });
     await writeRivalActions(admin, institutionId, now);
-    return null;
+    if (run.review === 'waiting') revalidatePath('/team/review');
+    return { problem: null, waits: run.review === 'waiting' };
   } catch (error) {
-    if (error instanceof AuditRunError) return error.message;
+    if (error instanceof AuditRunError) return { problem: error.message, waits: false };
     throw error;
   }
 }
@@ -206,10 +229,18 @@ export async function startPaidAction(institutionId: string, previous: ActionSta
   const supabase = await createClient();
   const { error } = await supabase.rpc('set_plan', { p_institution: institutionId, p_tier: 'paid', p_starts_at: startsAt.toISOString() });
   if (error) return reply(previous, 'error', planError(error.message));
-  const problem = await firstAudit(institutionId, viewer.userId);
+  const { problem, waits } = await firstAudit(institutionId, viewer.userId);
   revalidatePath(pagePath(institutionId));
   revalidatePath('/team');
-  return reply(previous, 'done', problem ? `Paid has started. The first Paid Audit could not run: ${problem}` : 'Paid has started, and the first Paid Audit is ready.');
+  return reply(
+    previous,
+    'done',
+    problem
+      ? `Paid has started. The first Paid Audit could not run: ${problem}`
+      : waits
+        ? 'Paid has started. The first Paid Audit waits in To review.'
+        : 'Paid has started, and the first Paid Audit is ready.',
+  );
 }
 
 export async function makeClientAction(institutionId: string, previous: ActionState): Promise<ActionState> {
@@ -218,10 +249,18 @@ export async function makeClientAction(institutionId: string, previous: ActionSt
   const supabase = await createClient();
   const { error } = await supabase.rpc('set_plan', { p_institution: institutionId, p_tier: 'client', p_starts_at: new Date().toISOString() });
   if (error) return reply(previous, 'error', planError(error.message));
-  const problem = await firstAudit(institutionId, viewer.userId);
+  const { problem, waits } = await firstAudit(institutionId, viewer.userId);
   revalidatePath(pagePath(institutionId));
   revalidatePath('/team');
-  return reply(previous, 'done', problem ? `They are a Client now. The first Client Audit could not run: ${problem}` : 'They are a Client now, and their first Client Audit is ready.');
+  return reply(
+    previous,
+    'done',
+    problem
+      ? `They are a Client now. The first Client Audit could not run: ${problem}`
+      : waits
+        ? 'They are a Client now. Their first Client Audit waits in To review.'
+        : 'They are a Client now, and their first Client Audit is ready.',
+  );
 }
 
 export async function endPlanAction(institutionId: string, previous: ActionState): Promise<ActionState> {

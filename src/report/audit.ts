@@ -51,7 +51,7 @@ export interface AuditPdfData {
 
 export const TOP_FIX_NOTE = 'In your top 3 fixes.';
 
-export function buildAuditPdf(shared: SharedAudit, options: { madeAt: Date; freeAuditUrl: string }): AuditPdfData {
+export function buildAuditPdf(shared: Omit<SharedAudit, 'findings'>, options: { madeAt: Date; freeAuditUrl: string }): AuditPdfData {
   const { view, topFixes, moreFixes, working } = sharedView(shared);
   const type = shared.institution.type;
   const topKeys = new Set(topFixes.map((item) => item.key));

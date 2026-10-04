@@ -38,6 +38,7 @@ export const TEAM_NAV: readonly NavSection[] = [
     label: 'AdmitLabs team',
     items: [
       { href: '/team', label: 'Institutions', icon: 'institution' },
+      { href: '/team/review', label: 'To review', icon: 'stopwatch' },
       { href: '/team/bulk', label: 'Bulk Audit', icon: 'grid' },
       { href: '/team/ads', label: 'Rival ads', icon: 'rivals' },
       { href: '/team/enquiries', label: 'Enquiries', icon: 'enquiry' },
@@ -51,6 +52,9 @@ export const MOBILE_BAR_MAX = 5;
 
 /** The four destinations on the phone bottom bar of a dashboard. Everything else sits under More. */
 export const MOBILE_PRIMARY: readonly string[] = ['/', '/audit', '/rivals', '/demand'];
+
+/** The team's four on the phone bottom bar. */
+export const TEAM_MOBILE_PRIMARY: readonly string[] = ['/team', '/team/review', '/team/enquiries', '/team/bulk'];
 
 export function isActive(pathname: string, href: string): boolean {
   // Home pages match exactly, so a page under them (like /team/ads) lights up its own item only.

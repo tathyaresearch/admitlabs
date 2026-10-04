@@ -1,7 +1,8 @@
 // Test support only: what shared_audit() sends for a live link, built from a sample institution's
 // Audit through the live path. Used by the share and Audit PDF tests; the app never imports it.
 
-import { recordFor, stored } from '../audit/testing.ts';
+import { findingsOf, recordFor, stored } from '../audit/testing.ts';
+import type { StoredFinding } from '../audit/places.ts';
 import type { StoredAudit } from '../audit/view.ts';
 import { istDate } from '../domain/dates.ts';
 import type { InstitutionRef } from '../providers/types.ts';
@@ -11,8 +12,9 @@ type Place = Pick<InstitutionRef, 'name' | 'type' | 'city' | 'state' | 'website'
 
 const RIVERBEND: Place = { name: 'Riverbend College', type: 'college', city: 'Jorhat', state: 'Assam', website: 'https://riverbend-college.example' };
 
-/** What shared_audit() sends for a live link: every check, how to fix only for the top 3 fixes. */
-export function sharedPayload(audit: StoredAudit, names: ReadonlyMap<string, string>, institution: Place = RIVERBEND) {
+/** What shared_audit() sends for a live link: every check and finding, how to fix only for the top 3 fixes. */
+export function sharedPayload(audit: StoredAudit, names: ReadonlyMap<string, string>, institution: Place = RIVERBEND, findings: readonly StoredFinding[] = []) {
+  const top = (rank: number | null) => (rank ?? 99) <= 3;
   return {
     status: 'live',
     sharedAt: istDate('2026-09-19', 11).toISOString(),
@@ -34,8 +36,31 @@ export function sharedPayload(audit: StoredAudit, names: ReadonlyMap<string, str
       checkedAt: check.checkedAt,
       finding: check.detail?.finding,
       sourceUrl: check.detail?.sourceUrl,
-      howToFix: (check.fixRank ?? 99) <= 3 ? check.detail?.howToFix : null,
-      difficulty: (check.fixRank ?? 99) <= 3 ? check.detail?.difficulty : null,
+      fixTitle: check.detail?.fixTitle ?? null,
+      whyItMatters: top(check.fixRank) ? check.detail?.whyItMatters : null,
+      howToFix: top(check.fixRank) ? check.detail?.howToFix : null,
+      fixSteps: top(check.fixRank) ? check.detail?.fixSteps : null,
+      readyFix: top(check.fixRank) ? (check.detail?.readyFix ?? null) : null,
+      difficulty: top(check.fixRank) ? check.detail?.difficulty : null,
+    })),
+    findings: findings.map((finding) => ({
+      id: finding.id,
+      place: finding.place,
+      kind: finding.kind,
+      findingKey: finding.findingKey,
+      line: finding.line,
+      sourceName: finding.sourceName,
+      sourceUrl: finding.sourceUrl,
+      checkedAt: finding.checkedAt,
+      repeats: finding.repeats,
+      listing: finding.listing,
+      fixTitle: finding.fix?.title ?? null,
+      effort: finding.fix?.effort ?? null,
+      impact: finding.fix?.impact ?? null,
+      fixRank: finding.fixRank,
+      fixWhy: top(finding.fixRank) ? (finding.fix?.why ?? null) : null,
+      fixSteps: top(finding.fixRank) ? (finding.fix?.steps ?? null) : null,
+      readyFix: top(finding.fixRank) ? (finding.fix?.readyFix ?? null) : null,
     })),
   };
 }
@@ -43,7 +68,7 @@ export function sharedPayload(audit: StoredAudit, names: ReadonlyMap<string, str
 /** A sample institution's team Audit, as a live link shows it. */
 export async function sampleShared(slug = 'riverbend-college', day = '2026-09-18'): Promise<SharedAudit> {
   const { record, names, institution } = await recordFor(slug, day);
-  const shared = parseSharedLink(sharedPayload(stored(record), names, institution));
+  const shared = parseSharedLink(sharedPayload(stored(record), names, institution, findingsOf(record)));
   if (shared?.status !== 'live') throw new Error(`Expected a live shared Audit for ${slug}.`);
   return shared;
 }

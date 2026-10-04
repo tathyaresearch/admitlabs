@@ -6,6 +6,7 @@
 import { INDIA_CITIES, nearCity } from '../src/config/cities.ts';
 import { SCORING_V1 } from '../src/config/scoring.v1.ts';
 import { TEAM_RULES } from '../src/config/team.ts';
+import { applyReviewChange, approveAudit } from '../src/audit/review-jobs.ts';
 import { runAudit } from '../src/audit/run.ts';
 import { neededNow, pullDemand } from '../src/demand/jobs.ts';
 import { pullDayOf } from '../src/demand/schedule.ts';
@@ -33,6 +34,7 @@ import {
   SAMPLE_MARKS,
   SAMPLE_NOTES,
   SAMPLE_PROGRAM_DETAILS,
+  SAMPLE_REVIEWS,
   SAMPLE_RIVALS,
   SAMPLE_RUNS,
   SAMPLE_SHARES,
@@ -244,21 +246,43 @@ async function main(): Promise<void> {
   // Audits: every sample run, own, rival and team, through the live path (collect, score, save).
   // With Review first on, the team approved each own Audit three hours after it ran, except the
   // runs still waiting in To review; Brightpath's went out automatically.
-  const auditCounts = { own: 0, rival: 0, team: 0, waiting: 0 };
+  const auditCounts = { own: 0, rival: 0, team: 0, waiting: 0, reviewed: 0 };
   let signalCount = 0;
   for (const sample of SAMPLE_INSTITUTIONS) {
     for (const run of SAMPLE_RUNS[sample.slug] ?? []) {
+      // An Audit the team reviewed: it waits, the team fixes it, then approves it (below).
+      const reviewed = run.kind === 'own' ? SAMPLE_REVIEWS.find((review) => review.slug === sample.slug && review.day === run.day) : undefined;
       const result = await runAudit(db, {
         institutionId: institutionId(sample.slug),
         asOf: istDate(run.day, 10),
         trigger: run.trigger,
         kind: run.kind === 'own' ? undefined : run.kind,
         createdBy: run.kind === 'team' ? requireUser(TEAM_EMAIL) : null,
-        review: run.waiting ? 'waiting' : 'approved',
-        ...(run.kind === 'own' && !run.waiting && (sample.reviewFirst ?? true) ? { approvedBy: requireUser(TEAM_EMAIL), approvedAt: istDate(run.day, 13) } : {}),
+        review: run.waiting || reviewed ? 'waiting' : 'approved',
+        ...(run.kind === 'own' && !run.waiting && !reviewed && (sample.reviewFirst ?? true) ? { approvedBy: requireUser(TEAM_EMAIL), approvedAt: istDate(run.day, 13) } : {}),
       });
       auditCounts[run.kind] += 1;
       if (run.waiting) auditCounts.waiting += 1;
+      if (reviewed) {
+        const team = requireUser(TEAM_EMAIL);
+        const { data: checks, error: checkError } = await db.from('audit_checks').select('id, check_key, program_id').eq('audit_id', result.auditId);
+        if (checkError) fail(`Could not read the Audit to review: ${checkError.message}`);
+        for (const change of reviewed.changes) {
+          const onProgram = change.programKey ? programId(sample.slug, change.programKey) : null;
+          const check = (checks ?? []).find((row) => row.check_key === change.check && row.program_id === onProgram);
+          if (!check) fail(`No ${change.check} in the Audit to review.`);
+          await applyReviewChange(
+            db,
+            result.auditId,
+            change.kind === 'result'
+              ? { kind: 'result', checkId: check.id, result: change.result, reason: change.reason }
+              : { kind: 'line', on: 'check', checkId: check.id, field: change.field, value: change.value },
+            { editedBy: team },
+          );
+        }
+        await approveAudit(db, result.auditId, { by: team, at: istDate(reviewed.approvedOn, reviewed.hour) });
+        auditCounts.reviewed += 1;
+      }
       signalCount += result.signals;
     }
   }
@@ -457,7 +481,7 @@ async function main(): Promise<void> {
   const prospects = SAMPLE_INSTITUTIONS.filter((sample) => sample.isProspect).length;
   console.log('\nSample data ready.');
   console.log(`  Institutions ${SAMPLE_INSTITUTIONS.length} (${prospects} prospects, team only), programs ${programCount}, users ${SAMPLE_USERS.length}`);
-  console.log(`  Audits ${auditCounts.own} own (${auditCounts.waiting} waiting in To review), ${auditCounts.rival} rival, ${auditCounts.team} team, from ${signalCount} signals`);
+  console.log(`  Audits ${auditCounts.own} own (${auditCounts.waiting} waiting in To review, ${auditCounts.reviewed} approved after a review), ${auditCounts.rival} rival, ${auditCounts.team} team, from ${signalCount} signals`);
   console.log(`  Let AdmitLabs fix this ${SAMPLE_FIX_REQUESTS.length}, Leads ${SAMPLE_LEADS.length} from ${SAMPLE_LEAD_LINKS.length} tracking links`);
   console.log(`  Rival moves ${moveCount}, best posts ${contentCount ?? 0}, ads ${SAMPLE_ADS.length}, Rivals 3 things to do ${actionCount} (April to September)`);
   console.log(`  Demand pulls ${needed.length * DEMAND_MONTHS.length} with ${demandItems} grouped items, ${spikeCount} spike alerts sent`);

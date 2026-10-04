@@ -13,6 +13,7 @@ export * from './leads.ts';
 export * from './marks.ts';
 export * from './profiles.ts';
 export * from './requests.ts';
+export * from './reviews.ts';
 export * from './rivals.ts';
 export * from './shares.ts';
 export * from './users.ts';

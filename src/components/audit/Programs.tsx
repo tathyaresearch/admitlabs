@@ -1,5 +1,6 @@
-// The program switcher: clean tabs, each with its small score. On Free only one program is
-// included; the others show as plain locked captions, with no scores sent and no action.
+// The program switcher: clean tabs, one per program. No scores here: the score stays in the
+// background (spec 7.4). On Free only one program is included; the others show as plain locked
+// captions, with no action.
 
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
@@ -37,7 +38,6 @@ export function ProgramTabs({ entries, active, allLabel }: { entries: readonly P
         return (
           <Link key={entry.id} href={href} className={styles.tab} aria-current={current ? 'page' : undefined}>
             {entry.name}
-            {entry.score ? <span className={`${styles.tabScore} num`}>{entry.score.overall}</span> : null}
           </Link>
         );
       })}

@@ -13,6 +13,8 @@ export interface DoneMark {
   id: string;
   /** A check, which the next own Audit checks. */
   checkKey: CheckKey | null;
+  /** Or a finding with something to do, by its key, which the next own Audit checks too. */
+  findingKey?: string | null;
   /** Or any other thing to do, by its words, with its month ('YYYY-MM'). */
   thing: string | null;
   month: string | null;
@@ -22,8 +24,10 @@ export interface DoneMark {
 }
 
 /** What a mark is about, the same way for a mark and for the thing it marks: 'check:fees_shown', or '2026-09:Post the full fee'. */
-export function markKey(mark: { checkKey: CheckKey | null; thing: string | null; month: string | null }): string {
-  return mark.checkKey ? `check:${mark.checkKey}` : `${mark.month ?? ''}:${mark.thing ?? ''}`;
+export function markKey(mark: { checkKey: CheckKey | null; findingKey?: string | null; thing: string | null; month: string | null }): string {
+  if (mark.checkKey) return `check:${mark.checkKey}`;
+  if (mark.findingKey) return `finding:${mark.findingKey}`;
+  return `${mark.month ?? ''}:${mark.thing ?? ''}`;
 }
 
 export interface MovedPart {

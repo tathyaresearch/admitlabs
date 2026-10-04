@@ -151,11 +151,6 @@ a.tab:hover {
   background: var(--text);
 }
 
-.tabScore {
-  font: var(--type-caption);
-  font-variant-numeric: tabular-nums;
-}
-
 .tabLocked {
   opacity: 0.6;
 }
@@ -937,74 +932,6 @@ a.tab:hover {
   }
 }
 
-/* The rival check panel (../rivals/RivalCheckPanel.tsx). The Audit's own check panel is in ./panel.module.css. */
-
-.panelStack {
-  display: grid;
-  gap: var(--space-6);
-}
-
-.panelBlock {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.panelLabel {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.panelPart {
-  display: grid;
-  gap: var(--space-4);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--line-raised);
-}
-
-.panelPart:first-child {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.panelPartHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-3);
-}
-
-.panelProgram {
-  font: var(--type-card);
-  letter-spacing: var(--tracking-section);
-}
-
-.strongNote {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-.lockedLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-  width: fit-content;
-  font: var(--type-caption-strong);
-  color: var(--text);
-}
-
-.placeholderDetail {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.placeholderBar {
-  display: block;
-  height: 0.625rem;
-  border-radius: 2px;
-  background: var(--line-medium);
-}
-
 /* Fix these first, as a list: the check and its results above what to do, points and effort on the right. */
 
 .fixKicker {
@@ -1054,4 +981,10 @@ a.tab:hover {
   font: var(--weight-heading) clamp(1.25rem, 1rem + 1.1cqi, 1.5rem) / 1.3 var(--font-sans);
   letter-spacing: -0.02em;
   text-wrap: balance;
+}
+
+/* Progress: each part as its word (version 2: the score stays in the background). */
+.progressWord {
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
 }

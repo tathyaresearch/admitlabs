@@ -1,7 +1,8 @@
 /*
-  The shared Audit: a prospect opens it from a private link, with no sign in. The dashboard's
-  page order on one calm page: the question, the score and pillars, the top 3 fixes, the free
-  Audit, then the rest folded. Works on a phone first.
+  The shared Audit: a prospect opens it from a private link, with no sign in. The Audit's page
+  order on one calm page: the question, the three words, the top 3 fixes in full, the free
+  Audit, then the places as tabs (their parts come from the Audit's own styles). Works on a
+  phone first.
 */
 
 .page {
@@ -49,34 +50,46 @@
   padding: var(--space-10) var(--gutter) var(--space-16);
 }
 
-/* Inside the top 3 fixes: how to fix and the source. */
+/* The top 3 fixes, each explained in full. */
 
-.howTo {
-  font: var(--type-body);
-  color: var(--text);
+.topFixes {
+  display: grid;
+  gap: var(--card-gap);
 }
 
-.label {
-  font-weight: var(--weight-heading);
-}
-
-.source {
+.topFixHead {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-3);
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.topFixIndex {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  font: var(--type-num-caption);
+  font-weight: var(--weight-semibold);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-md);
+}
+
+.topFixText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.topFixTitle {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+  text-wrap: pretty;
+}
+
+.topFixWhere {
   font: var(--type-caption);
   color: var(--text-muted);
-}
-
-.source a {
-  color: inherit;
-  overflow-wrap: anywhere;
-}
-
-.sourceLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35em;
 }
 
 /* The free Audit: the one inverted block. */
@@ -123,183 +136,9 @@
   gap: var(--space-3);
 }
 
-/* The rest, folded: each section a card that opens by its title. */
-
-.folds {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.fold {
-  background: var(--surface-raised);
-  border: 1px solid var(--card-border);
-  border-radius: var(--card-radius);
-}
-
-.foldSummary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  min-height: 4rem;
-  padding: var(--space-4) var(--card-padding-sm);
-  cursor: pointer;
-  list-style: none;
-}
-
-.foldSummary::-webkit-details-marker {
-  display: none;
-}
-
-@container (min-width: 40rem) {
-  .foldSummary {
-    padding: var(--space-4) var(--card-padding);
-  }
-
-  .foldBody {
-    padding: 0 var(--card-padding) var(--space-5);
-  }
-}
-
-.foldText {
-  display: grid;
-  gap: 2px;
-}
-
-.foldTitle {
-  font: var(--type-card);
-  font-size: 1rem;
-  letter-spacing: var(--tracking-section);
-}
-
-.foldMeta {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-.foldIcon {
-  flex: none;
-  color: var(--text-muted);
-  transition: transform var(--duration-fast) var(--ease-out);
-}
-
-.fold[open] .foldIcon {
-  transform: rotate(180deg);
-}
-
-.foldBody {
-  display: grid;
-  gap: var(--space-5);
-  padding: 0 var(--card-padding-sm) var(--space-4);
-}
-
-.canFix {
-  font: var(--type-strong);
-}
-
-/* Rows inside a fold. */
-
-.rows {
-  display: grid;
-}
-
-.row {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4) 0;
-}
-
-.row + .row {
-  border-top: 1px solid var(--line-raised);
-}
-
-.rows .row:first-child {
-  padding-top: 0;
-}
-
-.rowHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-4);
-}
-
-.rowName {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
-  font: var(--type-strong);
-}
-
-.rowValue {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-.rowNote {
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.text {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
 .muted {
   font: var(--type-small);
   color: var(--text-muted);
-}
-
-/* Everything we checked: one group per pillar. */
-
-.pillar {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.pillar + .pillar {
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--line-raised);
-}
-
-.pillarTitle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.part {
-  display: grid;
-  gap: var(--space-1);
-}
-
-@container (min-width: 40rem) {
-  .part {
-    grid-template-columns: 11rem minmax(0, 1fr);
-    gap: var(--space-4);
-  }
-}
-
-.partResult {
-  display: grid;
-  gap: var(--space-1);
-  align-content: start;
-  justify-items: start;
-}
-
-.partProgram {
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-.partText {
-  display: grid;
-  gap: var(--space-1);
 }
 
 .foot {

@@ -1,16 +1,18 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { overviewView, scoresByMonth } from '@/audit/view';
-import { fixStep } from '@/components/audit/AuditScreen';
+import { overviewView, scoresByMonth, type ListItem } from '@/audit/view';
+import { PartResults } from '@/components/audit/Parts';
 import { AddedTag } from '@/components/details/Added';
 import { HomeSummary } from '@/components/home/HomeSummary';
-import { NextSteps } from '@/components/home/NextSteps';
-import { ActionButton, CopyLink, NoteForm, PaidStartForm, WorkForm } from '@/components/team/InstitutionPanels';
-import { AnchorButton, Button } from '@/components/ui/Button';
+import { NextSteps, type NextStep } from '@/components/home/NextSteps';
+import { ActionButton, CopyLink, NoteForm, PaidStartForm, ReviewFirstSetting, WorkForm } from '@/components/team/InstitutionPanels';
+import { AnchorButton, Button, ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/Feedback';
 import { KpiCard, KpiNote, KpiNumber, KpiWord } from '@/components/ui/Kpi';
 import { FactList, PageHead } from '@/components/ui/Layout';
+import { CheckIcon } from '@/components/ui/Marks';
+import { PointsValue } from '@/components/ui/Results';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { TEAM_RULES } from '@/config/team';
 import { istParts, monthKey } from '@/domain/dates';
@@ -18,12 +20,13 @@ import { EMPTY_PROGRAM_DETAILS as EMPTY_PROGRAM, institutionDetailLines, program
 import { formatDate, formatDateTime, formatMonth, hostAndPath } from '@/domain/format';
 import { scoreLabel } from '@/domain/scores';
 import { effectiveTier, type PlanRecord } from '@/domain/tiers';
-import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
+import { EFFORT_LABELS, INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS, type InstitutionType } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
 import { loadAddedDetails, type AddedDetails } from '@/lib/details/load';
 import { loadTeamInstitution, type LinkRow, type TeamInstitution, type WorkRow } from '@/lib/team/load';
 import { APP_URL } from '@/lib/urls';
+import { fixThing } from '@/report/things';
 import { TEAM_STATUS_LABELS, type TeamStatus } from '@/team/filters';
 import { planActions, planDetail } from '@/team/plans';
 import { linkState, linkStateText, sharePath } from '@/team/share';
@@ -38,6 +41,7 @@ import {
   removeNoteAction,
   removeWorkAction,
   addWorkAction,
+  setReviewFirstAction,
   shareAuditAction,
   startPaidAction,
   stopLinkAction,
@@ -272,13 +276,28 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
         </KpiCard>
       </section>
 
+      {institution.claimed ? (
+        <KpiCard
+          label="How new Audits and summaries go out"
+          aside={
+            institution.waitingAuditId ? (
+              <ButtonLink href={`/team/review/${institution.waitingAuditId}`} size="sm" variant="secondary" iconAfter="arrowRight">
+                Review the waiting Audit
+              </ButtonLink>
+            ) : undefined
+          }
+        >
+          <ReviewFirstSetting name={institution.name} on={institution.reviewFirst} action={setReviewFirstAction.bind(null, institution.id)} />
+        </KpiCard>
+      ) : null}
+
       {view && !institution.claimed ? (
         <NextSteps
           id="fixes"
           icon="wrench"
           title="What to fix first"
           description={`The biggest gains first. A shared Audit explains the top ${TEAM_RULES.sharedFixesInFull} and says AdmitLabs can fix the rest.`}
-          steps={view.fixes.slice(0, 5).map((item) => fixStep(item, institution.type, null))}
+          steps={view.fixes.slice(0, 5).map((item) => fixStep(item, institution.type))}
           empty={<p className={audit.quietNote}>Every check is Strong.</p>}
         />
       ) : null}
@@ -291,6 +310,32 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
       </section>
     </div>
   );
+}
+
+/** One of a prospect's fixes for the team: the check and its results, what was found, the points it could add and the effort. */
+function fixStep(item: ListItem, institutionType: InstitutionType): NextStep {
+  const finding = item.parts.find((part) => part.detail)?.detail?.finding ?? '';
+  return {
+    key: item.key,
+    kicker: (
+      <span className={audit.fixKicker}>
+        <span className={audit.fixCheck}>
+          <CheckIcon check={item.key} size={14} />
+          {item.name}
+        </span>
+        <PartResults parts={item.parts} showNames={item.parts.length > 1} />
+      </span>
+    ),
+    title: fixThing(item, institutionType).title,
+    detail: finding,
+    aside: (
+      <span className={audit.fixAside}>
+        <PointsValue kind="gain" points={item.points} />
+        {item.difficulty ? <span className={audit.fixDifficulty}>Effort {EFFORT_LABELS[item.difficulty]}</span> : null}
+      </span>
+    ),
+    href: null,
+  };
 }
 
 /** A Client's work log: add what the team did or does next, then the log as they see it, Next first. */

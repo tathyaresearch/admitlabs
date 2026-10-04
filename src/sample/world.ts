@@ -7,6 +7,7 @@
 // Not exported from ./index.ts, because it imports the providers, which import the sample data.
 
 import { factsFromSignals, findingsFromSignals, type CheckSignal } from '../audit/facts.ts';
+import type { StoredFinding } from '../audit/places.ts';
 import { prepareAudit, type AuditRecord, type PreparedAudit, type PreviousAudit } from '../audit/record.ts';
 import type { HistoryRow, StoredAudit } from '../audit/view.ts';
 import { PROVIDER_KEYS } from '../config/providers.ts';
@@ -148,11 +149,32 @@ export function storedAudit(record: AuditRecord, options: { id?: string; previou
         previousResult: check.previous_result,
         checkedAt: check.checked_at,
         detail: open
-          ? { finding: check.finding, whyItMatters: check.why_it_matters, howToFix: check.how_to_fix, fixSteps: check.fix_steps, difficulty: check.difficulty, sourceUrl: check.source_url }
+          ? { finding: check.finding, whyItMatters: check.why_it_matters, howToFix: check.how_to_fix, fixSteps: check.fix_steps, difficulty: check.difficulty, sourceUrl: check.source_url, readyFix: check.ready_fix }
           : null,
       };
     }),
   };
+}
+
+/** The record's findings as a viewer reads them back. `freeTop` keeps only those among the top 3 fixes, as the database does for Free. */
+export function storedFindingsOf(record: AuditRecord, options: { freeTop?: boolean } = {}): StoredFinding[] {
+  return record.findings
+    .map((finding, index): StoredFinding => ({
+      id: `finding-${index}`,
+      place: finding.place,
+      kind: finding.kind,
+      findingKey: finding.finding_key,
+      line: finding.line,
+      sourceName: finding.source_name,
+      sourceUrl: finding.source_url,
+      checkedAt: finding.checked_at,
+      repeats: finding.repeats,
+      listing: finding.listing,
+      fix: finding.fix ? { title: finding.fix.title, why: finding.fix.why, steps: finding.fix.steps, readyFix: finding.fix.ready_fix, effort: finding.fix.effort, impact: finding.fix.impact } : null,
+      fixRank: finding.fix_rank,
+      removed: false,
+    }))
+    .filter((finding) => !options.freeTop || (finding.fixRank ?? 99) <= 3);
 }
 
 /** A sample institution's plan, dated as the seed dates it. */

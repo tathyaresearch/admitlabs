@@ -6,6 +6,7 @@ import type { NextStep } from '@/components/home/NextSteps';
 import { checkName, getCheck } from '@/domain/checks';
 import { PILLAR_LABELS, type InstitutionType } from '@/domain/types';
 import type { ActionRow } from '@/lib/rivals/load';
+import { auditFixPath, checkFixKey } from '@/domain/fix-key';
 
 export function lessonSteps(items: readonly ActionRow[], rivalNames: ReadonlyMap<string, string>, institutionType: InstitutionType): NextStep[] {
   return items.map((item) => {
@@ -17,7 +18,7 @@ export function lessonSteps(items: readonly ActionRow[], rivalNames: ReadonlyMap
       kicker: [about, from].filter(Boolean).join('  ·  '),
       title: item.text,
       detail: item.detail ?? '',
-      href: item.checkKey ? `/audit?check=${item.checkKey}` : item.rivalId ? `/rivals/${item.rivalId}` : '/rivals',
+      href: item.checkKey ? auditFixPath(checkFixKey(item.checkKey)) : item.rivalId ? `/rivals/${item.rivalId}` : '/rivals',
     };
   });
 }

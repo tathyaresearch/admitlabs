@@ -11,10 +11,7 @@ import {
   movedChecks,
   monthScore,
   overviewView,
-  panelLines,
   pillarChecks,
-  pointsEarnedText,
-  pointsFraction,
   pointsToGainText,
   programView,
   resultCounts,
@@ -277,15 +274,10 @@ describe('history and wording', () => {
     assert.equal(pointsToGainText(0.3), 'Could add less than 1 point');
     assert.equal(pointsToGainText(0.5), 'Could add up to 1 point');
     assert.equal(pointsToGainText(5.83), 'Could add up to 6 points');
-    assert.equal(pointsEarnedText(7.5, 25), '8 of 25 points');
-    assert.equal(pointsEarnedText(18, 30), '18 of 30 points');
-    assert.equal(pointsFraction(7.5, 25), '8/25');
-    assert.equal(pointsFraction(4.5, 15), '5/15');
-    assert.equal(pointsFraction(15.83, 25), '16/25');
   });
 });
 
-describe('the check panel', () => {
+describe('how to fix, in the fix panel', () => {
   const part = (programName: string | null, result: ItemPart['result'], points: number, extra: Partial<ItemPart> = {}): ItemPart => ({
     checkId: `${programName ?? 'all'}-${result}`,
     programId: programName,
@@ -297,32 +289,6 @@ describe('the check panel', () => {
     checkedAt: '2026-09-01T04:30:00Z',
     detail: null,
     ...extra,
-  });
-
-  test('one line per program; Strong programs share one line, after the rest', () => {
-    const lines = panelLines([part('BBA', 'strong', 30), part('MBA', 'weak', 9), part('BCA', 'strong', 30)]);
-    assert.deepEqual(
-      lines.map((line) => [line.programs, line.result, line.points]),
-      [
-        [['MBA'], 'weak', 9],
-        [['BBA', 'BCA'], 'strong', 30],
-      ],
-    );
-  });
-
-  test('a Strong program that moved keeps its own line, with what it was', () => {
-    const lines = panelLines([part('BBA', 'strong', 30, { previousResult: 'okay' }), part('BCA', 'strong', 30)]);
-    assert.deepEqual(
-      lines.map((line) => [line.programs, line.previousResult]),
-      [
-        [['BBA'], 'okay'],
-        [['BCA'], null],
-      ],
-    );
-  });
-
-  test('a check on the whole institution is one line with no program', () => {
-    assert.deepEqual(panelLines([part(null, 'okay', 15)]).map((line) => [line.programs, line.result]), [[[], 'okay']]);
   });
 
   test('how to fix, in steps, is said once when every program needs the same', () => {

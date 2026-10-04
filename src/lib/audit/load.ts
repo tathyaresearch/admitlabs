@@ -29,7 +29,24 @@ export interface AuditPageData {
   nextAudit: { on: Date; tier: Tier } | null;
   /** Paid owners only: the extra refresh this calendar month. */
   refresh: { left: number; resetsOn: Date } | null;
+  /** A newer Audit waiting for the AdmitLabs team's review: when it ran, and whether it is the first. Never what it found. */
+  waiting: Waiting | null;
 }
+
+export interface Waiting {
+  runAt: string;
+  trigger: string;
+  /** No approved Audit before it: the college has nothing to see yet. */
+  first: boolean;
+}
+
+/** The newest of the institution's Audits waiting for review, as audit_waiting() tells the college. */
+export const loadWaiting = cache(async (institutionId: string): Promise<Waiting[]> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('audit_waiting', { p_institution: institutionId });
+  if (error) throw new Error(`Could not load the Audit waiting for review: ${error.message}`);
+  return (data ?? []).map((row) => ({ runAt: row.run_at, trigger: row.trigger, first: row.first }));
+});
 
 export const loadPrograms = cache(async (institutionId: string): Promise<ProgramRow[]> => {
   const supabase = await createClient();
@@ -102,15 +119,17 @@ export function auditNote(data: AuditPageData, tier: Tier): string | null {
 
 export async function loadAuditPage(viewer: Viewer & { membership: NonNullable<Viewer['membership']> }): Promise<AuditPageData> {
   const institutionId = viewer.membership.institution.id;
-  const [audit, programs, history] = await Promise.all([loadLatestAudit(institutionId), loadPrograms(institutionId), loadHistory(institutionId)]);
+  const [audit, programs, history, waiting] = await Promise.all([loadLatestAudit(institutionId), loadPrograms(institutionId), loadHistory(institutionId), loadWaiting(institutionId)]);
   const now = new Date();
 
-  const lastScheduled = [...history].reverse().find((row) => row.trigger === 'signup' || row.trigger === 'scheduled');
+  // An Audit waiting for review still ran: it counts for the schedule and for this month's refresh.
+  const runs = [...history.map((row) => ({ runAt: row.runAt, trigger: row.trigger, manualPaid: row.kind === 'paid' && row.trigger === 'manual' })), ...waiting.map((row) => ({ runAt: row.runAt, trigger: row.trigger, manualPaid: row.trigger === 'manual' && viewer.tier === 'paid' }))].sort((a, b) => a.runAt.localeCompare(b.runAt));
+  const lastScheduled = [...runs].reverse().find((row) => row.trigger === 'signup' || row.trigger === 'scheduled');
   const nextAudit = upcomingAudit(viewer.plan, lastScheduled ? new Date(lastScheduled.runAt) : null, now);
 
   let refresh: AuditPageData['refresh'] = null;
   if (viewer.tier === 'paid' && viewer.membership.role === 'owner') {
-    const used = history.filter((row) => row.kind === 'paid' && row.trigger === 'manual' && monthKey(new Date(row.runAt)) === monthKey(now)).length;
+    const used = runs.filter((row) => row.manualPaid && monthKey(new Date(row.runAt)) === monthKey(now)).length;
     refresh = { left: refreshesLeft('paid', used), resetsOn: refreshResetsOn(now) };
   }
 
@@ -121,5 +140,6 @@ export async function loadAuditPage(viewer: Viewer & { membership: NonNullable<V
     history,
     nextAudit,
     refresh,
+    waiting: waiting[0] ?? null,
   };
 }

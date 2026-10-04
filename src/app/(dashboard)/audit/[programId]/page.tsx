@@ -1,20 +1,19 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { programView, scoresByMonth } from '@/audit/view';
-import { AuditScreen } from '@/components/audit/AuditScreen';
+import { FixPanelHandlers } from '@/components/audit/handlers';
+import { PlacesAudit } from '@/components/audit/PlacesAudit';
 import { ProgramTabs } from '@/components/audit/Programs';
 import { UnlockCard } from '@/components/audit/UnlockCard';
+import { WaitingNotice } from '@/components/audit/Waiting';
 import { PaidAction } from '@/components/plan/PaidAction';
 import { EmptyState } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
-import { monthKey } from '@/domain/dates';
+import { formatDate } from '@/domain/format';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
-import { auditNote, loadAuditPage, loadProgramHistory, loadPrograms, nextAuditText, programEntries } from '@/lib/audit/load';
+import { loadAuditPage, loadProgramHistory, loadPrograms, nextAuditText, programEntries } from '@/lib/audit/load';
+import { loadPlacesPage } from '@/lib/audit/places';
 import { loadProgress } from '@/lib/audit/progress';
-import { loadAddedDetails } from '@/lib/details/load';
-import { loadMarkState } from '@/lib/home/load';
-import { markDoneAction } from '../../actions';
-import styles from '@/components/audit/audit.module.css';
+import styles from '@/components/audit/places.module.css';
 
 interface Props {
   params: Promise<{ programId: string }>;
@@ -37,7 +36,7 @@ export default async function ProgramAuditPage({ params }: Props) {
   const entries = programEntries(data, viewer.tier, viewer.plan?.freeProgramId ?? null);
   const top = (allLabel: string | null) => (
     <div className={styles.top}>
-      <PageHead title="Audit" question="How do we look to students?" />
+      <PageHead title="Audit" question="What does the internet say about us?" />
       <ProgramTabs entries={entries} active={programId} allLabel={allLabel} />
     </div>
   );
@@ -69,8 +68,7 @@ export default async function ProgramAuditPage({ params }: Props) {
     );
   }
 
-  const view = programView(data.audit, programId, { institutionType: institution.type, programNames: data.names });
-  if (!view) {
+  if (!data.audit.programs.some((entry) => entry.programId === programId)) {
     return (
       <div className={styles.page}>
         {top('All programs')}
@@ -81,24 +79,22 @@ export default async function ProgramAuditPage({ params }: Props) {
     );
   }
 
-  const [history, details, marking] = await Promise.all([loadProgramHistory(programId), loadAddedDetails(institution.id), loadMarkState(viewer, data)]);
+  const [page, history] = await Promise.all([loadPlacesPage(viewer, data, programId), loadProgramHistory(programId)]);
+  if (!page) return null;
   const months = await loadProgress({ history, names: data.names, type: institution.type, programId });
   return (
-    <AuditScreen
-      view={view}
+    <PlacesAudit
+      view={page.view}
       tier={viewer.tier}
-      caption={viewer.tier === 'client' ? ['Your AdmitLabs team can refresh it at any time'] : undefined}
+      caption={[`Checked ${formatDate(data.audit.runAt)}`, program.name, ...(data.nextAudit && data.nextAudit.tier === viewer.tier ? [nextAuditText(data)] : [])]}
+      notice={data.waiting ? <WaitingNotice shownRunAt={data.audit.runAt} /> : undefined}
       entries={entries}
       allLabel="All programs"
-      scoreCaption={`${program.name} score`}
-      checkedAt={data.audit.runAt}
-      trend={scoresByMonth(history, (runAt) => monthKey(new Date(runAt)))}
-      note={auditNote(data, viewer.tier)}
-      progress={{ months, history, scoreLabel: `${program.name} score` }}
-      historyLabel={`${program.name} score by month`}
-      details={details}
-      institutionType={institution.type}
-      marking={{ ...marking, onMark: markDoneAction }}
+      programId={programId}
+      state={page.state}
+      handlers={FixPanelHandlers}
+      added={page.added}
+      progress={{ months, history, scoreLabel: `${program.name} score`, label: `${program.name} score month by month` }}
     />
   );
 }

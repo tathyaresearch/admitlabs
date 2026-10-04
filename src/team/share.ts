@@ -1,13 +1,17 @@
 // Share links for a prospect's team Audit (spec section 13, Phase 6 decisions): what a link's
 // state is, and what the shared Audit shows. A link works for 90 days (config) unless the team
-// stops it. The shared Audit shows every check with its result, what was found, the source and
-// the date; how to fix only for the top 3 fixes (the database sends nothing more), and "AdmitLabs
-// can fix this" for the rest. Pure.
+// stops it. The shared Audit shows the three words and every place: each check with its result,
+// what was found, the source and the date, and each finding with its line and link; why it
+// matters, the steps and the ready fix only for the top 3 fixes (the database sends nothing more),
+// and "AdmitLabs can fix this" for the rest. Pure.
 
+import { auditPlaces, type AuditPlacesView, type StoredFinding } from '../audit/places.ts';
 import { overviewView, workingTop, type AuditView, type ListItem, type StoredAudit, type StoredCheck } from '../audit/view.ts';
 import { TEAM_RULES } from '../config/team.ts';
+import type { ListingProblem } from '../domain/finding-rules.ts';
 import { formatDate } from '../domain/format.ts';
-import { CHECK_KEYS, DIFFICULTIES, INSTITUTION_TYPES, PILLARS, RESULTS, type CheckKey, type InstitutionType } from '../domain/types.ts';
+import { parseReadyFix } from '../domain/ready-fix.ts';
+import { CHECK_KEYS, DIFFICULTIES, FINDING_KINDS, FINDING_PLACES, IMPACTS, INSTITUTION_TYPES, PILLARS, RESULTS, type CheckKey, type InstitutionType } from '../domain/types.ts';
 
 export type LinkState = 'live' | 'expired' | 'stopped';
 
@@ -47,6 +51,8 @@ export interface SharedAudit {
   expiresAt: string;
   institution: SharedInstitution;
   audit: StoredAudit;
+  /** What people say and Other places: the fix's name for each, how to fix only for the top 3. */
+  findings: StoredFinding[];
   programNames: ReadonlyMap<string, string>;
 }
 
@@ -56,6 +62,40 @@ const isRecord = (value: unknown): value is Record<string, unknown> => typeof va
 const text = (value: unknown): string | null => (typeof value === 'string' ? value : null);
 const number = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) ? value : typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value)) ? Number(value) : null);
 const oneOf = <T extends string>(value: unknown, allowed: readonly T[]): T | null => ((allowed as readonly unknown[]).includes(value) ? (value as T) : null);
+const strings = (value: unknown): string[] => (Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []);
+const LISTING_PROBLEMS: readonly ListingProblem[] = ['old_details', 'missing_courses', 'missing'];
+
+/** One finding as shared_audit() sends it, checked; null when it is not one. */
+function parseFinding(entry: unknown): StoredFinding | null {
+  if (!isRecord(entry)) return null;
+  const id = text(entry.id);
+  const place = oneOf(entry.place, FINDING_PLACES);
+  const kind = oneOf(entry.kind, FINDING_KINDS);
+  const findingKey = text(entry.findingKey);
+  const line = text(entry.line);
+  const sourceName = text(entry.sourceName);
+  const sourceUrl = text(entry.sourceUrl);
+  const checkedAt = text(entry.checkedAt);
+  if (!id || !place || !kind || !findingKey || !line || !sourceName || !sourceUrl || !checkedAt) return null;
+  const title = text(entry.fixTitle);
+  const effort = oneOf(entry.effort, DIFFICULTIES);
+  const impact = oneOf(entry.impact, IMPACTS);
+  return {
+    id,
+    place,
+    kind,
+    findingKey,
+    line,
+    sourceName,
+    sourceUrl,
+    checkedAt,
+    repeats: number(entry.repeats) ?? 1,
+    listing: oneOf(entry.listing, LISTING_PROBLEMS),
+    fix: title && effort && impact ? { title, why: text(entry.fixWhy), steps: strings(entry.fixSteps), readyFix: parseReadyFix(entry.readyFix), effort, impact } : null,
+    fixRank: number(entry.fixRank),
+    removed: false,
+  };
+}
 
 /** What shared_audit() returned, checked: a live Audit, an expired link, or nothing. */
 export function parseSharedLink(value: unknown): SharedLink | null {
@@ -115,9 +155,25 @@ export function parseSharedLink(value: unknown): SharedLink | null {
       checkedAt,
       detail:
         finding && sourceUrl
-          ? { finding, whyItMatters: null, howToFix: text(entry.howToFix), fixSteps: [], difficulty: oneOf(entry.difficulty, DIFFICULTIES), sourceUrl }
+          ? {
+              finding,
+              whyItMatters: text(entry.whyItMatters),
+              howToFix: text(entry.howToFix),
+              fixSteps: strings(entry.fixSteps),
+              difficulty: oneOf(entry.difficulty, DIFFICULTIES),
+              sourceUrl,
+              readyFix: parseReadyFix(entry.readyFix),
+              fixTitle: text(entry.fixTitle),
+            }
           : null,
     });
+  }
+
+  const findings: StoredFinding[] = [];
+  for (const entry of Array.isArray(value.findings) ? value.findings : []) {
+    const finding = parseFinding(entry);
+    if (!finding) return null;
+    findings.push(finding);
   }
 
   return {
@@ -137,6 +193,7 @@ export function parseSharedLink(value: unknown): SharedLink | null {
       programs,
       checks,
     },
+    findings,
     programNames: names,
   };
 }
@@ -150,21 +207,29 @@ export interface SharedView {
   working: ListItem[];
 }
 
-/** The shared Audit: ranked as stored, with how to fix for the top fixes only. */
+/**
+ * The shared Audit's checks, for its PDF: ranked as stored, with how to fix for the checks among
+ * the top 3 fixes of the one ranking (a finding can hold one of those places).
+ */
 export function sharedView(shared: Pick<SharedAudit, 'audit' | 'programNames' | 'institution'>): SharedView {
   const view = overviewView(shared.audit, { institutionType: shared.institution.type, programNames: shared.programNames });
-  const limit = TEAM_RULES.sharedFixesInFull;
+  const inFull = new Set(shared.audit.checks.filter((check) => explainedInFull(check)).map((check) => check.key));
   return {
     view,
-    topFixes: view.fixes.slice(0, limit),
-    moreFixes: view.fixes.slice(limit),
+    topFixes: view.fixes.filter((item) => inFull.has(item.key)),
+    moreFixes: view.fixes.filter((item) => !inFull.has(item.key)),
     working: workingTop(view, 3),
   };
 }
 
-/** Whether a fix is explained in full on the shared Audit. */
-export function explainedInFull(item: Pick<ListItem, 'rank'>): boolean {
-  return item.rank <= TEAM_RULES.sharedFixesInFull;
+/** Whether a check's or a finding's fix is explained in full on the shared Audit: its place in the one ranking. */
+export function explainedInFull(item: { fixRank: number | null }): boolean {
+  return item.fixRank !== null && item.fixRank <= TEAM_RULES.sharedFixesInFull;
+}
+
+/** The shared Audit, place by place with the three words: the top 3 fixes in full, the rest by name. */
+export function sharedPlaces(shared: Pick<SharedAudit, 'audit' | 'findings' | 'programNames' | 'institution'>): AuditPlacesView {
+  return auditPlaces(shared.audit, shared.findings, { institutionType: shared.institution.type, city: shared.institution.city, programNames: shared.programNames });
 }
 
 /** Said once, above the fixes after the top 3, on the shared page and in its PDF. */

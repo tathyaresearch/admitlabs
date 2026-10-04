@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { markKey, markOutcome } from '@/audit/marks';
 import { auditVerdict } from '@/audit/verdict';
 import { movedChecks, overviewView, scoresByMonth, type AuditView } from '@/audit/view';
+import { FirstAuditWaiting, WaitingNotice } from '@/components/audit/Waiting';
 import { DemandCard } from '@/components/home/DemandCard';
 import { HomeScore } from '@/components/home/HomeScore';
 import { PaidAction } from '@/components/plan/PaidAction';
@@ -32,6 +33,7 @@ import { byPoints, fixThing, threeThings, type Thing } from '@/report/things';
 import { workCard } from '@/team/work';
 import { closeStartGuideAction, markDoneAction } from './actions';
 import styles from '@/components/home/home.module.css';
+import { AUDIT_CHECK_PREFIX, auditFixPath, checkFixKey } from '@/domain/fix-key';
 
 export const metadata = { title: 'Home' };
 
@@ -39,7 +41,7 @@ export const metadata = { title: 'Home' };
 function thingHref(thing: Thing): string {
   switch (thing.source) {
     case 'audit':
-      return thing.checkKey ? `/audit?check=${thing.checkKey}` : '/audit';
+      return thing.checkKey ? auditFixPath(checkFixKey(thing.checkKey)) : '/audit';
     case 'rivals':
       return thing.rivalId ? `/rivals/${thing.rivalId}` : '/rivals';
     default:
@@ -126,6 +128,18 @@ export default async function HomePage() {
     ) : null;
 
   if (!view || !data.audit) {
+    // A first Audit waiting for the AdmitLabs team's review: the line takes the place of the results.
+    if (data.waiting) {
+      return (
+        <div className={styles.home}>
+          <div className={styles.summary}>
+            <PageHead title="Home" question="How are we doing this month?" />
+            {reminderNotice}
+          </div>
+          <FirstAuditWaiting ranAt={data.waiting.runAt} isOwner={role === 'owner' && !viewer.viewingAs} hasRivals={(rivals.standings?.length ?? 0) > 0} city={institution.city} />
+        </div>
+      );
+    }
     return (
       <div className={styles.home}>
         <div className={styles.summary}>
@@ -196,6 +210,7 @@ export default async function HomePage() {
       <div className={styles.summary}>
         <PageHead title="Home" question="How are we doing this month?" />
         {reminderNotice}
+        {data.waiting ? <WaitingNotice shownRunAt={audit.runAt} /> : null}
         <div className={styles.answer}>
           <p className={styles.verdict}>{auditVerdict(view.scores)}</p>
           <Link href="/audit" className={styles.headLink}>
@@ -208,7 +223,7 @@ export default async function HomePage() {
       {showGuide ? (
         <StartGuide
           score={view.scores.overall}
-          firstFix={firstFix ? { title: fixThing(firstFix, institution.type).title, points: firstFix.points, href: `/audit?check=${firstFix.key}` } : null}
+          firstFix={firstFix ? { title: fixThing(firstFix, institution.type).title, points: firstFix.points, href: auditFixPath(checkFixKey(firstFix.key)) } : null}
           fixMarked={firstFix ? open.has(markKey({ checkKey: firstFix.key, thing: null, month: null })) : false}
           rivalsPicked={rivals.rivals.length > 0}
           owner={role === 'owner'}
@@ -253,7 +268,7 @@ export default async function HomePage() {
         checkedAt={audit.runAt}
         since={full ? sinceFirst(data) : null}
         note={auditNote(data, viewer.tier)}
-        checkLinks="/audit?check="
+        checkLinks={AUDIT_CHECK_PREFIX}
         paidAction={full ? null : <PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}
       />
 

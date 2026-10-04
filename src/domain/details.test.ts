@@ -257,7 +257,8 @@ describe('never in the score', () => {
   test('scoring and the providers that collect signals never touch self-reported details; only the writer reads them, for ready fixes', () => {
     const root = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
     // The Audit run loads them for the writer, and the writer fills a ready fix's blanks with them.
-    const writer = new Set([join(root, 'audit', 'run.ts'), join(root, 'providers', 'analysis.ts'), join(root, 'providers', 'mock', 'ready-fix.ts')]);
+    // So does a review, when the team moves a result below Strong and the writer gives its fix.
+    const writer = new Set([join(root, 'audit', 'run.ts'), join(root, 'audit', 'review-jobs.ts'), join(root, 'providers', 'analysis.ts'), join(root, 'providers', 'mock', 'ready-fix.ts')]);
     const scanned = [join(root, 'domain', 'scoring'), join(root, 'audit'), join(root, 'providers')].flatMap(files).filter((file) => !writer.has(file) && !file.endsWith('.test.ts'));
     assert.ok(scanned.length > 20);
     for (const file of scanned) {

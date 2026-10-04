@@ -3,10 +3,11 @@
 // The interactive parts of the team's institution page. Every action is a server action that
 // checks the team role (and Admin for plans) again; these only show progress and the reply.
 
-import { useActionState, useState } from 'react';
+import { useActionState, useOptimistic, useState, useTransition } from 'react';
 import type { ActionState } from '@/app/team/institutions/[id]/actions';
 import { Button } from '@/components/ui/Button';
 import { RadioGroup, TextAreaField, TextField } from '@/components/ui/Form';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { paidEndText, paidStartFrom, paidStartRange } from '@/team/plans';
 import { WORK_RULES } from '@/team/work';
 import styles from './team.module.css';
@@ -165,5 +166,44 @@ export function CopyLink({ url }: { url: string }) {
     >
       {copied ? 'Copied' : 'Copy link'}
     </Button>
+  );
+}
+
+/** How a college's new Audits and summaries go out: Review first (on to start) or Send automatically. */
+export function ReviewFirstSetting({ name, on, action }: { name: string; on: boolean; action: (on: boolean) => Promise<{ ok: true } | { ok: false; error: string }> }) {
+  const [shown, setShown] = useOptimistic(on);
+  const [error, setError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+  return (
+    <div className={styles.facts}>
+      <SegmentedControl
+        label="How new Audits and summaries go out"
+        size="sm"
+        options={[
+          { value: 'review', label: 'Review first' },
+          { value: 'auto', label: 'Send automatically' },
+        ]}
+        value={shown ? 'review' : 'auto'}
+        onChange={(value) => {
+          const next = value === 'review';
+          if (next === shown) return;
+          startTransition(async () => {
+            setShown(next);
+            const outcome = await action(next);
+            setError(outcome.ok ? null : outcome.error);
+          });
+        }}
+      />
+      <p className={styles.formNote}>
+        {shown
+          ? 'Each new Audit and monthly summary waits in To review until the team approves it.'
+          : `${name}’s Audits and monthly summaries reach them straight away. With Review first, each waits in To review until the team approves it.`}
+      </p>
+      {error ? (
+        <p className={styles.formError} role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
   );
 }

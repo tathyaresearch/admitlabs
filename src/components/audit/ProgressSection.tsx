@@ -1,6 +1,6 @@
-// Progress month by month (B7), Paid and Client: each month's score and its three parts, the
-// change since the month before, your place among your rivals, and the checks that moved since
-// the month before. Newest first; on a phone, one card per month. Every Audit sits folded
+// Progress month by month (spec 7.8), Paid and Client: each month's score, small, with the three
+// words (Visibility, Trust and Chosen), the change since the month before, your place among your
+// rivals, and the checks that moved since the month before. Newest first; on a phone, one card per month. Every Audit sits folded
 // below, extra refreshes included.
 
 import type { ProgressMonth } from '@/audit/progress';
@@ -9,6 +9,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { Icon } from '@/components/ui/Icon';
 import { Change, ResultBar } from '@/components/ui/Results';
 import { formatDate, formatMonth, joinNames, ordinal } from '@/domain/format';
+import { scoreLabel as wordFor } from '@/domain/scores';
 import { PILLAR_LABELS, PILLARS, RESULTS } from '@/domain/types';
 import styles from './audit.module.css';
 
@@ -121,8 +122,8 @@ export function ProgressSection({
                   </span>
                 </td>
                 {PILLARS.map((pillar) => (
-                  <td key={pillar} className={`${styles.progressNumber} num`}>
-                    {row.scores[pillar]}
+                  <td key={pillar} className={styles.progressWord}>
+                    {wordFor(row.scores[pillar])}
                   </td>
                 ))}
                 {showPlace ? <td className={styles.progressNumber}>{row.place ? <Place place={row.place} /> : <span className={styles.progressQuiet}>Not scored</span>}</td> : null}
@@ -146,7 +147,7 @@ export function ProgressSection({
               {PILLARS.map((pillar) => (
                 <span key={pillar} className={styles.progressPart}>
                   {PILLAR_LABELS[pillar]}
-                  <span className="num">{row.scores[pillar]}</span>
+                  <span className={styles.progressWord}>{wordFor(row.scores[pillar])}</span>
                 </span>
               ))}
             </div>

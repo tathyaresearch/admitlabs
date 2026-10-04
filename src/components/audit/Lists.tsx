@@ -1,5 +1,5 @@
-// Fix these first (three numbered cards), the rest of the fixes, and what's working.
-// Every item opens its check in the detail panel; the long detail lives there.
+// The design system's pictures of the first Audit lists (three numbered fix cards, what's working)
+// and the fold under "See all" that Demand uses.
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -7,8 +7,7 @@ import type { ItemPart, ListItem } from '@/audit/view';
 import { Icon } from '@/components/ui/Icon';
 import { CheckIcon } from '@/components/ui/Marks';
 import { Difficulty, PointsValue, ResultBar } from '@/components/ui/Results';
-import { EFFORT_LABELS, type CheckKey, type InstitutionType } from '@/domain/types';
-import { fixThing } from '@/report/things';
+import type { CheckKey } from '@/domain/types';
 import { PartResults } from './Parts';
 import styles from './audit.module.css';
 
@@ -55,19 +54,13 @@ export function FixCards({ items, basePath = '' }: { items: readonly ListItem[];
   );
 }
 
-function Row({ to, check, rank, name, sub, result, meta }: { to: string; check: CheckKey; rank?: number; name: string; sub?: string | null; result: ReactNode; meta: ReactNode }) {
+function Row({ to, check, name, sub, result, meta }: { to: string; check: CheckKey; name: string; sub?: string | null; result: ReactNode; meta: ReactNode }) {
   return (
     <Link href={to} scroll={false} className={styles.row}>
       <span className={styles.rowName}>
         <span className={styles.rowTitle}>
           <CheckIcon check={check} size={16} />
-          {rank ? (
-            <span>
-              <span className="num">{rank}.</span> {name}
-            </span>
-          ) : (
-            name
-          )}
+          {name}
         </span>
         {sub ? <span className={styles.rowSub}>{sub}</span> : null}
       </span>
@@ -83,35 +76,6 @@ function ItemResult({ item }: { item: ListItem }) {
   if (item.parts.length === 1 && only) return <ResultBar result={only.result} points={only.points} max={only.maxPoints} showPoints={false} size="sm" />;
   if (item.strength) return <ResultBar result={item.strength} size="sm" />;
   return <span className={styles.varies}>{item.parts.length} programs</span>;
-}
-
-/**
- * Every fix as a quiet ranked row, named as on Home: what to do, then the check it is about (its
- * programs, when the name does not say them) and the effort.
- */
-export function FixRows({ items, institutionType }: { items: readonly ListItem[]; institutionType: InstitutionType }) {
-  return (
-    <div className={styles.rows}>
-      {items.map((item) => {
-        const programs = [...new Set(item.parts.flatMap((part) => (part.programName ? [part.programName] : [])))];
-        // The name says up to three programs; more read as "your programs", so the line under it names them.
-        const names = programs.length > 3 ? programs.join(', ') : null;
-        const effort = item.difficulty ? `Effort ${EFFORT_LABELS[item.difficulty]}` : null;
-        return (
-          <Row
-            key={item.rank}
-            to={href('', item)}
-            check={item.key}
-            rank={item.rank}
-            name={fixThing(item, institutionType).title}
-            sub={[item.name, names, effort].filter(Boolean).join('. ')}
-            result={<ItemResult item={item} />}
-            meta={<PointsValue kind="gain" points={item.points} />}
-          />
-        );
-      })}
-    </div>
-  );
 }
 
 /** What's working: name, result and the points it earns. */

@@ -1,7 +1,8 @@
 'use client';
 
-// Step 2 for Free: the one program the free Audit covers, and what happens next. Then the first
-// Audit runs.
+// Step 2 for Free: the one program the free Audit covers, and what happens next (spec section 6):
+// Drishti checks, the AdmitLabs team looks it over (section 25), then the three words, the places
+// and the first fixes. Then the first Audit runs.
 
 import { useActionState } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -28,8 +29,8 @@ export function ProgramChoice({ programs }: { programs: ReadonlyArray<{ id: stri
           What happens next
         </h2>
         <ol className={styles.nextSteps}>
-          <li>Drishti checks what a student would see: Google, your website, Instagram and your reviews. It takes about a minute.</li>
-          <li>You get your score out of 100 and the first things to fix, each with the points it could add.</li>
+          <li>Drishti checks what a student would see: Google, your website, Instagram and your reviews. It takes about a minute. Then someone from AdmitLabs looks it over.</li>
+          <li>You see Visibility, Trust and Chosen, what Drishti found in each place, and the first things to fix. An email tells you when it is ready.</li>
           <li>Your next free Audit comes in {SCHEDULES.free.auditEveryMonths} months, and shows what changed.</li>
         </ol>
       </section>
@@ -37,7 +38,7 @@ export function ProgramChoice({ programs }: { programs: ReadonlyArray<{ id: stri
         <Button type="submit" size="lg" loading={pending} iconAfter="arrowRight">
           {pending ? 'Running your Audit' : 'Run my free Audit'}
         </Button>
-        <p className={styles.fine}>Paid covers every program, each with its own score.</p>
+        <p className={styles.fine}>Paid covers every program.</p>
       </div>
     </form>
   );

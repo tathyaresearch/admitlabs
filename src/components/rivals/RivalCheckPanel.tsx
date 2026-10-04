@@ -16,6 +16,7 @@ import { PILLAR_LABELS, PILLAR_QUESTIONS, type InstitutionType } from '@/domain/
 import { leadSentence, type AcrossCell, type AcrossRow, type AcrossSide } from '@/rivals/across';
 import panel from '@/components/audit/panel.module.css';
 import styles from './rivals.module.css';
+import { auditFixPath, checkFixKey } from '@/domain/fix-key';
 
 const share = (cell: AcrossCell | null | undefined) => (!cell || cell.summary.kind === 'none' ? -1 : cell.summary.share);
 
@@ -103,7 +104,7 @@ export function RivalCheckPanel({ rows, sides, institutionType }: { rows: readon
             <p className={panel.summaryTitle}>{leadSentence(row, sides)}</p>
             {learnText(row) ? <p className={panel.summaryNote}>{learnText(row)}</p> : null}
             {row.programs.length ? <p className={panel.summaryNote}>Compared on {row.programs.join(', ')}.</p> : null}
-            <Link href={`/audit?check=${row.key}`} className={styles.panelLink}>
+            <Link href={auditFixPath(checkFixKey(row.key))} className={styles.panelLink}>
               {strong ? 'See your check' : 'See your check and how to fix it'}
               <Icon name="arrowRight" size={14} />
             </Link>
