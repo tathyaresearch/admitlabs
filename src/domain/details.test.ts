@@ -254,13 +254,20 @@ describe('never in the score', () => {
     });
   }
 
-  test('scoring, the Audit and the providers never touch self-reported details', () => {
+  test('scoring and the providers that collect signals never touch self-reported details; only the writer reads them, for ready fixes', () => {
     const root = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
-    const scanned = [join(root, 'domain', 'scoring'), join(root, 'audit'), join(root, 'providers')].flatMap(files);
+    // The Audit run loads them for the writer, and the writer fills a ready fix's blanks with them.
+    const writer = new Set([join(root, 'audit', 'run.ts'), join(root, 'providers', 'analysis.ts'), join(root, 'providers', 'mock', 'ready-fix.ts')]);
+    const scanned = [join(root, 'domain', 'scoring'), join(root, 'audit'), join(root, 'providers')].flatMap(files).filter((file) => !writer.has(file) && !file.endsWith('.test.ts'));
     assert.ok(scanned.length > 20);
     for (const file of scanned) {
       const source = readFileSync(file, 'utf8');
       assert.equal(/domain\/details|\.\/details\.ts|institution_details|program_details/.test(source), false, file);
     }
+    // The scoring engine's input never carries them: what evaluateAudit is given names no context.
+    const record = readFileSync(join(root, 'audit', 'record.ts'), 'utf8');
+    const call = record.slice(record.indexOf('evaluateAudit({'), record.indexOf('});', record.indexOf('evaluateAudit({')));
+    assert.ok(call.length > 0);
+    assert.doesNotMatch(call, /context|details/);
   });
 });

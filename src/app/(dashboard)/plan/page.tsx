@@ -6,10 +6,9 @@ import { PaidAction } from '@/components/plan/PaidAction';
 import { Card, PageHead } from '@/components/ui/Layout';
 import { CellText } from '@/components/ui/Results';
 import { ENTITLEMENTS, PLAN_PAGE_GROUPS, type EntitlementCell, type EntitlementRow } from '@/config/entitlements';
-import { PLAN_RULES } from '@/config/plans';
 import { SCHEDULES } from '@/config/schedules';
-import { formatDate, formatInr } from '@/domain/format';
-import { planReminder } from '@/domain/tiers';
+import { formatDate } from '@/domain/format';
+import { PAID_PRICE, planReminder } from '@/domain/tiers';
 import { TIER_LABELS, TIERS, type Tier } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
@@ -27,7 +26,7 @@ function priceLine(tier: Tier) {
   if (tier === 'paid') {
     return (
       <>
-        <span className="num">{formatInr(PLAN_RULES.paid.priceInr)}</span> for {PLAN_RULES.paid.lengthMonths} months
+        <span className="num">{PAID_PRICE.amount}</span> {PAID_PRICE.tax} {PAID_PRICE.term}
       </>
     );
   }
@@ -140,9 +139,11 @@ export default async function PlanPage() {
           <div className={styles.offerPrice}>
             <p className={styles.offerName}>Paid adds everything else</p>
             <p className={styles.offerAmount}>
-              <span className="num">{formatInr(PLAN_RULES.paid.priceInr)}</span>
+              <span className="num">{PAID_PRICE.amount}</span>
             </p>
-            <p className={styles.offerLength}>for {PLAN_RULES.paid.lengthMonths} months</p>
+            <p className={styles.offerLength}>
+              {PAID_PRICE.tax} {PAID_PRICE.term}
+            </p>
           </div>
           <ul className={styles.offerPoints}>
             <li>
@@ -225,7 +226,7 @@ export default async function PlanPage() {
           </div>
         </div>
         <p className={styles.fine}>
-          Paid is {formatInr(PLAN_RULES.paid.priceInr)} for {PLAN_RULES.paid.lengthMonths} months, with no auto-renew. Clients get it as part of their AdmitLabs service.
+          Paid is {PAID_PRICE.text} {PAID_PRICE.term}, with no auto-renew. Clients get it as part of their AdmitLabs service.
         </p>
       </section>
     </div>

@@ -5,6 +5,7 @@
 // details the database lets Free see. A single-program view (Paid and Client) ranks that
 // program's checks with the same engine functions.
 
+import { SCORING_V1 } from '../config/scoring.v1.ts';
 import { CHECKS, checkLooksAt, checkName, type CheckLevel } from '../domain/checks.ts';
 import { itemPoints, rankFixes, rankOkay, rankWorking, type RankedItem } from '../domain/scoring/rank.ts';
 import type { CheckOutcome } from '../domain/scoring/score.ts';
@@ -151,7 +152,7 @@ export interface AuditView {
 interface ViewOptions {
   institutionType: InstitutionType;
   programNames: ReadonlyMap<string, string>;
-  config?: Pick<ScoringConfig, 'labels'>;
+  config?: Pick<ScoringConfig, 'labels'> & Partial<Pick<ScoringConfig, 'impact'>>;
 }
 
 const DIFFICULTY_ORDER = new Map<Difficulty, number>(DIFFICULTIES.map((difficulty, index) => [difficulty, index]));
@@ -276,7 +277,9 @@ function engineItem(item: RankedItem, checkOf: ReadonlyMap<CheckOutcome, StoredC
 
 /** The whole Audit: every program the viewer can see, ranked as stored. */
 export function overviewView(audit: StoredAudit, options: ViewOptions): AuditView {
-  const fixes = fromStoredRanks(audit, options, 'fixRank');
+  // Fixes from findings share the stored ranking (src/domain/scoring/rank.ts); until they show here,
+  // the checks' fixes are numbered in their stored order with no gaps.
+  const fixes = fromStoredRanks(audit, options, 'fixRank').map((item, index) => ({ ...item, rank: index + 1 }));
   // Strong everywhere only. (Audits from before October 2026 also ranked the programs where a
   // check was Strong while others needed work; those checks are in what to fix.)
   const toFix = new Set(fixes.map((item) => item.key));
@@ -313,7 +316,7 @@ export function programView(audit: StoredAudit, programId: string, options: View
     firstAudit: program.changes.overall === null,
     programsChanged: false,
     working: rankWorking(outcomes, 1).map((item) => engineItem(item, checkOf, options, 1, 'strong')),
-    fixes: rankFixes(outcomes, 1, difficultyOf).map((item) => engineItem(item, checkOf, options, 1, null)),
+    fixes: rankFixes(outcomes, 1, difficultyOf, options.config?.impact ?? SCORING_V1.impact).map((item) => engineItem(item, checkOf, options, 1, null)),
     okay: rankOkay(outcomes, 1).map((item) => engineItem(item, checkOf, options, 1, 'okay')),
     areas: areas(checks, options),
   };

@@ -42,7 +42,7 @@ describe('the product page previews', () => {
     assert.deepEqual(
       rivals.rows.map((row) => [row.name, row.overall, row.you]),
       [
-        ['Calderwood College', 74, false],
+        ['Calderwood College', 77, false],
         ['Larkmoor University', 73, true],
         ['Brackenfield University', 52, false],
         ['Thornbury College', 45, false],

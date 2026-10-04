@@ -53,7 +53,7 @@ async function sampleTopicHistory(topic: Pick<DemandRow, 'programKey' | 'kind' |
   const pulls = await Promise.all(months.map(async (each) => ({ month: each, rows: each === month ? current : (await sampleDemand(SAMPLE_REPORT.slug, each)).rows })));
   return pulls.flatMap((pull) => {
     const row = pull.rows.find((entry) => entry.programKey === topic.programKey && entry.kind === topic.kind && entry.text === topic.text);
-    return row ? [{ month: pull.month, count: row.count }] : [];
+    return row && row.count !== null ? [{ month: pull.month, count: row.count }] : [];
   });
 }
 

@@ -49,7 +49,7 @@ export interface OpportunityInput {
   moves: ReadonlyArray<Omit<MoveOpportunity, 'type'>>;
 }
 
-const MOVE_PRIORITY: Readonly<Record<RivalMoveKind, number>> = { admission_dates: 0, fee_change: 1, new_program: 2, new_page: 3 };
+const MOVE_PRIORITY: Readonly<Record<RivalMoveKind, number>> = { admission_dates: 0, fee_change: 1, new_program: 2, started_ads: 3, reviews_jump: 4, new_page: 5 };
 
 /** Checks where at least one rival leads you, the biggest gap first. */
 export function gapOpportunities(rivals: OpportunityInput['rivals']): GapOpportunity[] {

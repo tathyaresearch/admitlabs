@@ -530,7 +530,7 @@ export function buildReport(input: ReportInput): ReportData {
           questions: demand.questions.slice(0, REPORT_LIMITS.questions).map((row) => ({
             text: row.text,
             count: countWords('question', row.count),
-            asked: row.count,
+            asked: row.count ?? 0,
             program: row.programName,
             language: LANGUAGE_TAGS[row.language],
           })),

@@ -5,10 +5,20 @@ import type { CheckKey, CheckResult, Pillar, ScoringFamily } from './types.ts';
 
 export type PillarWeights = Readonly<Partial<Record<CheckKey, number>>>;
 
+/** A part's word (spec 7.4): Strong, Okay or Weak, by the part's score. */
 export interface ScoreLabelBand {
-  label: 'Strong' | 'Needs work' | 'Getting started';
+  label: 'Strong' | 'Okay' | 'Weak';
   min: number;
   max: number;
+}
+
+/**
+ * A fix's impact (spec 7.7), from the points it could add to its part, out of 100: High from
+ * `highMinPoints`, Medium from `mediumMinPoints`, Low below.
+ */
+export interface ImpactBands {
+  highMinPoints: number;
+  mediumMinPoints: number;
 }
 
 interface ReviewCountBands {
@@ -49,5 +59,6 @@ export interface ScoringConfig {
   /** Points per check, per pillar, per weight family. Each pillar adds up to 100. */
   weights: Readonly<Record<ScoringFamily, Readonly<Record<Pillar, PillarWeights>>>>;
   labels: readonly ScoreLabelBand[];
+  impact: ImpactBands;
   thresholds: Thresholds;
 }

@@ -3,7 +3,8 @@
 // Turning facts into results is the scoring engine's job. The Audit check shapes live in
 // the domain (src/domain/facts.ts) so the engine depends on nothing here.
 
-import type { ContentPlatform, DemandKind, Language, RivalMoveKind, Sentiment } from '../domain/types.ts';
+import type { ListingProblem } from '../domain/finding-rules.ts';
+import type { ContentPlatform, DemandKind, FindingKind, FindingPlace, Language, RivalMoveKind, Sentiment } from '../domain/types.ts';
 import type {
   AdmissionStepsValue,
   AiAnswersValue,
@@ -58,6 +59,32 @@ export interface RivalContentValue {
   metrics: { views?: number; likes?: number; comments?: number; shares?: number };
 }
 
+/**
+ * Something found about an institution in What people say or Other places (spec 7.2): one short
+ * line in Drishti's words, where it was found and its link. Never the author's name or profile.
+ */
+export interface FindingValue {
+  place: FindingPlace;
+  kind: FindingKind;
+  /** One short line of what was seen. */
+  line: string;
+  /** Where it was found, by name: "Reddit", "Quora", "collegeguide.example". */
+  source: string;
+  /** The same finding month after month: a thread, a listing. */
+  key: string;
+  /** How many times the same point came up (a complaint three students make is 3). */
+  repeats: number;
+  /** For a listing or directory entry: what is wrong with it, or null when it is right. */
+  listing: ListingProblem | null;
+}
+
+/** Searches a month for a topic in a region, from the keyword tool: the only real count a search topic gets. */
+export interface SearchVolumeValue {
+  text: string;
+  /** Searches a month. */
+  monthly: number;
+}
+
 /** A grouped demand item: a topic, a count and a source. Never a person. */
 export interface DemandItemValue {
   kind: DemandKind;
@@ -66,14 +93,18 @@ export interface DemandItemValue {
   /** Original wording when the source language is Hindi or Assamese. */
   originalText: string | null;
   language: Language;
-  count: number;
+  /** A real count from the source (questions counted, or searches a month), or null when the source gives none. */
+  count: number | null;
   changePct: number | null;
   rank: number | null;
   /** For mentions: which institution the grouped mention is about. */
   about: { id: string | null; slug: string; name: string } | null;
   sentiment: Sentiment | null;
-  meta: Readonly<Record<string, string | number | boolean | null>>;
+  meta: Readonly<Record<string, DemandMetaValue>>;
 }
+
+/** What a Demand item's meta can hold: a word, a number, or a short list (a best month's months). */
+export type DemandMetaValue = string | number | boolean | null | readonly number[] | readonly string[];
 
 export interface SignalValues {
   google_search: GoogleSearchValue;
@@ -96,4 +127,6 @@ export interface SignalValues {
   rival_move: RivalMoveValue;
   rival_content: RivalContentValue;
   demand_item: DemandItemValue;
+  finding: FindingValue;
+  search_volume: SearchVolumeValue;
 }

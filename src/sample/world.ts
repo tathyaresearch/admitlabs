@@ -6,13 +6,13 @@
 // The mock providers are used whatever the provider settings say: the sample world is fictional.
 // Not exported from ./index.ts, because it imports the providers, which import the sample data.
 
-import { factsFromSignals, type CheckSignal } from '../audit/facts.ts';
+import { factsFromSignals, findingsFromSignals, type CheckSignal } from '../audit/facts.ts';
 import { prepareAudit, type AuditRecord, type PreparedAudit, type PreviousAudit } from '../audit/record.ts';
 import type { HistoryRow, StoredAudit } from '../audit/view.ts';
 import { PROVIDER_KEYS } from '../config/providers.ts';
 import { RIVAL_RULES } from '../config/rivals.ts';
 import { SCORING_V1 } from '../config/scoring.v1.ts';
-import { rankDemand } from '../demand/rank.ts';
+import { ideaItems, pulledItems } from '../demand/items.ts';
 import { regionsFor, type DemandRegion } from '../demand/regions.ts';
 import { pullDayOf } from '../demand/schedule.ts';
 import type { DemandRow } from '../demand/view.ts';
@@ -26,6 +26,7 @@ import type { InstitutionRef } from '../providers/types.ts';
 import type { RivalLesson } from '../report/things.ts';
 import { compareChecks, type CheckScore, type ScoreSet } from '../rivals/compare.ts';
 import { rivalOpportunities } from '../rivals/opportunities.ts';
+import { SAMPLE_INSTITUTION_DETAILS, SAMPLE_PROGRAM_DETAILS } from './details.ts';
 import { institutionId, sampleInstitution, SAMPLE_CONTENT, SAMPLE_MOVES, SAMPLE_RIVALS, SAMPLE_RUNS, toInstitutionRef, toProgramRefs } from './index.ts';
 
 const DAY_MS = 86_400_000;
@@ -78,7 +79,20 @@ export async function sampleAudit(slug: string, day: string, options: SampleAudi
       thresholds: SCORING_V1.thresholds,
       programs: named,
       collected: factsFromSignals(signals, named),
+      findings: findingsFromSignals(found),
       previous: options.previous ?? null,
+      context: {
+        institutionName: sample.name,
+        city: sample.city,
+        programNames: sample.programs.map((program) => program.name),
+        institutionDetails: SAMPLE_INSTITUTION_DETAILS[slug] ?? null,
+        programDetails: new Map(
+          SAMPLE_PROGRAM_DETAILS.flatMap((row) => {
+            const program = row.slug === slug ? sample.programs.find((candidate) => candidate.programKey === row.programKey) : undefined;
+            return program ? [[program.name, row.details] as const] : [];
+          }),
+        ),
+      },
     },
     mockAnalysis,
   );
@@ -165,7 +179,8 @@ export async function sampleAuditChain(slug: string, runs: 'own' | 'rival', unti
   const own = runs === 'own' ? ownKind(slug) : { kind: 'rival' as const };
   const chain: SampleAudit[] = [];
   for (const run of SAMPLE_RUNS[slug] ?? []) {
-    if (run.kind !== runs || run.day > until) continue;
+    // A run still waiting for the team's review is not one the institution has seen.
+    if (run.kind !== runs || run.day > until || run.waiting) continue;
     const previous = chain.length ? previousOf(chain[chain.length - 1] as SampleAudit) : null;
     chain.push(await sampleAudit(slug, run.day, { ...own, trigger: run.trigger, previous }));
   }
@@ -294,7 +309,7 @@ export async function sampleRivalLessons(slug: string, day: string): Promise<Riv
 
 /**
  * The month's Demand for the institution's city, one pull per program on the pull day, as the
- * monthly job collects it: grouped items, ranked, plus 5 content ideas. Mentions are left out.
+ * monthly job collects it: grouped items, ranked, plus the content ideas.
  */
 export async function sampleDemand(slug: string, month: string): Promise<{ region: DemandRegion; rows: DemandRow[]; pulledAt: string }> {
   const sample = sampleInstitution(slug);
@@ -302,58 +317,25 @@ export async function sampleDemand(slug: string, month: string): Promise<{ regio
   const pulledAt = pullDayOf(month);
   const rows: DemandRow[] = [];
   for (const program of sample.programs) {
-    const target = { kind: 'region' as const, scope: region.scope, region: region.region, state: region.state, programKey: program.programKey, watch: [] };
-    const found = (await collect(target, pulledAt, MOCK_ENV)).flatMap((signal) => (signal.key === 'demand_item' && signal.value.kind !== 'mention' ? [signal] : []));
-    const entries = found.map((signal) => ({ signal, kind: signal.value.kind, text: signal.value.text, count: signal.value.count, changePct: signal.value.changePct }));
-    const ranks = rankDemand(entries);
-    const row = (id: string, fields: Omit<DemandRow, 'id' | 'programKey' | 'programName' | 'month'>): DemandRow => ({
-      id: `${program.programKey}-${id}`,
-      programKey: program.programKey,
-      programName: program.name,
-      month,
-      ...fields,
-    });
-    entries.forEach((entry, index) => {
-      const value = entry.signal.value;
-      rows.push(
-        row(`item-${index}`, {
-          kind: value.kind,
-          text: value.text,
-          language: value.language,
-          count: value.count,
-          changePct: value.changePct,
-          rank: ranks.get(entry) ?? null,
-          sourceUrl: entry.signal.sourceUrl,
-          foundAt: entry.signal.fetchedAt,
-          meta: { ...value.meta, platform: entry.signal.provider },
-        }),
-      );
-    });
-    const questions = entries
-      .filter((entry) => entry.kind === 'question')
-      .map((entry) => ({
-        text: entry.text,
-        sourceUrl: entry.signal.sourceUrl,
-        questionIndex: typeof entry.signal.value.meta.questionIndex === 'number' ? entry.signal.value.meta.questionIndex : null,
-      }));
-    const rising = entries
-      .filter((entry) => entry.kind === 'rising')
-      .map((entry) => ({ text: entry.text, trendIndex: typeof entry.signal.value.meta.trendIndex === 'number' ? entry.signal.value.meta.trendIndex : null }));
-    const ideas = await mockAnalysis.contentIdeas({ programKey: program.programKey, region: { scope: region.scope, region: region.region, state: region.state }, questions, rising });
-    ideas.forEach((idea, index) => {
-      rows.push(
-        row(`idea-${index}`, {
-          kind: 'idea',
-          text: idea.text,
-          language: 'en',
-          count: 0,
-          rank: index + 1,
-          changePct: null,
-          sourceUrl: idea.sourceUrl,
-          foundAt: pulledAt.toISOString(),
-          meta: { basedOn: idea.basedOn, trend: idea.trend, format: idea.format, effort: idea.effort },
-        }),
-      );
+    const target = { kind: 'region' as const, scope: region.scope, region: region.region, state: region.state, programKey: program.programKey };
+    const { items, basis } = pulledItems(await collect(target, pulledAt, MOCK_ENV));
+    const ideas = await mockAnalysis.contentIdeas({ programKey: program.programKey, region: { scope: region.scope, region: region.region, state: region.state }, ...basis });
+    [...items, ...ideaItems(ideas, pulledAt)].forEach((item, index) => {
+      rows.push({
+        id: `${program.programKey}-${item.kind}-${index}`,
+        programKey: program.programKey,
+        programName: program.name,
+        month,
+        kind: item.kind,
+        text: item.text,
+        language: item.language,
+        count: item.count,
+        changePct: item.changePct,
+        rank: item.rank,
+        sourceUrl: item.sourceUrl,
+        foundAt: item.foundAt,
+        meta: item.meta,
+      });
     });
   }
   return { region, rows, pulledAt: pulledAt.toISOString() };

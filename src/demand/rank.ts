@@ -1,20 +1,23 @@
-// Ranking grouped Demand items within their kind: biggest rise, biggest fall, most asked,
-// most raised. Pure.
+// Ranking grouped Demand items within their kind: biggest rise, biggest fall, most asked. A count
+// is empty when no source gave a real one; an empty count sorts after any count. Pure.
 
 import type { DemandKind } from '../domain/types.ts';
 
 interface Rankable {
   kind: DemandKind;
   text: string;
-  count: number;
+  count: number | null;
   changePct: number | null;
 }
 
+const byCount = (a: Rankable, b: Rankable) => (b.count ?? -1) - (a.count ?? -1);
+
 const ORDER: Partial<Record<DemandKind, (a: Rankable, b: Rankable) => number>> = {
-  rising: (a, b) => (b.changePct ?? 0) - (a.changePct ?? 0) || b.count - a.count,
-  falling: (a, b) => (a.changePct ?? 0) - (b.changePct ?? 0) || b.count - a.count,
-  question: (a, b) => b.count - a.count,
-  worry: (a, b) => b.count - a.count,
+  rising: (a, b) => (b.changePct ?? 0) - (a.changePct ?? 0) || byCount(a, b),
+  falling: (a, b) => (a.changePct ?? 0) - (b.changePct ?? 0) || byCount(a, b),
+  question: byCount,
+  topic: byCount,
+  worry: byCount,
 };
 
 /** The rank of each item within its kind (1 is first), or null for kinds that are not ranked. */

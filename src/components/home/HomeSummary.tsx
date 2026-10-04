@@ -67,7 +67,7 @@ function ScoreSide({ trend, side, label, checkedAt, paidAction }: { trend: Month
         <p className={styles.sideTitle}>{label}</p>
         <LockedPanel
           title="See your score month by month"
-          description="Paid shows every month's score, with the lines where Needs work and Strong begin."
+          description="Paid shows every month's score, with the lines where Okay and Strong begin."
           placeholder={<PlaceholderChart />}
           action={paidAction ?? undefined}
         />

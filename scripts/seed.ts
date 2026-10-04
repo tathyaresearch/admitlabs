@@ -3,11 +3,11 @@
 // runs through the same path as a live one (mock providers, then the scoring engine, then
 // record_audit). Rival checks and Demand pulls run through their live paths with the mock providers too.
 
-import { INDIA_CITIES } from '../src/config/cities.ts';
+import { INDIA_CITIES, nearCity } from '../src/config/cities.ts';
 import { SCORING_V1 } from '../src/config/scoring.v1.ts';
 import { TEAM_RULES } from '../src/config/team.ts';
 import { runAudit } from '../src/audit/run.ts';
-import { neededNow, pullDemand, watchList } from '../src/demand/jobs.ts';
+import { neededNow, pullDemand } from '../src/demand/jobs.ts';
 import { pullDayOf } from '../src/demand/schedule.ts';
 import { istDate } from '../src/domain/dates.ts';
 import { formatDate } from '../src/domain/format.ts';
@@ -17,14 +17,19 @@ import { TIER_LABELS } from '../src/domain/types.ts';
 import type { Database, Json } from '../src/lib/supabase/database.types.ts';
 import { makeReport, reportsDue } from '../src/report/jobs.ts';
 import { monthEnd, reportDayOf } from '../src/report/schedule.ts';
-import { checkRival, writeRivalActions } from '../src/rivals/jobs.ts';
+import { checkRival, recordRivalAd, writeRivalActions } from '../src/rivals/jobs.ts';
+import { consentLine } from '../src/leads/text.ts';
 import {
   ADMIN_EMAIL,
   DEMAND_MONTHS,
   SAMPLE_ADS,
   SAMPLE_INSTITUTION_DETAILS,
   SAMPLE_GUIDE_CLOSED,
+  SAMPLE_FIX_REQUESTS,
   SAMPLE_INSTITUTIONS,
+  SAMPLE_LEAD_LINKS,
+  SAMPLE_LEAD_SETTINGS,
+  SAMPLE_LEADS,
   SAMPLE_MARKS,
   SAMPLE_NOTES,
   SAMPLE_PROGRAM_DETAILS,
@@ -83,7 +88,7 @@ async function main(): Promise<void> {
   const userId = (email: string | null) => (email ? (users.get(email) ?? null) : null);
   const requireUser = (email: string) => users.get(email) ?? fail(`Sample user ${email} was not created.`);
 
-  await insert('cities', INDIA_CITIES.map((city) => ({ name: city.name, state: city.state })));
+  await insert('cities', INDIA_CITIES.map((city) => ({ name: city.name, state: city.state, near: nearCity(city) })));
   await insert('scoring_config', [
     {
       version: SCORING_V1.version,
@@ -91,6 +96,7 @@ async function main(): Promise<void> {
       result_shares: json(SCORING_V1.resultShares),
       thresholds: json(SCORING_V1.thresholds),
       labels: json(SCORING_V1.labels),
+      impact: json(SCORING_V1.impact),
       active: true,
     },
   ]);
@@ -118,6 +124,8 @@ async function main(): Promise<void> {
       claimed: sample.claimedAt !== null,
       claimed_at: sample.claimedAt ? at(sample.claimedAt) : null,
       is_prospect: sample.isProspect,
+      // Review first is on to start; Brightpath's Audits go out automatically (spec section 25).
+      review_first: sample.reviewFirst ?? true,
       created_by: userId(sample.createdBy),
     })),
   );
@@ -223,18 +231,20 @@ async function main(): Promise<void> {
     })),
   );
 
-  // Fixes the owners marked done. Added before the Audits, so the first own Audit after each
-  // mark checks it, as it would live.
+  // Fixes the owners marked done, on checks and on findings. Added before the Audits, so the first
+  // approved own Audit after each mark checks it, as it would live.
   await insert(
     'done_marks',
     SAMPLE_MARKS.map((mark) => {
       const owner = sampleInstitution(mark.slug).owner;
-      return { institution_id: institutionId(mark.slug), check_key: mark.check, marked_by: userId(owner), marked_at: at(mark.markedOn, 17) };
+      return { institution_id: institutionId(mark.slug), check_key: mark.check ?? null, finding_key: mark.finding ?? null, marked_by: userId(owner), marked_at: at(mark.markedOn, 17) };
     }),
   );
 
   // Audits: every sample run, own, rival and team, through the live path (collect, score, save).
-  const auditCounts = { own: 0, rival: 0, team: 0 };
+  // With Review first on, the team approved each own Audit three hours after it ran, except the
+  // runs still waiting in To review; Brightpath's went out automatically.
+  const auditCounts = { own: 0, rival: 0, team: 0, waiting: 0 };
   let signalCount = 0;
   for (const sample of SAMPLE_INSTITUTIONS) {
     for (const run of SAMPLE_RUNS[sample.slug] ?? []) {
@@ -244,10 +254,22 @@ async function main(): Promise<void> {
         trigger: run.trigger,
         kind: run.kind === 'own' ? undefined : run.kind,
         createdBy: run.kind === 'team' ? requireUser(TEAM_EMAIL) : null,
+        review: run.waiting ? 'waiting' : 'approved',
+        ...(run.kind === 'own' && !run.waiting && (sample.reviewFirst ?? true) ? { approvedBy: requireUser(TEAM_EMAIL), approvedAt: istDate(run.day, 13) } : {}),
       });
       auditCounts[run.kind] += 1;
+      if (run.waiting) auditCounts.waiting += 1;
       signalCount += result.signals;
     }
+  }
+
+  // Ads the team saw rivals run, each with a "Started ads" alert for Paid and Client trackers.
+  for (const [index, ad] of SAMPLE_ADS.entries()) {
+    await recordRivalAd(
+      db,
+      { rivalId: institutionId(ad.slug), promise: ad.promise, sourceUrl: `https://ads.example/library/${ad.slug}/${index + 1}`, enteredBy: requireUser(TEAM_EMAIL), enteredAt: istDate(ad.enteredAt, 16) },
+      { notify: true },
+    );
   }
 
   // The weekly rival check, every Monday from August to today, through the live path: new moves
@@ -265,17 +287,6 @@ async function main(): Promise<void> {
   }
 
   const { count: contentCount } = await db.from('rival_content').select('id', { count: 'exact', head: true });
-
-  await insert(
-    'rival_ads',
-    SAMPLE_ADS.map((ad, index) => ({
-      rival_institution_id: institutionId(ad.slug),
-      promise: ad.promise,
-      source_url: `https://ads.example/library/${ad.slug}/${index + 1}`,
-      entered_by: requireUser(TEAM_EMAIL),
-      entered_at: at(ad.enteredAt, 16),
-    })),
-  );
 
   await insert(
     'notes',
@@ -328,15 +339,78 @@ async function main(): Promise<void> {
     shares.push({ url: `http://localhost:3000/share/${sampleToken(share.slug)}`, name: sampleInstitution(share.slug).name, expiresAt });
   }
 
+  // Let AdmitLabs fix this: one open request, one the team handled.
+  await insert(
+    'enquiries',
+    SAMPLE_FIX_REQUESTS.map((request) => {
+      const sample = sampleInstitution(request.slug);
+      const owner = sample.owner ?? fail(`${request.slug} has no owner.`);
+      return {
+        kind: 'fix_request' as const,
+        institution_id: institutionId(request.slug),
+        asked_by: requireUser(owner),
+        institution: sample.name,
+        email: owner,
+        fix_key: request.fixKey,
+        fix_title: request.fixTitle,
+        created_at: at(request.askedOn, 11),
+        handled_at: request.handledOn ? at(request.handledOn, 15) : null,
+        handled_by: request.handledOn ? requireUser(TEAM_EMAIL) : null,
+      };
+    }),
+  );
+
+  // Leads for Brightpath (Client): the team's tracking links, who gets the alert email, and the
+  // enquiries students sent. Only Brightpath's own people can read them.
+  await insert(
+    'lead_links',
+    SAMPLE_LEAD_LINKS.map((link) => ({
+      institution_id: institutionId(link.slug),
+      program_id: programId(link.slug, link.programKey),
+      code: link.code,
+      name: link.name,
+      used_on: link.usedOn,
+      created_by: requireUser(TEAM_EMAIL),
+      created_at: at(link.createdOn, 12),
+    })),
+  );
+  const { data: links, error: linkError } = await db.from('lead_links').select('id, code');
+  if (linkError) fail(`Could not read the tracking links: ${linkError.message}`);
+  const linkIds = new Map((links ?? []).map((link) => [link.code, link.id]));
+  await insert(
+    'lead_settings',
+    SAMPLE_LEAD_SETTINGS.map((settings) => ({
+      institution_id: institutionId(settings.slug),
+      alert_emails: [...settings.alertEmails],
+      keep_months: settings.keepMonths,
+      updated_at: at(settings.updatedOn, 12),
+      updated_by: userId(sampleInstitution(settings.slug).owner),
+    })),
+  );
+  await insert(
+    'leads',
+    SAMPLE_LEADS.map((lead) => ({
+      institution_id: institutionId(lead.slug),
+      link_id: linkIds.get(lead.linkCode) ?? fail(`No tracking link ${lead.linkCode}.`),
+      program_id: programId(lead.slug, lead.programKey),
+      name: lead.name,
+      phone: lead.phone,
+      email: lead.email,
+      city: lead.city,
+      consent: consentLine(sampleInstitution(lead.slug).name),
+      created_at: at(lead.sentOn, lead.hour),
+    })),
+  );
+
   // Demand: one shared pull per region and program each month, through the live path, on the
-  // 28th. September's big spikes alert the Paid and Client institutions in Guwahati.
+  // 28th: each city with an institution that has signed up, and its state to fill in. September's
+  // big spikes alert the Paid and Client institutions in Guwahati.
   const needed = await neededNow(db);
-  const watch = await watchList(db, needed);
   let demandItems = 0;
   let spikeCount = 0;
   for (const month of DEMAND_MONTHS) {
     for (const pull of needed) {
-      const result = await pullDemand(db, pull, month, pullDayOf(month), { notify: month === DEMAND_MONTHS[DEMAND_MONTHS.length - 1], watch });
+      const result = await pullDemand(db, pull, month, pullDayOf(month), { notify: month === DEMAND_MONTHS[DEMAND_MONTHS.length - 1] });
       demandItems += result.items;
       spikeCount += result.spikes.length;
     }
@@ -383,7 +457,8 @@ async function main(): Promise<void> {
   const prospects = SAMPLE_INSTITUTIONS.filter((sample) => sample.isProspect).length;
   console.log('\nSample data ready.');
   console.log(`  Institutions ${SAMPLE_INSTITUTIONS.length} (${prospects} prospects, team only), programs ${programCount}, users ${SAMPLE_USERS.length}`);
-  console.log(`  Audits ${auditCounts.own} own, ${auditCounts.rival} rival, ${auditCounts.team} team, from ${signalCount} signals`);
+  console.log(`  Audits ${auditCounts.own} own (${auditCounts.waiting} waiting in To review), ${auditCounts.rival} rival, ${auditCounts.team} team, from ${signalCount} signals`);
+  console.log(`  Let AdmitLabs fix this ${SAMPLE_FIX_REQUESTS.length}, Leads ${SAMPLE_LEADS.length} from ${SAMPLE_LEAD_LINKS.length} tracking links`);
   console.log(`  Rival moves ${moveCount}, best posts ${contentCount ?? 0}, ads ${SAMPLE_ADS.length}, Rivals 3 things to do ${actionCount} (April to September)`);
   console.log(`  Demand pulls ${needed.length * DEMAND_MONTHS.length} with ${demandItems} grouped items, ${spikeCount} spike alerts sent`);
   console.log(`  Monthly reports ${reportPages.length}, ${REPORT_MONTHS[0]} to ${REPORT_MONTHS[REPORT_MONTHS.length - 1]} (${reportPages.map((report) => `${report.month} ${report.pages} pages`).join(', ')})`);

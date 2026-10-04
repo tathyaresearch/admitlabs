@@ -1,22 +1,27 @@
 # Drishti by AdmitLabs: Product Spec
 
-Version 1.0 | 30 September 2026 | Owner: Manprit, AdmitLabs
+Version 2.0 | 4 October 2026 | Owner: Manprit, AdmitLabs
 
 This is the single source of truth for building Drishti. If something is not in this spec, ask before deciding. Values marked **[ADJUSTABLE]** are starting values and must live in config, not be hard-coded.
+
+**Version 2 (October 2026)** builds the product around one line: what the internet says about you. The Audit is organised by place, three plain words replace the big score, rivals come from your city, Demand picks 3 things to make each month, AdmitLabs clients get Leads, a short email arrives with each new Audit or month, the AdmitLabs team can review an Audit before the college sees it, and Paid is ₹24,999 + GST for 6 months. Version 1 (30 September 2026) is in the git history.
 
 ---
 
 ## 1. The product
 
-**One line:** See where you stand, who's ahead, and what students want. Every month.
+**One line:** Drishti shows a college what the internet says about them, who's ahead in their city, and what students want. AdmitLabs clients also see their enquiries.
 
 **Who it's for:** Private colleges, private universities and skilling institutes. Users are directors and founders, marketing heads, and admission heads.
 
-**Three features:**
+**Four features:**
 
-1. **Audit**: "How do we look?" Checks the institution's public presence and gives a score.
-2. **Rivals**: "Who's ahead of us?" Tracks 3 to 5 competing institutions.
-3. **Demand**: "What do students want?" Listens to what students search and say online.
+1. **Audit** (section 7): "What does the internet say about us?" Checks the institution's public presence place by place: its website, Google, social media, what people say and other places. Each place shows what was found, what's good and what to fix.
+2. **Rivals** (section 8): "Who's ahead in our city?" Tracks 3 to 5 institutions in the same city, compared place by place.
+3. **Demand** (section 9): "What do students want?" Which programs students in the city want, what they ask, what content gets their attention, and 3 things to make this month.
+4. **Leads** (section 23, AdmitLabs clients only): "What did our content bring in?" The enquiries their content brings, link by link.
+
+Every month Paid and Client also get a short **monthly summary** by email (section 24) and a PDF report (section 12); Free gets a short email when its free Audit is ready. The AdmitLabs team can check each new Audit and summary before it goes out (section 25).
 
 **Two surfaces:**
 
@@ -28,7 +33,7 @@ This is the single source of truth for building Drishti. If something is not in 
 **Role in the AdmitLabs business:**
 
 ```
-FREE       "Here's where you stand."
+FREE       "Here's what the internet says about you."
 PAID       "Here's what's changing every month."
 SERVICES   "We'll fix it for you."
 ```
@@ -39,10 +44,10 @@ The AdmitLabs team also uses Drishti internally to find, pitch and serve clients
 
 ## 2. Build approach
 
-- **Build the whole product on sample data first.** Every screen, score, report and plan rule must work end to end on sample data.
-- **External connections come later.** Every data source gets a clear slot (a "provider") with a mock version now. Real versions plug in later without rebuilding anything else.
-- **Build order:** Foundation, then Audit, then Rivals, then Demand, then Report, then Team tools, then Product page.
-- **Not in this build:** real data collection, Claude API calls, payments, WhatsApp, email sending, deployment and domains. See section 17.
+- **Build the whole product on sample data first.** Every screen, result, report and plan rule must work end to end on sample data.
+- **External connections come later.** Every data source gets a clear slot (a "provider") with a mock version now. Real versions plug in later, one by one, without rebuilding anything else (section 17).
+- **Build order:** version 1 went Foundation, Audit, Rivals, Demand, Report, Team tools, Product page. Version 2 goes data and mock providers, Audit, Rivals, Demand, Leads, Home with the summary, the PDFs and pricing, then the product page, the website and the pictures on sign up and log in (section 19).
+- **Not in this build:** real data collection, Claude API calls, payments, WhatsApp, real email sending (email goes only to the local test inbox), deployment of the dashboard. See section 17.
 
 ---
 
@@ -58,6 +63,7 @@ Same base as Tathya, so the team already knows it.
 | Styling | CSS Modules + CSS custom properties (design tokens). No Tailwind, no component library, no shadcn |
 | Charts | Hand-built SVG components, monochrome |
 | PDF report | @react-pdf/renderer with Bricolage Grotesque and Inter embedded |
+| Email (this build) | Sent only to the local test inbox that local Supabase runs (Mailpit). No email library |
 | Scoring | Pure functions: data in, score out. No database calls inside the engine |
 | Tests | Node's built-in test runner |
 | Hosting (later) | Vercel |
@@ -72,7 +78,7 @@ One Next.js app, two addresses. Which pages answer depends on the address a requ
 
 | Address | What it serves |
 |---|---|
-| admitlabs.in | The AdmitLabs website (section 22) and the product page at `/drishti`. Dashboard paths move to the dashboard's address |
+| admitlabs.in | The AdmitLabs website (section 22), the product page at `/drishti` and the Leads enquiry forms at `/enquire/...`. Dashboard paths move to the dashboard's address |
 | app.admitlabs.in | The dashboard (the routes below). `/drishti` moves to the website's address |
 | www.admitlabs.in | Moves to admitlabs.in for good |
 
@@ -81,6 +87,7 @@ One Next.js app, two addresses. Which pages answer depends on the address a requ
 | `/` (website) | AdmitLabs home page |
 | `/work-with-us` (website) | Work with us: the enquiry form |
 | `/drishti` (website) | Product page |
+| `/enquire/[code]` (website) | The enquiry form a Client's tracking link opens (section 23). Not indexed |
 | `/signup` | Sign up: email, then a 6-digit code. A new email gets an account; one that has an account is simply signed in |
 | `/login` | Log in: the same email code, for an account that exists or someone invited. It never says whether an email has an account, and never creates one for anyone else |
 | `/onboarding` | Institution setup |
@@ -88,13 +95,14 @@ One Next.js app, two addresses. Which pages answer depends on the address a requ
 | `/audit`, `/audit/[programId]` | Audit |
 | `/rivals`, `/rivals/[rivalId]` | Rivals |
 | `/demand` | Demand |
-| `/reports` | Monthly PDF reports |
+| `/leads` | Leads (Client only), with its CSV download |
+| `/reports` | Monthly summaries and PDF reports |
 | `/plan` | Plan and access |
 | `/settings` | Institution details, users |
 | `/team/...` | AdmitLabs team area (team roles only), including Enquiries |
 | `/share/[token]` | Shared Audit link for prospects (read only, no login) |
 
-**Website first.** Until Drishti opens, production runs with the dashboard closed (`NEXT_PUBLIC_APP_OPEN=false` in `.env.production`): every address shows the website, app.admitlabs.in moves to admitlabs.in, `/signup` and `/login` keep their left side and say "Drishti opens soon." with a "Talk to us" email button, every "Get your free Audit" and plan button on the website and `/drishti` says "Talk to us" and opens `/signup`, the header’s (and phone menu’s) "Sign in" opens `/signup` and its "Talk to us" writes to hello@admitlabs.in, the footer’s "Sign in" opens `/login`, the two pages link to each other and their logo goes to the home page, Work with us offers an email instead of the form, and every other dashboard route is not found. Nothing in production reads a database.
+**Website first.** Until Drishti opens, production runs with the dashboard closed (`NEXT_PUBLIC_APP_OPEN=false` in `.env.production`): every address shows the website, app.admitlabs.in moves to admitlabs.in, `/signup` and `/login` keep their left side and say "Drishti opens soon." with a "Talk to us" email button, every "Get your free Audit" and plan button on the website and `/drishti` says "Talk to us" and opens `/signup`, the header’s (and phone menu’s) "Sign in" opens `/signup` and its "Talk to us" writes to hello@admitlabs.in, the footer’s "Sign in" opens `/login`, the two pages link to each other and their logo goes to the home page, Work with us offers an email instead of the form, and every other dashboard route is not found, `/enquire/...` included. Nothing in production reads a database.
 
 The addresses are settings in `.env` (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_PRODUCT_URL`), with the live ones in `.env.production`, so moving them is a config change only. Locally the website is http://admitlabs.localhost:3000 and the dashboard http://localhost:3000. The website's pages live at `/site` inside the app. Search engines may crawl only the website's address (`robots.txt`), which lists its pages in `sitemap.xml`.
 
@@ -116,14 +124,15 @@ The addresses are settings in `.env` (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_U
 | Tier | Who | Cost | Length |
 |---|---|---|---|
 | Free | Any institution | ₹0 | Ongoing |
-| Paid | Non-clients | ₹9,999 | 6 months from signup date |
-| Client | AdmitLabs service clients | Included | While the service is active (set by Admin) |
+| Paid | Non-clients | ₹24,999 + GST | 6 months from the day Paid starts |
+| Client | AdmitLabs service clients | Included, with Leads | While the service is active (set by Admin) |
 
 Paid rules:
 - Only one paid plan: 6 months. No yearly plan. No discounts.
-- Starts on the day of payment.
+- ₹24,999 plus GST, written "₹24,999 + GST" with "for 6 months". The price lives in config.
+- Starts on the day the institution signs up for Paid. In this build an Admin switches it on that day; payment comes later.
 - **No auto-renew.** Reminder 30 days before end and 7 days before end (in-app now; email later).
-- When a paid plan ends, the institution drops to Free. They keep seeing their last Audit score.
+- When a paid plan ends, the institution drops to Free. They keep seeing their last Audit.
 
 In this build, Admin sets an institution's tier manually. Payment comes later.
 
@@ -140,17 +149,17 @@ The institution enters:
 5. Website (required)
 6. Instagram (required, handle or URL)
 7. YouTube (optional)
-8. Other social links: Facebook, LinkedIn (optional)
+8. Facebook (optional). LinkedIn is not asked: it has no official public access, so Drishti cannot check it
 
 In Settings, the owner can also add the institution's **Google Maps listing** (optional): the link from the listing's Share button, or the listing page. The Audit's Google profile and review checks then read that listing, so the rating and reviews are always the institution's own.
 
-After onboarding, Free users pick the **one program** their Free Audit covers. The last step says what happens next: Drishti checks what a student would see (about a minute), shows a score out of 100 and the first things to fix, and the next free Audit comes in 3 months. Then Home opens, with Start here (section 13).
+After onboarding, Free users pick the **one program** their Free Audit covers. The last step says what happens next: Drishti checks what a student would see (about a minute) and the AdmitLabs team looks it over (section 25); then it shows Visibility, Trust and Chosen, what it found in each place and the first things to fix, with an email when it is ready; and the next free Audit comes in 3 months. Then Home opens, with Start here (section 13).
 
 **Details added by you (Settings, every plan).** All optional and short.
 
 - About the institution: year founded, NAAC grade, NIRF rank and its year, AICTE approval, UGC recognition (or skilling recognition), other approvals, campus address, admissions phone and email, hostel, scholarships, and what makes it different.
 - For each program: duration, fees, seats, eligibility, specialisations, placements (year, share placed, average and highest package, top recruiters), application dates and the program page.
-- Labelled "Added by you" wherever they show. Used for context, better how to fix advice and the monthly report. **Never part of the score.**
+- Labelled "Added by you" wherever they show. Used for context, better how to fix advice, the ready fixes (section 7.7) and the monthly report. **Never part of the score.**
 - The owner edits them. Members and the AdmitLabs team can read them. Rivals never see them.
 
 ---
@@ -159,40 +168,50 @@ After onboarding, Free users pick the **one program** their Free Audit covers. T
 
 ### 7.1 Purpose
 
-Answers: **"How do we look to a student searching for us?"** Public information only. The same things a student or parent would see.
+Answers: **"What does the internet say about us?"** Public information only: the same things a student or parent would see. Organised by **place**, not by score.
 
-### 7.2 What it checks
+### 7.2 Places and checks
 
-17 checks, grouped into three pillars.
+Five places, in this order. Every check sits in one place and feeds one of the three words (7.4). What people say and Other places hold findings instead of scored checks.
 
-| Pillar | Check key | Check | Level |
-|---|---|---|---|
-| Discovered | `google_search` | Shows up on Google for "[program] in [city]" | Program |
-| Discovered | `instagram_activity` | Instagram posting and reels | Institution |
-| Discovered | `google_profile` | Google profile exists, number of reviews | Institution |
-| Discovered | `youtube` | YouTube activity | Institution |
-| Discovered | `ai_answers` | Named when a student asks ChatGPT, Gemini and Perplexity "best [program] in [city]" | Program |
-| Discovered | `other_socials` | Facebook, LinkedIn activity | Institution |
-| Trusted | `placement_proof` | Placement or results proof | Program |
-| Trusted | `review_rating` | Google review rating and replies | Institution |
-| Trusted | `approvals` | Approvals and official data shown | Institution |
-| Trusted | `faculty_leaders` | Faculty and leaders visible | Institution |
-| Trusted | `students_in_content` | Real students and alumni in content | Institution |
-| Chosen | `fees_shown` | Fees shown clearly | Program |
-| Chosen | `program_page` | Program has its own page | Program |
-| Chosen | `easy_enquiry` | Enquiry form and WhatsApp | Institution |
-| Chosen | `admission_steps` | Admission steps clear | Program |
-| Chosen | `mobile_friendly` | Website works on phone | Institution |
-| Chosen | `page_speed` | Website loads fast | Institution |
+| Place | What it covers | Checks: key, name on screen (word it feeds, level) |
+|---|---|---|
+| Website | Program pages, fees, placements, admission steps, enquiry, mobile, speed, approvals, faculty | `program_page` Program pages (Chosen, program); `fees_shown` Fees (Chosen, program); `placement_proof` Placements (Trust, program); `admission_steps` Admission steps (Chosen, program); `easy_enquiry` Enquiry (Chosen); `mobile_friendly` Mobile (Chosen); `page_speed` Speed (Chosen); `approvals` Approvals (Trust); `faculty_leaders` Faculty and leaders (Trust) |
+| Google | Search results as seen from the institution's city, the Google profile, reviews and rating, AI answers | `google_search` Search from [city] (Visibility, program); `google_profile` Google profile (Visibility); `review_rating` Reviews and rating (Trust); `ai_answers` AI answers (Visibility, program) |
+| Social media | Instagram, YouTube and Facebook: how active, and what's working | `instagram_activity` Instagram (Visibility); `youtube` YouTube (Visibility); `other_socials` Facebook (Visibility); `students_in_content` Students in your posts (Trust) |
+| What people say | Reddit, Quora and forums: what's good, what's bad, and questions nobody answered | Findings, not scored |
+| Other places | News, college listing sites and directories | Findings, not scored |
 
-**Program-level** checks are scored separately for each program. **Institution-level** checks are scored once and shared by all programs.
+These are the same 17 checks as version 1. Their keys stay; their names on screen change. `other_socials` now checks Facebook only.
+
+**Program-level** checks are scored separately for each program. The rest are **institution-level**: scored once and shared by all programs.
+
+**Findings** (What people say, Other places) are things Drishti found about the institution, each with its proof: a question on Quora nobody answered, a good thread on Reddit, a listing with old fees, a news story. Never a person: one short line in Drishti's words, the link and the date, never the author's name or profile.
 
 ### 7.3 Rules by institution type
 
 - **College and University:** `approvals` means official data and approvals such as NIRF, NAAC, AICTE, UGC.
 - **Skilling institute:** `approvals` means skilling recognition instead. Google profile and reviews count more. YouTube and AI answers count less. See weights below.
 
-### 7.4 Score model
+### 7.4 The three words, and the score behind them
+
+The top of the Audit, Home, the summary and the report show three plain words, never a big number:
+
+| Word | Was | Question |
+|---|---|---|
+| Visibility | Discovered | Can students find you? |
+| Trust | Trusted | Do they believe you? |
+| Chosen | Chosen | Is it easy to pick you? |
+
+Each shows **Strong, Okay or Weak**, from its part's score **[ADJUSTABLE]**:
+
+| Part score | Word |
+|---|---|
+| 70 to 100 | Strong |
+| 40 to 69 | Okay |
+| 0 to 39 | Weak |
+
+**The score stays in the background.** It works as in version 1, so months stay comparable. It shows small, as a number without a word, only in Progress (on the Audit), the Rivals ranking and the monthly report, and on the AdmitLabs team's own screens. There is no big gauge anywhere.
 
 Each check gets a result: **Strong, Okay, Weak or Missing**.
 
@@ -203,9 +222,9 @@ Each check gets a result: **Strong, Okay, Weak or Missing**.
 | Weak | 30% |
 | Missing | 0% |
 
-Each pillar is out of 100. Weights **[ADJUSTABLE]**:
+Each part is out of 100. Weights **[ADJUSTABLE]**:
 
-**Discovered**
+**Visibility**
 
 | Check | College / University | Skilling |
 |---|---|---|
@@ -217,7 +236,7 @@ Each pillar is out of 100. Weights **[ADJUSTABLE]**:
 | other_socials | 5 | 5 |
 | **Total** | **100** | **100** |
 
-**Trusted**
+**Trust**
 
 | Check | College / University | Skilling |
 |---|---|---|
@@ -242,36 +261,32 @@ Each pillar is out of 100. Weights **[ADJUSTABLE]**:
 
 **Calculations**
 
-- Pillar score = sum of (check weight × result share). Rounded to a whole number.
-- Program score = average of its three pillar scores.
-- Institution overall score = average of all its audited program scores. Institution pillar scores = average of program pillar scores.
-- Score label **[ADJUSTABLE]**:
+- Part score = sum of (check weight × result share). Rounded to a whole number.
+- Program score = average of its three part scores.
+- Institution overall score = average of all its audited program scores. Institution part scores = average of program part scores.
+- Each part's word comes from the table above.
 
-| Score | Label |
-|---|---|
-| 70 to 100 | Strong |
-| 40 to 69 | Needs work |
-| 0 to 39 | Getting started |
+What people say and Other places are **not scored** in this version: a small college with little said about it is not marked down, and the score stays comparable with past months. They may join the score later (section 21).
 
-The engine must be one pure function (plus helpers) that takes check results and config and returns all scores. Fully covered by tests.
+The engine must be one pure function (plus helpers) that takes check results and config and returns all scores, words and impacts (7.7). Fully covered by tests. Inside the code and the database the parts keep their version 1 keys (`discovered`, `trusted`, `chosen`); only the words on screen change.
 
 ### 7.5 What counts as Strong, Okay, Weak, Missing
 
 Fixed rules for now **[ADJUSTABLE]**. Later these move to comparison with peers (same type, same region), once enough institutions are audited. Build the threshold logic so this switch is possible.
 
-**Discovered**
+**Visibility**
 
 | Check | Strong | Okay | Weak | Missing |
 |---|---|---|---|---|
-| google_search | Top 3 results | Rest of page 1 | Page 2 | Not in top 20 |
+| google_search | Top 3 results, searched from the institution's city | Rest of page 1 | Page 2 | Not in top 20 |
 | instagram_activity | 3+ posts a week, mostly reels | 1 to 2 a week | Less than once a week | No account |
 | google_profile (College / University) | 100+ reviews | 30 to 99 | 1 to 29 | No profile |
 | google_profile (Skilling) | 50+ reviews | 15 to 49 | 1 to 14 | No profile |
 | youtube | New videos every month | Posted in last 3 months | Older | No channel |
 | ai_answers | Named by 2+ AI assistants | Named by 1 | Only when asked by name | Not known |
-| other_socials | Active monthly | Occasional | Inactive | None |
+| other_socials (Facebook) | Posts every month | Occasional | Inactive | No page |
 
-**Trusted**
+**Trust**
 
 | Check | Strong | Okay | Weak | Missing |
 |---|---|---|---|---|
@@ -292,23 +307,53 @@ Fixed rules for now **[ADJUSTABLE]**. Later these move to comparison with peers 
 | mobile_friendly | Works fully | Small issues | Hard to use | Broken |
 | page_speed | Google speed score 90+ | 50 to 89 | Below 50 | Doesn't load |
 
-### 7.6 Audit output
+### 7.6 What each place shows
 
-What the user sees after an Audit:
+Each place shows three things, in this order:
 
-1. **The score**: overall and Discovered, Trusted, Chosen, with change since last Audit.
-2. **Every check**: its result (Strong, Okay, Weak, Missing) as "18 of 30 points" with the word, what Drishti found, where it found it (source link) and the date checked. A check whose programs differ shows its weakest program by name.
-3. **What's working**: the checks that are Strong everywhere they apply, ranked by the points they earn (Free: the top 3). Shown first.
-4. **What to fix**: every check below Strong anywhere, ranked by impact (points that could be gained). Each is named by what to do ("Publish your BBA placement results", the same name on Home, the Audit and a shared Audit), with the check as a small label, what's wrong, why it matters to a student, how to fix it in short numbered steps, and the effort in plain words: Quick, Medium or Big (stored as easy, medium, hard). A title fits what was found: with no reviews yet, "Get your first Google reviews".
+1. **What we found.** Every check in the place with its result (a thin bar and the word), and every finding. Each with its proof: the link, the date it was checked and one short line of what Drishti saw ("The BBA page says “Contact us for fees”."). No screenshots. A check whose programs differ shows its weakest program by name.
+2. **What's good.** What is Strong everywhere it applies, and the good findings, one line each, best first.
+3. **What to fix.** Every check below Strong anywhere, and every finding with something to do, ranked by impact, then the quicker fix first.
 
-Each check is in exactly one of the two, so their counts add up to the checks the Audit ran (13 to fix and 4 working make 17). A short what's working (the top 3 in the monthly report and on a shared Audit) fills in with the best checks that are at least Okay everywhere when fewer than 3 are Strong.
+A check is in exactly one of What's good and What to fix, so the two counts add up to the checks in the place. A place with nothing to fix says so, and what keeps it there.
 
-**Mark as done.** The owner marks one of Home's things done (section 13). A fix, or a rival lesson about a check, waits for the next own Audit, which checks it: it moved up ("Confirmed, 2 points added") or it did not yet (with what the Audit still found). Any other thing (a rival's post to learn from, a content idea) is kept with its month. People at the institution and the AdmitLabs team see what was marked; only the owner marks or takes a mark back.
+**When little is found.** What people say is often thin for small colleges. With fewer than 3 findings in the last 3 months it says "Not much said about you yet.", why that is common, what helps (answer the questions students ask on Quora, ask students to share their experience) and when Drishti looks again. Other places says "No listings found yet." the same way. Neither counts against the institution.
+
+### 7.7 A fix
+
+Every fix has, in this order:
+
+- **Its name**: what to do ("Show your full BBA fees"), the same on Home, the Audit, a shared Audit and the report. A name fits what was found: with no reviews yet, "Get your first Google reviews".
+- The place and the check, as a small label.
+- **What we found**: the proof (link, date, what we saw), program by program for a program check.
+- **Why it matters** to a student, in one or two plain sentences.
+- **Simple steps**: 2 to 4 short numbered steps, one thing each.
+- **A ready fix to copy**: text (a Google profile description, a reply to a review, an answer to an unanswered question, a caption) or a layout (a fee table, a program page outline, admission steps with dates), with a Copy button. It uses the details added by you (section 6) where there are any, and leaves a blank in [brackets] where Drishti does not know. Never copied from a rival.
+- **Effort**: Quick, Medium or Big (stored as easy, medium, hard).
+- **Impact**: High, Medium or Low, instead of points.
+- **Mark as done**, and **Let AdmitLabs fix this** on Free and Paid (below).
+
+**Impact [ADJUSTABLE].** From the points the fix could add to its part, out of 100: High 12 or more, Medium 6 to 11, Low under 6. A finding's impact comes from simple rules: a question about you that nobody answered is Medium; the same complaint 3 times or more is High; a listing with old details is Medium; a missing listing is Low. The points stay in the background, for the order.
+
+**Mark as done.** The owner marks a fix done, on Home, the Audit or its panel. The next own Audit checks it: it moved up ("Confirmed: Fees is Strong now") or it did not yet (with what the Audit still found). A finding is checked again too: the question now has your answer, the listing shows the right fees. Any other thing (a rival lesson about a post, an idea marked as made) is kept with its month. People at the institution and the AdmitLabs team see what was marked; only the owner marks or takes a mark back.
+
+**Let AdmitLabs fix this.** On every fix, for Free and Paid; not on Client, where the team already works on it. The owner clicks once and a request lands in the team's Enquiries with the institution and the fix, by name and place. Asking again for the same fix while a request is open sends nothing new, and the button says when it was sent ("Sent on 4 Oct. AdmitLabs will write to you."). Members see that it was sent. No price is shown and no email is sent: the team writes back.
+
+### 7.8 Audit output
+
+What the user sees after an Audit, in order:
+
+1. **The three words**: Visibility, Trust and Chosen, each with its question and what holds it back most ("Fix first: Fees"). With history, how each moved, in words ("Up from Okay in June").
+2. **Fix these first**: the top 3 fixes across every place, by impact.
+3. **The five places**, each as in 7.6.
+4. **Progress** (Paid and Client): a table, month by month, of the score (small), the three words, your place among your rivals and what moved, with every Audit folded below.
 5. **By program**: the same view for each program.
 
-### 7.7 Tone
+A new Audit may first wait for the AdmitLabs team's review (section 25). Until it is approved the college keeps its last approved Audit and sees "Your Audit is being checked by the AdmitLabs team".
 
-A low score is an opportunity, not a failure. Copy must say "here's what to fix," never "you are failing." No shaming language anywhere.
+### 7.9 Tone
+
+A weak result is an opportunity, not a failure. Copy must say "here's what to fix," never "you are failing." No shaming language anywhere.
 
 ---
 
@@ -316,37 +361,40 @@ A low score is an opportunity, not a failure. Copy must say "here's what to fix,
 
 ### 8.1 Purpose
 
-Answers: **"Who's ahead of us, and what are they doing?"** Public information only.
+Answers: **"Who's ahead in our city, and what are they doing?"** Public information only.
 
-### 8.2 Input
+### 8.2 Who counts as a rival
 
-- Drishti **suggests** rivals: same type, overlapping programs, same city first, then same state.
-- The institution picks **3 to 5** rivals, or adds its own (name, city, website, Instagram).
+- **Always your city.** Drishti suggests institutions in the same city that offer at least one of the same programs, of any type, most shared programs first (up to 6).
+- **Nearby city.** If the city has fewer than 3 such rivals, Drishti also suggests some from the nearest bigger city (set for each city in the city list), each marked "Nearby city" wherever it shows.
+- The institution picks **3 to 5**, or adds its own (name, city, website, Instagram). One from another city is marked "Nearby city" too.
 - Rival institutions are stored as regular institution records that nobody has claimed. If a rival later signs up, they claim that record.
 
 ### 8.3 What it tracks
 
 | Area | Tracked |
 |---|---|
-| Score | Each rival's Audit score, same checks and rules |
-| Best content | Rival's top 5 posts of the month (Instagram, YouTube), with a short "why it worked" |
-| Moves | New programs, fee changes, new website pages, admission dates announced |
-| Ads | What rivals promise in their ads. **Manual entry by the team for now** |
-| Timing | When each rival's admission push starts |
-| Reviews | Review trend: better or worse |
+| The same places | Each rival's own monthly Audit: the same places, checks and rules as yours. Rival scores come only from these |
+| Alerts | New programs, fee changes, new pages, admission dates, started ads, and a big jump in Google reviews (20% or 15 reviews more in a month **[ADJUSTABLE]**) |
+| Ads | What rivals promise in their ads. **Entered by the team for now**; each entry also makes a "started ads" alert |
+| Best content | Each rival's top posts of the month (Instagram, YouTube), with a short "why it worked" |
+| Reviews | Google rating and its trend |
 
 ### 8.4 Output
 
-1. **Head to head**: your score vs each rival, pillar by pillar.
-2. **Where you lead, where they lead.**
-3. **Their best content** and what to learn from it.
-4. **Moves this month.**
-5. **What to learn from your rivals.**
+1. **One line for the month**: "This month, Silverline College is ahead on Instagram and Google reviews." It names the rival ahead of you on the most checks and the two checks where it leads by the most. With nobody ahead anywhere: "This month, no rival in Guwahati is ahead of you on any check."
+2. **The ranking**: you and each rival, with the small score and the three words. Nearby city marked.
+3. **Place by place**: the five places, you and each rival. Website, Google and Social media say who leads, with each side's results. What people say and Other places show what was found for each side (good, bad, unanswered; listings, news), with no leader. Each place opens check by check: what was found for each side, with the source and date, and what to learn from the one ahead.
+4. **What to learn from them**: 3 lessons a month. Take the idea, never copy.
+5. **Alerts**: the last 30 days, newest first, each with where it was found.
+
+One rival's page: you and them place by place, their alerts, their best posts and what to learn from them, when their admissions open, and their Google rating and its trend.
 
 ### 8.5 Rules
 
 - **Learn, never copy.** Drishti never suggests copying a rival's content.
 - **Rivals never know.** No one can see who is tracking them.
+- **Your city first.** Rivals from another city only when the city has fewer than 3, and always marked.
 
 ---
 
@@ -354,30 +402,37 @@ Answers: **"Who's ahead of us, and what are they doing?"** Public information on
 
 ### 9.1 Purpose
 
-Answers: **"What are students asking, wanting and worrying about right now?"** Public sources only. **Not connected to Tathya.**
+Answers: **"What do students in our city want right now?"** Public sources only. **Not connected to Tathya.**
 
 ### 9.2 Input
 
-Nothing new. Uses institution type, city and programs. The user chooses how wide to look: **City, State, All India**.
+Nothing new. Uses institution type, city and programs. Demand is about the institution's **city**. When the city has too little data for a program, the state's fills in, and the page says so. There is no region switch.
 
 ### 9.3 Sources
 
-Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi, Assamese.
+Google Trends, a keyword tool (search counts), YouTube, Instagram, Reddit, and Quora and forums through the search tool. Languages to start: English, Hindi, Assamese (shown in English, with the language named).
 
 ### 9.4 Output
 
-1. **Rising and falling**: courses and careers in the chosen region.
-2. **Top 5 student questions** this month.
-3. **Top worries**: fees, placements, hostel, safety, recognition (and any new ones found).
-4. **What students say about you and your rivals**: public mentions, positive and negative.
-5. **Season clock**: where we are in the admission year (exams, results, counselling).
-6. **5 content ideas**: each built on a real student question, with its source. Each says what to make (a post, a reel, a video, an FAQ or a web page), how big a job it is (Quick, Medium or Big) and the program, all stored with the idea, and the rising search behind it when there is one (also stored, never guessed from the words).
+1. **Make these 3 this month**, at the top: 3 ideas picked for the institution. Each says what to make, why (how often students asked, or that it is rising), the program, the format (a post, a reel, a video, an FAQ or a web page), a hook line, 3 to 4 key points, and Mark as made. Picked from what is asked most, that the institution's website and posts do not answer yet, one per program where possible. Picked with each monthly update and kept until the next. After the next update: "You made 2 of 3. These are still rising: ..."
+2. **Program signals**:
+   - Programs rising and falling in the city.
+   - Courses students ask for that the institution does not offer.
+   - What students ask about each program: fees, placements, scholarships, hostel and careers (and any new topic found), each with its top questions and their sources.
+3. **Content signals**:
+   - Topics and formats that get attention in the city, among institutions like this one.
+   - The best months to post, for each program.
+4. **More ideas**: the month's other ideas, each built on a real student question, with its source.
 
-### 9.5 Rules
+### 9.5 Honest numbers
+
+A number shows only when a source gives a real count: searches a month (keyword tool), questions counted on Reddit, Quora and forums. Otherwise words **[ADJUSTABLE]**: "Rising fast" (up 40% or more), "Rising" (up 10% to 39%), "Steady", "Falling". Never a made up figure.
+
+### 9.6 Rules
 
 - **Grouped only.** Never show or store individual students' names or profiles. Store the topic, the count and the source link, not the person.
 - **Source shown** for every insight.
-- **Shared pulls.** Demand data is collected once per region + program and shared by every institution that needs it. This keeps running costs low.
+- **Shared pulls.** Demand data is collected once per city + program (and state, where it fills in) and shared by every institution that needs it. This keeps running costs low.
 
 ---
 
@@ -386,23 +441,30 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 | | Free | Paid | Client |
 |---|---|---|---|
 | **Audit** | | | |
-| Overall score and its 3 parts | Yes | Yes | Yes |
-| Every check | The result of each | What was found, with sources | What was found, with sources |
-| What's working | Top 3 | Full | Full |
-| What to fix | Top 3 | Full ranked list | Full ranked list |
+| Visibility, Trust and Chosen | Yes | Yes | Yes |
+| Every place: each check's result | Yes | Yes | Yes |
+| What we found, with proof | For its top 3 fixes and strengths | Everything | Everything |
+| What's good | Top 3 | Full | Full |
+| What to fix: steps, ready fix, effort, impact | Top 3 | Full ranked list | Full ranked list |
+| What people say and Other places | A preview | Yes | Yes |
 | Programs | 1 | All | All |
-| Progress month by month | No | Yes | Yes |
+| Progress month by month, with the score | No | Yes | Yes |
+| Let AdmitLabs fix this | Yes | Yes | No: the team already works on it |
 | **Rivals** | | | |
-| Suggested rivals | Yes | Yes | Yes |
-| Ahead or behind (overall only) | Yes | Yes | Yes |
-| Full comparison, best content, moves, ads | A preview | Yes | Yes |
+| Suggested rivals, your city first | Yes | Yes | Yes |
+| Ahead or behind each rival | Yes | Yes | Yes |
+| This month's one line | Yes | Yes | Yes |
+| Ranking, place by place, what to learn, alerts | A preview | Yes | Yes |
 | Change rivals | No | Once a month | Anytime |
 | **Demand** | | | |
-| 1 rising trend | Yes | Yes | Yes |
+| Make these 3 this month | The first one, for its program | All 3 | All 3 |
+| Programs rising and falling | 1 | All | All |
 | Everything else | A preview | Yes | Yes |
-| Mentions of you and rivals | No | Yes | Yes |
+| **Leads** | No | No | Yes |
 | **Other** | | | |
 | Alerts (rival moves, demand spikes) | No | Yes | Yes |
+| Email when a new free Audit is ready | Yes | No: the monthly summary covers it | No: the monthly summary covers it |
+| Monthly summary by email | No | Yes | Yes |
 | Monthly PDF report | No | Yes | Yes |
 | AdmitLabs team acts on it | No | No | Yes |
 | Your AdmitLabs team: what the team did, and does next | No | No | Yes |
@@ -419,34 +481,40 @@ Google, YouTube, Instagram, Reddit, X, Quora. Languages to start: English, Hindi
 | Extra manual refresh | No | Once a month | Anytime, by the team |
 | Rival moves | No | Checked weekly, alert when found | Checked weekly, alert when found |
 | Demand | Monthly | Monthly, alert on big spikes | Monthly, alert on big spikes |
+| Make these 3 | With each monthly update | With each monthly update | With each monthly update |
+| Audit ready email | When each free Audit is approved | No | No |
+| Monthly summary by email | No | On the 1st | On the 1st |
+| Leads | | | An alert email for each new enquiry, straight away |
 
 - Monthly run date = same day of the month as the signup (or plan start) date.
+- With Review first on (section 25), a new Audit, the month's summary and report, and the emails that go with them wait for the team's approval. Alerts for new enquiries never wait.
 - Free users get a nudge when a new free Audit is available: "Your new Audit is ready. See what changed." It opens What changed on Home (section 13), for every plan.
+- Leads past the institution's keeping time are deleted for good, checked every day (section 23).
 - In this build, schedules run against mock providers. Build a way to trigger any scheduled run by hand for testing.
 
 ---
 
 ## 12. Monthly report (PDF)
 
-- One PDF per institution per month. Downloadable from `/reports`. Paid and Client only.
+- One PDF per institution per month, made on the 1st for the month just ended. Downloadable from `/reports`. Paid and Client only. After a Paid plan ends, past reports stay downloadable.
+- With Review first on, the report and its summary wait for the team's approval (section 25) before they show on Reports or go by email.
 - Stored in Supabase Storage.
-- Same brand as the dashboard (section 14): the overall score on its gauge, each result as a thin bar of the points it earns with the word, check and pillar icons, and bars for what each fix could add, how fast a trend rises and how often a question is asked.
+- Same brand as the dashboard (section 14): the three words, each result as a thin bar with the word, the place and check icons, impact and effort as words, and bars for how often a question is asked. The score shows small, on the summary page and in the progress table.
 
 **Contents, in order:**
 
-1. Cover: institution name, month, overall score and label
-2. Score summary: overall, three pillars, change since last month
-3. What's working (top 3: Strong first, the best Okay filling in)
-4. What to fix (ranked)
-5. By program (one short block each)
-6. Rivals: head to head, each part ranked against every rival, key moves
-7. Demand: rising trends, top questions, content ideas
-8. **3 things to do this month**
-9. Sources and dates checked
+1. Cover: institution name, month, Visibility, Trust and Chosen
+2. This month in short: the monthly summary (section 24)
+3. What the internet says: each place, what's good and what to fix, with proof
+4. What to fix: the top 5 in detail (steps, the ready fix, effort, impact), the rest as a short ranked list
+5. Rivals: the month's one line, the ranking with the small score, place by place, alerts
+6. Demand: Make these 3, programs rising and falling, what students ask, the best months
+7. Leads (Client): "Your content brought 23 enquiries in September.", by link. Counts only, never a student's details
+8. Progress and sources: the score and the three words month by month, the sources and dates checked
 
-Details added by you show next to the fix and the program they relate to, labelled, never scored.
+Details added by you show next to the fix and the program they relate to, labelled, never scored. Paid (not Client) ends with one quiet line: "Want AdmitLabs to do this for you? hello@admitlabs.in"
 
-Keep it short enough to read in 5 minutes.
+Keep it short enough to read in 5 minutes: about 7 pages, never more than 8.
 
 ---
 
@@ -458,35 +526,37 @@ Keep it short enough to read in 5 minutes.
 
 | Screen | Contents |
 |---|---|
-| Sign up (`/signup`) | Email, then a 6-digit code. "Create your Drishti account", "Free to start. Enter your email and we'll send you a code." An email that already has an account is simply signed in. "Already have an account? Log in". Left side: Home for the sample university in the dark, under a soft light that follows the cursor; where it falls, the score counts up and the bars grow |
-| Log in (`/login`) | The same email and code. "Welcome back", "Enter your email. We'll send you a code." Log in never says whether an email has an account, so nobody can check who uses Drishti: for any email it shows the same code step, "If this email has a Drishti account, we've sent a code. New here? Sign up." (Sign up carries the email over), and answers in about the same time. It sends a code only to an account that exists, or to someone invited by an owner or the AdmitLabs team, who comes in like any account and joins on first sign in. It never creates an account for anyone else. "New to Drishti? Sign up". Left side: the Drishti eye, big, in the middle, following the cursor, among four cards of the sample's dashboard that lean with the cursor and change in turn (the score counts up, the rivals change places, the questions come in, the searches grow); the eye watches each card as it changes and reads along the field while someone types |
+| Sign up (`/signup`) | Email, then a 6-digit code. "Create your Drishti account", "Free to start. Enter your email and we'll send you a code." An email that already has an account is simply signed in. "Already have an account? Log in". Left side: Home for the sample university in the dark, under a soft light that follows the cursor; where it falls, the three words settle and the things to do slide in |
+| Log in (`/login`) | The same email and code. "Welcome back", "Enter your email. We'll send you a code." Log in never says whether an email has an account, so nobody can check who uses Drishti: for any email it shows the same code step, "If this email has a Drishti account, we've sent a code. New here? Sign up." (Sign up carries the email over), and answers in about the same time. It sends a code only to an account that exists, or to someone invited by an owner or the AdmitLabs team, who comes in like any account and joins on first sign in. It never creates an account for anyone else. "New to Drishti? Sign up". Left side: the Drishti eye, big, in the middle, following the cursor, among four cards of the sample's dashboard that lean with the cursor and change in turn (the three words settle, the rivals change places, the questions come in, the searches grow); the eye watches each card as it changes and reads along the field while someone types |
 | Sign up and log in, both | The form first in reading order. On a wide screen the left side sits beside it; on a phone it is a small band above the form and plays on its own, as on any touch screen. With reduced motion the left side is still. The left side carries the logo and one line, "See where you stand. Every month." |
 | Onboarding | The input form from section 6, then program pick for Free with what happens next. No left side; the Drishti logo, with its eye, at the top. After the first Audit, Home |
-| Home | What to do first. The one-line answer; Start here on a first visit (three steps: your score, your first fix, your rivals; ticks as each is done; closed for good with "Got it, hide this", per person); for a Client, "Your AdmitLabs team" (what the team did this month, or its latest work, and what it does next, each with the day and a link to see it; when the Audit last checked and the next one; how to write to the team; "See all work"); "Do these 3 things this month" (Paid and Client: one from the Audit, one from rivals, one from what students ask, ordered by the points each could add) or "Fix these first" (Free: the top 3 fixes), each with where it comes from, the check as a small label, its programs, the points it could add (or how often students asked, for a content idea, with its format), the effort in Home's words (Quick, Medium, Big) and Mark as done; What changed since the last Audit (the score, each check that moved with its result before and after, the fixes marked done that this Audit checked, and for Paid and Client the rivals' moves and big jumps in searches; Free sees what Paid adds); then the score: the gauge, its band and change, "Up 14 since April", how far the next band is, and the 3 parts (each with the question it answers, its checks as one bar split by result with the counts, and what to fix first); rival snapshot with the latest move; 1 demand highlight with its searches by month. The score month by month and every check by name stay on the Audit |
-| Audit | The three parts with "What do these mean?" (the parts and their questions, the four results and what each earns, the score's bands), every fix named as on Home with its check as a small label and its effort, all checks with results and points earned against possible (each part with its question; a check whose programs differ shows its weakest program), what to fix and what's working (each check in one of them, so the counts add up to all checks; Free's To fix points up to its 3 fixes instead of repeating them), progress month by month (Paid and Client: a table of each month's score and its 3 parts, the change since the month before, your place among your rivals, and the checks that moved, with every Audit folded below), program switcher |
+| Home | What to do first. The one-line answer, from the three words; Start here on a first visit (three steps: see what was found, your first fix, your rivals; ticks as each is done; closed for good with "Got it, hide this", per person); for a Client, "Your AdmitLabs team" (what the team did this month, or its latest work, and what it does next, each with the day and a link to see it; when the Audit last checked and the next one; how to write to the team; "See all work") and the month's enquiries (how many, the change from last month, the link that brought the most, "See all leads"); the three words, each with its question and what to fix first in it; "Do these 3 things this month" (Paid and Client: one fix from the Audit, one lesson from rivals, one of Make these 3, ordered by impact) or "Fix these first" (Free: the top 3 fixes), each with where it comes from, its place and check as a small label, its programs, its impact (or how often students asked, for an idea, with its format), its effort, Mark as done, and Let AdmitLabs fix this on a Free or Paid fix; What changed since the last Audit (each word that moved, each check that moved with its result before and after, the fixes marked done that this Audit checked, and for Paid and Client the rival alerts and fast rises in what students search; Free sees what Paid adds); the rivals' one line with the latest alert; one demand highlight. No score and no gauge on Home. While a new Audit waits for review (section 25): "Your Audit is being checked by the AdmitLabs team" above the last approved Audit, or, on a first Audit, in place of the results, with when to expect it and that an email will say when it is ready |
+| Audit | The three words with "What do these mean?" (the words and their questions, what makes each Strong, Okay or Weak, the four results of a check), Fix these first (the top 3 by impact), the five places (each with what we found and its proof, what's good and what to fix; What people say and Other places say so kindly when little is found), progress month by month (Paid and Client: a table of each month's small score, the three words, the change since the month before, your place among your rivals, and the checks that moved, with every Audit folded below), program switcher. While a new Audit waits for review, the same line as Home above the last approved Audit |
 | Program detail | Same as Audit, for one program |
-| Check detail | Side panel, in one order: the fix it is about (its name as on Home, the points it could add, the effort, the programs); 1. what we found, program by program, with the source link and the date checked; 2. why it matters to a student; 3. how to fix it, in numbered steps, with the effort for each program; details added by you; Mark as done in the footer (the owner; others see that it was marked) |
-| Rivals | Rival list, head to head table, part by part (each part ranked against every rival), check by check (every check, you and each rival with the result and who leads; tabs for where a rival leads, where you lead and all checks, opening on the first with something in it; each check opens what was found for each side, with the source and date, and what to learn from the one ahead, never to copy), overall score month by month as a table, moves, best content |
-| Rival detail | One rival's full view, part by part and month by month, when their admissions open, their Google rating and its trend, and every check side by side (a side whose programs differ shows its weakest program). Every set of tabs opens on one with something in it: "Where they lead" shows only when they lead |
-| Demand | Region switch (City, State, All India), when it was updated and the next update, where it was found by name ("From Reddit, Quora and Search trends, in English, Hindi and Assamese"), 6 output sections from 9.4, the fastest rise by month, rising and falling as bars |
+| Fix panel | Side panel, in one order: the fix (its name as on Home, the place and check, impact, effort, the programs); 1. what we found, program by program, with the link, the date and the short line; 2. why it matters to a student; 3. the steps; 4. the ready fix, with Copy; details added by you; in the footer, Mark as done (the owner; others see that it was marked) and Let AdmitLabs fix this (Free and Paid; once sent, when). A Strong check opens the same panel with what was found and why it matters |
+| Rivals | The month's one line; the ranking (you and each rival with the small score and the three words, Nearby city marked); place by place (each place, you and each rival, who leads where it is scored and what was found where it is not; each opens check by check with each side's findings, source and date, and what to learn from the one ahead, never to copy); what to learn from them (3); alerts from the last 30 days; Change rivals. Free: ahead or behind each rival and the one line, then what Paid adds |
+| Rival detail | One rival: you and them place by place, every check side by side (a side whose programs differ shows its weakest program), their alerts, their best posts and what to learn from them, when their admissions open, their Google rating and its trend, and the score month by month as a table. Every set of tabs opens on one with something in it |
+| Demand | For the city: when it was updated and the next update, where it was found by name ("From Search trends, the keyword tool, Reddit and Quora, in English, Hindi and Assamese"); Make these 3 this month at the top, with last month's "You made 2 of 3" line once there is a last month; programs rising and falling, as bars with words, or counts when a source gives them; courses asked for that you do not offer; what students ask about each program (topics, then questions); what gets attention (topics and formats); the best months to post, for each program; more ideas |
+| Leads (`/leads`, Client only) | "What did our content bring in?": enquiries this month and the change from last month, the link that brought the most, every link with its count this month and before, then the list (name, course, link and date, with phone, email and city), newest first, with Download CSV, and deleting one student's data on request. Not a CRM: no calls, stages or follow ups |
 | Your AdmitLabs team (`/work`, Client only) | Opened from the card on Home. "What has our AdmitLabs team done?": what the team does next, soonest first, then everything it did, by month, newest first, each with the day and a link to see the work. Write to your team at hello@admitlabs.in |
-| Reports | List of monthly PDFs, download, the score by month with every point's value |
-| Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans. "Ask for Paid" on Free and "Ask to continue Paid" from the first renewal reminder (see Asking for Paid below) |
-| Settings | Plain groups, each at its own address (a list on the left, a row on a phone): Institution (details, public links, the Google Maps listing, and details added by you, section 6), Programs (with the Free Audit program and details for each program), Rivals (who, and when they can change), Team, Plan (with asking for Paid) and Notifications (what arrives, and when). Only the owner changes them |
+| Reports | Each month's summary (section 24) with its PDF, download, the score by month with every point's value |
+| Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans, Paid at ₹24,999 + GST for 6 months. "Ask for Paid" on Free and "Ask to continue Paid" from the first renewal reminder (see Asking for Paid below) |
+| Settings | Plain groups, each at its own address (a list on the left, a row on a phone): Institution (details, public links, the Google Maps listing, and details added by you, section 6), Programs (with the Free Audit program and details for each program), Rivals (who, and when they can change), Leads (Client: who gets each new enquiry by email, how long enquiries are kept, deleting a student's data), Team, Plan (with asking for Paid) and Notifications (what arrives, and when, and for each person the monthly summary email, or on Free the Audit ready email). Only the owner changes them |
 | Notifications | Alerts list, with filters by what each is about (Audit, Rivals, Students, Reports, Plan, each with its count, only the ones that have alerts). Each link says where it goes ("See what changed", "See the move"). Empty, or still short: what arrives here and when, for the plan |
 
-**Asking for Paid.** Wherever Paid is offered (the cards that say what Paid adds, a locked preview, the check panel, What changed on Free, the Plan page, Settings, a Paid plan that ended), the owner asks with one click: "Ask for Paid" on Free, "Ask to continue Paid" from the first renewal reminder. The request lands in the team's Enquiries with the institution and the owner's email; asking again while one is open sends nothing new, and the page says when it was sent. The price and terms never change, nothing is paid online and no email is sent: the team writes back and an Admin switches the plan on. Members see who can ask; Client has nothing to ask.
+**Asking for Paid.** Wherever Paid is offered (the cards that say what Paid adds, a locked preview, the fix panel, What changed on Free, the Plan page, Settings, a Paid plan that ended), the owner asks with one click: "Ask for Paid" on Free, "Ask to continue Paid" from the first renewal reminder. The request lands in the team's Enquiries with the institution and the owner's email; asking again while one is open sends nothing new, and the page says when it was sent. The price (₹24,999 + GST for 6 months) and terms never change, nothing is paid online and no email is sent: the team writes back and an Admin switches the plan on. Members see who can ask; Client has nothing to ask. Let AdmitLabs fix this (section 7.7) works the same way.
 
 **Team screens (`/team`)**
 
 | Screen | Contents |
 |---|---|
-| Team home | All institutions, sorted by the reason each needs attention, most urgent first, each row saying why: a Paid plan ending within 30 days, a Client with no team Audit this month, a score down 3 or more, signed up with no rivals, a prospect not signed up a week after their Audit was shared. Search, filter by type, city, state, score, tier, prospect or client; sort by name, score or last checked too |
+| Team home | All institutions, sorted by the reason each needs attention, most urgent first, each row saying why: a Paid plan ending within 30 days, a Client with no team Audit this month, a score down 3 or more, signed up with no rivals, a prospect not signed up a week after their Audit was shared. Search, filter by type, city, state, score, tier, prospect or client; sort by name, score or last checked too. The team keeps the score as a number |
+| To review | Every new Audit and monthly summary waiting for the team's review, oldest first, each with the college, what it is, its plan, how long it has waited and what changed in one line; a count beside it in the team's menu. One opens the review: what changed since the last approved Audit, then the Audit place by place (or the summary line by line) to fix a result or a line, then "Approve and send" (section 25) |
 | Bulk Audit | Add many institutions at once (paste list or CSV), run Audits, see results in a table |
-| Institution detail | Everything the institution sees, plus private notes, tier control (Admin), manual refresh. For a Client, the Work log tab first: add what the team did or does next (Done or Next, one plain sentence, the day, a link when there is one), mark Next as done, remove an entry. It is what the Client sees |
-| Share | Create a share link or PDF of a prospect's Audit |
-| Rival ads | Enter what rivals promise in their ads, by hand until Drishti can collect it |
-| Enquiries | Everyone who wrote in through the website's Work with us form (name, role, institution, email, phone, program and message), and owners who asked for Paid, or to continue it, from their dashboard (the institution, linked, and the owner's email), newest first. New or All. Mark as handled, or back to new. Every team user sees them. No emails are sent |
+| Institution detail | Everything the institution sees, plus private notes, tier control (Admin), manual refresh, and how its new Audits and summaries go out: "Review first" (on to start) or "Send automatically". For a Client, the Work log tab first: add what the team did or does next (Done or Next, one plain sentence, the day, a link when there is one), mark Next as done, remove an entry. It is what the Client sees. Then a Leads links tab: make a tracking link (a name such as "Reel: BBA placements", where it will be used, the program), copy it, see how many enquiries each brought this month and before, and archive one. Counts only |
+| Share | Create a share link or PDF of a prospect's Audit, place by place with the three words |
+| Rival ads | Enter what rivals promise in their ads, by hand until Drishti can collect it. Each entry is also a "started ads" alert for the institutions that track that rival |
+| Enquiries | Everyone who wrote in through the website's Work with us form (name, role, institution, email, phone, program and message); owners who asked for Paid, or to continue it, from their dashboard (the institution, linked, and the owner's email); and owners who asked AdmitLabs to fix something (the institution, linked, the fix by name and place, and the owner's email). Newest first. New or All. Mark as handled, or back to new. Every team user sees them. No emails are sent |
 
 **Team rules**
 
@@ -494,6 +564,8 @@ Keep it short enough to read in 5 minutes.
 - A prospect's shared Audit does **not** use up their Free Audit.
 - Private notes are never visible to institution users.
 - A Client's work log is written for the Client: what was done, in plain words, with the day and a link to see it. Never notes, and never anything about rivals that the rival could learn from.
+- The team sees Leads as counts by link. A student's details are for the college only, in "view as" too.
+- Nothing waiting for review reaches the college: not the Audit, not its alerts, not its email. Every change the team makes in a review is kept.
 
 ---
 
@@ -539,28 +611,26 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 **Showing Strong, Okay, Weak, Missing without colour**
 
-- In rows and lists: a thin bar of the points earned against the points possible (for example 18/30), then the word. Missing is an empty dashed bar. One style for every result, on screen and in the PDF, so a list reads evenly.
-- A part's checks (Discovered, Trusted, Chosen), every one named (rule 11 in section 18; chosen in the product review of October 2026, replacing the squares with a key):
-  - Where there's room (the Audit, a program, the team's institution pages, a shared Audit): every check as a row, weakest first (the worst result, then the most to gain): its icon, its name, a thin bar and the word. A program check shows its weakest program. A row opens the check where the page has its panel.
-  - Where it's tight (Home, and the part cards in the `/drishti` hero and `/signup` pictures, and "Every check" in the `/drishti` Audit picture): one bar for the part, split by result in four shades (Strong solid, Okay mid grey, Weak dark grey with a thin outline so it stands out at least 3 to 1, Missing a dashed outline), with each count written under its own piece ("2 Strong"), then "Fix first" and the weakest check with its bar and word.
+- In rows and lists: a thin bar of the share of the check's points earned, then the word. No point numbers on screen. Missing is an empty dashed bar. One style for every result, on screen and in the PDF, so a list reads evenly.
+- A place's checks, every one named (rule 11 in section 18): every check as a row, weakest first (the worst result, then the most to gain): its icon, its name, a thin bar and the word. A program check shows its weakest program. A row opens its panel where the page has one.
 - Readable on black and on ivory. The word is always available: beside the bar, on hover, and for screen readers. Never rely on the shape alone.
-- The overall score sits on a large gauge: filled to the score out of 100, with a tick where Needs work (40) and Strong (70) begin, and over each tick what it means, on two lines: "Needs work" over "from 40", "Strong" over "from 70". The number, in Inter, sits centred inside the arc on its baseline, never touching it, with "/100" smaller on the same baseline; "0" and "100" line up under the arc's two ends. A small gauge leaves out the ends, the ticks and their words: the number says it all. The line under it says how far the next band is ("24 points to Strong", "3 points above where Strong starts"). The same drawing on screen and in the PDF.
-- Each part card names the question it answers ("Can students find you?", "Do they believe you?", "Is it easy to pick you?") and, with history, how it moved in words ("Up 17 since April"), not a small line.
+- **The three words**: Visibility, Trust and Chosen side by side (stacked on a phone), each word large in Bricolage with its question under it, what to fix first in it, and, with history, how it moved in words ("Up from Okay in June"). Never a gauge or a big number. Where the overall score shows (Progress, the Rivals ranking, the report and the team's screens) it is a small number in Inter.
+- **Impact and effort** sit beside a fix as small words, "Impact High" and "Effort Quick", never a colour or a shape alone.
 
 **Icons and logos**
 
-- Line icons drawn for Drishti (thin strokes, square ends, no icon library): one for each of the 17 checks, the 3 pillars and the main sections. The same icons in the PDF.
+- Line icons drawn for Drishti (thin strokes, square ends, no icon library): one for each of the 17 checks, the 5 places, the 3 words and the main sections. The same icons in the PDF.
 - Real one-colour logos only for Instagram, X and YouTube (from Simple Icons, CC0), unchanged and in the colours each brand allows. Source and licence are kept next to the files.
-- Every other platform (Google, Google Maps, Facebook, LinkedIn, Reddit, Quora, ChatGPT, Gemini, Perplexity, websites) gets a neutral line icon and its name, until AdmitLabs has permission to use its logo.
+- Every other platform (Google, Google Maps, Facebook, LinkedIn, Reddit, Quora, ChatGPT, Gemini, Perplexity, websites, listing sites, news) gets a neutral line icon and its name, until AdmitLabs has permission to use its logo.
 - Icons are decoration. The name always sits beside them.
 
 **Charts**
 
 - Hand-built, monochrome: you in the text colour, rivals in grey, each named on the chart. No legend to decode (rule 11).
-- Every mark has its number or name beside it: every month's score on the score by month, every month's count on its bar, every point of the Reports card's small line with its value and month. A chart with one point is words instead ("First Audit. The next one shows how the score moves").
-- You and your rivals part by part: each part as a ranked list with real names, the score and a thin bar, your row highlighted, and one plain line about the gap ("You lead Silverline College by 6", "3 behind Silverline College"). Three side by side when there is room, one under another on a phone. On screen, in the PDF and in the `/drishti` Rivals picture.
+- Every mark has its number or name beside it: every month's count on its bar, every link's count on its row, every point of the Reports card's small line with its value and month. A chart with one point is words instead ("First Audit. The next one shows how things move").
+- The rivals ranking: you and each rival in rows with real names, the small score and the three words, your row highlighted, and the month's one line above it. On screen, in the PDF and in the `/drishti` Rivals picture.
 - Month by month, you and your rivals: a table of numbers, your row first and marked, and one line about your place ("2nd of 4 in every month since April"). A phone keeps the last three months.
-- The admission year: its stages ahead as one strip, each piece named on its own months with when it runs, the one now in the text colour; one stage a line on a phone.
+- The best months to post: the twelve months in one strip for each program, the best months in the text colour and named under the strip ("March to June"); one program a line on a phone.
 - Numbers in Inter. Every chart can be read as text or a table too.
 
 **Copy rules**
@@ -581,25 +651,25 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 
 **Premium product landing page, part of the AdmitLabs website** (section 22), rebuilt in its **Spotlight** style on 2026-10-02: the website's header and footer, its light, frames and buttons, and the product itself for pictures. Same design system, with the website's subtle monochrome gradients (section 14).
 
-**Headings are calm and confident** (redesigned 2026-10-03): the hero headline 52 px (30 on a phone), section headings 36 px (28 on a phone), a line under a heading 16 to 17 px. These sizes are the page's own; the website keeps its sizes. No small labels above headings, but a feature's own name: each feature opens with its bar, and the score names the feature it belongs to. Each visual shows something real from the product, never decoration.
+**Headings are calm and confident** (redesigned 2026-10-03): the hero headline 52 px (30 on a phone), section headings 36 px (28 on a phone), a line under a heading 16 to 17 px. These sizes are the page's own; the website keeps its sizes. No small labels above headings, but a feature's own name: each feature opens with its bar, and How Drishti reads you names the feature it belongs to. Each visual shows something real from the product, never decoration.
 
-**The pictures** are the dashboard's own components, filled from the sample world by the real scoring engine and shown under the website's made-up names: Larkmoor University, Bangalore, with Calderwood College, Brackenfield University and Thornbury College as its rivals (Karnataka, Kannada). Only the names change, never a number, so the website, this page and the sample report agree. They carry no caption. The dashboard's own sample keeps its names.
+**The pictures** are the dashboard's own components, filled from the sample world by the real scoring engine and shown under the website's made-up names: Larkmoor University, Bangalore, with Calderwood College, Brackenfield University and Thornbury College as its rivals in the same city (Karnataka, Kannada). Only the names change, never a result, so the website, this page and the sample report agree. They carry no caption. The dashboard's own sample keeps its names.
 
 **Sections, in order:**
 
-1. **Hero**: the product's name with the Drishti eye (its Rise reveal plays once as the intro, section 14), then "See where you stand, who's ahead, and what students want." (two lines on a wide screen) with the last words in an ivory block. "Get your free Audit" and "See the sample report", the trust line and the proof line, then the dashboard's Home in an app window that settles flat as the page moves
-2. **The problem** (ivory), one tight band with less space around it than the other sections: "Most teams guess. Drishti checks." with its line beside it (on a wide screen the headline left and the line right, their last lines level), then one wide Drishti card, dense like the dashboard. A top bar with the sample university and when it was last checked, then its answers to the three questions in three panels side by side (two, then the questions across, on a tablet or small laptop; stacked on a phone), each with where it came from: its score (number, thin bar and word) from the Audit's 17 checks of public pages; its place among its rivals, by name in thin rows, from each one's own Audit; the questions students ask most in its city, each on one line with its site and count small on the right ("Quora · 96"); and at the foot of that panel one short line with the search rising fastest and its numbers (Search trends)
-3. **The three features**, each in the same frame: a bar with its name (heavy and narrow, with the dashboard's icon), its question and its place ("1 of 3"), which stays under the header while its pictures pass, on a phone too; one short line; then the product across the full width on a dark stage. The Audit with its score gauge, what to fix first and every check; Rivals with the ladder and the latest move, and under them each part ranked across the full width; Demand with the fastest rise by month, what else is rising and the question asked most
-4. **The score**, inside the Audit (its label says so): "One score, from 17 checks." Beside the words, the sample's overall score; then a table of the three parts side by side (Discovered, Trusted, Chosen; stacked on a phone), each with its question and its score on a thin bar, and its checks, one to a row, each with its result. A table: every row one height, every bar one width in one place, the result words in one column; the rows line up across the parts, and Trusted, with one check fewer, ends in an empty slot ruled like the rest. A check made for each program shows its weakest program, as the Audit's rows do. The only numbers are the total and the three part scores, which average to it: no points per check. Then, compact, what each result earns
-5. **Public data only**: the rules every result follows, in one framed band
-6. **How it works**: four steps on a line that fills as the page moves: enter details, Drishti checks everything, see results, get a monthly report
+1. **Hero**: the product's name with the Drishti eye (its Rise reveal plays once as the intro, section 14), then "See what the internet says about you, who’s ahead in your city, and what students want." with the last words in an ivory block. "Get your free Audit" and "See the sample report", the trust line and the proof line, then the dashboard's Home in an app window that settles flat as the page moves
+2. **The problem** (ivory), one tight band with less space around it than the other sections: "Most teams guess. Drishti checks." with its line beside it (on a wide screen the headline left and the line right, their last lines level), then one wide Drishti card, dense like the dashboard. A top bar with the sample university and when it was last checked, then its answers to the three questions in three panels side by side (two, then the questions across, on a tablet or small laptop; stacked on a phone), each with where it came from: Visibility, Trust and Chosen with their words, from the Audit's five places of public pages; its place among the rivals in its city, by name in thin rows, with the month's one line; the questions students ask most in its city, each on one line with its site and count small on the right ("Quora · 96"); and at the foot of that panel one short line with the program rising fastest, in words (Search trends)
+3. **The three features**, each in the same frame: a bar with its name (heavy and narrow, with the dashboard's icon), its question and its place ("1 of 3"), which stays under the header while its pictures pass, on a phone too; one short line; then the product across the full width on a dark stage. The Audit with the three words, the places and what to fix first; Rivals with the month's one line, the ranking and place by place; Demand with Make these 3 and the programs rising
+4. **How Drishti reads you**, inside the Audit (its label says so): "Five places. Three words." The three words side by side (stacked on a phone), each with its question and the checks behind it, one to a row, each with its place and its result; then, compact, what makes a word Strong, Okay or Weak. No total score
+5. **Public data only**: the rules every result follows, in one framed band. Leads is the one exception, and says so: only what students send a client's college themselves
+6. **How it works**: four steps on a line that fills as the page moves: enter details, Drishti checks every place, see what the internet says, get a summary and a report every month
 7. **Sample report** (ivory): three of its pages fanned out, and the download of the full sample PDF, marked "Sample report. Fictional data." on every page
-8. **Plans**: Free and Paid (₹9,999 for 6 months, no auto-renew), Paid on ivory, then every feature compared
-9. **For AdmitLabs clients**: included free, with the team acting on it
-10. **FAQ**: data sources, privacy, what "public data only" means, renewal
+8. **Plans**: Free and Paid (₹24,999 + GST for 6 months, no auto-renew), Paid on ivory, then every feature compared
+9. **For AdmitLabs clients**: included free, with the team acting on it, and Leads: the enquiries their content brings, link by link
+10. **FAQ**: data sources, privacy, what "public data only" means, Leads, renewal
 11. **Final call to action**: "Get your free Audit", under the same light as the top of the page
 
-**Motion**, calm and almost all CSS: sections and headings fade and rise in; each feature's bar holds its place while its pictures pass; the score counts up while its gauge draws; points bars fill; the rivals slide into rank order; Demand's bars grow; the report's pages fan out; buttons, cards and plans answer the pointer. With reduced motion, or no script, everything shows settled.
+**Motion**, calm and almost all CSS: sections and headings fade and rise in; each feature's bar holds its place while its pictures pass; the three words settle in turn; result bars fill; the rivals slide into rank order; Demand's bars grow; the report's pages fan out; buttons, cards and plans answer the pointer. With reduced motion, or no script, everything shows settled.
 
 "Get your free Audit" (and the Paid plan's "Start with a free Audit") leads to `/signup`, then `/onboarding`.
 
@@ -611,78 +681,91 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 
 | Table | Key fields |
 |---|---|
-| `institutions` | id, name, type (college, university, skilling), city, state, website, instagram, youtube, other_links (jsonb), claimed (bool), is_prospect (bool), created_at |
+| `cities` | name, state, aliases, near (the nearest bigger city, for Nearby city rivals) |
+| `institutions` | id, name, type (college, university, skilling), city, state, website, instagram, youtube, other_links (jsonb), claimed (bool), is_prospect (bool), review_first (bool, on to start; set by the team), created_at |
 | `programs` | id, institution_id, name |
-| `memberships` | user_id, institution_id, role (owner, member), guide_closed_at (Start here closed) |
+| `memberships` | user_id, institution_id, role (owner, member), guide_closed_at (Start here closed), summary_email (on or off) |
 | `team_users` | user_id, role (team, admin) |
 | `plans` | institution_id, tier (free, paid, client), starts_at, ends_at, set_by, free_program_id |
 | `signals` | id, institution_id, program_id (nullable), provider, check_key, value (jsonb), source_url, fetched_at |
-| `audits` | id, institution_id, run_at, kind (free, paid, client, team), overall, discovered, trusted, chosen, config_version |
+| `audits` | id, institution_id, run_at, kind (free, paid, client, team), overall, discovered, trusted, chosen, config_version, review (waiting, approved), approved_at, approved_by |
+| `audit_edits` | id, audit_id or report_id, what (a result, a line, a finding taken out, a summary line), target, before, after, reason, edited_by, edited_at (every change made in a review) |
 | `audit_program_scores` | audit_id, program_id, overall, discovered, trusted, chosen |
-| `audit_checks` | audit_id, program_id (nullable), pillar, check_key, result, points_awarded, points_max, finding, how_to_fix (and the same as fix_steps, one thing each), difficulty, source_url, checked_at |
+| `audit_checks` | audit_id, program_id (nullable), pillar, check_key, result, points_awarded, points_max, finding (the short line of what was seen), how_to_fix (and the same as fix_steps, one thing each), ready_fix (text or a layout), difficulty, source_url, checked_at |
+| `audit_findings` | id, audit_id, institution_id, place (people, other), kind (good, bad, unanswered, listing, news, directory), finding_key (the same finding month after month), line, source_name, source_url, checked_at, fix (name, why, steps, ready fix, effort, impact; null when there is nothing to do), fix_rank |
 | `rivals` | institution_id, rival_institution_id, suggested (bool), added_at |
-| `rival_moves` | id, rival_institution_id, kind, description, source_url, detected_at |
+| `rival_moves` | id, rival_institution_id, kind (new_program, fee_change, new_page, admission_dates, started_ads, reviews_jump), description, source_url, detected_at |
 | `rival_content` | id, rival_institution_id, platform, url, metrics (jsonb), why_it_worked, month |
 | `rival_ads` | id, rival_institution_id, promise, source_url, entered_by, entered_at |
-| `demand_pulls` | id, scope (city, state, india), region, program_key, month |
-| `demand_items` | id, pull_id, kind (rising, falling, question, worry, mention, season, idea), text, language, count, source_url, found_at |
+| `demand_pulls` | id, scope (city, state), region, program_key, month |
+| `demand_items` | id, pull_id, kind (rising, falling, question, topic, content, best_month, idea; version 1's worry, mention and season stay for old rows), text, language, count (null when no source gives a real count), meta (an idea's format, effort, program, hook, key points and why), source_url, found_at |
+| `content_picks` | institution_id, month, rank, idea (as picked), program_id, picked_at (Make these 3; Mark as made is a mark in `done_marks`) |
 | `actions` | institution_id, month, rank, text, feature (audit, rivals, demand), effort |
-| `done_marks` | institution_id, check_key or thing and month, marked_by, marked_at, checked_by_audit (the first own Audit after a check was marked) |
-| `reports` | institution_id, month, storage_path, created_at |
+| `done_marks` | institution_id, check_key, finding_key or thing and month, marked_by, marked_at, checked_by_audit (the first own Audit after a check or finding was marked) |
+| `reports` | institution_id, month, storage_path, summary (the month's summary, section 24), review (waiting, approved), approved_at, approved_by, created_at |
 | `notifications` | id, institution_id, kind, text, read, created_at |
 | `notes` | id, institution_id, author_id, body, created_at (team only) |
 | `team_work` | id, institution_id, kind (done, next), body, work_on (the day it was done, or Next is due), link, added_by, created_at (a Client's work log) |
 | `share_links` | token, institution_id, audit_id, created_by, created_at |
 | `institution_details` | institution_id, the details added by the institution (section 6), updated_at, updated_by. Never read by scoring |
 | `program_details` | program_id, institution_id, the details added for each program (section 6), updated_at, updated_by. Never read by scoring |
-| `scoring_config` | version, weights (jsonb), result_shares (jsonb), thresholds (jsonb), labels (jsonb), active (bool) |
-| `enquiries` | id, created_at, name, institution, role (founder_director, principal_dean, admissions, marketing, other), email, phone, program, message, handled_at, handled_by (website, section 22) |
+| `scoring_config` | version, weights (jsonb), result_shares (jsonb), thresholds (jsonb), labels (jsonb), impact (jsonb), active (bool) |
+| `enquiries` | id, created_at, kind (work_with_us, ask_paid, continue_paid, fix_request), name, institution, role (founder_director, principal_dean, admissions, marketing, other), email, phone, program, message, institution_id, asked_by, fix_key, fix_title, handled_at, handled_by (website, section 22; dashboard requests, section 13) |
+| `lead_links` | id, institution_id, program_id, code, name, used_on (instagram, youtube, facebook, website, whatsapp, other), created_by, created_at, archived_at |
+| `leads` | id, institution_id, link_id, program_id, name, phone, email, city, consent (the exact line shown), created_at |
+| `lead_settings` | institution_id, alert_emails, keep_months (6, 12 or 24), updated_at, updated_by |
+| `email_log` | id, kind (lead_alert, monthly_summary), institution_id, recipient, sent_at, sender (local test inbox), ok, error. Never the message itself |
 
 **Row Level Security:**
 - Institution users only see their own institution's data, filtered by plan.
-- Team and Admin see everything.
+- Team and Admin see everything, except a student's details in Leads.
 - Notes are team only.
 - A Client's work log: the team reads every log, adds to a Client's in its own name, marks Next as done and removes entries; the Client's own people read theirs while the service is active. No other plan sees one.
-- Marks done: people at the institution and the team read them; only the owner adds or takes one back, through `mark_done` and `undo_done`, and only for a check the latest own Audit finds below Strong. Each person closes their own Start here.
-- Enquiries: anyone can send one, only through `submit_enquiry` (at most 3 a day from one email). An owner asks for Paid only through `ask_for_paid`, which checks the owner and the plan and keeps one open request per kind; the institution reads its own open request through `open_paid_ask`. Only the team reads Enquiries and marks them handled.
+- Marks done: people at the institution and the team read them; only the owner adds or takes one back, through `mark_done` and `undo_done`, and only for a check or finding the latest own Audit has something to fix in. Each person closes their own Start here.
+- Enquiries: anyone can send one, only through `submit_enquiry` (at most 3 a day from one email). An owner asks for Paid only through `ask_for_paid`, which checks the owner and the plan and keeps one open request per kind; the institution reads its own open request through `open_paid_ask`. An owner asks AdmitLabs to fix something only through `ask_admitlabs_fix`: the owner, Free or Paid, a fix in the latest own Audit, one open request per fix. Only the team reads Enquiries and marks them handled.
+- Leads: only the institution's own people read them, never the team. Anyone can send one only through `submit_lead`: a live link, an institution that is a Client, and the spam checks of section 23. Only the owner deletes them, one enquiry or every enquiry from one phone or email. The team makes and archives links and reads counts by link through `lead_link_counts`; the institution's people read their own links. Lead settings: the owner changes them, the institution's people read them.
+- Email log: team only.
+- Review: a college reads its own Audits, their findings, its reports and summaries only once approved. The team sees what waits, changes results and lines (each change kept in `audit_edits`) and approves through `approve_audit` and `approve_report`; the team sets each college's `review_first`.
 - Rival data is only reachable through the `rivals` link of the viewing institution.
 - Plan gating must be enforced on the server, not only hidden in the UI.
 
-**Every signal keeps its source and the date it was checked.** This is how any score point can be explained.
+**Every signal keeps its source and the date it was checked.** This is how any result can be explained.
 
 ---
 
 ## 17. Data providers (slots for later)
 
-Each data source is a **provider** with one shared interface: it takes an institution (and program where needed) and returns signals, each with a value, a `source_url` and a `fetched_at` date.
+Each data source is a **provider** with one shared interface: it takes an institution (and program where needed), or a city and program for Demand, and returns signals, each with a value, a `source_url` and a `fetched_at` date. The AI reader and writer and the email sender have small interfaces of their own.
 
-**In this build, every provider has a mock version** that returns realistic sample data. A single setting switches each provider between mock and real.
+**In this build, every provider has a mock version** that returns realistic sample data. A single setting switches each provider between mock and real. A real version says it is not connected until it is built.
 
-| Provider | Feeds | Real source (later) |
-|---|---|---|
-| `search` | google_search | Search data provider (DataForSEO or SerpApi) |
-| `places` | google_profile, review_rating | Google Places API |
-| `pagespeed` | mobile_friendly, page_speed | Google PageSpeed Insights API |
-| `site_crawler` | fees_shown, program_page, easy_enquiry, admission_steps, placement_proof, faculty_leaders, approvals, rival moves | Website crawl, then Claude reads the pages |
-| `instagram` | instagram_activity, students_in_content, rival best content, demand | Instagram Graph API (official access only) |
-| `youtube` | youtube, rival best content, demand | YouTube Data API |
-| `socials` | other_socials | Facebook, LinkedIn official access |
-| `ai_answers` | ai_answers | Asking ChatGPT, Gemini and Perplexity the student's question, each result kept |
-| `official_data` | approvals | Official documents (NIRF and others), using Tathya's PDF extraction approach |
-| `reddit`, `x`, `quora`, `trends` | demand | Official APIs, checked for terms of use |
-| `analysis` | "why it worked", how to fix, demand grouping, content ideas, 3 things to do | Claude API |
-| `manual` | rival ads, anything else | Team entry screen |
+| Provider | Slot for | Feeds | Real source (later) |
+|---|---|---|---|
+| `website` | Website reader | The Website place: program pages, fees, placements, admission steps, enquiry, approvals, faculty; whether the site answers a student question; rival moves (new programs, fee changes, new pages, admission dates) | Reading the institution's public pages, with the AI reader |
+| `pagespeed` | Google PageSpeed | Mobile, Speed | Google PageSpeed Insights API |
+| `places` | Google Places | Google profile, Reviews and rating, the big jump in reviews alert | Google Places API |
+| `search` | Search tool, city specific | Search from [city], as seen from the city; Quora and forum threads for What people say; news, college listing sites and directories for Other places; official listings that prove approvals | A search data provider with location (DataForSEO or SerpApi) |
+| `youtube` | YouTube | YouTube, rivals' best videos, content signals | YouTube Data API |
+| `instagram` | Instagram | Instagram, Students in your posts, rivals' best posts, content signals | VidIQ |
+| `facebook` | Facebook, light | Facebook: the page, and when it last posted | Facebook official access |
+| `reddit` | Reddit | What people say on Reddit, student questions for Demand | Reddit API (commercial use needs Reddit's agreement) |
+| `trends` | Google Trends | Programs rising and falling, the best months to post | Google Trends, through a data provider |
+| `keywords` | Keyword tool | Searches a month for programs and courses in the city, and the questions people search | A keyword data provider |
+| `ai_answers` | AI answers | AI answers | Asking ChatGPT, Gemini and Perplexity the student's question, each result kept |
+| `ai` | AI reader and writer | Reads pages for the website reader; writes each finding's short line, why it matters, the steps, the ready fix, effort and a finding's impact, "why it worked", the rivals' one line and lessons, the ideas with their hooks and key points, and the monthly summary | Claude API |
+| `email` | Email sender | The alert for each new enquiry, the monthly summary | The local test inbox that local Supabase runs, for now; an email service later. WhatsApp later, as a second channel |
+| `manual` | Team entry | Rival ads | Team entry screen |
 
 **Rule: official access only.** No scraping tools that break a platform's terms.
 
-**Not in this build:** real providers, Claude API, Razorpay payments, WhatsApp, email sending, Vercel deployment, domains.
+**Not in this build:** real providers, Claude API, Razorpay payments, WhatsApp, real email sending, deployment of the dashboard.
 
 ---
 
 ## 18. Non-negotiable rules
 
-1. **Public data only.** Drishti checks only what a student or parent could see.
-2. **Every point explained.** Every result shows what was found, the source and the date.
+1. **Public data only**, with one exception: Leads (rule 13). Drishti checks only what a student or parent could see.
+2. **Every finding explained.** Every result shows what was found, the source and the date.
 3. **Learn, never copy** rival content.
 4. **Rivals never know** who tracks them.
 5. **Grouped only** for Demand. No individual students.
@@ -695,7 +778,8 @@ Each data source is a **provider** with one shared interface: it takes an instit
     - No shape, dot, square or colour without a name or number right next to it.
     - No chart that needs a key to understand.
     - If a person can't understand it in 3 seconds, simplify it.
-12. **Empty states that help.** Anything that can be empty says why it is empty, what to do about it, and when it fills: no rival suggestions yet says where suggestions come from and how to add rivals; no alerts yet says what arrives and when; a new prospect on the team side says what to do first. A set of tabs opens on one with something in it.
+12. **Empty states that help.** Anything that can be empty says why it is empty, what to do about it, and when it fills: no rival suggestions yet says where suggestions come from and how to add rivals; no alerts yet says what arrives and when; a new prospect on the team side says what to do first; not much said about you yet says why and what helps. A set of tabs opens on one with something in it.
+13. **Leads are the students' own, for that college only.** The only individual student data in Drishti, because students send it to that college themselves, with a consent line. Shown only to that college, kept only as long as it chooses, deleted on request. Not a CRM. A lawyer checks it before it goes live (section 23).
 
 ---
 
@@ -715,7 +799,23 @@ Stop at the end of each phase for review. Do not start the next phase without ap
 
 **After phase 7:** the AdmitLabs website (section 22), in the same app, so the website, the product page and the dashboard share one design system, one set of fonts and one deploy.
 
-**Later (not now):** connect real providers one by one, Claude API for analysis, Razorpay, reminders by email, WhatsApp, deployment to Vercel with admitlabs.in (the website and /drishti) and app.admitlabs.in.
+**Version 2 (October 2026)**, in three steps:
+
+1. The plan and this spec. Wait for approval.
+2. A development only mock page (not found in production, not indexed) with the new Audit, Rivals, Demand with Make these 3, Leads (the client's view, the team's links and the public form), Home, the monthly summary and the Audit ready email, and the review before sending (To review, one review, the college's waiting state), with two options where there is a real design choice, shown on desktop and phone. Wait for the pick.
+3. Build in parts. Each part: shots of its key screens on desktop and phone, every check and test once at its end, then a local commit and a short summary. The mock page goes at the end.
+
+| Part | What gets built |
+|---|---|
+| 1. Data and mock providers | Migrations, the new provider slots and mocks, the sample data, the engine's words and impact (with tests), the price in config |
+| 2. Audit | The places, fixes with ready fixes, Let AdmitLabs fix this, marks on findings, plan gating, the shared Audit and the team's views; review before sending for Audits: To review, fixing a result or a line, Approve and send, the college's waiting state, the Review first setting |
+| 3. Rivals | City suggestions and Nearby city, the ranking, place by place, the month's one line, lessons, the new alerts, a rival's page |
+| 4. Demand | Make these 3 and Mark as made, program and content signals, the best months, honest numbers |
+| 5. Leads | Team links, the public form and its spam checks, the Client's Leads page and CSV, alert emails to the local test inbox, keeping and deleting |
+| 6. Home, summary, PDFs, pricing | The new Home, the monthly summary by email and on Reports, the Audit ready email for Free, both waiting in To review when Review first is on, both PDFs, ₹24,999 + GST everywhere |
+| 7. Product page, website, sign up and log in | `/drishti`, the website's Drishti parts and the pictures on sign up and log in; the mock page removed |
+
+**Later (not now):** connect real providers one by one, Claude API for analysis, Razorpay, reminders by email, a real email sender, WhatsApp, deployment of the dashboard to app.admitlabs.in.
 
 ---
 
@@ -723,25 +823,39 @@ Stop at the end of each phase for review. Do not start the next phase without ap
 
 Fictional only. No real institution names.
 
-- 8 institutions in Assam: 3 colleges, 2 universities, 3 skilling institutes. Mostly Guwahati, some in other Assam cities.
+- 8 institutions in Assam: 3 colleges, 2 universities, 3 skilling institutes. Mostly Guwahati, some in other Assam cities. Plus 2 rival records added in version 2: a skilling institute in Guwahati and an institute in Tezpur.
+- Rivals are local: Highfield University moves to Guwahati, so every Guwahati institution tracks 3 or more rivals in its own city.
+- The Nearby city case: Loomcraft Skills Institute (Tezpur) signs up on Free and tracks one rival in Tezpur and two from Guwahati, marked "Nearby city".
 - Programs such as BBA, MBA, BCA, B.Com, Nursing, Hotel Management, Digital Marketing, Data Analytics.
-- Use `.example` domains for websites (for example `northbank-college.example`).
-- A spread of scores: some Strong, some Needs work, some Getting started.
-- Fixes marked done: one the next Audit confirmed, one it did not find yet, one still waiting.
+- Use `.example` domains for websites (for example `northbank-college.example`), and for listing sites, news and forums.
+- A spread of results: some parts Strong, some Okay, some Weak.
+- Every fix has its ready fix; some use details added by you.
+- What people say: plenty for Eastgate and Silverline, a little for Brightpath, and "Not much said about you yet" for Northbank and Loomcraft.
+- Other places: listings with old details, missing listings and a news story or two.
+- Fixes marked done: one the next Audit confirmed, one it did not find yet, one still waiting. One finding marked done and confirmed.
+- Asks to let AdmitLabs fix something: one open, one handled.
+- To review: a Free sign up's first Audit, a Paid refresh and a monthly summary waiting; one Audit approved after the team fixed a result; Brightpath on Send automatically.
 - 6 months of Audit history for at least 2 institutions.
 - Rival scores and Demand pulls from April to September 2026, so the month by month charts have 6 months too.
+- Rival alerts, including started ads and a big jump in reviews.
 - Details added by some institutions, for themselves and their programs.
 - Rivals set up between them, with moves, best content and ads.
-- Demand pulls for Guwahati, Assam and All India across the sample programs, in English, Hindi and Assamese.
-- One institution on each tier: Free, Paid, Client. Plus 2 prospects visible only to the team.
+- Demand pulls for Guwahati and Tezpur, with Assam filling in, across the sample programs, in English, Hindi and Assamese: programs rising and falling, topics, questions, content signals, best months and ideas with hooks and key points. Make these 3 for August and September: Eastgate made 2 of August's 3.
+- Leads for Brightpath (Client): 4 tracking links from July, and enquiries from July to September with made up names, `.example` emails and made up phone numbers.
+- One institution on each tier: Free, Paid, Client (and a second Free, Loomcraft). Plus 2 prospects visible only to the team.
 - Sample users: one owner per institution, one team user, one admin.
 
 ---
 
 ## 21. Open items (not decided yet)
 
-- WhatsApp summary of the monthly report (later)
+- WhatsApp: the monthly summary and the alert for each new enquiry (later)
+- A real email sender (later; the local test inbox for now)
 - Email reminders for plan end (later)
+- **Before Leads goes live: a lawyer checks its privacy** (the consent line, keeping and deleting, what changes under the DPDP rules)
+- What happens to a Client's Leads when the service ends. For now: the forms close, and the list stays with the college until its keeping time runs out
+- Scoring What people say and Other places, once there is enough data
+- Whether a review that waits too long goes out on its own. For now it waits, and To review shows how long each has waited
 - Whether AdmitLabs serves two direct rivals for the same program in the same city (services decision)
 - Moving thresholds from fixed rules to peer comparison (after enough Audits)
 - Final hex values, confirmed against the brand identity PDF
@@ -759,9 +873,9 @@ The main AdmitLabs website, built in this app (section 4), in the **Spotlight** 
 **Home page sections, in order:**
 
 1. **Hero**: "Get discovered, trusted, and chosen." in two lines (80px on a desktop), falling from ivory to warm grey, centred on black under a soft cone of light, inside a fine frame with small crosses. One short paragraph, two buttons ("Get your free Audit" and "Work with us"), and the quiet proof line "120+ education companies worked with." No picture, no labels
-2. **The system** (ivory): one dark stage where the three moments happen in the order a student lives them: a search where the institution is the answer (an AI answer and the top result), a review and its proof, and an enquiry that someone receives. Under each, its words set like a caption: Discovered, Trusted or Chosen, its line, and what Drishti checks. Then "Measure. Fix. Repeat." as one sentence on one track, with a dot that travels it. On a phone each moment gets its own small stage
+2. **The system** (ivory): one dark stage where the three moments happen in the order a student lives them: a search where the institution is the answer (an AI answer and the top result), a review and its proof, and an enquiry that someone receives. Under each, its words set like a caption: Visibility, Trust or Chosen, its line, and what Drishti checks. Then "Measure. Fix. Repeat." as one sentence on one track, with a dot that travels it. On a phone each moment gets its own small stage
 3. **Services**: three chapters, each laid out its own way around what that service makes: Program Growth beside a program's own page (a browser, and the phone in front; on a phone, the phone alone); Institution Branding on a stage of phones (the official page's posts, a reel, a YouTube film); Admit Campaign beside its season, planned week by week, with this week's posts. Instagram and YouTube appear only as their official one colour logos. Each links to the form with the service named. "We create content. We don't run ads." No prices
-4. **Drishti**: under one small label, "Product", the only one on the page, its name with the Drishti eye (its Rise reveal plays once when the title comes into view, section 14); its three numbers (17 checks, 5 rivals, 1 report), its three questions as a short list beside the product itself, a made up institution's Home in an app window, then "Free to start." with "Get your free Audit" and "Explore Drishti"
+4. **Drishti**: under one small label, "Product", the only one on the page, its name with the Drishti eye (its Rise reveal plays once when the title comes into view, section 14); its three numbers (5 places checked, 5 rivals in your city, 1 report every month), its three questions as a short list beside the product itself, a made up institution's Home in an app window, then "Free to start." with "Get your free Audit" and "Explore Drishti"
 5. **Who we work with** (ivory): private colleges, private universities, and skilling and training institutes, set large as a staircase, for professional and career programs
 6. **Our work**: content samples. Hidden until there are samples (`src/site/work.ts`) and `SITE_SETTINGS.showWork` is on
 7. **How we work**: the promise held on the left; Audit, Blueprint, Run and Report on a line that fills as the page moves. No numbers
@@ -784,3 +898,66 @@ The main AdmitLabs website, built in this app (section 4), in the **Spotlight** 
 **Search and sharing:** every page has its own title, description and link preview image (1200 by 630: the headline in the hero's light and frame, with the proof line).
 
 **Settings** (`src/config/site.ts`): `showWork`, `tathyaUrl` and the contact email.
+
+---
+
+## 23. Leads (AdmitLabs Clients only)
+
+**Answers:** "What did our content bring in?" For AdmitLabs clients: the enquiries their content brings, link by link.
+
+**The one exception to public data only.** Leads are the only place in Drishti with individual student data, because students send their details to that college themselves, through its form, with a consent line. **A lawyer must check Leads' privacy (the consent line, keeping and deleting, the DPDP rules) before it goes live.** Until then it runs on sample data only.
+
+**Tracking links.** The AdmitLabs team makes links for each Client in the team area: a name ("Instagram bio", "Reel: BBA placements", "YouTube"), where it will be used (Instagram, YouTube, Facebook, website, WhatsApp, other) and one program. Each link knows its source. An archived link's form says it is closed.
+
+**The form.** Each link opens a short enquiry form that Drishti hosts, at `admitlabs.in/enquire/<code>`, with the college's name and the program. Fields: name, phone, email, course (the link's program to start, or any of the college's programs) and city. Above the button, the consent line: "Your details go to [College] so they can contact you about admission." Then "Thanks. [College] will contact you soon." Spam protection: a hidden field, a minimum time to fill the form, one enquiry per phone or email per college per day, and a cap on enquiries per link per hour **[ADJUSTABLE]**. Not indexed by search engines. The form takes enquiries only while the college is a Client.
+
+**What the Client sees (`/leads`):**
+
+- Enquiries this month, and the change from last month.
+- The link that brought the most, and every link with its count this month and before.
+- The list: name, course, link and date, with phone, email and city, newest first, and Download CSV.
+- An alert email to the admissions team for each new enquiry, with the student's details. It goes to the local test inbox in this build; WhatsApp later.
+
+**Monthly report and summary:** "Your content brought 23 enquiries in September." with the links that brought them. Counts only, never a student's details.
+
+**Keeping and deleting.** In Settings, Leads: who gets the alert email (up to 3 addresses; to start, the admissions email from the details added by you, or else the owner's) and how long enquiries are kept (6, 12 or 24 months; 12 to start **[ADJUSTABLE]**), after which they are deleted for good. The owner can delete one student's data on request: find them by phone or email and delete every enquiry they sent.
+
+**Who sees what.** Only the college's own people see the list. The AdmitLabs team sees counts by link, never a student's details, in "view as" too. Rivals never see anything.
+
+**Not a CRM.** No calling, no follow up stages, no sales pipeline, no notes on a student.
+
+---
+
+## 24. Monthly summary, and the Audit ready email
+
+**Paid and Client: the monthly summary.** A short summary each month, made on the 1st with the report:
+
+1. How you're doing: Visibility, Trust and Chosen, and any that moved.
+2. The 3 things to do this month (Home's three).
+3. One rival move.
+4. For a Client: the month's enquiries ("Your content brought 23 enquiries in September, 6 more than in August.").
+
+It arrives by email to the owner and members, each of whom can turn it off in Settings, Notifications, with links to the dashboard and the PDF. The same summary opens the month on Reports and in the PDF.
+
+**Free: the Audit ready email.** When a free Audit is ready (the first, then every 3 months), a short email: Visibility, Trust and Chosen; the top 3 fixes, each with Let AdmitLabs fix this; and Ask for Paid. Each button opens the dashboard, where the owner asks with one click. To the owner and members, each of whom can turn it off.
+
+In this build both go to the local test inbox; WhatsApp later. With Review first on, both wait for the team's approval (section 25).
+
+---
+
+## 25. Review before sending
+
+The AdmitLabs team can look over a new Audit and a monthly summary before the college sees it, and fix what a provider got wrong.
+
+- **What waits.** With Review first on, every new own Audit (at sign up, on its schedule, or a refresh) and every monthly summary with its report waits in the team's **To review** list, and so do their emails (section 24). Alerts for new enquiries never wait. Prospect Audits are the team's own and need no review.
+- **The setting.** Each college has one, set by the team on its page: **Review first** (on to start) or **Send automatically**.
+- **To review** (team area): everything waiting, oldest first, each with the college, what it is ("New Audit", "September summary"), its plan, how long it has waited and what changed in one line. A count beside To review in the team's menu.
+- **Reviewing one.** First, what changed since the college's last approved Audit: the words that moved, the checks that moved with their results before and after, new findings and findings gone. Then the Audit place by place (or the summary line by line), where the team can:
+  - fix a result: choose Strong, Okay, Weak or Missing, with a short reason; the words and the score update straight away;
+  - fix a line: what was seen, a fix's name, its steps or ready fix, a summary line;
+  - take out a finding that is not about the college.
+
+  Then **Approve and send**.
+- **Every change is kept**: who, when, what it was, what it became and why. A result the team changed keeps its link, shows the day the team checked it and the team's line, and reads "Checked by the AdmitLabs team".
+- **Until it is approved** the college keeps its last approved Audit and sees "Your Audit is being checked by the AdmitLabs team" on Home and the Audit. On a first Audit that line takes the place of the results, with when to expect it. Nothing about the waiting Audit shows anywhere else, no email goes, and marks done wait to be checked.
+- **On Approve and send** the Audit shows, marks done are checked, "Your new Audit is ready" arrives in Notifications and its email goes; a summary goes by email and shows on Reports with its PDF.

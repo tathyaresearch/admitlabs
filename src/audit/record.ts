@@ -1,5 +1,10 @@
-// Builds the finished Audit, ready to store, from collected facts. No database and no network:
-// the caller loads the inputs and saves the record through record_audit().
+// Builds the finished Audit, ready to store, from collected facts and findings. No database and no
+// network: the caller loads the inputs and saves the record through record_audit().
+//
+// The writer (the AI provider) words each fix and its ready fix; the details an institution added
+// fill some of a ready fix's blanks, and are never read by scoring. A finding with something to do
+// gets its impact and effort from the rules (src/domain/finding-rules.ts) and joins the checks' fixes
+// in one ranking.
 
 import { classify } from '../domain/scoring/classify.ts';
 import { evaluateAudit, type AuditEvaluation } from '../domain/scoring/evaluate.ts';
@@ -8,6 +13,8 @@ import { resultKey, type PreviousScores } from '../domain/scoring/score.ts';
 import type { ScoringConfig, Thresholds } from '../domain/scoring-config.ts';
 import { INSTITUTION_CHECK_KEYS, PROGRAM_CHECK_KEYS } from '../domain/checks.ts';
 import type { CheckFacts } from '../domain/facts.ts';
+import { findingEffort, findingHasFix, findingImpact, type ListingProblem } from '../domain/finding-rules.ts';
+import type { ReadyFix } from '../domain/ready-fix.ts';
 import {
   scoringFamily,
   type AuditKind,
@@ -15,10 +22,14 @@ import {
   type CheckKey,
   type CheckResult,
   type Difficulty,
+  type FindingKind,
+  type FindingPlace,
+  type Impact,
   type InstitutionType,
   type Pillar,
+  type ReviewState,
 } from '../domain/types.ts';
-import type { AnalysisProvider, FixAdvice } from '../providers/analysis.ts';
+import type { AnalysisProvider, FindingFixText, FixAdvice, WritingContext } from '../providers/analysis.ts';
 import type { CollectedFacts } from './facts.ts';
 
 export type { AuditTrigger } from '../domain/types.ts';
@@ -28,6 +39,19 @@ export const OWN_AUDIT_KINDS: readonly AuditKind[] = ['free', 'paid', 'client'];
 
 export interface PreviousAudit extends PreviousScores {
   id: string;
+}
+
+/** Something found about the institution in What people say or Other places, as collected. */
+export interface CollectedFinding {
+  key: string;
+  place: FindingPlace;
+  kind: FindingKind;
+  line: string;
+  source: string;
+  sourceUrl: string;
+  checkedAt: string;
+  repeats: number;
+  listing: ListingProblem | null;
 }
 
 export interface PrepareInput {
@@ -42,7 +66,13 @@ export interface PrepareInput {
   /** The programs this Audit covers: one for Free, all for everyone else. */
   programs: ReadonlyArray<{ id: string; name: string }>;
   collected: CollectedFacts;
+  /** What people say and Other places. */
+  findings?: readonly CollectedFinding[];
   previous: PreviousAudit | null;
+  /** Who the fixes are for and the details they added, for the ready fixes. */
+  context?: WritingContext;
+  /** An own Audit waits for the team when its college has Review first on (spec section 25). */
+  review?: ReviewState;
 }
 
 /** One row per check, with its details. Field names match the record_audit() payload. */
@@ -63,7 +93,24 @@ export interface CheckRecord {
   /** How to fix, in short steps (how_to_fix is the same as one paragraph). */
   fix_steps: string[];
   difficulty: Difficulty | null;
+  /** A text or layout to copy. Null when the check is Strong. */
+  ready_fix: ReadyFix | null;
   source_url: string;
+}
+
+/** One finding, with its fix when there is something to do. Field names match the record_audit() payload. */
+export interface FindingRecord {
+  place: FindingPlace;
+  kind: FindingKind;
+  finding_key: string;
+  line: string;
+  source_name: string;
+  source_url: string;
+  checked_at: string;
+  repeats: number;
+  listing: ListingProblem | null;
+  fix: { title: string; why: string; steps: string[]; ready_fix: ReadyFix; effort: Difficulty; impact: Impact } | null;
+  fix_rank: number | null;
 }
 
 export interface ScoreRecord {
@@ -87,6 +134,8 @@ export interface AuditRecord extends ScoreRecord {
   previous_audit_id: string | null;
   programs: Array<ScoreRecord & { program_id: string }>;
   checks: CheckRecord[];
+  findings: FindingRecord[];
+  review: ReviewState;
 }
 
 export interface PreparedAudit {
@@ -94,7 +143,20 @@ export interface PreparedAudit {
   evaluation: AuditEvaluation;
 }
 
-export async function prepareAudit(input: PrepareInput, analysis: Pick<AnalysisProvider, 'fixAdvice'>): Promise<PreparedAudit> {
+/** A listing's ready fix shows the fees of the institution's first program with details added. */
+function firstProgramDetails(context: WritingContext | undefined) {
+  if (!context) return null;
+  for (const name of context.programNames) {
+    const details = context.programDetails.get(name);
+    if (details) return details;
+  }
+  return null;
+}
+
+/** People say first, then Other places; otherwise in the order they were found. */
+const PLACE_ORDER: Readonly<Record<FindingPlace, number>> = { people: 0, other: 1 };
+
+export async function prepareAudit(input: PrepareInput, analysis: Pick<AnalysisProvider, 'fixAdvice' | 'findingFix'>): Promise<PreparedAudit> {
   const { collected, institutionType } = input;
   const context = { family: scoringFamily(institutionType), thresholds: input.thresholds };
   const names = new Map(input.programs.map((program) => [program.id, program.name]));
@@ -105,7 +167,7 @@ export async function prepareAudit(input: PrepareInput, analysis: Pick<AnalysisP
     const result = classify(key, facts, context);
     advice.set(
       resultKey(key, programId),
-      await analysis.fixAdvice({ checkKey: key, result, facts, institutionType, programName: programId ? (names.get(programId) ?? null) : null }),
+      await analysis.fixAdvice({ checkKey: key, result, facts, institutionType, programName: programId ? (names.get(programId) ?? null) : null, context: input.context }),
     );
   };
   await Promise.all([
@@ -117,6 +179,26 @@ export async function prepareAudit(input: PrepareInput, analysis: Pick<AnalysisP
     }),
   ]);
 
+  // Findings: the writer words each fix; the rules say its impact and effort, unless the writer knows better.
+  const findings = [...(input.findings ?? [])].sort((a, b) => PLACE_ORDER[a.place] - PLACE_ORDER[b.place]);
+  const findingFixes = new Map<string, { text: FindingFixText; impact: Impact; effort: Difficulty }>();
+  await Promise.all(
+    findings.map(async (finding) => {
+      if (!findingHasFix(finding)) return;
+      const impact = findingImpact(finding);
+      const effort = findingEffort(finding);
+      const text = await analysis.findingFix({
+        finding: { place: finding.place, kind: finding.kind, key: finding.key, line: finding.line, source: finding.source, repeats: finding.repeats, listing: finding.listing },
+        institutionType,
+        institutionName: input.context?.institutionName ?? 'your institution',
+        city: input.context?.city ?? 'your city',
+        programNames: input.context?.programNames ?? [],
+        details: { institution: input.context?.institutionDetails ?? null, program: firstProgramDetails(input.context) },
+      });
+      if (text && impact && effort) findingFixes.set(finding.key, { text, impact: text.impact ?? impact, effort: text.effort ?? effort });
+    }),
+  );
+
   const evaluation = evaluateAudit({
     config: input.config,
     thresholds: input.thresholds,
@@ -125,6 +207,10 @@ export async function prepareAudit(input: PrepareInput, analysis: Pick<AnalysisP
     programs: input.programs.map((program) => ({ id: program.id, facts: collected.programs.get(program.id) as never })),
     previous: input.previous,
     difficultyOf: (outcome) => advice.get(resultKey(outcome.key, outcome.programId))?.difficulty ?? 'medium',
+    findingFixes: findings.flatMap((finding) => {
+      const fix = findingFixes.get(finding.key);
+      return fix ? [{ id: finding.key, impact: fix.impact, difficulty: fix.effort }] : [];
+    }),
   });
 
   const factsFor = (key: CheckKey, programId: string | null): unknown => {
@@ -156,7 +242,25 @@ export async function prepareAudit(input: PrepareInput, analysis: Pick<AnalysisP
       how_to_fix: tip.howToFix,
       fix_steps: tip.steps,
       difficulty: tip.difficulty,
+      ready_fix: tip.readyFix,
       source_url: source.sourceUrl,
+    };
+  });
+
+  const findingRecords: FindingRecord[] = findings.map((finding) => {
+    const fix = findingFixes.get(finding.key);
+    return {
+      place: finding.place,
+      kind: finding.kind,
+      finding_key: finding.key,
+      line: finding.line,
+      source_name: finding.source,
+      source_url: finding.sourceUrl,
+      checked_at: finding.checkedAt,
+      repeats: finding.repeats,
+      listing: finding.listing,
+      fix: fix ? { title: fix.text.title, why: fix.text.why, steps: fix.text.steps, ready_fix: fix.text.readyFix, effort: fix.effort, impact: fix.impact } : null,
+      fix_rank: evaluation.findingRanks.get(finding.key) ?? null,
     };
   });
 
@@ -192,6 +296,8 @@ export async function prepareAudit(input: PrepareInput, analysis: Pick<AnalysisP
       };
     }),
     checks,
+    findings: findingRecords,
+    review: input.review ?? 'approved',
   };
 
   return { record, evaluation };

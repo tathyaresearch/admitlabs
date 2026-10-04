@@ -3,11 +3,11 @@ import Link from 'next/link';
 import { ActionButton } from '@/components/team/InstitutionPanels';
 import { EmptyState } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
-import { PLAN_RULES } from '@/config/plans';
-import { formatDateTime, formatInr, plural } from '@/domain/format';
+import { formatDateTime, plural } from '@/domain/format';
+import { PAID_PRICE } from '@/domain/tiers';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
-import { loadEnquiries, type EnquiryRow, type FormEnquiry, type PaidAsk } from '@/lib/team/enquiries';
+import { loadEnquiries, type EnquiryRow, type FixAsk, type FormEnquiry, type PaidAsk } from '@/lib/team/enquiries';
 import { ENQUIRY_ROLE_LABELS, formatPhone } from '@/site/enquiry';
 import { setEnquiryHandledAction } from './actions';
 import audit from '@/components/audit/audit.module.css';
@@ -57,7 +57,34 @@ function Ask({ enquiry }: { enquiry: PaidAsk }) {
         </a>
       </p>
       <p className={team.itemBody}>
-        Paid is {formatInr(PLAN_RULES.paid.priceInr)} for {PLAN_RULES.paid.lengthMonths} months, with no auto-renew. Write back, then an Admin switches it on from their page.
+        Paid is {PAID_PRICE.text} {PAID_PRICE.term}, with no auto-renew. Write back, then an Admin switches it on from their page.
+      </p>
+      <Handled enquiry={enquiry} />
+    </article>
+  );
+}
+
+/** An owner asks AdmitLabs to fix one thing from their Audit. */
+function FixRequest({ enquiry }: { enquiry: FixAsk }) {
+  return (
+    <article className={team.item} aria-labelledby={`enquiry-${enquiry.id}`}>
+      <div className={team.itemHead}>
+        <h2 id={`enquiry-${enquiry.id}`} className={team.itemTitle}>
+          Asks AdmitLabs to fix this
+        </h2>
+        <Link href={`/team/institutions/${enquiry.institutionId}`} className={team.link}>
+          {enquiry.institution}
+        </Link>
+      </div>
+      <p className={team.itemMeta}>
+        <span>Sent {formatDateTime(enquiry.createdAt)}, from their Audit</span>
+      </p>
+      <p className={team.itemBody}>{enquiry.fixTitle}</p>
+      <p className={styles.contact}>
+        <span>The owner:</span>
+        <a className={team.link} href={`mailto:${enquiry.email}`}>
+          {enquiry.email}
+        </a>
       </p>
       <Handled enquiry={enquiry} />
     </article>
@@ -65,7 +92,8 @@ function Ask({ enquiry }: { enquiry: PaidAsk }) {
 }
 
 function Enquiry({ enquiry }: { enquiry: EnquiryRow }) {
-  return enquiry.kind === 'work_with_us' ? <FormRow enquiry={enquiry} /> : <Ask enquiry={enquiry} />;
+  if (enquiry.kind === 'work_with_us') return <FormRow enquiry={enquiry} />;
+  return enquiry.kind === 'fix_request' ? <FixRequest enquiry={enquiry} /> : <Ask enquiry={enquiry} />;
 }
 
 function FormRow({ enquiry }: { enquiry: FormEnquiry }) {
@@ -111,7 +139,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
       <PageHead
         title="Enquiries"
         question="Who wants to work with us?"
-        caption={[`${fresh.length} new`, `${plural(all.length, 'enquiry', 'enquiries')} in all`, 'From the website’s Work with us form, and requests for Paid from dashboards']}
+        caption={[`${fresh.length} new`, `${plural(all.length, 'enquiry', 'enquiries')} in all`, 'From the website’s Work with us form, and requests from dashboards: for Paid, or to fix something']}
       />
       <nav className={styles.filter} aria-label="Show">
         <Link href="/team/enquiries" className={styles.filterLink} aria-current={showAll ? undefined : 'page'}>

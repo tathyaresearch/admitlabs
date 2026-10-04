@@ -1,7 +1,8 @@
 // The 17 Audit checks (spec section 7.2). Program checks are scored per program;
-// institution checks are scored once and shared by every program.
+// institution checks are scored once and shared by every program. Each sits in one place
+// (Website, Google, Social media) and feeds one of the three words.
 
-import { CHECK_KEYS, PILLARS, type CheckKey, type CheckResult, type InstitutionType, type Pillar } from './types.ts';
+import { CHECK_KEYS, PILLARS, type CheckKey, type CheckResult, type InstitutionType, type Pillar, type Place } from './types.ts';
 
 export type CheckLevel = 'program' | 'institution';
 
@@ -22,6 +23,8 @@ export function isProgramCheck(key: CheckKey): key is ProgramCheckKey {
 export interface CheckDefinition {
   key: CheckKey;
   pillar: Pillar;
+  /** Where it sits in the Audit. */
+  place: Place;
   level: CheckLevel;
   /** Short name for lists, tables and meters. */
   name: string;
@@ -30,23 +33,44 @@ export interface CheckDefinition {
 }
 
 export const CHECKS: readonly CheckDefinition[] = [
-  { key: 'google_search', pillar: 'discovered', level: 'program', name: 'Google search', looksAt: 'Shows up on Google for "[program] in [city]"' },
-  { key: 'instagram_activity', pillar: 'discovered', level: 'institution', name: 'Instagram', looksAt: 'Instagram posting and reels' },
-  { key: 'google_profile', pillar: 'discovered', level: 'institution', name: 'Google profile', looksAt: 'Google profile exists, number of reviews' },
-  { key: 'youtube', pillar: 'discovered', level: 'institution', name: 'YouTube', looksAt: 'YouTube activity' },
-  { key: 'ai_answers', pillar: 'discovered', level: 'program', name: 'AI answers', looksAt: 'Named when a student asks ChatGPT, Gemini and Perplexity "best [program] in [city]"' },
-  { key: 'other_socials', pillar: 'discovered', level: 'institution', name: 'Other socials', looksAt: 'Facebook, LinkedIn activity' },
-  { key: 'placement_proof', pillar: 'trusted', level: 'program', name: 'Placement proof', looksAt: 'Placement or results proof' },
-  { key: 'review_rating', pillar: 'trusted', level: 'institution', name: 'Review rating', looksAt: 'Google review rating and replies' },
-  { key: 'approvals', pillar: 'trusted', level: 'institution', name: 'Approvals', looksAt: 'Approvals and official data shown' },
-  { key: 'faculty_leaders', pillar: 'trusted', level: 'institution', name: 'Faculty and leaders', looksAt: 'Faculty and leaders visible' },
-  { key: 'students_in_content', pillar: 'trusted', level: 'institution', name: 'Students in content', looksAt: 'Real students and alumni in content' },
-  { key: 'fees_shown', pillar: 'chosen', level: 'program', name: 'Fees shown', looksAt: 'Fees shown clearly' },
-  { key: 'program_page', pillar: 'chosen', level: 'program', name: 'Program page', looksAt: 'Program has its own page' },
-  { key: 'easy_enquiry', pillar: 'chosen', level: 'institution', name: 'Easy enquiry', looksAt: 'Enquiry form and WhatsApp' },
-  { key: 'admission_steps', pillar: 'chosen', level: 'program', name: 'Admission steps', looksAt: 'Admission steps clear' },
-  { key: 'mobile_friendly', pillar: 'chosen', level: 'institution', name: 'Mobile friendly', looksAt: 'Website works on phone' },
-  { key: 'page_speed', pillar: 'chosen', level: 'institution', name: 'Page speed', looksAt: 'Website loads fast' },
+  { key: 'google_search', pillar: 'discovered', place: 'google', level: 'program', name: 'Search results', looksAt: 'Shows up on Google for "[program] in [city]", searched from the city' },
+  { key: 'instagram_activity', pillar: 'discovered', place: 'social', level: 'institution', name: 'Instagram', looksAt: 'Instagram posting and reels' },
+  { key: 'google_profile', pillar: 'discovered', place: 'google', level: 'institution', name: 'Google profile', looksAt: 'Google profile exists, number of reviews' },
+  { key: 'youtube', pillar: 'discovered', place: 'social', level: 'institution', name: 'YouTube', looksAt: 'YouTube activity' },
+  { key: 'ai_answers', pillar: 'discovered', place: 'google', level: 'program', name: 'AI answers', looksAt: 'Named when a student asks ChatGPT, Gemini and Perplexity "best [program] in [city]"' },
+  { key: 'other_socials', pillar: 'discovered', place: 'social', level: 'institution', name: 'Facebook', looksAt: 'Facebook activity' },
+  { key: 'placement_proof', pillar: 'trusted', place: 'website', level: 'program', name: 'Placements', looksAt: 'Placement or results proof' },
+  { key: 'review_rating', pillar: 'trusted', place: 'google', level: 'institution', name: 'Reviews and rating', looksAt: 'Google review rating and replies' },
+  { key: 'approvals', pillar: 'trusted', place: 'website', level: 'institution', name: 'Approvals', looksAt: 'Approvals and official data shown' },
+  { key: 'faculty_leaders', pillar: 'trusted', place: 'website', level: 'institution', name: 'Faculty and leaders', looksAt: 'Faculty and leaders visible' },
+  { key: 'students_in_content', pillar: 'trusted', place: 'social', level: 'institution', name: 'Students in your posts', looksAt: 'Real students and alumni in content' },
+  { key: 'fees_shown', pillar: 'chosen', place: 'website', level: 'program', name: 'Fees', looksAt: 'Fees shown clearly' },
+  { key: 'program_page', pillar: 'chosen', place: 'website', level: 'program', name: 'Program pages', looksAt: 'Program has its own page' },
+  { key: 'easy_enquiry', pillar: 'chosen', place: 'website', level: 'institution', name: 'Enquiry', looksAt: 'Enquiry form and WhatsApp' },
+  { key: 'admission_steps', pillar: 'chosen', place: 'website', level: 'program', name: 'Admission steps', looksAt: 'Admission steps clear' },
+  { key: 'mobile_friendly', pillar: 'chosen', place: 'website', level: 'institution', name: 'Mobile', looksAt: 'Website works on phone' },
+  { key: 'page_speed', pillar: 'chosen', place: 'website', level: 'institution', name: 'Speed', looksAt: 'Website loads fast' },
+];
+
+/** The order checks are listed in inside their place: what a student meets first, first. */
+export const PLACE_CHECK_ORDER: readonly CheckKey[] = [
+  'program_page',
+  'fees_shown',
+  'placement_proof',
+  'admission_steps',
+  'easy_enquiry',
+  'mobile_friendly',
+  'page_speed',
+  'approvals',
+  'faculty_leaders',
+  'google_search',
+  'google_profile',
+  'review_rating',
+  'ai_answers',
+  'instagram_activity',
+  'youtube',
+  'other_socials',
+  'students_in_content',
 ];
 
 const BY_KEY = new Map<CheckKey, CheckDefinition>(CHECKS.map((check) => [check.key, check]));
@@ -65,6 +89,16 @@ export function checksForLevel(level: CheckLevel): CheckDefinition[] {
   return CHECKS.filter((check) => check.level === level);
 }
 
+/** The checks in a place, in the order the place lists them. What people say and Other places have none. */
+export function checksForPlace(place: Place): CheckDefinition[] {
+  return PLACE_CHECK_ORDER.map(getCheck).filter((check) => check.place === place);
+}
+
+/** Sorts checks the way their places list them: Website, Google, Social media, then each place's order. */
+export function comparePlaceOrder(a: CheckKey, b: CheckKey): number {
+  return PLACE_CHECK_ORDER.indexOf(a) - PLACE_CHECK_ORDER.indexOf(b);
+}
+
 const PILLAR_ORDER = new Map<Pillar, number>(PILLARS.map((pillar, index) => [pillar, index]));
 const CHECK_ORDER = new Map<CheckKey, number>(CHECKS.map((check, index) => [check.key, index]));
 
@@ -76,10 +110,12 @@ export function compareChecks(a: CheckKey, b: CheckKey): number {
 
 /**
  * For skilling institutes the approvals check means skilling recognition instead of
- * NIRF, NAAC, AICTE or UGC (spec section 7.3).
+ * NIRF, NAAC, AICTE or UGC (spec section 7.3). The search check names the city it searches
+ * from, when it is known: "Search from Guwahati".
  */
-export function checkName(key: CheckKey, type: InstitutionType): string {
+export function checkName(key: CheckKey, type: InstitutionType, city?: string | null): string {
   if (key === 'approvals' && type === 'skilling') return 'Skilling recognition';
+  if (key === 'google_search' && city) return `Search from ${city}`;
   return getCheck(key).name;
 }
 
@@ -93,7 +129,7 @@ const CHECK_ACTIONS: Readonly<Record<CheckKey, (programs: string | null, many: b
   google_profile: () => 'Build up your Google profile and reviews',
   youtube: () => 'Post a short YouTube video each month',
   ai_answers: (programs) => `Get named when students ask AI about ${programs ?? 'your programs'}`,
-  other_socials: () => 'Keep Facebook and LinkedIn active',
+  other_socials: () => 'Post on Facebook every month',
   placement_proof: (programs) => `Publish your ${programs ? `${programs} ` : ''}placement results`,
   review_rating: () => 'Reply to every Google review',
   approvals: () => 'Show your approvals on your website',
@@ -112,7 +148,7 @@ const FIRST_STEP_ACTIONS: Partial<Readonly<Record<CheckKey, string>>> = {
   instagram_activity: 'Start an Instagram account',
   google_profile: 'Set up your Google profile',
   youtube: 'Start a YouTube channel',
-  other_socials: 'Start a Facebook or LinkedIn page',
+  other_socials: 'Start a Facebook page',
   review_rating: 'Get your first Google reviews',
 };
 

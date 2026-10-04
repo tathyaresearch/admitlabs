@@ -37,8 +37,8 @@ describe('what goes into the monthly report', () => {
     assert.deepEqual(
       data.summary.pillars.map((pillar) => [pillar.name, pillar.change]),
       [
-        ['Discovered', 'No change'],
-        ['Trusted', 'Up 3'],
+        ['Visibility', 'No change'],
+        ['Trust', 'Up 3'],
         ['Chosen', 'Down 1'],
       ],
     );

@@ -1,4 +1,5 @@
-// Score labels (spec 7.4): 70 to 100 Strong, 40 to 69 Needs work, 0 to 39 Getting started.
+// Score words (spec 7.4): 70 to 100 Strong, 40 to 69 Okay, 0 to 39 Weak. Visibility, Trust and
+// Chosen each show their word; the number stays in the background.
 // The bands come from the scoring config, never from code.
 
 import { SCORING_V1 } from '../config/scoring.v1.ts';
@@ -21,7 +22,7 @@ export function bandStarts(config: Pick<ScoringConfig, 'labels'> = SCORING_V1): 
 
 /**
  * What each tick on the score gauge says, so it explains itself (rule 11): the band that starts
- * there, then where, on two lines: "Needs work" over "from 40", "Strong" over "from 70".
+ * there, then where, on two lines: "Okay" over "from 40", "Strong" over "from 70".
  */
 export function bandTicks(config: Pick<ScoringConfig, 'labels'> = SCORING_V1): Array<{ start: number; lines: [string, string] }> {
   return [...config.labels]
@@ -57,7 +58,7 @@ export function resultShareText(result: CheckResult, config: Pick<ScoringConfig,
   return `Earns ${Math.round(share * 100)}% of the points`;
 }
 
-/** The score's bands in words, top first: "Strong from 70, Needs work from 40, Getting started below 40". */
+/** The score's bands in words, top first: "Strong from 70, Okay from 40, Weak below 40". */
 export function bandsText(config: Pick<ScoringConfig, 'labels'> = SCORING_V1): string {
   const bands = [...config.labels].sort((a, b) => b.min - a.min);
   const next = (index: number) => bands[index - 1]?.min ?? 0;

@@ -1,7 +1,7 @@
 // The large score gauge, as plain geometry, so the dashboard (SVG) and the PDFs (react-pdf) draw
 // the same shape. A half circle over the top, left to right, filled to the score out of 100, with
-// a tick where each score band starts (40 Needs work, 70 Strong, from the scoring config), and over
-// each tick what it means, on two lines ("Needs work" over "from 40"), so no mark goes unnamed. The
+// a tick where each score band starts (40 Okay, 70 Strong, from the scoring config), and over
+// each tick what it means, on two lines ("Okay" over "from 40"), so no mark goes unnamed. The
 // number is part of the drawing: centred in the bowl with its baseline on the arc's baseline (the
 // line through its two ends), "/100" after it on the same baseline, and "0" and "100" centred
 // under the two ends, so every part scales together. Pure.

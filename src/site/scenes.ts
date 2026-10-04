@@ -150,9 +150,9 @@ export const DASHBOARD = {
   question: 'How are we doing this month?',
   score: { title: 'Overall score', overall: 73, label: 'Strong', change: 14, since: 'April' },
   pillars: [
-    { name: 'Discovered', value: 79 },
-    { name: 'Trusted', value: 69 },
-    { name: 'Chosen', value: 70 },
+    { name: 'Visibility', value: 75 },
+    { name: 'Trust', value: 69 },
+    { name: 'Chosen', value: 74 },
   ],
   fixes: {
     title: 'Fix these first',
@@ -169,7 +169,7 @@ export const DASHBOARD = {
     rank: '2nd',
     of: 4,
     rows: [
-      { name: OTHERS.calderwood.name, score: 74, you: false },
+      { name: OTHERS.calderwood.name, score: 77, you: false },
       { name: 'You', score: 73, you: true },
       { name: OTHERS.brackenfield.name, score: 52, you: false },
       { name: OTHERS.thornbury.name, score: 45, you: false },

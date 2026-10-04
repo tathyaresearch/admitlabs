@@ -243,7 +243,7 @@ const SAMPLE_VIEW: AuditView = {
   programId: null,
   scores: { overall: 46, discovered: 44, trusted: 44, chosen: 50 },
   changes: { overall: 5, discovered: 8, trusted: 0, chosen: 6 },
-  label: 'Needs work',
+  label: 'Okay',
   firstAudit: false,
   programsChanged: false,
   // Nothing Strong yet: the Okay checks only fill a short what's working.
@@ -503,7 +503,7 @@ export default async function DesignSystemPage() {
                     <span className={`${styles.tScore} num`}>73</span>
                     <span className={`${styles.tScoreMedium} num`}>73</span>
                     <span className={`${styles.tScoreSmall} num`}>73</span>
-                    <span className={`${styles.tMetric} num`}>₹9,999</span>
+                    <span className={`${styles.tMetric} num`}>₹24,999</span>
                   </div>
                   <p className={styles.tCaption}>Score 56 to 104px, dial 44 to 56px, number cards 24 to 28px, other numbers 22px. All 600. Numbers inside a sentence stay in Bricolage: Could add up to 4 points.</p>
                 </Specimen>
@@ -790,7 +790,7 @@ export default async function DesignSystemPage() {
                 <Stat label="Rivals tracked" value="3" sub="3 to 5 allowed" />
               </Card>
               <Card>
-                <Stat label="Paid" value="₹9,999" sub="for 6 months" />
+                <Stat label="Paid" value="₹24,999" sub="+ GST for 6 months" />
               </Card>
             </div>
             <Card>

@@ -61,7 +61,7 @@ function makeMove(institution: InstitutionRef, day: string, rng: Rng): MockMove 
   const program = programName(institution, rng);
   const key = slugify(program);
   const kind = rng.pick(['new_page', 'fee_change', 'admission_dates', 'new_program'] as const);
-  const options: Record<RivalMoveKind, ReadonlyArray<[string, string]>> = {
+  const options: Record<typeof kind, ReadonlyArray<[string, string]>> = {
     new_page: [
       [`Added a page answering common questions about ${program}.`, `/programs/${key}/faq`],
       ['Published a hostel and campus life page.', '/campus-life'],

@@ -127,7 +127,8 @@ export function Problem({ showcase }: { showcase: Showcase }) {
   const { audit, institution, rivals, demand } = showcase;
   const score = audit.scores.overall;
   const you = rivals.rows.find((row) => row.you);
-  const top = demand.view.topTrend;
+  // A trend with a real count, so the picture never shows a made up figure (spec 9.5).
+  const top = demand.view.rising.find((row) => row.count !== null) ?? demand.view.topTrend;
   return (
     <section className={styles.problem} data-theme="light" aria-labelledby="problem-title">
       <div className={site.container}>
@@ -229,7 +230,8 @@ export function Problem({ showcase }: { showcase: Showcase }) {
               {top ? (
                 <p className={`${styles.cardTrend} ${styles.cardFoot}`}>
                   <span>
-                    {card.rising} <strong>{top.text}</strong>, about {plural(top.count, 'search', 'searches')}
+                    {card.rising} <strong>{top.text}</strong>
+                    {top.count !== null ? <>, about {plural(top.count, 'search', 'searches')}</> : null}
                   </span>
                   <span className={styles.cardMeta}>
                     {PLATFORM_NAMES.search_trends}

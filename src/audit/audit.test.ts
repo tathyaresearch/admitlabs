@@ -11,7 +11,7 @@ import { collect } from '../providers/collect.ts';
 import { mockAnalysis } from '../providers/mock/index.ts';
 import type { ProgramRef } from '../providers/types.ts';
 import { PROFILE_MONTHS, profileResult, sampleInstitution, SAMPLE_INSTITUTIONS, toInstitutionRef, toProgramRefs, type SampleInstitution } from '../sample/index.ts';
-import { factsFromSignals, IncompleteFactsError, type CheckSignal } from './facts.ts';
+import { factsFromSignals, findingsFromSignals, IncompleteFactsError, type CheckSignal } from './facts.ts';
 import { prepareAudit, type PreviousAudit } from './record.ts';
 
 // The whole path on sample data: mock providers, facts, the engine, and the stored record.
@@ -80,13 +80,13 @@ describe('mock facts score back to the intended result', () => {
 
 describe('sample scores in September 2026 (golden values)', () => {
   const golden: Array<[string, number, string, [number, number, number]]> = [
-    ['eastgate-university', 73, 'Strong', [79, 69, 70]],
-    ['silverline-college', 74, 'Strong', [73, 72, 76]],
-    ['brightpath-skills', 63, 'Needs work', [55, 61, 72]],
-    ['highfield-university', 51, 'Needs work', [44, 66, 43]],
-    ['cedar-skill-institute', 51, 'Needs work', [62, 48, 42]],
-    ['loomcraft-skills', 32, 'Getting started', [35, 29, 34]],
-    ['riverbend-college', 27, 'Getting started', [28, 29, 24]],
+    ['eastgate-university', 73, 'Strong', [75, 69, 74]],
+    ['silverline-college', 77, 'Strong', [73, 82, 76]],
+    ['brightpath-skills', 63, 'Okay', [55, 61, 72]],
+    ['highfield-university', 51, 'Okay', [44, 66, 43]],
+    ['cedar-skill-institute', 51, 'Okay', [62, 48, 42]],
+    ['loomcraft-skills', 32, 'Weak', [35, 29, 34]],
+    ['riverbend-college', 27, 'Weak', [28, 29, 24]],
   ];
 
   for (const [slug, overall, label, [discovered, trusted, chosen]] of golden) {
@@ -95,6 +95,9 @@ describe('sample scores in September 2026 (golden values)', () => {
       assert.equal(evaluation.overall, overall);
       assert.equal(evaluation.label, label);
       assert.deepEqual(evaluation.pillars, { discovered, trusted, chosen });
+      // Visibility, Trust and Chosen in words: Strong from 70, Okay from 40, Weak below.
+      const word = (score: number) => (score >= 70 ? 'Strong' : score >= 40 ? 'Okay' : 'Weak');
+      assert.deepEqual(evaluation.words, { discovered: word(discovered), trusted: word(trusted), chosen: word(chosen) });
     });
   }
 
@@ -155,7 +158,8 @@ describe('the stored record', () => {
         .map((check) => check.check_key);
     // Nothing is Strong yet, so nothing is ranked as working, and Free sees details for its top 3 fixes only.
     assert.deepEqual(byRank('strength_rank'), []);
-    assert.deepEqual(byRank('fix_rank'), ['placement_proof', 'fees_shown', 'google_profile']);
+    // All three are High impact; the quicker fees fix comes first.
+    assert.deepEqual(byRank('fix_rank'), ['fees_shown', 'placement_proof', 'google_profile']);
     assert.equal(record.checks.find((check) => check.check_key === 'fees_shown')?.points_awarded, 7.5);
     // Every check carries exactly one of the two ranks.
     for (const check of record.checks) assert.equal((check.strength_rank === null) !== (check.fix_rank === null), true, check.check_key);
@@ -164,7 +168,7 @@ describe('the stored record', () => {
   test('when a check has no data, nothing is saved', async () => {
     const sample = sampleInstitution('riverbend-college');
     const signals = (await signalsFor(sample, istDate('2026-09-18', 10))).filter((signal) => signal.key !== 'page_speed');
-    assert.throws(() => factsFromSignals(signals, named(toProgramRefs(sample))), (error) => error instanceof IncompleteFactsError && error.missing.includes('Page speed'));
+    assert.throws(() => factsFromSignals(signals, named(toProgramRefs(sample))), (error) => error instanceof IncompleteFactsError && error.missing.includes('Speed'));
   });
 
   test('the newest signal for a check wins', async () => {
@@ -214,5 +218,71 @@ describe('fix advice bank', () => {
     assert.match(advice.whyItMatters, /skilling recognition/);
     assert.deepEqual(advice.steps, ['Add Skill India to your website. You hold it but do not show it yet.', 'Add the certificate or an official link for each one you show.']);
     assert.equal(advice.howToFix, advice.steps.join(' '));
+  });
+});
+
+describe('findings and ready fixes in the stored record (version 2)', () => {
+  async function eastgateWithFindings(review?: 'waiting' | 'approved') {
+    const sample = sampleInstitution('eastgate-university');
+    const asOf = istDate('2026-09-15', 10);
+    const institution = toInstitutionRef(sample);
+    const programs = toProgramRefs(sample);
+    const found = [
+      ...(await collect({ kind: 'institution', institution }, asOf)),
+      ...(await Promise.all(programs.map((program) => collect({ kind: 'program', institution, program }, asOf)))).flat(),
+    ];
+    const signals = found.filter((signal) => CHECK_KEY_SET.has(signal.key)).map((signal) => ({ key: signal.key as CheckKey, programId: signal.programId, value: signal.value, sourceUrl: signal.sourceUrl, fetchedAt: signal.fetchedAt }));
+    return prepareAudit(
+      {
+        institutionId: institution.id,
+        institutionType: sample.type,
+        kind: 'paid',
+        trigger: 'scheduled',
+        runAt: asOf,
+        createdBy: null,
+        config: SCORING_V1,
+        thresholds: SCORING_V1.thresholds,
+        programs: named(programs),
+        collected: factsFromSignals(signals, named(programs)),
+        findings: findingsFromSignals(found),
+        previous: null,
+        context: { institutionName: sample.name, city: sample.city, programNames: sample.programs.map((program) => program.name), institutionDetails: null, programDetails: new Map() },
+        ...(review ? { review } : {}),
+      },
+      mockAnalysis,
+    );
+  }
+
+  test('a finding with something to do carries its fix, impact and effort; the rest carry none', async () => {
+    const { record } = await eastgateWithFindings();
+    assert.ok(record.findings.length >= 5);
+    for (const finding of record.findings) {
+      const actionable = finding.kind === 'unanswered' || finding.kind === 'bad' || ((finding.kind === 'listing' || finding.kind === 'directory') && finding.listing !== null);
+      assert.equal(finding.fix !== null, actionable, finding.finding_key);
+      assert.equal(finding.fix_rank !== null, actionable, finding.finding_key);
+      if (finding.fix) assert.ok(finding.fix.steps.length > 0 && finding.fix.ready_fix.title, finding.finding_key);
+    }
+    // The same complaint from three students is High and quick: first in the whole list.
+    const complaint = record.findings.find((finding) => finding.finding_key === 'eastgate-reddit-hostel-fees');
+    assert.equal(complaint?.fix?.impact, 'high');
+    assert.equal(complaint?.fix_rank, 1);
+  });
+
+  test('checks and findings share one ranking: every place used once, a program check across programs once', async () => {
+    const { record } = await eastgateWithFindings();
+    const checkRanks = new Set(record.checks.flatMap((check) => (check.fix_rank === null ? [] : [check.fix_rank])));
+    const findingRanks = record.findings.flatMap((finding) => (finding.fix_rank === null ? [] : [finding.fix_rank]));
+    const all = [...checkRanks, ...findingRanks].sort((a, b) => a - b);
+    assert.deepEqual(all, Array.from({ length: all.length }, (_, index) => index + 1));
+  });
+
+  test('every check below Strong has a ready fix; Strong ones need none', async () => {
+    const { record } = await eastgateWithFindings();
+    for (const check of record.checks) assert.equal(check.ready_fix !== null, check.result !== 'strong', `${check.check_key} ${check.program_id}`);
+  });
+
+  test('the review state goes into the record: approved unless asked to wait', async () => {
+    assert.equal((await eastgateWithFindings()).record.review, 'approved');
+    assert.equal((await eastgateWithFindings('waiting')).record.review, 'waiting');
   });
 });

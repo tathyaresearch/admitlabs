@@ -15,7 +15,7 @@ import { compareChecks } from './compare.ts';
 import { rivalOpportunities } from './opportunities.ts';
 import { checkScores, latestOwnAudit, latestRivalAudits, programInfo } from './read.ts';
 import { isRivalAuditDue, monthColumn, mondayOf, monthStartOf } from './schedule.ts';
-import { moveNotice } from './text.ts';
+import { adMoveText, moveNotice } from './text.ts';
 
 type Db = SupabaseClient<Database>;
 type Env = Readonly<Record<string, string | undefined>>;
@@ -104,13 +104,14 @@ export async function checkRival(db: Db, rivalId: string, asOf: Date, options: {
   const env = options.env ?? process.env;
   const rival = await institutionRef(db, rivalId);
   const target = { kind: 'institution' as const, institution: rival };
-  const [site, instagram, youtube] = await Promise.all([
-    getProvider('site_crawler', env).collect(target, asOf),
+  const [site, places, instagram, youtube] = await Promise.all([
+    getProvider('website', env).collect(target, asOf),
+    getProvider('places', env).collect(target, asOf),
     getProvider('instagram', env).collect(target, asOf),
     getProvider('youtube', env).collect(target, asOf),
   ]);
 
-  const moves = site
+  const moves = [...site, ...places]
     .filter((signal): signal is Signal<'rival_move'> => signal.key === 'rival_move')
     .map((signal) => {
       const value: RivalMoveValue = signal.value;
@@ -154,6 +155,34 @@ export async function checkRival(db: Db, rivalId: string, asOf: Date, options: {
   });
   if (saved.error) throw new RivalJobError(`Could not save the check of ${rival.name}: ${saved.error.message}`);
   return { newMoves: saved.data, posts: content.length };
+}
+
+/**
+ * An ad the team saw a rival run (the manual provider): kept with its promise and its link, and a
+ * "Started ads" move that alerts the rival's Paid and Client trackers once (spec 8.3).
+ */
+export async function recordRivalAd(
+  db: Db,
+  ad: { rivalId: string; promise: string; sourceUrl: string; enteredBy: string | null; enteredAt: Date },
+  options: { notify: boolean },
+): Promise<string> {
+  const { data: rival, error } = await db.from('institutions').select('name').eq('id', ad.rivalId).maybeSingle();
+  if (error || !rival) throw new RivalJobError(`Could not find the rival: ${error?.message ?? 'no such institution'}`);
+  const description = adMoveText(ad.promise);
+  const saved = await db.rpc('record_rival_ad', {
+    payload: json({
+      rival_institution_id: ad.rivalId,
+      promise: ad.promise.trim(),
+      source_url: ad.sourceUrl,
+      entered_by: ad.enteredBy,
+      entered_at: ad.enteredAt.toISOString(),
+      description,
+      notice: moveNotice(rival.name, description),
+      notify: options.notify,
+    }),
+  });
+  if (saved.error) throw new RivalJobError(`Could not save the ad of ${rival.name}: ${saved.error.message}`);
+  return saved.data;
 }
 
 /** Tracked rivals not yet checked this week (the Monday of `now`). */

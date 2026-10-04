@@ -7,7 +7,12 @@ import { sampleInstitution, toInstitutionRef, toProgramRefs } from '../sample/in
 import { collect } from './collect.ts';
 import { aiAnswersFacts, googleSearchFacts, pageSpeedFacts, reviewCountOverTime } from './mock/facts.ts';
 import { rngFor } from './mock/random.ts';
-import { getAnalysisProvider, getProvider } from './registry.ts';
+import { pulledItems } from '../demand/items.ts';
+import { EMPTY_PROGRAM_DETAILS } from '../domain/details.ts';
+import { hasBlanks, readyFixText } from '../domain/ready-fix.ts';
+import { SAMPLE_INSTITUTION_DETAILS } from '../sample/details.ts';
+import { mockEmail } from './mock/email.ts';
+import { getAnalysisProvider, getEmailProvider, getProvider } from './registry.ts';
 import { ProviderNotConnectedError, type AnySignal, type InstitutionRef } from './types.ts';
 
 const asOf = istDate('2026-09-15', 10);
@@ -118,7 +123,8 @@ describe('mock providers', () => {
     assert.ok(program);
     await assert.rejects(collect({ kind: 'program', institution: eastgateRef, program }, asOf, env), ProviderNotConnectedError);
     assert.equal(getProvider('search', env).mode, 'real');
-    await assert.rejects(getAnalysisProvider({ DRISHTI_PROVIDER_ANALYSIS: 'real' }).contentIdeas({ programKey: 'bba', questions: [], rising: [] }));
+    await assert.rejects(getAnalysisProvider({ DRISHTI_PROVIDER_AI: 'real' }).contentIdeas({ programKey: 'bba', questions: [], topics: [], rising: [] }), ProviderNotConnectedError);
+    await assert.rejects(getEmailProvider({ DRISHTI_PROVIDER_EMAIL: 'real' }).send({ kind: 'lead_alert', to: ['a@mail.example'], subject: 'x', text: 'x', html: 'x' }), ProviderNotConnectedError);
   });
 });
 
@@ -183,7 +189,9 @@ describe('mock demand', () => {
   test('a shared pull has every kind of grouped item', async () => {
     const signals = await collect({ kind: 'region', scope: 'city', region: 'Guwahati', programKey: 'bba' }, asOf);
     const kinds = new Set(signals.map((signal) => signal.key === 'demand_item' && signal.value.kind));
-    for (const kind of ['rising', 'falling', 'question', 'worry', 'mention', 'season']) assert.ok(kinds.has(kind as never), kind);
+    for (const kind of ['rising', 'falling', 'question', 'topic', 'content', 'best_month']) assert.ok(kinds.has(kind as never), kind);
+    // Version 1's worries, mentions and season are no longer collected.
+    for (const kind of ['worry', 'mention', 'season']) assert.ok(!kinds.has(kind as never), kind);
   });
 
   test('Hindi and Assamese questions keep their original wording, English ones do not need to', async () => {
@@ -198,36 +206,30 @@ describe('mock demand', () => {
     assert.ok(questions.some((question) => question.language === 'as'));
   });
 
-  test('state and India pulls count more than the city', async () => {
-    const count = async (scope: 'city' | 'state' | 'india', region: string) =>
-      (await collect({ kind: 'region', scope, region, programKey: 'mba' }, asOf)).reduce(
-        (sum, signal) => sum + (signal.key === 'demand_item' && signal.value.kind === 'question' ? signal.value.count : 0),
+  test('the state counts more than its biggest city, and a smaller city much less', async () => {
+    const count = async (scope: 'city' | 'state', region: string) =>
+      (await collect({ kind: 'region', scope, region, state: 'Assam', programKey: 'mba' }, asOf)).reduce(
+        (sum, signal) => sum + (signal.key === 'demand_item' && signal.value.kind === 'question' ? (signal.value.count ?? 0) : 0),
         0,
       );
-    const city = await count('city', 'Guwahati');
-    const state = await count('state', 'Assam');
-    const india = await count('india', 'India');
-    assert.ok(city < state && state < india);
+    const tezpur = await count('city', 'Tezpur');
+    const guwahati = await count('city', 'Guwahati');
+    const assam = await count('state', 'Assam');
+    assert.ok(tezpur < guwahati / 5 && guwahati < assam);
   });
 
   test('content ideas are each built on a real question, with its source', async () => {
     const signals = await collect({ kind: 'region', scope: 'city', region: 'Guwahati', programKey: 'bca' }, asOf);
-    const questions = signals.flatMap((signal) =>
-      signal.key === 'demand_item' && signal.value.kind === 'question'
-        ? [{ text: signal.value.text, sourceUrl: signal.sourceUrl, questionIndex: Number(signal.value.meta.questionIndex) }]
-        : [],
-    );
-    const rising = signals.flatMap((signal) =>
-      signal.key === 'demand_item' && signal.value.kind === 'rising'
-        ? [{ text: signal.value.text, trendIndex: typeof signal.value.meta.trendIndex === 'number' ? signal.value.meta.trendIndex : null }]
-        : [],
-    );
-    const ideas = await getAnalysisProvider({}).contentIdeas({ programKey: 'bca', questions, rising });
+    const { basis } = pulledItems(signals);
+    const { questions, topics } = basis;
+    const ideas = await getAnalysisProvider({}).contentIdeas({ programKey: 'bca', ...basis });
     assert.equal(ideas.length, 5);
     for (const idea of ideas) {
-      const question = questions.find((candidate) => candidate.text === idea.basedOn);
+      const question = questions.find((candidate) => candidate.text === idea.basedOn) ?? topics.find((candidate) => candidate.text === idea.basedOn);
       assert.ok(question, idea.text);
       assert.equal(idea.sourceUrl, question.sourceUrl);
+      // A hook to stop the scroll, and 3 or 4 key points.
+      assert.ok(idea.hook.length > 0 && idea.points.length >= 3 && idea.points.length <= 4, idea.title);
     }
     // Only where a rising search really stands behind it: the AI project rides on BCA with AI.
     assert.equal(ideas[0]?.trend, 'BCA with AI and Machine Learning');
@@ -240,10 +242,145 @@ describe('Demand history', () => {
     const target = { kind: 'region', scope: 'city', region: 'Guwahati', programKey: 'bba' } as const;
     const counts: number[] = [];
     for (const month of ['2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09']) {
-      const signals = await collect(target, istDate(`${month}-28`, 9));
-      const rising = signals.flatMap((signal) => (signal.key === 'demand_item' && signal.value.kind === 'rising' ? [signal.value] : []));
+      // Searches a month for the fastest rise, from the keyword tool.
+      const rising = pulledItems(await collect(target, istDate(`${month}-28`, 9))).items.filter((item) => item.kind === 'rising');
       counts.push(rising[0]?.count ?? 0);
     }
     for (let index = 1; index < counts.length; index += 1) assert.ok((counts[index] as number) > (counts[index - 1] as number), `month ${index} grows: ${counts.join(', ')}`);
+  });
+});
+
+describe('What people say and Other places', () => {
+  test('Eastgate in September: Reddit threads from the Reddit provider, the rest from the search tool, each with its source', async () => {
+    const signals = await collect({ kind: 'institution', institution: eastgateRef }, asOf);
+    const findings = signals.flatMap((signal) => (signal.key === 'finding' ? [signal] : []));
+    assert.ok(findings.length >= 5);
+    for (const finding of findings) {
+      assert.equal(finding.provider === 'reddit', finding.value.source === 'Reddit', finding.value.key);
+      assert.ok(finding.value.line.length > 0 && finding.value.line.length <= 400);
+      assert.doesNotMatch(finding.value.line, /@\w/);
+    }
+    assert.ok(findings.some((finding) => finding.value.place === 'people') && findings.some((finding) => finding.value.place === 'other'));
+    // The same complaint from three students counts three times.
+    assert.equal(findings.find((finding) => finding.value.key === 'eastgate-reddit-hostel-fees')?.value.repeats, 3);
+  });
+
+  test('a finding dealt with is gone from the next Audit', async () => {
+    const keys = async (day: string) =>
+      (await collect({ kind: 'institution', institution: eastgateRef }, istDate(day, 10))).flatMap((signal) => (signal.key === 'finding' ? [signal.value.key] : []));
+    assert.ok((await keys('2026-08-15')).includes('eastgate-quora-mba-hostel'));
+    assert.ok(!(await keys('2026-09-15')).includes('eastgate-quora-mba-hostel'));
+  });
+});
+
+describe('the AI writer: ready fixes and the fixes for findings', () => {
+  const ai = getAnalysisProvider({});
+  const context = {
+    institutionName: 'Eastgate University',
+    city: 'Guwahati',
+    programNames: ['BBA', 'MBA'],
+    institutionDetails: SAMPLE_INSTITUTION_DETAILS['eastgate-university'] ?? null,
+    programDetails: new Map([['MBA', { ...EMPTY_PROGRAM_DETAILS, feesAmount: 240000, feesPeriod: 'year' as const, durationValue: 2, durationUnit: 'years' as const, placementYear: 2026, placedPercent: 88, averagePackage: 6.2, highestPackage: 18, topRecruiters: ['Tata Steel'] }]]),
+  };
+  // The facts each check found for Eastgate's MBA in September, as a provider returned them.
+  const factsFor = async (checkKey: (typeof CHECK_KEYS)[number]) => {
+    const program = toProgramRefs(eastgate).find((entry) => entry.name === 'MBA');
+    assert.ok(program);
+    const signals = [...(await collect({ kind: 'institution', institution: eastgateRef }, asOf)), ...(await collect({ kind: 'program', institution: eastgateRef, program }, asOf))];
+    const signal = signals.find((entry) => entry.key === checkKey);
+    assert.ok(signal, checkKey);
+    return signal.value as never;
+  };
+  const facts = factsFor;
+
+  test('every check below Strong gets a ready fix; a Strong one needs none', async () => {
+    for (const checkKey of CHECK_KEYS) {
+      const found = await factsFor(checkKey);
+      const advice = await ai.fixAdvice({ checkKey, result: 'weak', facts: found, institutionType: 'university', programName: 'MBA', context });
+      assert.ok(advice.readyFix, checkKey);
+      assert.ok(readyFixText(advice.readyFix).length > 20, checkKey);
+      const strong = await ai.fixAdvice({ checkKey, result: 'strong', facts: found, institutionType: 'university', programName: 'MBA', context });
+      assert.equal(strong.readyFix, null, checkKey);
+    }
+  });
+
+  test('details the institution added fill the blanks, and say so', async () => {
+    const fees = await ai.fixAdvice({ checkKey: 'fees_shown', result: 'weak', facts: await facts('fees_shown'), institutionType: 'university', programName: 'MBA', context });
+    assert.equal(fees.readyFix?.kind, 'table');
+    assert.ok(fees.readyFix && readyFixText(fees.readyFix).includes('₹2,40,000'));
+    assert.equal(fees.readyFix?.fromDetails, true);
+    const placements = await ai.fixAdvice({ checkKey: 'placement_proof', result: 'weak', facts: await facts('placement_proof'), institutionType: 'university', programName: 'MBA', context });
+    assert.ok(placements.readyFix && readyFixText(placements.readyFix).includes('88% of the batch'));
+    // Without details, the blanks stay for the institution to fill in.
+    const blank = await ai.fixAdvice({ checkKey: 'fees_shown', result: 'weak', facts: await facts('fees_shown'), institutionType: 'university', programName: 'BBA' });
+    assert.ok(blank.readyFix && hasBlanks(blank.readyFix));
+    assert.equal(blank.readyFix?.fromDetails, undefined);
+  });
+
+  test('a finding with something to do gets a fix; good news and a listing that is right do not', async () => {
+    const base = { institutionType: 'university' as const, institutionName: 'Eastgate University', city: 'Guwahati', programNames: ['BBA'] };
+    const finding = (kind: 'good' | 'bad' | 'unanswered' | 'listing' | 'news' | 'directory', listing: 'old_details' | 'missing_courses' | 'missing' | null = null) => ({
+      place: kind === 'listing' || kind === 'news' || kind === 'directory' ? ('other' as const) : ('people' as const),
+      kind,
+      key: `test-${kind}-${listing ?? 'none'}`,
+      line: '“Is the BBA worth it?” has no answer from the university.',
+      source: 'Quora',
+      repeats: 1,
+      listing,
+    });
+    for (const [kind, listing] of [['unanswered', null], ['bad', null], ['listing', 'old_details'], ['listing', 'missing'], ['directory', 'missing_courses']] as const) {
+      const fix = await ai.findingFix({ ...base, finding: finding(kind, listing) });
+      assert.ok(fix && fix.title && fix.steps.length >= 2 && fix.readyFix, `${kind} ${listing}`);
+    }
+    for (const [kind, listing] of [['good', null], ['news', null], ['listing', null]] as const) {
+      assert.equal(await ai.findingFix({ ...base, finding: finding(kind, listing) }), null, `${kind}`);
+    }
+  });
+
+  test('a sample finding gets the fix the writer wrote for it', async () => {
+    const fix = await ai.findingFix({
+      institutionType: 'university',
+      institutionName: 'Eastgate University',
+      city: 'Guwahati',
+      programNames: ['BBA'],
+      finding: { place: 'people', kind: 'bad', key: 'eastgate-reddit-hostel-fees', line: 'x', source: 'Reddit', repeats: 3, listing: null },
+    });
+    assert.equal(fix?.title, 'Reply to the hostel fee thread on Reddit');
+  });
+});
+
+describe('the email sender', () => {
+  test('the mock sends one message per recipient to the local test inbox', async () => {
+    const calls: Array<{ url: string; body: { To: Array<{ Email: string }>; Subject: string } }> = [];
+    const fakeFetch = (async (url: string, init: { body: string }) => {
+      calls.push({ url, body: JSON.parse(init.body) });
+      return new Response('{}', { status: 200 });
+    }) as unknown as typeof fetch;
+    const email = mockEmail({ DRISHTI_MAILPIT_URL: 'http://127.0.0.1:55324' }, fakeFetch);
+    const results = await email.send({ kind: 'lead_alert', to: ['a@brightpath-skills.example', 'b@brightpath-skills.example'], subject: 'New enquiry', text: 'x', html: '<p>x</p>' });
+    assert.deepEqual(
+      results.map((result) => [result.recipient, result.ok]),
+      [
+        ['a@brightpath-skills.example', true],
+        ['b@brightpath-skills.example', true],
+      ],
+    );
+    assert.deepEqual(
+      calls.map((call) => [call.url, call.body.To[0]?.Email]),
+      [
+        ['http://127.0.0.1:55324/api/v1/send', 'a@brightpath-skills.example'],
+        ['http://127.0.0.1:55324/api/v1/send', 'b@brightpath-skills.example'],
+      ],
+    );
+    assert.equal(email.sender, 'Local test inbox');
+  });
+
+  test('never anywhere but this computer, and a failure is reported, not thrown', async () => {
+    const email = mockEmail({ DRISHTI_MAILPIT_URL: 'https://mail.example.com' });
+    await assert.rejects(email.send({ kind: 'monthly_summary', to: ['a@mail.example'], subject: 'x', text: 'x', html: 'x' }), /this computer/);
+    const down = mockEmail({}, (async () => new Response('', { status: 500 })) as unknown as typeof fetch);
+    const [result] = await down.send({ kind: 'audit_ready', to: ['a@mail.example'], subject: 'x', text: 'x', html: 'x' });
+    assert.equal(result?.ok, false);
+    assert.match(result?.error ?? '', /500/);
   });
 });

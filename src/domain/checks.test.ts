@@ -52,7 +52,9 @@ describe('check catalogue (spec 7.2)', () => {
     assert.equal(checkName('approvals', 'skilling'), 'Skilling recognition');
     assert.equal(checkName('approvals', 'college'), 'Approvals');
     assert.match(checkLooksAt('approvals', 'university'), /NIRF, NAAC, AICTE, UGC/);
-    assert.equal(checkName('page_speed', 'skilling'), 'Page speed');
+    assert.equal(checkName('page_speed', 'skilling'), 'Speed');
+    assert.equal(checkName('google_search', 'college', 'Guwahati'), 'Search from Guwahati');
+    assert.equal(checkName('google_search', 'college'), 'Search results');
   });
 
   test('what to do about a check, in a few words, naming the programs when given', () => {

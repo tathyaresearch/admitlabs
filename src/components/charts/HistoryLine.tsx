@@ -105,7 +105,7 @@ export function HistoryLine({
         onPointerLeave={() => setActive(null)}
         onBlur={() => setActive(null)}
       >
-        {/* Band lines: where Needs work and Strong begin, and the chart's ends. */}
+        {/* Band lines: where Okay and Strong begin, and the chart's ends. */}
         {ticks.map((tick) => (
           <g key={tick}>
             <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(tick)} y2={y(tick)} className={styles.grid} />

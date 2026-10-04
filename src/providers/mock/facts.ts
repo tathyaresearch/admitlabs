@@ -26,7 +26,7 @@ import type { Rng } from './random.ts';
 
 const T = SCORING_V1.thresholds;
 
-export function googleSearchFacts(result: CheckResult, rng: Rng, query: string): GoogleSearchValue {
+export function googleSearchFacts(result: CheckResult, rng: Rng, query: string, searchedFrom: string | null = null): GoogleSearchValue {
   const t = T.google_search;
   const position =
     result === 'strong'
@@ -36,7 +36,7 @@ export function googleSearchFacts(result: CheckResult, rng: Rng, query: string):
         : result === 'weak'
           ? rng.int(t.okayMaxPosition + 1, t.weakMaxPosition)
           : null;
-  return { query, position, resultsChecked: t.weakMaxPosition };
+  return { query, position, resultsChecked: t.weakMaxPosition, searchedFrom };
 }
 
 export function instagramFacts(result: CheckResult, rng: Rng, handle: string | null): InstagramActivityValue {
@@ -144,7 +144,8 @@ export function otherSocialsFacts(
   links: { facebook?: string; linkedin?: string },
 ): OtherSocialsValue {
   const t = T.other_socials;
-  const present = (['facebook', 'linkedin'] as const).filter((platform) => Boolean(links[platform]));
+  // Facebook only (version 2): LinkedIn has no official public access, so it is not checked.
+  const present = (['facebook'] as const).filter((platform) => Boolean(links[platform]));
   if (result === 'missing' || present.length === 0) return { platforms: [] };
   const bestDays =
     result === 'strong'

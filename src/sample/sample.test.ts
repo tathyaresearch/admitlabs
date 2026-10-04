@@ -10,11 +10,14 @@ import { checkWork } from '../team/work.ts';
 import {
   ADMIN_EMAIL,
   DEMAND_FIXTURES,
-  MENTION_FIXTURES,
   PROFILE_MONTHS,
   SAMPLE_ADS,
   SAMPLE_CONTENT,
+  SAMPLE_FIX_REQUESTS,
   SAMPLE_INSTITUTIONS,
+  SAMPLE_LEAD_LINKS,
+  SAMPLE_LEADS,
+  SAMPLE_MARKS,
   SAMPLE_MOVES,
   SAMPLE_NOTES,
   SAMPLE_PROFILES,
@@ -35,10 +38,15 @@ import {
 const bySlug = new Map(SAMPLE_INSTITUTIONS.map((institution) => [institution.slug, institution]));
 
 describe('sample institutions (spec section 20)', () => {
-  test('8 institutions in Assam: 3 colleges, 2 universities, 3 skilling institutes', () => {
-    assert.equal(SAMPLE_INSTITUTIONS.length, 8);
+  test('8 institutions in Assam (3 colleges, 2 universities, 3 skilling institutes), plus 2 rival records added in version 2', () => {
+    assert.equal(SAMPLE_INSTITUTIONS.length, 10);
     const count = (type: string) => SAMPLE_INSTITUTIONS.filter((institution) => institution.type === type).length;
-    assert.deepEqual([count('college'), count('university'), count('skilling')], [3, 2, 3]);
+    assert.deepEqual([count('college'), count('university'), count('skilling')], [3, 2, 5]);
+    // The 2 rival records: a skilling institute in Guwahati and one in Tezpur, never signed up.
+    for (const [slug, city] of [['pinegrove-skills', 'Guwahati'], ['kestrel-skills', 'Tezpur']] as const) {
+      assert.equal(bySlug.get(slug)?.city, city);
+      assert.equal(bySlug.get(slug)?.claimedAt, null);
+    }
     assert.ok(SAMPLE_INSTITUTIONS.every((institution) => institution.state === 'Assam'));
   });
 
@@ -191,7 +199,8 @@ describe('sample profiles', () => {
 
   test('every institution has runs; 6 months of history for Eastgate and Brightpath', () => {
     for (const institution of SAMPLE_INSTITUTIONS) assert.ok((SAMPLE_RUNS[institution.slug] ?? []).length > 0, institution.slug);
-    assert.equal(SAMPLE_RUNS['eastgate-university']?.filter((run) => run.kind === 'own').length, 6);
+    // Eastgate: 6 monthly Audits, and September's extra refresh.
+    assert.equal(SAMPLE_RUNS['eastgate-university']?.filter((run) => run.kind === 'own' && run.trigger !== 'manual').length, 6);
     assert.equal(SAMPLE_RUNS['brightpath-skills']?.filter((run) => run.kind === 'own').length, 6);
   });
 
@@ -208,6 +217,11 @@ describe('sample profiles', () => {
         `${institution.slug} runs in date order`,
       );
       for (const run of runs) {
+        if (run.kind === 'own' && run.trigger === 'manual') {
+          // An extra refresh is Paid's, once a month.
+          assert.equal(institution.plan?.tier, 'paid', `${institution.slug} ${run.day} refresh`);
+          continue;
+        }
         if (run.kind === 'own') {
           assert.ok(institution.plan && institution.claimedAt, `${institution.slug} own runs need a signup`);
           const plan = { tier: institution.plan.tier, startsAt: istDate(institution.plan.startsAt, 10), endsAt: institution.plan.endsAt ? istDate(institution.plan.endsAt, 10) : null };
@@ -232,28 +246,30 @@ describe('sample demand', () => {
       assert.equal(fixture.questions.length, 5, key);
       assert.equal(fixture.ideas.length, 5, key);
       assert.ok(fixture.rising.length >= 1 && fixture.falling.length >= 1, key);
-      for (const idea of fixture.ideas) assert.ok(fixture.questions[idea.question], `${key} idea points at a question`);
+      for (const idea of fixture.ideas) {
+        assert.ok(idea.question === undefined ? fixture.topics.some((topic) => topic.topic === idea.topic) : fixture.questions[idea.question], `${key} idea stands on a question`);
+      }
       assert.ok(fixture.questions.some((question) => question.language === 'hi' && question.original), `${key} Hindi`);
       assert.ok(fixture.questions.some((question) => question.language === 'as' && question.original), `${key} Assamese`);
     }
   });
 
-  test('top worries include fees, placements, hostel, safety and recognition', () => {
+  test('what students ask covers fees, placements, scholarships, hostel and careers, each with its top question', () => {
     for (const key of SAMPLE_PROGRAM_KEYS) {
-      const texts = (DEMAND_FIXTURES[key]?.worries ?? []).map((worry) => worry.text.toLowerCase());
-      for (const word of ['fees', 'placements', 'hostel', 'safety', 'recognition']) {
-        assert.ok(
-          texts.some((text) => text.includes(word)),
-          `${key} ${word}`,
-        );
+      const topics = DEMAND_FIXTURES[key]?.topics ?? [];
+      assert.deepEqual(topics.map((topic) => topic.topic).sort(), ['careers', 'fees', 'hostel', 'placements', 'scholarships'], key);
+      for (const topic of topics) {
+        assert.ok(topic.question.text.endsWith('?'), `${key} ${topic.topic}`);
+        assert.doesNotMatch(topic.question.text, /@\w/);
       }
     }
   });
 
-  test('mentions are grouped topics about sample institutions, never people', () => {
-    for (const mention of MENTION_FIXTURES) {
-      assert.ok(bySlug.has(mention.slug));
-      assert.doesNotMatch(mention.text, /@\w/);
+  test('each program has its best months, and Make these 3 ideas have a hook and 3 or 4 key points', () => {
+    for (const key of SAMPLE_PROGRAM_KEYS) {
+      const fixture = DEMAND_FIXTURES[key];
+      assert.ok(fixture && fixture.bestMonths.length >= 3, key);
+      for (const idea of fixture?.ideas ?? []) assert.ok(idea.hook.startsWith('“') && idea.points.length >= 3 && idea.points.length <= 4, `${key}: ${idea.title}`);
     }
   });
 
@@ -266,8 +282,67 @@ describe('sample demand', () => {
       SAMPLE_NOTES,
       SAMPLE_TEAM_WORK,
       DEMAND_FIXTURES,
-      MENTION_FIXTURES,
+      SAMPLE_LEAD_LINKS,
+      SAMPLE_FIX_REQUESTS,
     ]);
     assert.equal(hasDashes(everything), false);
+  });
+});
+
+describe('version 2 sample', () => {
+  test('Loomcraft in Tezpur tracks one rival in Tezpur and two from Guwahati, its Nearby city', () => {
+    const rivals = SAMPLE_RIVALS.filter(([tracker]) => tracker === 'loomcraft-skills').map(([, rival]) => bySlug.get(rival)?.city);
+    assert.deepEqual([...rivals].sort(), ['Guwahati', 'Guwahati', 'Tezpur']);
+    assert.equal(bySlug.get('loomcraft-skills')?.city, 'Tezpur');
+  });
+
+  test('every Guwahati institution that has signed up tracks 3 or more rivals in its own city', () => {
+    for (const institution of SAMPLE_INSTITUTIONS.filter((entry) => entry.city === 'Guwahati' && entry.claimedAt && entry.plan?.tier !== 'free')) {
+      const local = SAMPLE_RIVALS.filter(([tracker, rival]) => tracker === institution.slug && bySlug.get(rival)?.city === 'Guwahati');
+      assert.ok(local.length >= 3, institution.slug);
+    }
+  });
+
+  test('To review: a Free sign up and a Paid refresh wait; Brightpath goes out automatically', () => {
+    const waiting = Object.entries(SAMPLE_RUNS).flatMap(([slug, runs]) => runs.filter((run) => run.waiting).map((run) => [slug, run.trigger]));
+    assert.deepEqual(waiting.sort(), [
+      ['eastgate-university', 'manual'],
+      ['loomcraft-skills', 'signup'],
+    ]);
+    assert.equal(bySlug.get('brightpath-skills')?.reviewFirst, false);
+    assert.ok(SAMPLE_INSTITUTIONS.filter((entry) => entry.slug !== 'brightpath-skills').every((entry) => entry.reviewFirst !== false));
+  });
+
+  test('marks done: on checks and on one finding', () => {
+    assert.ok(SAMPLE_MARKS.some((mark) => mark.finding === 'eastgate-quora-mba-hostel'));
+    assert.equal(SAMPLE_MARKS.filter((mark) => mark.check).length, 3);
+  });
+
+  test('Let AdmitLabs fix this: one open request, one handled', () => {
+    assert.equal(SAMPLE_FIX_REQUESTS.filter((request) => request.handledOn === null).length, 1);
+    assert.equal(SAMPLE_FIX_REQUESTS.filter((request) => request.handledOn !== null).length, 1);
+  });
+
+  test('Leads only for Brightpath, a Client: 4 links from July and 10, 17 and 23 enquiries', () => {
+    assert.ok(SAMPLE_LEAD_LINKS.every((link) => link.slug === 'brightpath-skills' && link.createdOn.startsWith('2026-07')));
+    assert.equal(SAMPLE_LEAD_LINKS.length, 4);
+    assert.equal(bySlug.get('brightpath-skills')?.plan?.tier, 'client');
+    const byMonth = new Map<string, number>();
+    for (const lead of SAMPLE_LEADS) byMonth.set(lead.sentOn.slice(0, 7), (byMonth.get(lead.sentOn.slice(0, 7)) ?? 0) + 1);
+    assert.deepEqual([...byMonth.entries()], [
+      ['2026-07', 10],
+      ['2026-08', 17],
+      ['2026-09', 23],
+    ]);
+    const programs = new Set(bySlug.get('brightpath-skills')?.programs.map((program) => program.programKey));
+    for (const lead of SAMPLE_LEADS) {
+      assert.ok(programs.has(lead.programKey), lead.name);
+      assert.match(lead.email, /@mail\.example$/);
+      // Made up numbers: 00000 can never be a real Indian mobile number.
+      assert.match(lead.phone, /^\+9100000\d{5}$/);
+      const link = SAMPLE_LEAD_LINKS.find((entry) => entry.code === lead.linkCode);
+      assert.ok(link && lead.sentOn > link.createdOn, lead.name);
+    }
+    assert.equal(new Set(SAMPLE_LEADS.map((lead) => lead.phone)).size, SAMPLE_LEADS.length);
   });
 });

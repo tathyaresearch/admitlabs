@@ -29,6 +29,8 @@ export interface SampleInstitution {
   owner: string | null;
   members: readonly string[];
   plan: { tier: Tier; startsAt: string; endsAt: string | null; setBy: string | null; freeProgramKey: string | null } | null;
+  /** How its new Audits and summaries go out (spec 25): false sends them automatically. True to start. */
+  reviewFirst?: boolean;
   /** How this institution is used in the sample, for the seed summary. */
   role: string;
 }
@@ -118,7 +120,8 @@ export const SAMPLE_INSTITUTIONS: readonly SampleInstitution[] = [
     owner: 'owner@brightpath-skills.example',
     members: [],
     plan: { tier: 'client', startsAt: '2026-03-02', endsAt: null, setBy: ADMIN_EMAIL, freeProgramKey: null },
-    role: 'Client tier, 6 months of history, rising as the AdmitLabs team acts on it.',
+    reviewFirst: false,
+    role: 'Client tier, 6 months of history, rising as the AdmitLabs team acts on it. Sends automatically. Leads from 4 links.',
   },
   {
     slug: 'silverline-college',
@@ -153,18 +156,18 @@ export const SAMPLE_INSTITUTIONS: readonly SampleInstitution[] = [
     programs: [P.digital, P.hotel],
     createdAt: '2026-03-02',
     createdBy: 'owner@brightpath-skills.example',
-    claimedAt: null,
+    claimedAt: '2026-09-30',
     isProspect: false,
-    owner: null,
+    owner: 'owner@loomcraft-skills.example',
     members: [],
-    plan: null,
-    role: 'Rival record, unclaimed.',
+    plan: { tier: 'free', startsAt: '2026-09-30', endsAt: null, setBy: null, freeProgramKey: 'digital-marketing' },
+    role: 'Free tier, signed up today in Tezpur: its first Audit waits for the team. One rival in Tezpur, two from Guwahati (Nearby city).',
   },
   {
     slug: 'highfield-university',
     name: 'Highfield University',
     type: 'university',
-    city: 'Dibrugarh',
+    city: 'Guwahati',
     state: 'Assam',
     website: 'https://highfield-university.example',
     instagram: 'highfielduniversity',
@@ -220,6 +223,46 @@ export const SAMPLE_INSTITUTIONS: readonly SampleInstitution[] = [
     plan: null,
     role: 'Prospect. Visible to the team only.',
   },
+  {
+    slug: 'pinegrove-skills',
+    name: 'Pinegrove Skills Hub',
+    type: 'skilling',
+    city: 'Guwahati',
+    state: 'Assam',
+    website: 'https://pinegrove-skills.example',
+    instagram: 'pinegroveskills',
+    youtube: 'https://youtube.example/@pinegroveskills',
+    otherLinks: { facebook: 'https://facebook.example/pinegroveskills' },
+    programs: [P.digital, P.data],
+    createdAt: '2026-03-02',
+    createdBy: 'owner@brightpath-skills.example',
+    claimedAt: null,
+    isProspect: false,
+    owner: null,
+    members: [],
+    plan: null,
+    role: 'Rival record in Guwahati, unclaimed.',
+  },
+  {
+    slug: 'kestrel-skills',
+    name: 'Kestrel Skills Centre',
+    type: 'skilling',
+    city: 'Tezpur',
+    state: 'Assam',
+    website: 'https://kestrel-skills.example',
+    instagram: 'kestrelskills',
+    youtube: null,
+    otherLinks: {},
+    programs: [P.digital],
+    createdAt: '2026-09-30',
+    createdBy: 'owner@loomcraft-skills.example',
+    claimedAt: null,
+    isProspect: false,
+    owner: null,
+    members: [],
+    plan: null,
+    role: 'Rival record in Tezpur, unclaimed.',
+  },
 ];
 
 export function sampleInstitution(slug: string): SampleInstitution {
@@ -228,7 +271,11 @@ export function sampleInstitution(slug: string): SampleInstitution {
   return found;
 }
 
-/** Rivals each signed-up institution tracks: [tracker, rival, suggested by Drishti, added on]. */
+/**
+ * Rivals each signed-up institution tracks: [tracker, rival, suggested by Drishti, added on].
+ * Always the same city (spec 8.2); Loomcraft, with one rival in Tezpur, also tracks two from
+ * Guwahati, the nearest bigger city.
+ */
 export const SAMPLE_RIVALS: ReadonlyArray<readonly [string, string, boolean, string]> = [
   ['northbank-college', 'silverline-college', true, '2026-06-10'],
   ['northbank-college', 'eastgate-university', false, '2026-06-10'],
@@ -236,12 +283,15 @@ export const SAMPLE_RIVALS: ReadonlyArray<readonly [string, string, boolean, str
   ['eastgate-university', 'highfield-university', true, '2026-04-15'],
   ['eastgate-university', 'silverline-college', false, '2026-04-15'],
   ['eastgate-university', 'northbank-college', false, '2026-04-15'],
-  ['brightpath-skills', 'loomcraft-skills', true, '2026-03-02'],
+  ['brightpath-skills', 'pinegrove-skills', true, '2026-03-02'],
   ['brightpath-skills', 'silverline-college', false, '2026-03-02'],
   ['brightpath-skills', 'eastgate-university', false, '2026-03-02'],
   ['silverline-college', 'northbank-college', true, '2026-07-22'],
   ['silverline-college', 'eastgate-university', false, '2026-07-22'],
   ['silverline-college', 'brightpath-skills', false, '2026-07-22'],
+  ['loomcraft-skills', 'kestrel-skills', true, '2026-09-30'],
+  ['loomcraft-skills', 'brightpath-skills', true, '2026-09-30'],
+  ['loomcraft-skills', 'pinegrove-skills', true, '2026-09-30'],
 ];
 
 /**
@@ -253,6 +303,8 @@ export interface SampleRun {
   day: string;
   kind: 'own' | 'rival' | 'team';
   trigger: AuditTrigger;
+  /** An own Audit still waiting for the team's review (spec 25). Every other own Audit was approved. */
+  waiting?: boolean;
 }
 
 const monthly = (days: readonly string[]): SampleRun[] => days.map((day) => ({ day, kind: 'own', trigger: 'scheduled' }));
@@ -269,9 +321,12 @@ const byDay = (runs: readonly SampleRun[]): SampleRun[] => [...runs].sort((a, b)
 
 /** Every Audit run in the sample, in date order per institution. Rival scores come from rival runs only. */
 export const SAMPLE_RUNS: Readonly<Record<string, readonly SampleRun[]>> = {
-  // Paid from 15 Apr: monthly on the 15th. The extra refresh is left unused, so it can be tried.
+  // Paid from 15 Apr: monthly on the 15th. September's extra refresh (29 Sep) waits for the team's
+  // review, so Eastgate keeps seeing 15 September's Audit with one line at the top. October's
+  // refresh is unused, so it can be tried.
   'eastgate-university': byDay([
     ...monthly(['2026-04-15', '2026-05-15', '2026-06-15', '2026-07-15', '2026-08-15', '2026-09-15']),
+    { day: '2026-09-29', kind: 'own', trigger: 'manual', waiting: true },
     ...rivalRuns(RIVAL_SINCE_MARCH),
   ]),
   // Client from 2 Mar: monthly on the 2nd (history kept from April).
@@ -288,7 +343,12 @@ export const SAMPLE_RUNS: Readonly<Record<string, readonly SampleRun[]>> = {
   // Free from 22 Jul (next free Audit 22 Oct). Tracked by three institutions, without knowing.
   'silverline-college': byDay([{ day: '2026-07-22', kind: 'own', trigger: 'signup' }, ...rivalRuns(RIVAL_SINCE_MARCH)]),
   'highfield-university': rivalRuns(RIVAL_SINCE_15_APRIL),
-  'loomcraft-skills': rivalRuns(RIVAL_SINCE_MARCH),
+  // Free from 30 Sep, signed up today: its first Audit waits for the team's review.
+  'loomcraft-skills': [{ day: '2026-09-30', kind: 'own', trigger: 'signup', waiting: true }],
+  // Tracked by Brightpath since March, and by Loomcraft from today.
+  'pinegrove-skills': rivalRuns(RIVAL_SINCE_MARCH),
+  // Picked by Loomcraft today: its first rival Audit ran when it was picked.
+  'kestrel-skills': [{ day: '2026-09-30', kind: 'rival', trigger: 'manual' }],
   'riverbend-college': [{ day: '2026-09-18', kind: 'team', trigger: 'manual' }],
   'cedar-skill-institute': [{ day: '2026-09-18', kind: 'team', trigger: 'manual' }],
 };

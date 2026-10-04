@@ -99,6 +99,27 @@ export function joinNames(names: readonly string[]): string {
   return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }
 
+/**
+ * Months as words, a run of months as one span: [3, 4, 5, 6] is "March to June", [11, 12, 1, 2]
+ * is "November to February", [4, 5, 6, 10] is "April to June, and October". Spans keep the
+ * order the months are given in.
+ */
+export function monthSpanWords(months: readonly number[]): string {
+  const set = new Set(months.filter((month) => Number.isInteger(month) && month >= 1 && month <= 12));
+  if (set.size === 12) return 'All year';
+  const next = (month: number) => (month % 12) + 1;
+  const previous = (month: number) => ((month + 10) % 12) + 1;
+  const spans: string[] = [];
+  for (const start of [...new Set(months)]) {
+    if (!set.has(start) || set.has(previous(start))) continue;
+    let end = start;
+    while (set.has(next(end))) end = next(end);
+    spans.push(start === end ? (MONTHS_LONG[start - 1] ?? '') : `${MONTHS_LONG[start - 1]} to ${MONTHS_LONG[end - 1]}`);
+  }
+  if (spans.length <= 1) return spans[0] ?? '';
+  return `${spans.slice(0, -1).join(', ')}, and ${spans[spans.length - 1]}`;
+}
+
 /** "1st", "2nd", "3rd", "4th", "11th", "22nd". */
 export function ordinal(value: number): string {
   const tens = value % 100;

@@ -3,21 +3,19 @@
 //   Northbank College marked its enquiry buttons and its BBA fees done in August. Its September
 //   free Audit found the first (Weak to Okay) but not the second.
 //   Eastgate University marked its placement results done after its September Audit; its next
-//   Audit checks them.
+//   Audit checks them once the team approves it (it waits in To review).
+//   Eastgate also marked an unanswered Quora question about MBA hostels done in August. It was
+//   answered, and its September Audit no longer found it: the finding mark is confirmed.
 
 import type { CheckKey } from '../domain/types.ts';
 
-export interface SampleMark {
-  slug: string;
-  check: CheckKey;
-  /** India date. */
-  markedOn: string;
-}
+export type SampleMark = { slug: string; /** India date. */ markedOn: string } & ({ check: CheckKey; finding?: never } | { finding: string; check?: never });
 
 export const SAMPLE_MARKS: readonly SampleMark[] = [
   { slug: 'northbank-college', check: 'easy_enquiry', markedOn: '2026-08-20' },
   { slug: 'northbank-college', check: 'fees_shown', markedOn: '2026-08-26' },
   { slug: 'eastgate-university', check: 'placement_proof', markedOn: '2026-09-22' },
+  { slug: 'eastgate-university', finding: 'eastgate-quora-mba-hostel', markedOn: '2026-08-18' },
 ];
 
 /**

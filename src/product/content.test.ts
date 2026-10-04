@@ -45,9 +45,9 @@ describe('the product page copy', () => {
   test('prices, plan length and reminders come from the plan settings', () => {
     const [free, paid] = content.PLANS.cards;
     assert.equal(free?.price, '₹0');
-    assert.equal(paid?.price, '₹9,999');
-    assert.equal(PLAN_RULES.paid.priceInr, 9999);
-    assert.equal(paid?.term, `for ${PLAN_RULES.paid.lengthMonths} months`);
+    assert.equal(paid?.price, '₹24,999');
+    assert.equal(PLAN_RULES.paid.priceInr, 24999);
+    assert.equal(paid?.term, `+ GST for ${PLAN_RULES.paid.lengthMonths} months`);
     assert.match(content.PLANS.fine, /does not renew on its own/);
     assert.match(content.PLANS.fine, /30 days and 7 days/);
     const renewal = content.FAQ.find((item) => item.question.includes('renew'));

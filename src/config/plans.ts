@@ -5,7 +5,9 @@ export const PLAN_RULES = {
     priceInr: 0,
   },
   paid: {
-    priceInr: 9999,
+    /** [ADJUSTABLE] Written "₹24,999 + GST" with "for 6 months": GST is added on top. */
+    priceInr: 24999,
+    plusGst: true,
     lengthMonths: 6,
     autoRenew: false,
     /** In-app reminders before the end date (email later). */

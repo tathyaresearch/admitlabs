@@ -4,8 +4,10 @@
 // the content ideas built on the most asked questions.
 
 import { DIFFICULTIES, IDEA_FORMATS, type DemandKind, type Difficulty, type IdeaFormat, type Language } from '../domain/types.ts';
-import type { WorryTheme } from '../sample/demand.ts';
 import type { SeasonStage, SeasonStageKey } from './season.ts';
+
+/** Version 1's usual five worries, and "new" for any other. Version 2 asks by topic (spec 9.4); old pulls keep these. */
+export type WorryTheme = 'fees' | 'placements' | 'hostel' | 'safety' | 'recognition' | 'new';
 
 export interface DemandRow {
   id: string;
@@ -16,7 +18,8 @@ export interface DemandRow {
   kind: DemandKind;
   text: string;
   language: Language;
-  count: number;
+  /** A real count from the source, or null when it gave none (spec 9.5). */
+  count: number | null;
   changePct: number | null;
   rank: number | null;
   sourceUrl: string;
@@ -68,6 +71,8 @@ export interface DemandView {
 }
 
 const byText = (a: { text: string }, b: { text: string }) => a.text.localeCompare(b.text);
+/** Most first; an item without a count after every item with one. */
+const byCount = (a: { count: number | null }, b: { count: number | null }) => (b.count ?? -1) - (a.count ?? -1);
 
 /** A stored word, when it is one of the known ones. */
 const oneOf = <T extends string>(known: readonly T[], value: unknown): T | null => (known.includes(value as T) ? (value as T) : null);
@@ -79,16 +84,16 @@ function worries(rows: readonly DemandRow[]): WorryRow[] {
   for (const row of rows) {
     const theme = (typeof row.meta.theme === 'string' ? row.meta.theme : 'new') as WorryTheme;
     if (theme === 'new' || row.meta.isNew === true) {
-      fresh.push({ key: row.id, text: row.text, theme: 'new', count: row.count, isNew: true, programs: [row.programName], sourceUrl: row.sourceUrl });
+      fresh.push({ key: row.id, text: row.text, theme: 'new', count: row.count ?? 0, isNew: true, programs: [row.programName], sourceUrl: row.sourceUrl });
       continue;
     }
     const entry = known.get(theme) ?? { key: theme, text: row.text, theme, count: 0, isNew: false, programs: [], sourceUrl: row.sourceUrl };
-    entry.count += row.count;
+    entry.count += row.count ?? 0;
     if (!entry.programs.includes(row.programName)) entry.programs.push(row.programName);
     // The source shown is the one from the program where the worry was raised most.
-    if (row.count > (biggest.get(theme) ?? -1)) {
+    if ((row.count ?? 0) > (biggest.get(theme) ?? -1)) {
       entry.sourceUrl = row.sourceUrl;
-      biggest.set(theme, row.count);
+      biggest.set(theme, row.count ?? 0);
     }
     known.set(theme, entry);
   }
@@ -147,9 +152,9 @@ function season(rows: readonly DemandRow[], skills: boolean): SeasonStage[] {
  */
 export function demandView(rows: readonly DemandRow[], options: { singleProgram: boolean; skills: boolean }): DemandView {
   const of = (kind: DemandKind) => rows.filter((row) => row.kind === kind);
-  const rising = of('rising').sort((a, b) => (b.changePct ?? 0) - (a.changePct ?? 0) || b.count - a.count || byText(a, b));
-  const falling = of('falling').sort((a, b) => (a.changePct ?? 0) - (b.changePct ?? 0) || b.count - a.count || byText(a, b));
-  const questions = of('question').sort((a, b) => b.count - a.count || byText(a, b));
+  const rising = of('rising').sort((a, b) => (b.changePct ?? 0) - (a.changePct ?? 0) || byCount(a, b) || byText(a, b));
+  const falling = of('falling').sort((a, b) => (a.changePct ?? 0) - (b.changePct ?? 0) || byCount(a, b) || byText(a, b));
+  const questions = of('question').sort((a, b) => byCount(a, b) || byText(a, b));
   const worryRows = worries(of('worry'));
   const months = rows.map((row) => row.month).sort();
   const listed = rows.filter((row) => row.kind !== 'season' && row.kind !== 'idea');

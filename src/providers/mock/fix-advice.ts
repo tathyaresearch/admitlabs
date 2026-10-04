@@ -341,7 +341,7 @@ export function writeFixAdvice<K extends CheckKey>(input: {
   facts: CheckFacts[K];
   institutionType: InstitutionType;
   programName: string | null;
-}): FixAdvice {
+}): Omit<FixAdvice, 'readyFix'> {
   const entry = BANK[input.checkKey] as Entry<K>;
   const context: AdviceContext<K> = { facts: input.facts, institutionType: input.institutionType, program: input.programName ?? 'this program' };
   const whyItMatters = entry.why(context);

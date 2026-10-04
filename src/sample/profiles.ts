@@ -4,12 +4,13 @@
 // Letters: S strong, O okay, W weak, M missing. One letter holds for every month; six
 // letters cover April to September 2026 in order.
 //
-// Target bands for September 2026 under scoring v1:
-//   Strong:          Eastgate University (about 73), Silverline College (about 74)
-//   Needs work:      Northbank College BBA (about 46, up from 41 in June), Brightpath Skills
-//                    (about 63, up from about 28 in April), Highfield University (about 51),
-//                    Cedar Skill Institute (about 50)
-//   Getting started: Loomcraft Skills Institute (about 32), Riverbend College (about 27)
+// Target bands for September 2026 under scoring v1 (the overall score; each part has its own word):
+//   Strong:  Eastgate University (about 73), Silverline College (about 77)
+//   Okay:    Northbank College BBA (about 46, up from 41 in June), Brightpath Skills (about 63, up
+//            from about 28 in April), Highfield University (about 51), Pinegrove Skills Hub (about
+//            62), Cedar Skill Institute (about 50)
+//   Weak:    Loomcraft Skills Institute (about 32), Kestrel Skills Centre (about 30), Riverbend
+//            College (about 27)
 
 import { isProgramCheck, type InstitutionCheckKey, type ProgramCheckKey } from '../domain/checks.ts';
 import type { CheckKey, CheckResult } from '../domain/types.ts';
@@ -27,19 +28,22 @@ export interface SampleProfile {
 
 export const SAMPLE_PROFILES: Readonly<Record<string, SampleProfile>> = {
   // Paid. Improves steadily and crosses into Strong in July. Data Analytics is new and holds it back.
+  // Instagram slips back to Okay in August while YouTube, Facebook and the site's speed pick up,
+  // so Silverline leads it on Instagram and Google reviews ("Calderwood is ahead on Instagram and
+  // Google reviews" on the product page, where Eastgate is Larkmoor and Silverline is Calderwood).
   'eastgate-university': {
     institution: {
-      instagram_activity: 'OOSSSS',
+      instagram_activity: 'OOSSOO',
       google_profile: 'S',
-      youtube: 'WWOOOO',
-      other_socials: 'WWWOOO',
+      youtube: 'WWOOSS',
+      other_socials: 'WWWOSS',
       review_rating: 'O',
       approvals: 'S',
       faculty_leaders: 'WOOOOO',
       students_in_content: 'WWWWOO',
       easy_enquiry: 'WWOOOO',
       mobile_friendly: 'OOOSSS',
-      page_speed: 'WWWOOO',
+      page_speed: 'WWWOSS',
     },
     program: {
       google_search: { mba: 'S', bba: 'S', bca: 'O', nursing: 'O', 'data-analytics': 'MMWWWW' },
@@ -51,7 +55,7 @@ export const SAMPLE_PROFILES: Readonly<Record<string, SampleProfile>> = {
     },
   },
 
-  // Client. Starts in Getting started in April and climbs as the AdmitLabs team fixes things.
+  // Client. Starts Weak in April and climbs as the AdmitLabs team fixes things.
   'brightpath-skills': {
     institution: {
       instagram_activity: 'WWOOOO',
@@ -101,14 +105,14 @@ export const SAMPLE_PROFILES: Readonly<Record<string, SampleProfile>> = {
     },
   },
 
-  // Free, and the strongest rival in Guwahati.
+  // Free, and the strongest rival in Guwahati: busy on Instagram, well reviewed on Google.
   'silverline-college': {
     institution: {
       instagram_activity: 'S',
       google_profile: 'O',
       youtube: 'W',
       other_socials: 'O',
-      review_rating: 'O',
+      review_rating: 'S',
       approvals: 'O',
       faculty_leaders: 'O',
       students_in_content: 'S',
@@ -151,7 +155,7 @@ export const SAMPLE_PROFILES: Readonly<Record<string, SampleProfile>> = {
     },
   },
 
-  // Unclaimed rival. Added WhatsApp to every page in late August.
+  // Free from 30 September, in Tezpur. Added WhatsApp to every page in late August.
   'loomcraft-skills': {
     institution: {
       instagram_activity: 'O',
@@ -173,6 +177,57 @@ export const SAMPLE_PROFILES: Readonly<Record<string, SampleProfile>> = {
       fees_shown: { 'digital-marketing': 'M', 'hotel-management': 'W' },
       program_page: 'W',
       admission_steps: { 'digital-marketing': 'W', 'hotel-management': 'M' },
+    },
+  },
+
+  // Unclaimed rival in Guwahati, tracked by Brightpath (and Loomcraft, from Tezpur). Good on
+  // Instagram and reviews, weak on placement proof.
+  'pinegrove-skills': {
+    institution: {
+      instagram_activity: 'S',
+      google_profile: 'OOOOSS',
+      youtube: 'O',
+      other_socials: 'O',
+      review_rating: 'O',
+      approvals: 'O',
+      faculty_leaders: 'W',
+      students_in_content: 'O',
+      easy_enquiry: 'S',
+      mobile_friendly: 'S',
+      page_speed: 'O',
+    },
+    program: {
+      google_search: { 'digital-marketing': 'O', 'data-analytics': 'S' },
+      ai_answers: { 'digital-marketing': 'W', 'data-analytics': 'O' },
+      placement_proof: { 'digital-marketing': 'W', 'data-analytics': 'WWWOOO' },
+      fees_shown: 'S',
+      program_page: 'O',
+      admission_steps: 'O',
+    },
+  },
+
+  // Unclaimed rival in Tezpur, picked by Loomcraft. Small and new online.
+  'kestrel-skills': {
+    institution: {
+      instagram_activity: 'W',
+      google_profile: 'W',
+      youtube: 'M',
+      other_socials: 'M',
+      review_rating: 'W',
+      approvals: 'W',
+      faculty_leaders: 'M',
+      students_in_content: 'W',
+      easy_enquiry: 'O',
+      mobile_friendly: 'O',
+      page_speed: 'W',
+    },
+    program: {
+      google_search: 'O',
+      ai_answers: 'M',
+      placement_proof: 'M',
+      fees_shown: 'W',
+      program_page: 'W',
+      admission_steps: 'W',
     },
   },
 

@@ -11,12 +11,12 @@ import styles from './AppShell.module.css';
  * Phone navigation: a bottom bar. Up to five pages (the team area's four) all sit on it; more than
  * that (an institution's dashboard) shows four destinations and a More sheet for the rest.
  */
-export function MobileNav({ sections, extra }: { sections: readonly NavSection[]; extra?: ReactNode }) {
+export function MobileNav({ sections, extra, primary: primaryHrefs = MOBILE_PRIMARY }: { sections: readonly NavSection[]; extra?: ReactNode; primary?: readonly string[] }) {
   const pathname = usePathname();
   const items = sections.flatMap((section) => section.items);
   const fits = items.length <= MOBILE_BAR_MAX;
-  const primary = fits ? items : items.filter((item) => MOBILE_PRIMARY.includes(item.href));
-  const rest = fits ? [] : items.filter((item) => !MOBILE_PRIMARY.includes(item.href));
+  const primary = fits ? items : items.filter((item) => primaryHrefs.includes(item.href));
+  const rest = fits ? [] : items.filter((item) => !primaryHrefs.includes(item.href));
   const moreActive = rest.some((item) => isActive(pathname, item.href));
 
   if (primary.length === 0) return null;

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { INDIA_CITIES, INDIA_STATES, UNION_TERRITORIES } from '../config/cities.ts';
+import { INDIA_CITIES, INDIA_STATES, nearCity, UNION_TERRITORIES } from '../config/cities.ts';
 import { SAMPLE_INSTITUTIONS } from '../sample/institutions.ts';
 import { hasDashes } from './copy.ts';
 import { findPlace, placeLabel, searchPlaces } from './places.ts';
@@ -21,6 +21,16 @@ describe('the city list', () => {
 
   test('every sample institution is in a listed city', () => {
     for (const sample of SAMPLE_INSTITUTIONS) assert.ok(findPlace(INDIA_CITIES, sample.city, sample.state), `${sample.city}, ${sample.state}`);
+  });
+
+  test('each city knows its nearest bigger city in the state, for Nearby city rivals; the biggest has none', () => {
+    assert.equal(nearCity({ name: 'Tezpur', state: 'Assam' }), 'Guwahati');
+    assert.equal(nearCity({ name: 'Guwahati', state: 'Assam' }), null);
+    assert.equal(nearCity({ name: 'Pimpri Chinchwad', state: 'Maharashtra' }), 'Pune');
+    for (const city of INDIA_CITIES) {
+      const near = nearCity(city);
+      if (near) assert.ok(findPlace(INDIA_CITIES, near, city.state), `${city.name} is near ${near}, a listed city in ${city.state}`);
+    }
   });
 
   test('a few hundred cities, big enough for every state', () => {

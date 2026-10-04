@@ -3,7 +3,7 @@
 
 import { formatCount, joinNames, plural } from '../domain/format.ts';
 import { LANGUAGE_LABELS, LANGUAGES, type DemandKind, type Language } from '../domain/types.ts';
-import type { WorryTheme } from '../sample/demand.ts';
+import type { WorryTheme } from './view.ts';
 
 /** "Up 38%", "Down 12%", "No change". */
 export function changeWords(changePct: number | null): string {
@@ -27,11 +27,12 @@ export const LANGUAGE_TAGS: Readonly<Record<Language, string | null>> = {
 
 export const PLATFORM_LABELS: Readonly<Record<string, string>> = {
   reddit: 'Reddit',
-  x: 'X',
   quora: 'Quora',
+  forum: 'Forums',
   youtube: 'YouTube',
   instagram: 'Instagram',
   trends: 'Search trends',
+  keywords: 'Keyword tool',
 };
 
 /** The platform a source link points at ("reddit" for reddit.example or reddit.com), if known. */
@@ -58,9 +59,11 @@ export function worrySentence(place: string, themes: readonly WorryTheme[]): str
   return words.length ? `Students in ${place} worry most about ${joinNames(words)}.` : '';
 }
 
-/** How often, in words that fit the kind of item. */
-export function countWords(kind: DemandKind, count: number): string {
+/** How often, in words that fit the kind of item. Empty when no source gave a count. */
+export function countWords(kind: DemandKind, count: number | null): string {
+  if (count === null) return '';
   switch (kind) {
+    case 'topic':
     case 'question':
       return `Asked about ${plural(count, 'time', 'times')}`;
     case 'worry':

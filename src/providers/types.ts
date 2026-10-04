@@ -26,18 +26,6 @@ export interface ProgramRef {
   programKey: string | null;
 }
 
-/** An institution whose public mentions a Demand pull looks for (grouped topics, never people). */
-export interface WatchedInstitution {
-  id: string;
-  slug: string;
-  name: string;
-  type: InstitutionType;
-  city: string;
-  state: string;
-  /** The program whose pull its mentions are filed under (its first program), so they are stored once per region. */
-  programKey: string;
-}
-
 /**
  * What to collect for: a whole institution, one of its programs, or (for Demand) a region and
  * program. A city pull names its state too, since city names repeat across states.
@@ -45,7 +33,7 @@ export interface WatchedInstitution {
 export type Target =
   | { kind: 'institution'; institution: InstitutionRef }
   | { kind: 'program'; institution: InstitutionRef; program: ProgramRef }
-  | { kind: 'region'; scope: DemandScope; region: string; programKey: string; state?: string | null; watch?: readonly WatchedInstitution[] };
+  | { kind: 'region'; scope: DemandScope; region: string; programKey: string; state?: string | null };
 
 export type TargetKind = Target['kind'];
 

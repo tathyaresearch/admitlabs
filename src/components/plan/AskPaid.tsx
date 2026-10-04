@@ -8,8 +8,8 @@
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { PLAN_RULES } from '@/config/plans';
-import { formatDate, formatInr } from '@/domain/format';
+import { formatDate } from '@/domain/format';
+import { PAID_PRICE } from '@/domain/tiers';
 import type { PaidAskState } from '@/lib/plan/ask';
 import styles from './AskPaid.module.css';
 
@@ -70,7 +70,7 @@ export function AskPaid({
         <p className={styles.note}>The AdmitLabs team writes back and switches Paid on for you. Nothing is paid here.</p>
       ) : note ? (
         <p className={styles.note}>
-          {formatInr(PLAN_RULES.paid.priceInr)} for {PLAN_RULES.paid.lengthMonths} months, no auto-renew. The AdmitLabs team writes back to switch it on. Nothing is paid here.
+          {PAID_PRICE.text} {PAID_PRICE.term}, no auto-renew. The AdmitLabs team writes back to switch it on. Nothing is paid here.
         </p>
       ) : null}
       {error ? (

@@ -50,8 +50,8 @@ describe('the score gauge', () => {
 
   test('the line under the score: how far the next band is', () => {
     assert.equal(nextBandText(46), '24 points to Strong');
-    assert.equal(nextBandText(27), '13 points to Needs work');
-    assert.equal(nextBandText(39), '1 point to Needs work');
+    assert.equal(nextBandText(27), '13 points to Okay');
+    assert.equal(nextBandText(39), '1 point to Okay');
     assert.equal(nextBandText(69.6), 'Right where Strong starts');
     assert.equal(nextBandText(73), '3 points above where Strong starts');
     assert.equal(nextBandText(71), '1 point above where Strong starts');
@@ -60,11 +60,11 @@ describe('the score gauge', () => {
 
   test('each tick says what it means, on two lines over it, inside the drawing (rule 11)', () => {
     assert.deepEqual(bandTicks(), [
-      { start: 40, lines: ['Needs work', 'from 40'] },
+      { start: 40, lines: ['Okay', 'from 40'] },
       { start: 70, lines: ['Strong', 'from 70'] },
     ]);
     // The same bands in one line, for "What do these mean?".
-    assert.equal(bandsText(), 'Strong from 70, Needs work from 40, Getting started below 40');
+    assert.equal(bandsText(), 'Strong from 70, Okay from 40, Weak below 40');
     const shape = scoreGauge(73, bandStarts());
     assert.equal(shape.tickLabels.length, shape.notches.length);
     shape.tickLabels.forEach((label, index) => {

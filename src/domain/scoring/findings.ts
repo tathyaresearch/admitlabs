@@ -29,8 +29,9 @@ function perWeek(value: number): string {
 
 const DESCRIBERS: { readonly [K in CheckKey]: Describer<K> } = {
   google_search(facts) {
-    if (facts.position === null) return `Not in the top ${facts.resultsChecked} Google results for ${quote(facts.query)}.`;
-    return `Position ${facts.position} on Google for ${quote(facts.query)}.`;
+    const from = facts.searchedFrom ? `, searched from ${facts.searchedFrom}` : '';
+    if (facts.position === null) return `Not in the top ${facts.resultsChecked} Google results for ${quote(facts.query)}${from}.`;
+    return `Position ${facts.position} on Google for ${quote(facts.query)}${from}.`;
   },
 
   instagram_activity(facts) {
@@ -71,7 +72,7 @@ const DESCRIBERS: { readonly [K in CheckKey]: Describer<K> } = {
 
   other_socials(facts) {
     const present = facts.platforms.filter((platform) => platform.exists);
-    if (present.length === 0) return 'No Facebook or LinkedIn page found.';
+    if (present.length === 0) return 'No Facebook page found.';
     return present
       .map((platform) => {
         const name = platform.platform === 'facebook' ? 'Facebook' : 'LinkedIn';

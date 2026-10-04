@@ -28,7 +28,8 @@ export interface StageData {
 export function stageData(showcase: Showcase): StageData {
   const { audit, rivals, demand, home, institution } = showcase;
   const byName = [...rivals.rows].sort((a, b) => a.name.localeCompare(b.name)).map((row) => row.id);
-  const top = demand.view.topTrend;
+  // A trend with a real count, so the picture never shows a made up figure (spec 9.5).
+  const top = demand.view.rising.find((row) => row.count !== null) ?? demand.view.topTrend;
   return {
     name: institution.name,
     city: institution.city,
@@ -45,7 +46,7 @@ export function stageData(showcase: Showcase): StageData {
       you: row.you,
       from: byName.indexOf(row.id) - index,
     })),
-    questions: demand.view.questions.slice(0, 3).map((row) => ({ text: row.text, count: row.count, platform: PLATFORM_NAMES[askedOn(row)] })),
+    questions: demand.view.questions.slice(0, 3).map((row) => ({ text: row.text, count: row.count ?? 0, platform: PLATFORM_NAMES[askedOn(row)] })),
     trend: {
       text: top?.text ?? '',
       changePct: Math.round(top?.changePct ?? 0),

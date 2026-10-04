@@ -721,3 +721,65 @@ export const INDIA_CITIES: readonly City[] = Object.entries(STATES).flatMap(([st
     return { name, state, aliases } satisfies City;
   }),
 );
+
+/**
+ * The biggest city in each state and union territory: the nearest bigger city for the state's
+ * other cities, unless NEAR_OVERRIDES names a closer one. Used for Nearby city rival
+ * suggestions when a city has fewer than 3 rivals of its own (spec 8.2). Seeded as cities.near.
+ */
+const STATE_HUBS: Readonly<Record<string, string>> = {
+  'Andhra Pradesh': 'Visakhapatnam',
+  'Arunachal Pradesh': 'Itanagar',
+  Assam: 'Guwahati',
+  Bihar: 'Patna',
+  Chhattisgarh: 'Raipur',
+  Goa: 'Panaji',
+  Gujarat: 'Ahmedabad',
+  Haryana: 'Gurugram',
+  'Himachal Pradesh': 'Shimla',
+  Jharkhand: 'Ranchi',
+  Karnataka: 'Bengaluru',
+  Kerala: 'Kochi',
+  'Madhya Pradesh': 'Indore',
+  Maharashtra: 'Mumbai',
+  Manipur: 'Imphal',
+  Meghalaya: 'Shillong',
+  Mizoram: 'Aizawl',
+  Nagaland: 'Dimapur',
+  Odisha: 'Bhubaneswar',
+  Punjab: 'Ludhiana',
+  Rajasthan: 'Jaipur',
+  Sikkim: 'Gangtok',
+  'Tamil Nadu': 'Chennai',
+  Telangana: 'Hyderabad',
+  Tripura: 'Agartala',
+  'Uttar Pradesh': 'Lucknow',
+  Uttarakhand: 'Dehradun',
+  'West Bengal': 'Kolkata',
+  'Andaman and Nicobar Islands': 'Sri Vijaya Puram',
+  Chandigarh: 'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu': 'Silvassa',
+  Delhi: 'Delhi',
+  'Jammu and Kashmir': 'Srinagar',
+  Ladakh: 'Leh',
+  Lakshadweep: 'Kavaratti',
+  Puducherry: 'Puducherry',
+};
+
+/** Cities whose nearest bigger city is not their state's biggest, keyed "State|City". */
+const NEAR_OVERRIDES: Readonly<Record<string, string>> = {
+  'Maharashtra|Pimpri Chinchwad': 'Pune',
+  'Maharashtra|Amravati': 'Nagpur',
+  'Maharashtra|Wardha': 'Nagpur',
+  'Maharashtra|Chandrapur': 'Nagpur',
+  'Karnataka|Dharwad': 'Hubballi',
+  'Telangana|Secunderabad': 'Hyderabad',
+  'Gujarat|Gandhinagar': 'Ahmedabad',
+  'Uttar Pradesh|Greater Noida': 'Noida',
+};
+
+/** The nearest bigger city in the same state, or null for the state's biggest city. */
+export function nearCity(city: { name: string; state: string }): string | null {
+  const near = NEAR_OVERRIDES[`${city.state}|${city.name}`] ?? STATE_HUBS[city.state] ?? null;
+  return near === city.name ? null : near;
+}

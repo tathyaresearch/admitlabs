@@ -21,11 +21,12 @@ export const SAMPLE_MOVES: readonly SampleMove[] = [
   { slug: 'eastgate-university', kind: 'admission_dates', description: 'Opened early applications for the January MBA intake.', detectedAt: '2026-09-08', path: '/admissions/mba-january' },
   { slug: 'highfield-university', kind: 'new_page', description: 'Published a placement report page for the 2026 batch.', detectedAt: '2026-08-06', path: '/placements/2026' },
   { slug: 'highfield-university', kind: 'fee_change', description: 'Replaced MBA fee amounts with "Contact us for fees".', detectedAt: '2026-08-20', path: '/programs/mba' },
-  { slug: 'loomcraft-skills', kind: 'new_page', description: 'Added a WhatsApp enquiry button to every page.', detectedAt: '2026-08-22', path: '/' },
-  { slug: 'loomcraft-skills', kind: 'new_program', description: 'Started a 3 month course in Social Media Marketing.', detectedAt: '2026-09-01', path: '/courses/social-media-marketing' },
   { slug: 'northbank-college', kind: 'fee_change', description: 'Now shows BCA fees as a yearly range.', detectedAt: '2026-09-10', path: '/programs/bca' },
   { slug: 'brightpath-skills', kind: 'new_page', description: 'Added a results page for the Digital Marketing course.', detectedAt: '2026-08-12', path: '/results/digital-marketing' },
   { slug: 'brightpath-skills', kind: 'new_program', description: 'Started a weekend batch in Data Analytics with Power BI.', detectedAt: '2026-09-06', path: '/courses/data-analytics-weekend' },
+  { slug: 'pinegrove-skills', kind: 'fee_change', description: 'Shows the Digital Marketing course at ₹28,000, down from ₹32,000.', detectedAt: '2026-09-04', path: '/courses/digital-marketing' },
+  { slug: 'pinegrove-skills', kind: 'new_page', description: 'Added a placements page with 2026 learners and companies.', detectedAt: '2026-09-19', path: '/placements' },
+  { slug: 'kestrel-skills', kind: 'new_program', description: 'Started a 6 week course in Instagram Marketing for shops.', detectedAt: '2026-09-25', path: '/courses/instagram-marketing' },
 ];
 
 export interface SampleContent {
@@ -60,17 +61,23 @@ export const SAMPLE_CONTENT: readonly SampleContent[] = [
   c('eastgate-university', 'instagram', '2026-09-19', 'Data Analytics: 5 projects from the first batch', [11_900, 690, 41, 150], 'Proof of skill for a new program that has no placement record yet.'),
   c('eastgate-university', 'instagram', '2026-09-26', 'The director answers the top 3 questions from parents', [15_600, 1_020, 144, 170], 'A visible leader answering real worries builds trust with parents.'),
 
-  c('highfield-university', 'instagram', '2026-09-05', 'Nursing graduates on their first day at a Dibrugarh hospital', [14_300, 1_110, 64, 180], 'Shows where graduates end up, close to home.'),
+  c('highfield-university', 'instagram', '2026-09-05', 'Nursing graduates on their first day at a Guwahati hospital', [14_300, 1_110, 64, 180], 'Shows where graduates end up, close to home.'),
   c('highfield-university', 'youtube', '2026-09-10', 'MBA placement report 2026, explained in 4 minutes', [6_200, 280, 37, 40], 'Walks through the numbers instead of making a big claim.'),
   c('highfield-university', 'instagram', '2026-09-14', 'Hostel room tour for new students', [9_800, 540, 71, 95], 'Answers the hostel worry for students coming from outside the city.'),
   c('highfield-university', 'instagram', '2026-09-21', 'NAAC A grade certificate, with a link to the official page', [4_100, 260, 12, 30], 'Proof with a source is easier to trust than a claim.'),
   c('highfield-university', 'instagram', '2026-09-27', 'A BCA student builds an app for a local shop', [7_600, 480, 39, 70], 'A small, real project shows skills better than a brochure.'),
 
-  c('loomcraft-skills', 'instagram', '2026-09-02', 'From zero to a first freelance client in 3 months', [21_500, 1_640, 203, 390], 'A before and after story with a clear time frame.'),
-  c('loomcraft-skills', 'instagram', '2026-09-08', 'What a digital marketing class looks like on day one', [12_200, 830, 64, 120], 'Lowers the fear of the unknown for first time learners.'),
-  c('loomcraft-skills', 'instagram', '2026-09-13', 'The course fee and what it includes, in one image', [8_400, 510, 97, 210], 'Showing the fee up front answers the first question people have.'),
-  c('loomcraft-skills', 'youtube', '2026-09-20', 'A hotel management trainee shares tips for a first interview', [5_300, 300, 26, 45], 'Useful to watch even for people who never enrol.'),
-  c('loomcraft-skills', 'instagram', '2026-09-25', 'Weekend batch learners share why they joined', [6_900, 450, 31, 60], 'Speaks to working people who need flexible timings.'),
+  c('pinegrove-skills', 'instagram', '2026-09-03', 'A learner shows the dashboard she built for a local shop', [17_200, 1_190, 88, 240], 'A real project for a real business, finished on screen.'),
+  c('pinegrove-skills', 'instagram', '2026-09-10', 'Weekend batch: 12 Saturdays to your first analyst job', [11_600, 720, 61, 130], 'One clear promise with a time frame working people can plan around.'),
+  c('pinegrove-skills', 'youtube', '2026-09-17', 'Excel to Power BI in one hour, a free class', [8_200, 410, 52, 90], 'Teaches something useful for free before asking anything.'),
+  c('pinegrove-skills', 'instagram', '2026-09-24', 'Three 2026 learners and the companies that hired them', [9_900, 640, 47, 160], 'Names and companies make the result easy to believe.'),
+  c('pinegrove-skills', 'instagram', '2026-09-28', 'The fee in 3 parts, explained in 30 seconds', [6_400, 380, 44, 95], 'Answers the money question before anyone has to ask it.'),
+
+  c('kestrel-skills', 'instagram', '2026-09-05', 'Before and after: a Tezpur bakery’s Instagram in 30 days', [5_600, 410, 33, 70], 'A visible result for a business people in the town already know.'),
+  c('kestrel-skills', 'instagram', '2026-09-12', 'A shop owner in Tezpur explains what she learned in 6 weeks', [4_800, 330, 29, 60], 'A familiar local face makes the course feel close to home.'),
+  c('kestrel-skills', 'youtube', '2026-09-18', 'How to shoot product photos on a phone, a free class', [2_900, 160, 21, 30], 'Useful even for people who never join, so it gets shared.'),
+  c('kestrel-skills', 'instagram', '2026-09-22', 'Fees and batch timings for October, in one image', [2_400, 140, 26, 40], 'The two things people ask first, answered up front.'),
+  c('kestrel-skills', 'instagram', '2026-09-26', 'New: Instagram Marketing for shops, starts in October', [3_100, 180, 17, 25], 'Simple and timely: the date and who it is for, in one post.'),
 
   c('northbank-college', 'instagram', '2026-09-06', 'BCA students demo their coding projects', [8_700, 590, 44, 80], 'Shows students doing real work, not posing.'),
   c('northbank-college', 'instagram', '2026-09-11', 'The principal welcomes the new batch', [4_500, 380, 52, 25], 'A known face from the college builds trust with parents.'),
@@ -95,13 +102,27 @@ export interface SampleAd {
 /** The weekly rival check runs every Monday at 9 am India time, from this Monday on. */
 export const SAMPLE_WEEKLY_CHECKS_FROM = '2026-08-03';
 
+/** Ads the team entered. Each entry also makes a "started ads" alert for whoever tracks that rival (spec 8.3). */
 export const SAMPLE_ADS: readonly SampleAd[] = [
-  { slug: 'silverline-college', promise: '100% placement support for every BBA student.', enteredAt: '2026-09-05' },
+  { slug: 'silverline-college', promise: '100% placement support for every BBA student.', enteredAt: '2026-09-22' },
   { slug: 'eastgate-university', promise: 'Scholarships up to 40% for early MBA applicants.', enteredAt: '2026-09-09' },
   { slug: 'highfield-university', promise: 'NAAC A grade. Apply before 30 November.', enteredAt: '2026-09-14' },
-  { slug: 'loomcraft-skills', promise: 'Get certified in 3 months. Job help included.', enteredAt: '2026-09-02' },
   { slug: 'northbank-college', promise: "Guwahati's most affordable BCA.", enteredAt: '2026-08-28' },
   { slug: 'brightpath-skills', promise: 'Learn from trainers who work in the industry. Weekend batches open.', enteredAt: '2026-09-07' },
+  { slug: 'pinegrove-skills', promise: 'Data Analytics in 12 weekends. Pay in 3 parts.', enteredAt: '2026-09-16' },
+];
+
+export interface SampleReviewJump {
+  slug: string;
+  /** India date Google showed the jump. */
+  on: string;
+  description: string;
+}
+
+/** Big jumps in Google reviews (spec 8.3: 20% or 15 reviews more in a month), as Places finds them. */
+export const SAMPLE_REVIEW_JUMPS: readonly SampleReviewJump[] = [
+  { slug: 'highfield-university', on: '2026-09-18', description: '24 new Google reviews this month, up from 9 in August. Rating 4.1.' },
+  { slug: 'pinegrove-skills', on: '2026-08-21', description: '19 new Google reviews this month, up from 6 in July. Rating 4.4.' },
 ];
 
 /**

@@ -25,7 +25,7 @@ describe('how wide to look', () => {
 });
 
 describe('shared pulls: once per region and program', () => {
-  test('every institution needs its city, state and All India, for each program with a key', () => {
+  test('every institution needs its city and its state, for each program with a key (All India is no longer pulled)', () => {
     const pulls = neededPulls([
       { city: 'Guwahati', state: 'Assam', programKeys: ['bba', 'bca'] },
       { city: 'Jorhat', state: 'Assam', programKeys: ['bba', null] },
@@ -35,8 +35,6 @@ describe('shared pulls: once per region and program', () => {
       'city|Guwahati|Assam|bba',
       'city|Guwahati|Assam|bca',
       'city|Jorhat|Assam|bba',
-      'india|India||bba',
-      'india|India||bca',
       'state|Assam|Assam|bba',
       'state|Assam|Assam|bca',
     ]);
@@ -48,6 +46,7 @@ describe('shared pulls: once per region and program', () => {
       { city: 'Udaipur', state: 'Tripura', programKeys: ['bba'] },
     ]);
     assert.equal(pulls.filter((pull) => pull.scope === 'city').length, 2);
-    assert.equal(pulls.filter((pull) => pull.scope === 'india').length, 1);
+    assert.equal(pulls.filter((pull) => pull.scope === 'state').length, 2);
+    assert.equal(pulls.filter((pull) => pull.scope === 'india').length, 0);
   });
 });

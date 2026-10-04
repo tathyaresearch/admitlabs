@@ -35,6 +35,8 @@ const MOVE_ACTIONS: Readonly<Record<RivalMoveKind, { text: string; next: string;
   fee_change: { text: 'See how your fees compare', next: 'Students compare fees side by side, so make yours easy to find.', effort: 'easy' },
   new_program: { text: 'Look at the new program they started', next: 'Check whether your programs already answer the same need, and say so clearly.', effort: 'medium' },
   new_page: { text: 'See what they added to their website', next: 'Ask whether your own site answers the same student question.', effort: 'medium' },
+  started_ads: { text: 'See what their ads promise', next: 'Check whether your own pages and posts answer the same promise, with proof.', effort: 'easy' },
+  reviews_jump: { text: 'Ask your students for Google reviews', next: "Ask this year's students and recent graduates for a review, with a link that opens the form.", effort: 'easy' },
 };
 
 export function writeRivalAction(item: Opportunity, type: InstitutionType): RivalActionText {

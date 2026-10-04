@@ -6,6 +6,8 @@ import type { ApprovalsFacts, ApprovalsValue, CheckFacts } from '../domain/facts
 import type { InstitutionFacts, ProgramFacts } from '../domain/scoring/evaluate.ts';
 import { resultKey } from '../domain/scoring/score.ts';
 import type { CheckKey } from '../domain/types.ts';
+import type { AnySignal } from '../providers/types.ts';
+import type { CollectedFinding } from './record.ts';
 
 /** A check signal as stored or as collected: which check, which program, the value and its source. */
 export interface CheckSignal {
@@ -94,4 +96,14 @@ function approvalsFacts(latest: Map<string, CheckSignal>, programId: string | nu
   const held = official ? (official.value as Extract<ApprovalsValue, { source: 'official' }>).held : null;
   sources.set(resultKey('approvals', programId), { sourceUrl: site.sourceUrl, checkedAt: site.fetchedAt });
   return { shown: shown.shown, withProof: shown.withProof, held };
+}
+
+/** The findings among collected signals (What people say, Other places), each once, with its source and date. */
+export function findingsFromSignals(signals: readonly AnySignal[]): CollectedFinding[] {
+  const seen = new Set<string>();
+  return signals.flatMap((signal) => {
+    if (signal.key !== 'finding' || seen.has(signal.value.key)) return [];
+    seen.add(signal.value.key);
+    return [{ ...signal.value, sourceUrl: signal.sourceUrl, checkedAt: signal.fetchedAt }];
+  });
 }

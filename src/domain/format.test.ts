@@ -55,10 +55,10 @@ describe('score labels from config', () => {
   test('bands and their edges', () => {
     assert.equal(scoreLabel(100), 'Strong');
     assert.equal(scoreLabel(70), 'Strong');
-    assert.equal(scoreLabel(69), 'Needs work');
-    assert.equal(scoreLabel(40), 'Needs work');
-    assert.equal(scoreLabel(39), 'Getting started');
-    assert.equal(scoreLabel(0), 'Getting started');
+    assert.equal(scoreLabel(69), 'Okay');
+    assert.equal(scoreLabel(40), 'Okay');
+    assert.equal(scoreLabel(39), 'Weak');
+    assert.equal(scoreLabel(0), 'Weak');
     assert.equal(scoreLabel(69.5), 'Strong');
   });
 

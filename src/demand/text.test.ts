@@ -30,7 +30,10 @@ describe('Demand in words', () => {
     assert.equal(sourcesCaption(['reddit', 'quora', 'trends'], ['en', 'hi', 'as']), 'From Reddit, Quora and Search trends, in English, Hindi and Assamese');
     assert.equal(sourcesCaption(['youtube'], []), 'From YouTube');
     // English first, then Hindi and Assamese, however they were found.
-    assert.equal(sourcesCaption(['x'], ['as', 'en']), 'From X, in English and Assamese');
+    assert.equal(sourcesCaption(['forum'], ['as', 'en']), 'From Forums, in English and Assamese');
+    assert.equal(countWords('topic', 140), 'Asked about 140 times');
+    // A search trend without a count from the keyword tool shows no number at all.
+    assert.equal(countWords('rising', null), '');
   });
 
   test('the platform behind a source link', () => {

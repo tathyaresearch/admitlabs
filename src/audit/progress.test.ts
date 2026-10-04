@@ -78,10 +78,10 @@ describe('progress month by month', () => {
     assert.deepEqual(months[0]?.moved, []);
     assert.deepEqual(months[1]?.moved, [
       { key: 'instagram_activity', name: 'Instagram', programs: [], from: 'weak', to: 'okay' },
-      { key: 'fees_shown', name: 'Fees shown', programs: ['BBA', 'BCA'], from: 'weak', to: 'okay' },
-      { key: 'page_speed', name: 'Page speed', programs: [], from: 'okay', to: 'weak' },
+      { key: 'fees_shown', name: 'Fees', programs: ['BBA', 'BCA'], from: 'weak', to: 'okay' },
+      { key: 'page_speed', name: 'Speed', programs: [], from: 'okay', to: 'weak' },
     ]);
-    assert.deepEqual(months[2]?.moved, [{ key: 'fees_shown', name: 'Fees shown', programs: ['BBA'], from: 'okay', to: 'strong' }]);
+    assert.deepEqual(months[2]?.moved, [{ key: 'fees_shown', name: 'Fees', programs: ['BBA'], from: 'okay', to: 'strong' }]);
   });
 
   test("a program's page counts that program's checks and the institution's own", () => {

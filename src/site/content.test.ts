@@ -97,8 +97,8 @@ describe('the website copy', () => {
     assert.deepEqual(
       content.SYSTEM.pillars.map((pillar) => [pillar.name, pillar.line]),
       [
-        ['Discovered', 'Students find you when they search.'],
-        ['Trusted', 'They believe what they see.'],
+        ['Visibility', 'Students find you when they search.'],
+        ['Trust', 'They believe what they see.'],
         ['Chosen', 'Saying yes is easy.'],
       ],
     );

@@ -14,7 +14,8 @@ import styles from './home.module.css';
 export interface DemandHighlightData {
   text: string;
   changePct: number | null;
-  count: number;
+  /** Searches a month, when the keyword tool counts this trend (spec 9.5). */
+  count: number | null;
   sourceUrl: string;
   programName: string;
   region: string;
@@ -69,7 +70,7 @@ export function DemandCard({
             <span>
               {highlight.programName} in {highlight.region}, {formatMonth(highlight.month)}
             </span>
-            <span>{countWords('rising', highlight.count)}</span>
+            {highlight.count !== null ? <span>{countWords('rising', highlight.count)}</span> : null}
             <Source url={highlight.sourceUrl} platform="trends" />
           </p>
           <MonthBars points={history} title="Searches by month" valueLabel="Searches" grow />

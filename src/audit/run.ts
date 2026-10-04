@@ -8,16 +8,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { istDate, istParts } from '../domain/dates.ts';
 import { auditSchedule, isAuditDue } from '../domain/schedule.ts';
+import { institutionDetailsFromRow, programDetailsFromRow, type ProgramDetails } from '../domain/details.ts';
 import { thresholdsFor } from '../domain/scoring/classify.ts';
 import { parseScoringConfig } from '../domain/scoring/config.ts';
 import { resultKey } from '../domain/scoring/score.ts';
 import { effectiveTier, type PlanRecord } from '../domain/tiers.ts';
-import { CHECK_KEYS, type AuditKind, type CheckKey, type CheckResult } from '../domain/types.ts';
+import { CHECK_KEYS, type AuditKind, type CheckKey, type CheckResult, type ReviewState } from '../domain/types.ts';
 import type { Database, Json } from '../lib/supabase/database.types.ts';
 import { collect } from '../providers/collect.ts';
 import { getAnalysisProvider } from '../providers/registry.ts';
 import type { InstitutionRef, ProgramRef } from '../providers/types.ts';
-import { factsFromSignals, type CheckSignal } from './facts.ts';
+import { factsFromSignals, findingsFromSignals, type CheckSignal } from './facts.ts';
 import { OWN_AUDIT_KINDS, prepareAudit, type AuditRecord, type AuditTrigger, type PreviousAudit } from './record.ts';
 
 type Db = SupabaseClient<Database>;
@@ -45,6 +46,14 @@ export interface RunAuditOptions {
   /** Leave out for the institution's own Audit (free, paid or client from its plan). */
   kind?: 'team' | 'rival';
   createdBy?: string | null;
+  /**
+   * Leave out to follow the college's Review first setting: an own Audit waits for the team when it
+   * is on (spec section 25). The seed passes the state its sample needs.
+   */
+  review?: ReviewState;
+  /** For an Audit approved straight away by a team user: who, and when. */
+  approvedBy?: string | null;
+  approvedAt?: Date;
   env?: Env;
 }
 
@@ -54,6 +63,7 @@ export interface RunAuditResult {
   overall: number;
   programs: number;
   signals: number;
+  review: ReviewState;
   record: AuditRecord;
 }
 
@@ -118,6 +128,8 @@ async function previousAudit(db: Db, institutionId: string, kinds: readonly Audi
     .select('id, overall, discovered, trusted, chosen')
     .eq('institution_id', institutionId)
     .in('kind', kinds)
+    // What changed is measured from the last Audit the college saw: an approved one (spec section 25).
+    .eq('review', 'approved')
     .lt('run_at', before.toISOString())
     .order('run_at', { ascending: false })
     .limit(1)
@@ -143,17 +155,21 @@ export async function runAudit(db: Db, options: RunAuditOptions): Promise<RunAud
   const env = options.env ?? process.env;
   const { institutionId, asOf } = options;
 
-  const [institutionResult, programsResult, planResult, statusResult, configResult] = await Promise.all([
+  const [institutionResult, programsResult, planResult, statusResult, configResult, detailsResult, programDetailsResult] = await Promise.all([
     db.from('institutions').select('id, slug, name, type, city, state, website, instagram, youtube, other_links').eq('id', institutionId).maybeSingle(),
     db.from('programs').select('id, name, program_key, archived_at, created_at').eq('institution_id', institutionId).order('created_at').order('name'),
     db.from('plans').select('tier, starts_at, ends_at, free_program_id').eq('institution_id', institutionId).maybeSingle(),
-    db.from('institution_status').select('claimed').eq('institution_id', institutionId).maybeSingle(),
-    db.from('scoring_config').select('version, weights, result_shares, thresholds, labels').eq('active', true).maybeSingle(),
+    db.from('institution_status').select('claimed, review_first').eq('institution_id', institutionId).maybeSingle(),
+    db.from('scoring_config').select('version, weights, result_shares, thresholds, labels, impact').eq('active', true).maybeSingle(),
+    // The details it added fill some blanks in the ready fixes. Never read by scoring.
+    db.from('institution_details').select('*').eq('institution_id', institutionId).maybeSingle(),
+    db.from('program_details').select('*').eq('institution_id', institutionId),
   ]);
   const institution = must(institutionResult, 'institution');
   const allPrograms = must(programsResult, 'programs');
   const config = parseScoringConfig(must(configResult, 'active scoring config'));
   if (planResult.error || statusResult.error) throw new AuditRunError('Could not read the plan for this institution.');
+  if (detailsResult.error || programDetailsResult.error) throw new AuditRunError('Could not read the details this institution added.');
 
   const plan = planRecord(planResult.data);
   const own = options.kind === undefined;
@@ -193,6 +209,7 @@ export async function runAudit(db: Db, options: RunAuditOptions): Promise<RunAud
     ...(await collect({ kind: 'institution', institution: ref }, asOf, env)),
     ...(await Promise.all(programRefs.map((program) => collect({ kind: 'program', institution: ref, program }, asOf, env)))).flat(),
   ];
+  const findings = findingsFromSignals(found);
   const signals: CheckSignal[] = found
     .filter((signal) => CHECK_KEY_SET.has(signal.key))
     .map((signal) => ({ key: signal.key as CheckKey, programId: signal.programId, value: signal.value, sourceUrl: signal.sourceUrl, fetchedAt: signal.fetchedAt }));
@@ -216,6 +233,14 @@ export async function runAudit(db: Db, options: RunAuditOptions): Promise<RunAud
 
   const named = audited.map((program) => ({ id: program.id, name: program.name }));
   const previous = await previousAudit(db, institutionId, own ? OWN_AUDIT_KINDS : [kind], asOf);
+  const programNames = new Map(allPrograms.map((program) => [program.id, program.name]));
+  const programDetails = new Map<string, ProgramDetails>(
+    (programDetailsResult.data ?? []).flatMap((row) => {
+      const name = programNames.get(row.program_id);
+      return name ? [[name, programDetailsFromRow(row)] as const] : [];
+    }),
+  );
+  const review: ReviewState = options.review ?? (own && (statusResult.data?.review_first ?? true) ? 'waiting' : 'approved');
   const { record, evaluation } = await prepareAudit(
     {
       institutionId,
@@ -228,20 +253,30 @@ export async function runAudit(db: Db, options: RunAuditOptions): Promise<RunAud
       thresholds: thresholdsFor(config),
       programs: named,
       collected: factsFromSignals(signals, named),
+      findings,
       previous,
+      context: {
+        institutionName: institution.name,
+        city: institution.city,
+        programNames: active.map((program) => program.name),
+        institutionDetails: detailsResult.data ? institutionDetailsFromRow(detailsResult.data) : null,
+        programDetails,
+      },
+      review,
     },
     getAnalysisProvider(env),
   );
 
-  // A new Audit lands on Home's What changed; the first one on the Audit.
-  const notification = own ? (previous ? { text: AUDIT_READY_TEXT.next, link: '/#changed' } : { text: AUDIT_READY_TEXT.first, link: '/audit' }) : null;
-  const saved = await db.rpc('record_audit', { payload: JSON.parse(JSON.stringify({ ...record, notification })) as Json });
+  // A new Audit lands on Home's What changed; the first one on the Audit. A waiting one tells nobody until it is approved.
+  const notification = own && review === 'approved' ? (previous ? { text: AUDIT_READY_TEXT.next, link: '/#changed' } : { text: AUDIT_READY_TEXT.first, link: '/audit' }) : null;
+  const approval = review === 'approved' ? { approved_at: (options.approvedAt ?? asOf).toISOString(), approved_by: options.approvedBy ?? null } : {};
+  const saved = await db.rpc('record_audit', { payload: JSON.parse(JSON.stringify({ ...record, ...approval, notification })) as Json });
   if (saved.error) {
     if (saved.error.message.includes('refresh_used')) throw new RefreshUsedError();
     throw new AuditRunError(`Could not save the Audit: ${saved.error.message}`);
   }
 
-  return { auditId: saved.data, kind, overall: evaluation.overall, programs: named.length, signals: signals.length, record };
+  return { auditId: saved.data, kind, overall: evaluation.overall, programs: named.length, signals: signals.length, review, record };
 }
 
 export interface DueAudit {

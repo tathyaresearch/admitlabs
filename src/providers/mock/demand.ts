@@ -1,44 +1,52 @@
-// Mock Demand sources. Each platform returns grouped items for a region and program:
-// a topic, a count and a source link. Never a person, never a profile.
+// Mock Demand sources. Each returns grouped items for a region and program: a topic, a count
+// when the source gives a real one, and a source link. Never a person, never a profile.
 //
 // The sample programs follow their hand-written fixtures; every other listed program follows a
 // written template (demand-bank.ts). The fixtures are written for Guwahati and Assam; other
-// regions get their own place names. The fixtures describe September 2026: earlier months show
-// the counts before that change, later months drift a little, with the odd big spike.
+// regions get their own place names, and a smaller city much smaller counts, so its state fills
+// in (spec 9.2). The fixtures describe September 2026: earlier months show the counts before
+// that change, later months drift a little, with the odd big spike.
+//
+// Honest numbers (spec 9.5): questions and topics carry the questions counted; a search trend
+// carries its change only, and the keyword tool gives searches a month for some of them.
 
 import { monthKey } from '../../domain/dates.ts';
+import { monthSpanWords } from '../../domain/format.ts';
 import type { DemandScope, Language } from '../../domain/types.ts';
-import { institutionId } from '../../sample/ids.ts';
-import { DEMAND_SCOPE_FACTOR, SEASON_DEGREE, SEASON_SKILLS, type DemandPlatform, type TrendFixture } from '../../sample/demand.ts';
-import { SAMPLE_INSTITUTIONS } from '../../sample/institutions.ts';
+import { CITY_FACTOR, DEMAND_SCOPE_FACTOR, KEYWORD_VOLUME, type DemandPlatform, type TrendFixture } from '../../sample/demand.ts';
 import type { DemandItemValue } from '../signals.ts';
-import { makeSignal, type AnySignal, type Target, type WatchedInstitution } from '../types.ts';
-import { demandFixture, isSkillsProgram, localize, mentionTopics, placeWords } from './demand-bank.ts';
-import { hashString, rngFor } from './random.ts';
+import { makeSignal, type AnySignal, type Target } from '../types.ts';
+import { demandFixture, localize, placeWords, type PlaceWords } from './demand-bank.ts';
+import { rngFor } from './random.ts';
 import { slugify } from './shared.ts';
+
+/** The providers that bring Demand items. Quora and forums come through the search tool. */
+export type DemandProvider = 'search' | 'reddit' | 'youtube' | 'instagram' | 'trends' | 'keywords';
 
 const LATEST_MONTH = '2026-09';
 
-function geo(scope: DemandScope): string {
-  return scope === 'india' ? 'IN' : 'IN-AS';
-}
+/** Below this share of Guwahati's counts, a city has too little for search trends, search counts or what gets attention. */
+export const THIN_CITY_FACTOR = 0.25;
 
 /** A link to the grouped topic on the platform where it was found. */
-export function topicUrl(platform: DemandPlatform, text: string, scope: DemandScope): string {
+export function topicUrl(platform: DemandPlatform, text: string, words: PlaceWords): string {
   const q = encodeURIComponent(text);
+  const place = encodeURIComponent(words.place);
   switch (platform) {
     case 'reddit':
-      return `https://reddit.example/r/assam/search?q=${q}`;
-    case 'x':
-      return `https://x.example/search?q=${q}`;
+      return `https://reddit.example/r/${slugify(words.state)}/search?q=${q}`;
     case 'quora':
       return `https://quora.example/topic/${slugify(text)}`;
+    case 'forum':
+      return `https://forum.example/${slugify(words.state)}/t/${slugify(text)}`;
     case 'youtube':
       return `https://youtube.example/results?search_query=${q}`;
     case 'instagram':
       return `https://instagram.example/explore/search/?q=${q}`;
     case 'trends':
-      return `https://trends.example/explore?q=${q}&geo=${geo(scope)}`;
+      return `https://trends.example/explore?q=${q}&geo=${place}`;
+    case 'keywords':
+      return `https://keywords.example/volume?q=${q}&location=${place}`;
   }
 }
 
@@ -85,105 +93,113 @@ function trendThisMonth(trend: TrendFixture, kind: 'rising' | 'falling', program
   return { changePct, growth: (1 + 0.03 * after) * (1 + changePct / 100) };
 }
 
-/** Without a watch list, the sample institutions (never a team prospect), as in the sample world. */
-function sampleWatch(): WatchedInstitution[] {
-  return SAMPLE_INSTITUTIONS.flatMap((institution) => {
-    const first = institution.programs[0];
-    if (institution.isProspect || !first) return [];
-    return [
-      {
-        id: institutionId(institution.slug),
-        slug: institution.slug,
-        name: institution.name,
-        type: institution.type,
-        city: institution.city,
-        state: institution.state,
-        programKey: first.programKey,
-      },
-    ];
-  });
+/** How big a region's counts are against Guwahati's: the state's are bigger, a smaller city's much smaller. */
+export function regionFactor(scope: DemandScope, region: string): number {
+  return DEMAND_SCOPE_FACTOR[scope] * (scope === 'city' ? (CITY_FACTOR[region] ?? 1) : 1);
 }
 
-export function demandSignals(platform: DemandPlatform, target: Target, asOf: Date): AnySignal[] {
+/** Which provider brings a platform's items: Quora and forums come through the search tool. */
+function providerOf(platform: DemandPlatform): DemandProvider | null {
+  switch (platform) {
+    case 'quora':
+    case 'forum':
+      return 'search';
+    case 'reddit':
+    case 'youtube':
+    case 'instagram':
+    case 'trends':
+    case 'keywords':
+      return platform;
+  }
+}
+
+/** A question as found in the region. Assamese is asked in Assam; elsewhere the same question comes up in Hindi. */
+function asked(question: { text: string; original?: string; language: Language }, words: PlaceWords): { text: string; originalText: string | null; language: Language } {
+  const text = localize(question.text, words);
+  const language: Language = question.language === 'as' && !words.assamese ? 'hi' : question.language;
+  const originalText = language !== 'en' && language === question.language && text === question.text ? (question.original ?? null) : null;
+  return { text, originalText, language };
+}
+
+export function demandSignals(provider: DemandProvider, target: Target, asOf: Date): AnySignal[] {
   if (target.kind !== 'region') return [];
   const fixture = demandFixture(target.programKey);
   if (!fixture) return [];
 
   const month = monthKey(asOf);
   const words = placeWords(target.scope, target.region, target.state);
-  const factor = DEMAND_SCOPE_FACTOR[target.scope];
+  const factor = regionFactor(target.scope, target.region);
+  const thin = factor < THIN_CITY_FACTOR;
   const wobble = (label: string) => 0.9 + rngFor('demand', label, target.scope, target.region, target.programKey, month).next() * 0.2;
+  const counted = (base: number, label: string) => Math.round(base * factor * wobble(label));
   const signals: AnySignal[] = [];
-  const add = (value: DemandItemValue, sourceUrl: string) => signals.push(makeSignal(platform, 'demand_item', target, value, sourceUrl, asOf));
+  const add = (value: DemandItemValue, sourceUrl: string) => signals.push(makeSignal(provider, 'demand_item', target, value, sourceUrl, asOf));
 
-  if (platform === 'trends') {
+  if (provider === 'trends' && !thin) {
     for (const [kind, trends] of [
       ['rising', fixture.rising],
       ['falling', fixture.falling],
     ] as const) {
       trends.forEach((trend, index) => {
         const text = localize(trend.text, words);
-        const { changePct, growth } = trendThisMonth(trend, kind, target.programKey, month);
-        add(item({ kind, text, count: Math.round(trend.base * factor * growth), changePct, meta: kind === 'rising' ? { trendIndex: index } : {} }), topicUrl('trends', text, target.scope));
+        const { changePct } = trendThisMonth(trend, kind, target.programKey, month);
+        // Search trends give a change, never a count (spec 9.5).
+        add(item({ kind, text, count: null, changePct, meta: { [kind === 'rising' ? 'trendIndex' : 'fallingIndex']: index, course: trend.course ?? true, platform: 'trends' } }), topicUrl('trends', text, words));
       });
     }
-    const season = isSkillsProgram(target.programKey) ? SEASON_SKILLS : SEASON_DEGREE;
-    for (const stage of season) {
-      add(
-        item({ kind: 'season', text: stage.text, count: 0, meta: { stage: stage.stage, from: stage.from, to: stage.to } }),
-        `https://exams.example/${slugify(words.state)}/admission-year-2027`,
-      );
+    add(
+      item({ kind: 'best_month', text: monthSpanWords(fixture.bestMonths), count: null, meta: { months: fixture.bestMonths, platform: 'trends' } }),
+      topicUrl('trends', localize(fixture.rising[0]?.text ?? target.programKey, words), words),
+    );
+  }
+
+  if (provider === 'keywords' && !thin) {
+    // Searches a month, for the trends the keyword tool covers.
+    for (const [kind, trends, covered] of [
+      ['rising', fixture.rising, KEYWORD_VOLUME.rising],
+      ['falling', fixture.falling, KEYWORD_VOLUME.falling],
+    ] as const) {
+      trends.slice(0, covered).forEach((trend) => {
+        const text = localize(trend.text, words);
+        const { growth } = trendThisMonth(trend, kind, target.programKey, month);
+        signals.push(makeSignal('keywords', 'search_volume', target, { text, monthly: Math.max(10, Math.round(trend.base * factor * growth)) }, topicUrl('keywords', text, words), asOf));
+      });
     }
   }
 
   fixture.questions.forEach((question, index) => {
-    if (question.source !== platform) return;
-    const text = localize(question.text, words);
-    // Assamese is asked in Assam. Elsewhere the same question comes up in Hindi.
-    const language: Language = question.language === 'as' && !words.assamese ? 'hi' : question.language;
-    const originalText = language !== 'en' && language === question.language && text === question.text ? (question.original ?? null) : null;
+    if (providerOf(question.source) !== provider) return;
+    const count = counted(question.base, `question-${index}`);
+    if (count < 1) return;
+    const found = asked(question, words);
     add(
-      item({ kind: 'question', text, originalText, language, count: Math.round(question.base * factor * wobble(`question-${index}`)), meta: { questionIndex: index } }),
-      topicUrl(platform, originalText ?? text, target.scope),
+      item({ kind: 'question', ...found, count, meta: { questionIndex: index, topic: question.topic, platform: question.source } }),
+      topicUrl(question.source, found.originalText ?? found.text, words),
     );
   });
 
-  fixture.worries.forEach((worry, index) => {
-    if (worry.source !== platform) return;
-    const text = localize(worry.text, words);
+  // What students ask about the program: each topic's questions counted, with the question asked most.
+  for (const topic of fixture.topics) {
+    if (providerOf(topic.question.source) !== provider) continue;
+    const count = counted(topic.base, `topic-${topic.topic}`);
+    if (count < 1) continue;
+    const found = asked(topic.question, words);
     add(
-      item({ kind: 'worry', text, count: Math.round(worry.base * factor * wobble(`worry-${index}`)), meta: { isNew: worry.isNew ?? false, theme: worry.theme } }),
-      topicUrl(platform, text, target.scope),
+      item({ kind: 'topic', ...found, count, meta: { topic: topic.topic, platform: topic.question.source } }),
+      topicUrl(topic.question.source, found.originalText ?? found.text, words),
     );
-  });
+  }
 
-  // Grouped mentions of the institutions this pull watches, filed under each one's first program
-  // so they are stored once per region. City and state only: All India is too broad for one institution.
-  if (target.scope !== 'india') {
-    for (const institution of target.watch ?? sampleWatch()) {
-      if (institution.programKey !== target.programKey) continue;
-      const inRegion =
-        target.scope === 'city'
-          ? institution.city === target.region && (!target.state || institution.state === target.state)
-          : institution.state === target.region;
-      if (!inRegion) continue;
-      const scale = target.scope === 'state' ? 1.4 : 1;
-      for (const mention of mentionTopics(institution.slug, institution.type)) {
-        if (mention.source !== platform) continue;
-        const source = new URL(topicUrl(platform, institution.name, target.scope));
-        source.searchParams.set('topic', hashString(mention.text).toString(36));
-        add(
-          item({
-            kind: 'mention',
-            text: mention.text,
-            count: Math.max(1, Math.round(mention.base * scale * wobble(`mention-${institution.slug}-${mention.sentiment}`))),
-            about: { id: institution.id, slug: institution.slug, name: institution.name },
-            sentiment: mention.sentiment,
-          }),
-          source.toString(),
-        );
-      }
-    }
+  // What gets attention among institutions like this one: videos on YouTube, everything else on Instagram.
+  if ((provider === 'youtube' || provider === 'instagram') && !thin) {
+    fixture.content.forEach((content, index) => {
+      if ((content.format === 'video') !== (provider === 'youtube')) return;
+      const text = localize(content.text, words);
+      add(
+        item({ kind: 'content', text, count: null, meta: { format: content.format, level: content.level, contentIndex: index, platform: provider } }),
+        topicUrl(provider, `${text} ${words.place}`, words),
+      );
+    });
   }
 
   return signals;

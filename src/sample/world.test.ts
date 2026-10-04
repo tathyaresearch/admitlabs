@@ -41,7 +41,7 @@ describe('the sample world, without a database', () => {
       [
         ['Highfield University', 'rival', 51],
         ['Northbank College', 'rival', 46],
-        ['Silverline College', 'rival', 74],
+        ['Silverline College', 'rival', 77],
       ],
     );
     // Rival Audits start once someone tracks the rival: Silverline on 1 April, the others on 15 April.

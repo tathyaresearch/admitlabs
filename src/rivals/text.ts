@@ -10,6 +10,8 @@ export const MOVE_KIND_LABELS: Readonly<Record<RivalMoveKind, string>> = {
   fee_change: 'Fee change',
   new_page: 'New page',
   admission_dates: 'Admission dates',
+  started_ads: 'Started ads',
+  reviews_jump: 'Big jump in reviews',
 };
 
 /** From your side: "Ahead of you" means the rival is ahead. */
@@ -39,6 +41,11 @@ export function suggestionReason(sameCity: boolean, sharedPrograms: readonly str
 function lowerFirst(text: string): string {
   const [first = '', second = ''] = text;
   return second && second === second.toLowerCase() ? `${first.toLowerCase()}${text.slice(1)}` : text;
+}
+
+/** A "started ads" move, from an ad the team entered: “Started ads: “Scholarships up to 40%.”” */
+export function adMoveText(promise: string): string {
+  return `Started ads: “${promise.trim()}”`;
 }
 
 /** The alert for a new move: "Silverline College announced 2027 admission dates. Forms open on 5 January 2027." */

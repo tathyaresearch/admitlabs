@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
+import { SCORING_V1 } from '../config/scoring.v1.ts';
 import { istDate, monthKey } from '../domain/dates.ts';
 import { itemPoints, rankFixes } from '../domain/scoring/rank.ts';
 import { sampleAuditChain } from '../sample/world.ts';
@@ -30,20 +31,21 @@ describe('the all-programs view', () => {
     const { record, names, type } = await recordFor('northbank-college', '2026-09-10', ['bba']);
     const view = overviewView(stored(record, { freeDetails: true }), { institutionType: type, programNames: names });
     assert.equal(view.scores.overall, 46);
-    assert.equal(view.label, 'Needs work');
+    assert.equal(view.label, 'Okay');
     // Nothing is Strong yet, so nothing is working; a short list fills with the best Okay checks.
     assert.deepEqual(view.working, []);
     assert.deepEqual(
       workingTop(view, 3).map((item) => [item.name, item.strength, item.rank]),
       [
-        ['Google search', 'okay', 1],
+        ['Search results', 'okay', 1],
         ['Instagram', 'okay', 2],
-        ['Review rating', 'okay', 3],
+        ['Reviews and rating', 'okay', 3],
       ],
     );
     assert.deepEqual(view.fixes.slice(0, 3).map((item) => [item.name, pointsToGainText(item.points)]), [
-      ['Placement proof', 'Could add up to 7 points'],
-      ['Fees shown', 'Could add up to 6 points'],
+      // All High impact: the quicker fees fix first.
+      ['Fees', 'Could add up to 6 points'],
+      ['Placements', 'Could add up to 7 points'],
       ['Google profile', 'Could add up to 5 points'],
     ]);
     assert.ok(view.fixes.slice(0, 3).every((item) => item.parts.every((part) => part.detail !== null) && item.difficulty !== null));
@@ -109,7 +111,7 @@ describe('the all-programs view', () => {
     const view = overviewView(stored(record), { institutionType: type, programNames: names });
     const rows = view.areas.flatMap((area) => area.rows);
     const instagram = rows.find((row) => row.key === 'instagram_activity');
-    assert.deepEqual(instagram?.summary, { kind: 'single', result: 'strong', points: 25, maxPoints: 25 });
+    assert.deepEqual(instagram?.summary, { kind: 'single', result: 'okay', points: 15, maxPoints: 25 });
     const search = rows.find((row) => row.key === 'google_search');
     assert.equal(search?.summary.kind, 'varies');
     const average = (search?.parts ?? []).reduce((sum, part) => sum + part.points, 0) / 5;
@@ -138,7 +140,7 @@ describe('the one-program view', () => {
     assert.equal(view.scores.overall, engineRow?.overall);
     assert.equal(view.areas.flatMap((area) => area.rows).reduce((sum, row) => sum + row.parts.length, 0), 17);
     const own = evaluation.outcomes.filter((outcome) => outcome.programId === null || outcome.programId === mba);
-    const expected = rankFixes(own, 1, () => 'medium').map((item) => item.key);
+    const expected = rankFixes(own, 1, () => 'medium', SCORING_V1.impact).map((item) => item.key);
     assert.equal(view.fixes.length, expected.length);
     assert.ok(view.fixes.every((item) => item.points > 0));
     assert.equal(programView(stored(record), 'not-a-program', { institutionType: type, programNames: names }), null);
@@ -152,9 +154,9 @@ describe('each pillar at a glance', () => {
     assert.deepEqual(
       pillars.map((pillar) => [pillar.pillar, pillar.checks.length, pillar.strong, pillar.weakest?.name, pillar.weakest?.result]),
       [
-        ['discovered', 6, 2, 'AI answers', 'missing'],
-        ['trusted', 5, 1, 'Placement proof', 'missing'],
-        ['chosen', 6, 1, 'Admission steps', 'weak'],
+        ['discovered', 6, 3, 'AI answers', 'missing'],
+        ['trusted', 5, 1, 'Placements', 'missing'],
+        ['chosen', 6, 2, 'Admission steps', 'weak'],
       ],
     );
     // Google search is Strong for two programs and Weak for one: the check counts as Weak.
@@ -188,11 +190,11 @@ describe('each pillar at a glance', () => {
       pillars[0]?.weakestFirst.map((check) => [check.name, check.result]),
       [
         ['AI answers', 'missing'],
-        ['Google search', 'weak'],
-        ['YouTube', 'okay'],
-        ['Other socials', 'okay'],
-        ['Instagram', 'strong'],
+        ['Search results', 'weak'],
+        ['Instagram', 'okay'],
         ['Google profile', 'strong'],
+        ['YouTube', 'strong'],
+        ['Facebook', 'strong'],
       ],
     );
   });
@@ -353,7 +355,7 @@ describe('what changed since the Audit before', () => {
     const view = overviewView(stored(latest.record), { institutionType: latest.type, programNames: latest.names });
     assert.deepEqual(movedChecks(view), [
       { key: 'instagram_activity', name: 'Instagram', programs: [], from: 'weak', to: 'okay' },
-      { key: 'easy_enquiry', name: 'Easy enquiry', programs: [], from: 'weak', to: 'okay' },
+      { key: 'easy_enquiry', name: 'Enquiry', programs: [], from: 'weak', to: 'okay' },
     ]);
   });
 

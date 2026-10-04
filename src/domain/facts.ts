@@ -9,6 +9,8 @@ export interface GoogleSearchValue {
   /** Position in Google results, or null when not in the top `resultsChecked`. */
   position: number | null;
   resultsChecked: number;
+  /** The city the search was made from, so the results are the ones a local student sees. */
+  searchedFrom?: string | null;
 }
 
 export interface InstagramActivityValue {

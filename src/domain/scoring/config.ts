@@ -8,7 +8,7 @@ import type { ScoreLabelBand, ScoringConfig } from '../scoring-config.ts';
 import { PILLARS, RESULTS } from '../types.ts';
 
 const FAMILIES = ['college_university', 'skilling'] as const;
-const LABEL_NAMES: readonly ScoreLabelBand['label'][] = ['Strong', 'Needs work', 'Getting started'];
+const LABEL_NAMES: readonly ScoreLabelBand['label'][] = ['Strong', 'Okay', 'Weak'];
 
 export interface StoredScoringConfig {
   version: number;
@@ -16,6 +16,7 @@ export interface StoredScoringConfig {
   result_shares: unknown;
   thresholds: unknown;
   labels: unknown;
+  impact: unknown;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -84,6 +85,16 @@ export function validateScoringConfig(config: ScoringConfig): string[] {
     for (const band of bands) if (!LABEL_NAMES.includes(band.label)) problems.push(`"${band.label}" is not a known label`);
   }
 
+  const impact = config.impact;
+  if (!isRecord(impact)) problems.push('impact is missing');
+  else {
+    sameShape(SCORING_V1.impact, impact, 'impact', problems);
+    const { highMinPoints, mediumMinPoints } = impact as ScoringConfig['impact'];
+    if (typeof highMinPoints === 'number' && typeof mediumMinPoints === 'number' && !(highMinPoints > mediumMinPoints && mediumMinPoints > 0)) {
+      problems.push('impact.highMinPoints should be above impact.mediumMinPoints, and both above 0');
+    }
+  }
+
   if (config.thresholds?.mode !== 'fixed' && config.thresholds?.mode !== 'peer') problems.push('thresholds.mode should be fixed or peer');
   sameShape(SCORING_V1.thresholds, config.thresholds, 'thresholds', problems);
 
@@ -98,6 +109,7 @@ export function parseScoringConfig(row: StoredScoringConfig): ScoringConfig {
     resultShares: row.result_shares,
     thresholds: row.thresholds,
     labels: row.labels,
+    impact: row.impact,
   } as ScoringConfig;
   const problems = validateScoringConfig(config);
   if (problems.length) throw new Error(`Scoring config version ${row.version} cannot be used: ${problems.join('; ')}.`);

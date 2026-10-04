@@ -1,5 +1,5 @@
 // The overall score as a half-circle gauge: filled to the score out of 100, with a tick where each
-// score band starts (from the scoring config) and over it what the tick means ("Needs work" over
+// score band starts (from the scoring config) and over it what the tick means ("Okay" over
 // "from 40"), so no mark goes unnamed. Drawn in one piece, so the number scales with the arc and
 // never touches it: centred in the bowl on the arc's baseline, "/100" after it on the same line,
 // "0" and "100" under the two ends. A small gauge leaves the ticks, their words and the ends out:

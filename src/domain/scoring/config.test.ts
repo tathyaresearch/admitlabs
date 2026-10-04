@@ -12,6 +12,7 @@ const stored = (config: ScoringConfig) => ({
   result_shares: JSON.parse(JSON.stringify(config.resultShares)) as unknown,
   thresholds: JSON.parse(JSON.stringify(config.thresholds)) as unknown,
   labels: JSON.parse(JSON.stringify(config.labels)) as unknown,
+  impact: JSON.parse(JSON.stringify(config.impact)) as unknown,
 });
 
 const edit = (change: (copy: ScoringConfig) => void): ScoringConfig => {
@@ -61,7 +62,7 @@ describe('scoring config checks', () => {
     const gap = validateScoringConfig(
       edit((copy) => {
         const labels = copy.labels as unknown as Array<{ label: string; min: number; max: number }>;
-        labels[1] = { label: 'Needs work', min: 41, max: 69 };
+        labels[1] = { label: 'Okay', min: 41, max: 69 };
       }),
     );
     assert.ok(gap.some((problem) => problem.includes('no gaps')));
@@ -76,6 +77,17 @@ describe('scoring config checks', () => {
     assert.ok(unknown.some((problem) => problem.includes('not a known setting')));
     const mode = validateScoringConfig(edit((copy) => void ((copy.thresholds as { mode: string }).mode = 'guess')));
     assert.ok(mode.some((problem) => problem.includes('mode')));
+  });
+
+  test('the words are Strong, Okay and Weak, and impact bands step down', () => {
+    assert.deepEqual(
+      SCORING_V1.labels.map((band) => band.label),
+      ['Strong', 'Okay', 'Weak'],
+    );
+    const flipped = validateScoringConfig(edit((copy) => void (copy.impact = { highMinPoints: 4, mediumMinPoints: 6 })));
+    assert.ok(flipped.some((problem) => problem.includes('impact.highMinPoints')), flipped.join('; '));
+    const missing = validateScoringConfig(edit((copy) => void delete (copy as Partial<ScoringConfig>).impact));
+    assert.ok(missing.some((problem) => problem.includes('impact is missing')), missing.join('; '));
   });
 
   test('parse says which version is broken and why', () => {

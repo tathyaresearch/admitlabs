@@ -33,11 +33,16 @@ interface AppShellProps {
   unread?: number;
   /** A strip at the top of the page, for example while the team views an institution's dashboard. */
   banner?: ReactNode;
+  /** Counts beside other pages in the sidebar, by href (the team's To review). */
+  badges?: Readonly<Record<string, number>>;
+  /** The pages on the phone's bottom bar when there are more than fit (src/components/shell/nav.ts). */
+  mobilePrimary?: readonly string[];
   children: ReactNode;
 }
 
-export function AppShell({ sections, homeHref, email, roleLabel, context, showNotifications = true, unread = 0, banner, children }: AppShellProps) {
+export function AppShell({ sections, homeHref, email, roleLabel, context, showNotifications = true, unread = 0, banner, badges, mobilePrimary, children }: AppShellProps) {
   const notificationsLabel = unread ? `Notifications, ${unread} new` : 'Notifications';
+  const sideBadges = { ...badges, ...(showNotifications && unread ? { '/notifications': unread } : {}) };
   return (
     <div className={styles.shell}>
       <a className="skip-link" href="#main">
@@ -58,7 +63,7 @@ export function AppShell({ sections, homeHref, email, roleLabel, context, showNo
           </div>
         </div>
         <div className={styles.sidebarNav}>
-          <SideNav sections={sections} badges={showNotifications && unread ? { '/notifications': unread } : undefined} />
+          <SideNav sections={sections} badges={Object.keys(sideBadges).length ? sideBadges : undefined} />
         </div>
         <div className={styles.sidebarFoot}>
           <AccountMenu variant="side" email={email} roleLabel={roleLabel} institutionName={context.title} />
@@ -93,7 +98,7 @@ export function AppShell({ sections, homeHref, email, roleLabel, context, showNo
         </div>
       </div>
 
-      <MobileNav sections={sections} />
+      <MobileNav sections={sections} primary={mobilePrimary} />
     </div>
   );
 }

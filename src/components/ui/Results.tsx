@@ -44,7 +44,7 @@ export function ResultBar({ result, points, max, share, showPoints = true, size 
   );
 }
 
-/** Strong, Needs work or Getting started, from the score bands in the scoring config. */
+/** Strong, Okay or Weak, from the score bands in the scoring config. */
 export function ScoreLabel({ score, label }: { score?: number; label?: ScoreLabelName }) {
   const value = label ?? scoreLabel(score ?? 0);
   return (

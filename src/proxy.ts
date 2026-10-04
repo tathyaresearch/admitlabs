@@ -17,8 +17,9 @@ const TO_DASHBOARD = '/site/to-dashboard';
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) return true;
-  // The design system page is open while developing. In production it is for the team only.
-  return process.env.NODE_ENV !== 'production' && (pathname === '/design-system' || pathname.startsWith('/design-system/'));
+  // The design system page and the version 2 mock page are open while developing. In production
+  // the design system is for the team only and the mock page is not found.
+  return process.env.NODE_ENV !== 'production' && ['/design-system', '/mock'].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
 export async function proxy(request: NextRequest) {

@@ -8,6 +8,7 @@ import { RIVAL_RULES } from '../config/rivals.ts';
 import { SCHEDULES } from '../config/schedules.ts';
 import { CHECKS, checksForPillar } from '../domain/checks.ts';
 import { formatInr } from '../domain/format.ts';
+import { PAID_PRICE } from '../domain/tiers.ts';
 import { APP_OPEN } from '../lib/urls.ts';
 import { PILLAR_LABELS, PILLARS, type Pillar } from '../domain/types.ts';
 import { SAMPLE_REPORT_NOTE } from '../report/data.ts';
@@ -202,8 +203,8 @@ export const PLANS: { title: readonly [string, string]; lede: string; cards: rea
     {
       key: 'paid',
       name: 'Paid',
-      price: formatInr(PLAN_RULES.paid.priceInr),
-      term: `for ${PLAN_RULES.paid.lengthMonths} months`,
+      price: PAID_PRICE.amount,
+      term: `${PAID_PRICE.tax} ${PAID_PRICE.term}`,
       line: 'Here’s what’s changing every month.',
       points: [
         'Everything in Free',

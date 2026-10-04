@@ -17,7 +17,7 @@ export function intendedResult(institution: InstitutionRef, checkKey: CheckKey, 
 
   if (checkKey === 'instagram_activity' && !institution.instagram) return 'missing';
   if (checkKey === 'youtube' && !institution.youtube) return 'missing';
-  if (checkKey === 'other_socials' && !institution.otherLinks.facebook && !institution.otherLinks.linkedin) return 'missing';
+  if (checkKey === 'other_socials' && !institution.otherLinks.facebook) return 'missing';
 
   const roll = rngFor('result', institution.slug, program?.programKey ?? null, checkKey).next();
   if (roll < 0.22) return 'strong';

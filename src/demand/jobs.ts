@@ -2,6 +2,9 @@
 // pull per region and program each month, with an alert for each big spike to the Paid and
 // Client institutions in that city; and a first pull, straight away, for a region and program
 // nobody needed before. The one path for the app, the scripts and the seed.
+//
+// Honest numbers (spec 9.5): a search trend keeps its count only when the keyword tool gives
+// searches a month for it; a question or a topic keeps the questions counted.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DEMAND_RULES } from '../config/demand.ts';
@@ -9,8 +12,9 @@ import { monthStart } from '../domain/dates.ts';
 import type { Database, Json } from '../lib/supabase/database.types.ts';
 import { collect } from '../providers/collect.ts';
 import { getAnalysisProvider } from '../providers/registry.ts';
-import type { Signal, WatchedInstitution } from '../providers/types.ts';
-import { bigSpikes, rankDemand } from './rank.ts';
+import type { InstitutionType } from '../domain/types.ts';
+import { ideaItems, pulledItems } from './items.ts';
+import { bigSpikes } from './rank.ts';
 import { neededPulls, pullKey, regionLabel, type NeededPull } from './regions.ts';
 import { isPullDue, pullMonth } from './schedule.ts';
 import { spikeNotice } from './text.ts';
@@ -37,17 +41,16 @@ interface InstitutionRow {
   id: string;
   slug: string;
   name: string;
-  type: WatchedInstitution['type'];
+  type: InstitutionType;
   city: string;
   state: string;
   programs: Array<{ key: string; name: string; createdAt: string }>;
 }
 
-async function institutions(db: Db): Promise<{ rows: InstitutionRow[]; claimed: Set<string>; tracked: Set<string> }> {
-  const [list, statuses, links, programs] = await Promise.all([
+async function institutions(db: Db): Promise<{ rows: InstitutionRow[]; claimed: Set<string> }> {
+  const [list, statuses, programs] = await Promise.all([
     db.from('institutions').select('id, slug, name, type, city, state'),
     db.from('institution_status').select('institution_id, claimed'),
-    db.from('rivals').select('rival_institution_id'),
     db.from('programs').select('institution_id, name, program_key, created_at').is('archived_at', null).not('program_key', 'is', null),
   ]);
   const byInstitution = new Map<string, InstitutionRow['programs']>();
@@ -64,7 +67,6 @@ async function institutions(db: Db): Promise<{ rows: InstitutionRow[]; claimed: 
   return {
     rows,
     claimed: new Set(must(statuses, 'institution status').flatMap((row) => (row.claimed ? [row.institution_id] : []))),
-    tracked: new Set(must(links, 'rival links').map((row) => row.rival_institution_id)),
   };
 }
 
@@ -72,21 +74,6 @@ async function institutions(db: Db): Promise<{ rows: InstitutionRow[]; claimed: 
 export async function neededNow(db: Db): Promise<NeededPull[]> {
   const { rows, claimed } = await institutions(db);
   return neededPulls(rows.filter((row) => claimed.has(row.id)).map((row) => ({ city: row.city, state: row.state, programKeys: row.programs.map((program) => program.key) })));
-}
-
-/**
- * Institutions whose public mentions are worth collecting: every one that has signed up, and
- * every rival someone tracks. Each is filed under one of its programs that its state is pulled
- * for, so its mentions are stored once per region.
- */
-export async function watchList(db: Db, needed: readonly NeededPull[]): Promise<WatchedInstitution[]> {
-  const { rows, claimed, tracked } = await institutions(db);
-  const statePulls = new Set(needed.filter((pull) => pull.scope === 'state').map((pull) => `${pull.region}|${pull.programKey}`));
-  return rows.flatMap((row) => {
-    if (!claimed.has(row.id) && !tracked.has(row.id)) return [];
-    const program = row.programs.find((candidate) => statePulls.has(`${row.state}|${candidate.key}`));
-    return program ? [{ id: row.id, slug: row.slug, name: row.name, type: row.type, city: row.city, state: row.state, programKey: program.key }] : [];
-  });
 }
 
 export interface PullResult {
@@ -97,65 +84,28 @@ export interface PullResult {
 }
 
 /**
- * One shared pull: collect grouped items from every Demand source, rank them, write the content
- * ideas, and save it all at once. With `notify`, a city pull alerts Paid and Client
- * institutions there to each big spike (spec section 11).
+ * One shared pull: collect grouped items from every Demand source, add the keyword tool's
+ * searches a month to the trends it covers, rank them, write the content ideas, and save it all
+ * at once. With `notify`, a city pull alerts Paid and Client institutions there to each big
+ * spike (spec section 11).
  */
-export async function pullDemand(
-  db: Db,
-  pull: NeededPull,
-  month: string,
-  pulledAt: Date,
-  options: { notify: boolean; watch: readonly WatchedInstitution[]; env?: Env },
-): Promise<PullResult> {
+export async function pullDemand(db: Db, pull: NeededPull, month: string, pulledAt: Date, options: { notify: boolean; env?: Env }): Promise<PullResult> {
   const env = options.env ?? process.env;
-  const target = { kind: 'region' as const, scope: pull.scope, region: pull.region, state: pull.state, programKey: pull.programKey, watch: options.watch };
-  const found = (await collect(target, pulledAt, env))
-    .filter((signal): signal is Signal<'demand_item'> => signal.key === 'demand_item')
-    .map((signal) => ({ signal, kind: signal.value.kind, text: signal.value.text, count: signal.value.count, changePct: signal.value.changePct }));
-  const ranks = rankDemand(found);
-
-  const items: Array<Record<string, unknown>> = found.map((entry) => {
-    const value = entry.signal.value;
-    return {
-      kind: value.kind,
-      text: value.text,
-      original_text: value.originalText,
-      language: value.language,
-      count: value.count,
-      change_pct: value.changePct,
-      rank: ranks.get(entry) ?? null,
-      institution_id: value.about?.id ?? null,
-      sentiment: value.sentiment,
-      source_url: entry.signal.sourceUrl,
-      found_at: entry.signal.fetchedAt,
-      meta: { ...value.meta, platform: entry.signal.provider },
-    };
-  });
-
-  const questions = found
-    .filter((entry) => entry.kind === 'question')
-    .map((entry) => ({
-      text: entry.text,
-      sourceUrl: entry.signal.sourceUrl,
-      questionIndex: typeof entry.signal.value.meta.questionIndex === 'number' ? entry.signal.value.meta.questionIndex : null,
-    }));
-  const rising = found
-    .filter((entry) => entry.kind === 'rising')
-    .map((entry) => ({ text: entry.text, trendIndex: typeof entry.signal.value.meta.trendIndex === 'number' ? entry.signal.value.meta.trendIndex : null }));
-  const ideas = await getAnalysisProvider(env).contentIdeas({ programKey: pull.programKey, region: { scope: pull.scope, region: pull.region, state: pull.state }, questions, rising });
-  ideas.forEach((idea, index) => {
-    items.push({
-      kind: 'idea',
-      text: idea.text,
-      language: 'en',
-      count: 0,
-      rank: index + 1,
-      source_url: idea.sourceUrl,
-      found_at: pulledAt.toISOString(),
-      meta: { basedOn: idea.basedOn, trend: idea.trend, format: idea.format, effort: idea.effort },
-    });
-  });
+  const target = { kind: 'region' as const, scope: pull.scope, region: pull.region, state: pull.state, programKey: pull.programKey };
+  const { items: found, basis } = pulledItems(await collect(target, pulledAt, env));
+  const ideas = await getAnalysisProvider(env).contentIdeas({ programKey: pull.programKey, region: { scope: pull.scope, region: pull.region, state: pull.state }, ...basis });
+  const items = [...found, ...ideaItems(ideas, pulledAt)].map((item) => ({
+    kind: item.kind,
+    text: item.text,
+    original_text: item.originalText,
+    language: item.language,
+    count: item.count,
+    change_pct: item.changePct,
+    rank: item.rank,
+    source_url: item.sourceUrl,
+    found_at: item.foundAt,
+    meta: item.meta,
+  }));
 
   const spikes =
     options.notify && pull.scope === 'city'
@@ -191,9 +141,8 @@ export async function demandPullsDue(db: Db, now: Date): Promise<{ month: string
 export async function runDuePulls(db: Db, now: Date, env?: Env): Promise<PullResult[]> {
   const { month, due } = await demandPullsDue(db, now);
   if (due.length === 0) return [];
-  const watch = await watchList(db, await neededNow(db));
   const results: PullResult[] = [];
-  for (const pull of due) results.push(await pullDemand(db, pull, month, now, { notify: true, watch, env }));
+  for (const pull of due) results.push(await pullDemand(db, pull, month, now, { notify: true, env }));
   return results;
 }
 
@@ -220,8 +169,7 @@ export async function firstPulls(db: Db, institutionId: string, now: Date, env?:
   const have = new Set(existing.map((row) => pullKey({ scope: row.scope, region: row.region, state: row.state, programKey: row.program_key })));
   const missing = mine.filter((pull) => !have.has(pullKey(pull)));
   if (missing.length === 0) return 0;
-  const watch = await watchList(db, [...(await neededNow(db)), ...mine]);
   const month = pullMonth(now);
-  for (const pull of missing) await pullDemand(db, pull, month, now, { notify: false, watch, env });
+  for (const pull of missing) await pullDemand(db, pull, month, now, { notify: false, env });
   return missing.length;
 }

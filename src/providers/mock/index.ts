@@ -6,16 +6,27 @@ import type { Provider } from '../types.ts';
 import {
   instagramInstitutionSignals,
   mockAiAnswers,
+  mockFacebook,
   mockManual,
-  mockOfficialData,
   mockPagespeed,
   mockPlaces,
-  mockSearch,
-  mockSiteCrawler,
-  mockSocials,
+  mockWebsite,
+  searchInstitutionSignals,
+  searchProgramSignals,
   youtubeInstitutionSignals,
 } from './checks.ts';
 import { demandSignals } from './demand.ts';
+import { findingSignals } from './findings.ts';
+
+const mockSearch: Provider = {
+  key: 'search',
+  mode: 'mock',
+  targets: PROVIDER_TARGETS.search,
+  async collect(target, asOf) {
+    if (target.kind === 'region') return demandSignals('search', target, asOf);
+    return target.kind === 'program' ? searchProgramSignals(target, asOf) : searchInstitutionSignals(target, asOf);
+  },
+};
 
 const mockInstagram: Provider = {
   key: 'instagram',
@@ -35,7 +46,16 @@ const mockYoutube: Provider = {
   },
 };
 
-function demandOnly(key: 'reddit' | 'x' | 'quora' | 'trends'): Provider {
+const mockReddit: Provider = {
+  key: 'reddit',
+  mode: 'mock',
+  targets: PROVIDER_TARGETS.reddit,
+  async collect(target, asOf) {
+    return target.kind === 'region' ? demandSignals('reddit', target, asOf) : findingSignals('reddit', target, asOf);
+  },
+};
+
+function demandOnly(key: 'trends' | 'keywords'): Provider {
   return {
     key,
     mode: 'mock',
@@ -47,20 +67,19 @@ function demandOnly(key: 'reddit' | 'x' | 'quora' | 'trends'): Provider {
 }
 
 export const MOCK_PROVIDERS: Readonly<Record<SignalProviderKey, Provider>> = {
-  search: mockSearch,
-  places: mockPlaces,
+  website: mockWebsite,
   pagespeed: mockPagespeed,
-  site_crawler: mockSiteCrawler,
-  instagram: mockInstagram,
+  places: mockPlaces,
+  search: mockSearch,
   youtube: mockYoutube,
-  socials: mockSocials,
-  ai_answers: mockAiAnswers,
-  official_data: mockOfficialData,
-  reddit: demandOnly('reddit'),
-  x: demandOnly('x'),
-  quora: demandOnly('quora'),
+  instagram: mockInstagram,
+  facebook: mockFacebook,
+  reddit: mockReddit,
   trends: demandOnly('trends'),
+  keywords: demandOnly('keywords'),
+  ai_answers: mockAiAnswers,
   manual: mockManual,
 };
 
 export { mockAnalysis } from './analysis.ts';
+export { mockEmail } from './email.ts';

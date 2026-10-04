@@ -89,6 +89,7 @@ export type Database = {
           finding: string
           fix_steps: string[] | null
           how_to_fix: string | null
+          ready_fix: Json | null
           source_url: string
           why_it_matters: string | null
         }
@@ -98,6 +99,7 @@ export type Database = {
           finding: string
           fix_steps?: string[] | null
           how_to_fix?: string | null
+          ready_fix?: Json | null
           source_url: string
           why_it_matters?: string | null
         }
@@ -107,6 +109,7 @@ export type Database = {
           finding?: string
           fix_steps?: string[] | null
           how_to_fix?: string | null
+          ready_fix?: Json | null
           source_url?: string
           why_it_matters?: string | null
         }
@@ -134,6 +137,7 @@ export type Database = {
           program_id: string | null
           result: Database["public"]["Enums"]["check_result"]
           strength_rank: number | null
+          team_checked_at: string | null
         }
         Insert: {
           audit_id: string
@@ -148,6 +152,7 @@ export type Database = {
           program_id?: string | null
           result: Database["public"]["Enums"]["check_result"]
           strength_rank?: number | null
+          team_checked_at?: string | null
         }
         Update: {
           audit_id?: string
@@ -162,6 +167,7 @@ export type Database = {
           program_id?: string | null
           result?: Database["public"]["Enums"]["check_result"]
           strength_rank?: number | null
+          team_checked_at?: string | null
         }
         Relationships: [
           {
@@ -183,6 +189,168 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_edits: {
+        Row: {
+          after: string | null
+          audit_id: string | null
+          before: string | null
+          edited_at: string
+          edited_by: string | null
+          id: string
+          reason: string | null
+          report_id: string | null
+          target: string
+          what: Database["public"]["Enums"]["edit_what"]
+        }
+        Insert: {
+          after?: string | null
+          audit_id?: string | null
+          before?: string | null
+          edited_at?: string
+          edited_by?: string | null
+          id?: string
+          reason?: string | null
+          report_id?: string | null
+          target: string
+          what: Database["public"]["Enums"]["edit_what"]
+        }
+        Update: {
+          after?: string | null
+          audit_id?: string | null
+          before?: string | null
+          edited_at?: string
+          edited_by?: string | null
+          id?: string
+          reason?: string | null
+          report_id?: string | null
+          target?: string
+          what?: Database["public"]["Enums"]["edit_what"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_edits_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_edits_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["audit_id"]
+          },
+          {
+            foreignKeyName: "audit_edits_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_findings: {
+        Row: {
+          audit_id: string
+          checked_at: string
+          effort: Database["public"]["Enums"]["difficulty"] | null
+          finding_key: string
+          fix_rank: number | null
+          fix_steps: string[] | null
+          fix_title: string | null
+          fix_why: string | null
+          id: string
+          impact: Database["public"]["Enums"]["impact"] | null
+          institution_id: string
+          kind: Database["public"]["Enums"]["finding_kind"]
+          line: string
+          listing: string | null
+          place: Database["public"]["Enums"]["finding_place"]
+          ready_fix: Json | null
+          removed_at: string | null
+          removed_by: string | null
+          repeats: number
+          source_name: string
+          source_url: string
+        }
+        Insert: {
+          audit_id: string
+          checked_at: string
+          effort?: Database["public"]["Enums"]["difficulty"] | null
+          finding_key: string
+          fix_rank?: number | null
+          fix_steps?: string[] | null
+          fix_title?: string | null
+          fix_why?: string | null
+          id?: string
+          impact?: Database["public"]["Enums"]["impact"] | null
+          institution_id: string
+          kind: Database["public"]["Enums"]["finding_kind"]
+          line: string
+          listing?: string | null
+          place: Database["public"]["Enums"]["finding_place"]
+          ready_fix?: Json | null
+          removed_at?: string | null
+          removed_by?: string | null
+          repeats?: number
+          source_name: string
+          source_url: string
+        }
+        Update: {
+          audit_id?: string
+          checked_at?: string
+          effort?: Database["public"]["Enums"]["difficulty"] | null
+          finding_key?: string
+          fix_rank?: number | null
+          fix_steps?: string[] | null
+          fix_title?: string | null
+          fix_why?: string | null
+          id?: string
+          impact?: Database["public"]["Enums"]["impact"] | null
+          institution_id?: string
+          kind?: Database["public"]["Enums"]["finding_kind"]
+          line?: string
+          listing?: string | null
+          place?: Database["public"]["Enums"]["finding_place"]
+          ready_fix?: Json | null
+          removed_at?: string | null
+          removed_by?: string | null
+          repeats?: number
+          source_name?: string
+          source_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_findings_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["audit_id"]
+          },
+          {
+            foreignKeyName: "audit_findings_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
             referencedColumns: ["id"]
           },
         ]
@@ -250,6 +418,8 @@ export type Database = {
       }
       audits: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           chosen: number
           chosen_change: number | null
           config_version: number
@@ -263,12 +433,15 @@ export type Database = {
           overall_change: number | null
           previous_audit_id: string | null
           program_count: number
+          review: Database["public"]["Enums"]["review_state"]
           run_at: string
           trigger: Database["public"]["Enums"]["audit_trigger"]
           trusted: number
           trusted_change: number | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           chosen: number
           chosen_change?: number | null
           config_version: number
@@ -282,12 +455,15 @@ export type Database = {
           overall_change?: number | null
           previous_audit_id?: string | null
           program_count?: number
+          review?: Database["public"]["Enums"]["review_state"]
           run_at?: string
           trigger: Database["public"]["Enums"]["audit_trigger"]
           trusted: number
           trusted_change?: number | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           chosen?: number
           chosen_change?: number | null
           config_version?: number
@@ -301,6 +477,7 @@ export type Database = {
           overall_change?: number | null
           previous_audit_id?: string | null
           program_count?: number
+          review?: Database["public"]["Enums"]["review_state"]
           run_at?: string
           trigger?: Database["public"]["Enums"]["audit_trigger"]
           trusted?: number
@@ -440,22 +617,74 @@ export type Database = {
       cities: {
         Row: {
           name: string
+          near: string | null
           state: string
         }
         Insert: {
           name: string
+          near?: string | null
           state: string
         }
         Update: {
           name?: string
+          near?: string | null
           state?: string
         }
         Relationships: []
       }
+      content_picks: {
+        Row: {
+          idea: Json
+          institution_id: string
+          month: string
+          picked_at: string
+          program_id: string | null
+          rank: number
+        }
+        Insert: {
+          idea: Json
+          institution_id: string
+          month: string
+          picked_at?: string
+          program_id?: string | null
+          rank: number
+        }
+        Update: {
+          idea?: Json
+          institution_id?: string
+          month?: string
+          picked_at?: string
+          program_id?: string | null
+          rank?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_picks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_picks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_picks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demand_items: {
         Row: {
           change_pct: number | null
-          count: number
+          count: number | null
           found_at: string
           id: string
           institution_id: string | null
@@ -471,7 +700,7 @@ export type Database = {
         }
         Insert: {
           change_pct?: number | null
-          count?: number
+          count?: number | null
           found_at: string
           id?: string
           institution_id?: string | null
@@ -487,7 +716,7 @@ export type Database = {
         }
         Update: {
           change_pct?: number | null
-          count?: number
+          count?: number | null
           found_at?: string
           id?: string
           institution_id?: string | null
@@ -559,6 +788,7 @@ export type Database = {
         Row: {
           check_key: Database["public"]["Enums"]["check_key"] | null
           checked_by_audit: string | null
+          finding_key: string | null
           id: string
           institution_id: string
           marked_at: string
@@ -569,6 +799,7 @@ export type Database = {
         Insert: {
           check_key?: Database["public"]["Enums"]["check_key"] | null
           checked_by_audit?: string | null
+          finding_key?: string | null
           id?: string
           institution_id: string
           marked_at?: string
@@ -579,6 +810,7 @@ export type Database = {
         Update: {
           check_key?: Database["public"]["Enums"]["check_key"] | null
           checked_by_audit?: string | null
+          finding_key?: string | null
           id?: string
           institution_id?: string
           marked_at?: string
@@ -617,11 +849,61 @@ export type Database = {
           },
         ]
       }
+      email_log: {
+        Row: {
+          error: string | null
+          id: string
+          institution_id: string | null
+          kind: Database["public"]["Enums"]["email_kind"]
+          ok: boolean
+          recipient: string
+          sender: string
+          sent_at: string
+        }
+        Insert: {
+          error?: string | null
+          id?: string
+          institution_id?: string | null
+          kind: Database["public"]["Enums"]["email_kind"]
+          ok: boolean
+          recipient: string
+          sender: string
+          sent_at?: string
+        }
+        Update: {
+          error?: string | null
+          id?: string
+          institution_id?: string | null
+          kind?: Database["public"]["Enums"]["email_kind"]
+          ok?: boolean
+          recipient?: string
+          sender?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_log_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_log_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enquiries: {
         Row: {
           asked_by: string | null
           created_at: string
           email: string
+          fix_key: string | null
+          fix_title: string | null
           handled_at: string | null
           handled_by: string | null
           id: string
@@ -638,6 +920,8 @@ export type Database = {
           asked_by?: string | null
           created_at?: string
           email: string
+          fix_key?: string | null
+          fix_title?: string | null
           handled_at?: string | null
           handled_by?: string | null
           id?: string
@@ -654,6 +938,8 @@ export type Database = {
           asked_by?: string | null
           created_at?: string
           email?: string
+          fix_key?: string | null
+          fix_title?: string | null
           handled_at?: string | null
           handled_by?: string | null
           id?: string
@@ -765,6 +1051,7 @@ export type Database = {
           created_by: string | null
           institution_id: string
           is_prospect: boolean
+          review_first: boolean
         }
         Insert: {
           claimed?: boolean
@@ -772,6 +1059,7 @@ export type Database = {
           created_by?: string | null
           institution_id: string
           is_prospect?: boolean
+          review_first?: boolean
         }
         Update: {
           claimed?: boolean
@@ -779,6 +1067,7 @@ export type Database = {
           created_by?: string | null
           institution_id?: string
           is_prospect?: boolean
+          review_first?: boolean
         }
         Relationships: [
           {
@@ -892,12 +1181,178 @@ export type Database = {
           },
         ]
       }
+      lead_links: {
+        Row: {
+          archived_at: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          institution_id: string
+          name: string
+          program_id: string
+          used_on: Database["public"]["Enums"]["lead_source"]
+        }
+        Insert: {
+          archived_at?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institution_id: string
+          name: string
+          program_id: string
+          used_on: Database["public"]["Enums"]["lead_source"]
+        }
+        Update: {
+          archived_at?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institution_id?: string
+          name?: string
+          program_id?: string
+          used_on?: Database["public"]["Enums"]["lead_source"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_links_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_links_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_links_program_belongs"
+            columns: ["program_id", "institution_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id", "institution_id"]
+          },
+        ]
+      }
+      lead_settings: {
+        Row: {
+          alert_emails: string[]
+          institution_id: string
+          keep_months: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          alert_emails?: string[]
+          institution_id: string
+          keep_months?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          alert_emails?: string[]
+          institution_id?: string
+          keep_months?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_settings_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_settings_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          city: string | null
+          consent: string
+          created_at: string
+          email: string | null
+          id: string
+          institution_id: string
+          link_id: string | null
+          name: string
+          phone: string
+          program_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          consent: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          institution_id: string
+          link_id?: string | null
+          name: string
+          phone: string
+          program_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          consent?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          institution_id?: string
+          link_id?: string | null
+          name?: string
+          phone?: string
+          program_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "lead_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           created_at: string
           guide_closed_at: string | null
           institution_id: string
           role: Database["public"]["Enums"]["membership_role"]
+          summary_email: boolean
           user_id: string
         }
         Insert: {
@@ -905,6 +1360,7 @@ export type Database = {
           guide_closed_at?: string | null
           institution_id: string
           role: Database["public"]["Enums"]["membership_role"]
+          summary_email?: boolean
           user_id: string
         }
         Update: {
@@ -912,6 +1368,7 @@ export type Database = {
           guide_closed_at?: string | null
           institution_id?: string
           role?: Database["public"]["Enums"]["membership_role"]
+          summary_email?: boolean
           user_id?: string
         }
         Relationships: [
@@ -1199,31 +1656,43 @@ export type Database = {
       }
       reports: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           id: string
           institution_id: string
           month: string
           pages: number | null
+          review: Database["public"]["Enums"]["review_state"]
           size_bytes: number | null
           storage_path: string
+          summary: Json | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           id?: string
           institution_id: string
           month: string
           pages?: number | null
+          review?: Database["public"]["Enums"]["review_state"]
           size_bytes?: number | null
           storage_path: string
+          summary?: Json | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           id?: string
           institution_id?: string
           month?: string
           pages?: number | null
+          review?: Database["public"]["Enums"]["review_state"]
           size_bytes?: number | null
           storage_path?: string
+          summary?: Json | null
         }
         Relationships: [
           {
@@ -1506,6 +1975,7 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
+          impact: Json
           labels: Json
           result_shares: Json
           thresholds: Json
@@ -1515,6 +1985,7 @@ export type Database = {
         Insert: {
           active?: boolean
           created_at?: string
+          impact?: Json
           labels: Json
           result_shares: Json
           thresholds: Json
@@ -1524,6 +1995,7 @@ export type Database = {
         Update: {
           active?: boolean
           created_at?: string
+          impact?: Json
           labels?: Json
           result_shares?: Json
           thresholds?: Json
@@ -1903,6 +2375,7 @@ export type Database = {
         }
         Returns: string
       }
+      record_rival_ad: { Args: { payload: Json }; Returns: string }
       record_rival_check: { Args: { payload: Json }; Returns: number }
       remove_member: { Args: { p_user: string }; Returns: undefined }
       remove_team_invite: { Args: { p_email: string }; Returns: undefined }
@@ -2041,9 +2514,18 @@ export type Database = {
         | "mention"
         | "season"
         | "idea"
+        | "topic"
+        | "content"
+        | "best_month"
       demand_scope: "city" | "state" | "india"
       difficulty: "easy" | "medium" | "hard"
-      enquiry_kind: "work_with_us" | "ask_paid" | "continue_paid"
+      edit_what: "result" | "line" | "finding_removed" | "summary_line"
+      email_kind: "lead_alert" | "monthly_summary" | "audit_ready"
+      enquiry_kind:
+        | "work_with_us"
+        | "ask_paid"
+        | "continue_paid"
+        | "fix_request"
       enquiry_role:
         | "founder_director"
         | "principal_dean"
@@ -2051,8 +2533,24 @@ export type Database = {
         | "marketing"
         | "other"
       feature: "audit" | "rivals" | "demand"
+      finding_kind:
+        | "good"
+        | "bad"
+        | "unanswered"
+        | "listing"
+        | "news"
+        | "directory"
+      finding_place: "people" | "other"
+      impact: "high" | "medium" | "low"
       institution_type: "college" | "university" | "skilling"
       language: "en" | "hi" | "as"
+      lead_source:
+        | "instagram"
+        | "youtube"
+        | "facebook"
+        | "website"
+        | "whatsapp"
+        | "other"
       membership_role: "owner" | "member"
       notification_kind:
         | "audit_ready"
@@ -2062,11 +2560,14 @@ export type Database = {
         | "plan_ended"
         | "report_ready"
       pillar: "discovered" | "trusted" | "chosen"
+      review_state: "waiting" | "approved"
       rival_move_kind:
         | "new_program"
         | "fee_change"
         | "new_page"
         | "admission_dates"
+        | "started_ads"
+        | "reviews_jump"
       sentiment: "positive" | "negative"
       team_role: "team" | "admin"
       team_work_kind: "done" | "next"
@@ -2229,10 +2730,20 @@ export const Constants = {
         "mention",
         "season",
         "idea",
+        "topic",
+        "content",
+        "best_month",
       ],
       demand_scope: ["city", "state", "india"],
       difficulty: ["easy", "medium", "hard"],
-      enquiry_kind: ["work_with_us", "ask_paid", "continue_paid"],
+      edit_what: ["result", "line", "finding_removed", "summary_line"],
+      email_kind: ["lead_alert", "monthly_summary", "audit_ready"],
+      enquiry_kind: [
+        "work_with_us",
+        "ask_paid",
+        "continue_paid",
+        "fix_request",
+      ],
       enquiry_role: [
         "founder_director",
         "principal_dean",
@@ -2241,8 +2752,26 @@ export const Constants = {
         "other",
       ],
       feature: ["audit", "rivals", "demand"],
+      finding_kind: [
+        "good",
+        "bad",
+        "unanswered",
+        "listing",
+        "news",
+        "directory",
+      ],
+      finding_place: ["people", "other"],
+      impact: ["high", "medium", "low"],
       institution_type: ["college", "university", "skilling"],
       language: ["en", "hi", "as"],
+      lead_source: [
+        "instagram",
+        "youtube",
+        "facebook",
+        "website",
+        "whatsapp",
+        "other",
+      ],
       membership_role: ["owner", "member"],
       notification_kind: [
         "audit_ready",
@@ -2253,11 +2782,14 @@ export const Constants = {
         "report_ready",
       ],
       pillar: ["discovered", "trusted", "chosen"],
+      review_state: ["waiting", "approved"],
       rival_move_kind: [
         "new_program",
         "fee_change",
         "new_page",
         "admission_dates",
+        "started_ads",
+        "reviews_jump",
       ],
       sentiment: ["positive", "negative"],
       team_role: ["team", "admin"],

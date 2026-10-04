@@ -58,7 +58,7 @@ Home answers "How are we doing this month?" with what to do first (`src/app/(das
 - **What changed** since the last Audit (`/#changed`, where "See what changed" lands): the score, each check that moved with its result before and after, the fixes marked done that the Audit checked, and for Paid and Client the rivals' moves and the big jumps in searches.
 - Then the score (the gauge, the band, "Up 14 since April", how far the next band is, and the three parts as split bars with what to fix first), the rival snapshot and the demand highlight. The score month by month and every check by name are on the Audit.
 
-On the Audit, each check is either to fix or working (Strong everywhere), so the two tab counts add up to all checks. A score from 0 to 39 is labelled Getting started.
+On the Audit, each check is either to fix or working (Strong everywhere), so the two tab counts add up to all checks. Visibility, Trust and Chosen (the three parts) each read Strong (70 and up), Okay (40 to 69) or Weak (below 40).
 
 ## The Audit's checks
 
@@ -140,7 +140,9 @@ npm run rivals -- --actions --institution eastgate-university
 
 ## Demand
 
-What students search, ask and worry about (spec section 9), grouped: a topic, a count and a source, never a person. Demand is pulled once per region (city, state, All India) and program, and shared by every institution that needs it.
+What students search, ask and worry about (spec section 9), grouped: a topic, a count and a source, never a person. Demand is pulled once per region and program (the city, and its state to fill in when the city has too little; version 1's All India pulls are no longer made) and shared by every institution that needs it.
+
+Version 2 pulls (Part 1) also hold what students ask about each program by topic (fees, placements, scholarships, hostel, careers), what gets attention (topics and formats), the best months to post, and ideas with a hook line and key points. Honest numbers: a search trend keeps a count only when the keyword tool gives searches a month for it (`src/demand/items.ts`); questions and topics keep the questions counted. Tezpur, a small city, has questions but no trends, so Assam fills in. The page is rebuilt in Part 4.
 
 - **Paid and Client** see their city, state or All India (the switch at the top), for all their programs or one: the fastest rising course or career with its searches month by month, what students worry about most, the season clock, 5 content ideas (each with what to make, the effort, the program, the real question it answers with where and how often it was asked, and the rising search behind it when there is one, all stored with the idea), the top questions, the worries (the usual five plus anything new), what is rising and falling (one list, each change a bar from the middle), and what students say about them and the rivals they track (from each one's state, with a bar of praise against criticism).
 - **Free** sees one rising trend, for its Free program in its city (`demand_highlight`), and one "Paid shows everything students are asking" card with counts (`demand_teaser`). Home shows the same highlight on every plan; Paid and Client also see its searches by month (`loadHighlightHistory`).
@@ -187,7 +189,7 @@ Settings has an About tab, and each program has its details under Programs. Ever
 
 - **The owner edits them.** Members and the AdmitLabs team read them; rivals never see them (row level security on `institution_details` and `program_details`, with database tests).
 - **Labelled "Added by you"** wherever they show: beside the check they relate to on the Audit, in the advice on how to fix it, and in the monthly report.
-- **Never part of the score.** The scoring engine, the Audit and the providers never read them, and a test checks that no file there mentions them.
+- **Never part of the score.** The scoring engine never reads them. The Audit run hands them to the writer, which fills some blanks in each ready fix (a fee, placement numbers, an admissions email), and a test checks that no other file in scoring, the Audit or the providers mentions them.
 
 ## Icons and logos
 
@@ -316,9 +318,24 @@ src/sample/      the fictional sample world, and that world worked out in memory
 
 The scoring engine is in `src/domain/scoring`: pure functions, no database. Facts from the providers become Strong, Okay, Weak or Missing (spec 7.5), then pillar, program and overall scores (spec 7.4), rounded to whole numbers with halves rounding up. Every number comes from the active row in `scoring_config` (version 1 is `src/config/scoring.v1.ts`), and each Audit records the version it used.
 
+## Version 2 data and provider slots
+
+Part 1 of version 2 added the data the new screens use (`supabase/migrations/20261012120000_v2_kinds.sql` and `20261012120100_v2_data.sql`):
+
+- **Review first.** A new own Audit waits (`audits.review`) when the college's `review_first` is on (on to start; Brightpath's go out automatically). A college reads only approved Audits and reports, and its latest approved Audit is the one plan rules and marks use. In the sample, Eastgate's 29 September refresh and Loomcraft's first Audit wait. The To review screens come in Part 2.
+- **Findings** (`audit_findings`): What people say and Other places, one row per finding with its source and date, and a fix when there is something to do. Its impact comes from `src/domain/finding-rules.ts`, and it joins the checks' fixes in one ranking (`rankAllFixes`). Free reads the findings among its top 3 fixes.
+- **Ready fixes**: every fix has a text or layout to copy (`src/domain/ready-fix.ts`), written by the AI writer's mock (`src/providers/mock/ready-fix.ts`, `finding-fix.ts`).
+- **Impact**: High, Medium or Low from the points a fix could add to its part (`impact` in the scoring config).
+- **Leads** (`lead_links`, `leads`, `lead_settings`): Brightpath has 4 tracking links and 50 enquiries from July to September. Only the college's own people read them, never the team. `email_log` keeps who each email went to, never the message.
+- **Let AdmitLabs fix this**: `fix_request` enquiries, one open per fix. Eastgate has one open, Northbank one handled.
+- **Price**: Paid is ₹24,999 + GST for 6 months (`PLAN_RULES` in `src/config/plans.ts`, written by `PAID_PRICE` in `src/domain/tiers.ts`).
+
+Every provider has a mock and a real slot that throws until it is connected (`src/config/providers.ts`, `src/providers/registry.ts`): `website`, `pagespeed`, `places`, `search` (city specific; Quora, forums, news, listing sites), `youtube`, `instagram` (VidIQ later), `facebook`, `reddit`, `trends`, `keywords`, `ai_answers`, `ai` (the AI reader and writer), `email` and `manual`. Set `DRISHTI_PROVIDER_<KEY>=real` to try a slot. The email sender's mock posts each message to the local test inbox (Mailpit) through its API, never to the internet.
+
 ## Before launch
 
 Must do before any real institution uses Drishti:
 
 1. **Proof of ownership when claiming an institution.** Signing up with a website already on record (a tracked rival or a team prospect) claims that record. Nothing private leaks today, but anyone who enters the website takes over the record. Options to weigh: a code sent to an email on the institution's own domain, or team approval of each claim.
 2. **Privacy policy and terms pages, reviewed by a lawyer.** The product page explains privacy in plain words in its FAQ, but there are no policy or terms pages yet.
+3. **Leads privacy, checked by a lawyer before Leads goes live.** Leads are the only individual student data in Drishti (spec 23): the consent line, how long enquiries are kept and how they are deleted, and the DPDP rules. Until then Leads runs on sample data only.

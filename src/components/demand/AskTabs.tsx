@@ -38,7 +38,7 @@ function QuestionItems({ items, start, top, showProgram }: { items: readonly Dem
                 <span>{countWords('question', item.count)}</span>
                 {tag ? <span className={styles.tag}>{tag}</span> : null}
               </span>
-              <Share count={item.count} top={top} />
+              <Share count={item.count ?? 0} top={top} />
             </span>
             <Source url={item.sourceUrl} platform={item.meta.platform} />
           </li>
@@ -115,7 +115,7 @@ function TrendBars({ rising, falling, showProgram }: { rising: readonly DemandRo
 /** Questions, worries and trends, one tab each. `more` adds tabs after them (the mentions). */
 export function AskTabs({ view, showProgram, more = [] }: { view: DemandView; showProgram: boolean; more?: readonly TabItem[] }) {
   const shown = DEMAND_RULES.topQuestions;
-  const top = Math.max(1, ...view.questions.map((question) => question.count));
+  const top = Math.max(1, ...view.questions.map((question) => question.count ?? 0));
   const rising = view.rising.slice(0, DEMAND_RULES.trendsShown);
   const falling = view.falling.slice(0, DEMAND_RULES.trendsShown);
   return (

@@ -1,6 +1,6 @@
 // Loads what an institution added about itself and its programs (Settings, "Added by you"), as
 // the signed-in user: row level security returns them to members and the team only, never to a
-// rival. Never used by the Audit.
+// rival. Never read by scoring: the Audit's ready fixes use them to fill some blanks.
 
 import { cache } from 'react';
 import { institutionDetailsFromRow, programDetailsFromRow, type InstitutionDetails, type ProgramDetails } from '@/domain/details';

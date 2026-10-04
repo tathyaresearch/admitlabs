@@ -62,7 +62,7 @@ export function ResultBar({
 
 /**
  * The overall score as the large half-circle gauge: filled to the score, with a tick where each
- * score band starts and over it what it means ("Needs work" over "from 40"), and the number drawn
+ * score band starts and over it what it means ("Okay" over "from 40"), and the number drawn
  * with it, as on the dashboard: centred in the bowl on the arc's baseline, "/100" after it on the
  * same line, "0" and "100" under the two ends.
  */
@@ -139,7 +139,7 @@ export function AmountBar({ value, max, width, height = 3 }: { value: number; ma
   );
 }
 
-/** Strong, Needs work or Getting started. Strong is inverted. */
+/** Strong, Okay or Weak. Strong is inverted. */
 export function LabelChip({ label, dark = false }: { label: ScoreLabel; dark?: boolean }): ReactElement {
   const inverted = label === 'Strong';
   const ink = dark ? COLORS.ivory : COLORS.black;

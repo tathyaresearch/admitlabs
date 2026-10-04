@@ -1,5 +1,6 @@
-// How wide to look (spec 9.2): the institution's city, its state, or All India. Demand is
-// pulled once per region and program and shared by every institution that needs it. Pure.
+// How wide to look (spec 9.2): Demand is about the institution's city, and its state fills in
+// when the city has too little. It is pulled once per region and program and shared by every
+// institution that needs it. Version 1's All India pulls stay readable but are no longer made. Pure.
 
 import { DEMAND_SCOPES, type DemandScope } from '../domain/types.ts';
 
@@ -33,6 +34,9 @@ export function parseScope(value: string | undefined): DemandScope {
   return (DEMAND_SCOPES as readonly string[]).includes(value ?? '') ? (value as DemandScope) : 'city';
 }
 
+/** The regions pulled each month: the city, and its state to fill in. */
+export const PULL_SCOPES = ['city', 'state'] as const satisfies readonly DemandScope[];
+
 export interface NeededPull extends DemandRegion {
   programKey: string;
 }
@@ -46,7 +50,7 @@ export function neededPulls(institutions: ReadonlyArray<{ city: string; state: s
     const regions = regionsFor(institution);
     for (const programKey of institution.programKeys) {
       if (!programKey) continue;
-      for (const scope of DEMAND_SCOPES) {
+      for (const scope of PULL_SCOPES) {
         const pull = { ...regions[scope], programKey };
         needed.set(pullKey(pull), pull);
       }

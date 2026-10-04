@@ -87,8 +87,8 @@ describe('scoring config v1', () => {
       SCORING_V1.labels.map((band) => [band.label, band.min, band.max]),
       [
         ['Strong', 70, 100],
-        ['Needs work', 40, 69],
-        ['Getting started', 0, 39],
+        ['Okay', 40, 69],
+        ['Weak', 0, 39],
       ],
     );
   });

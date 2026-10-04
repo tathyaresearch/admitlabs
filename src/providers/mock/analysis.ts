@@ -1,10 +1,12 @@
-// Mock analysis: text from a written bank that follows the copy rules. No Claude calls.
+// Mock AI writer: text from a written bank that follows the copy rules. No Claude calls.
 
 import { SAMPLE_CONTENT } from '../../sample/rivals.ts';
-import type { AnalysisProvider } from '../analysis.ts';
+import type { AnalysisProvider, ContentIdea } from '../analysis.ts';
 import { demandFixture, localize, placeWords } from './demand-bank.ts';
+import { writeFindingFix } from './finding-fix.ts';
 import { writeFixAdvice } from './fix-advice.ts';
 import { rngFor } from './random.ts';
+import { writeReadyFix } from './ready-fix.ts';
 import { writeRivalAction } from './rival-actions.ts';
 
 const GENERAL_REASONS = [
@@ -14,7 +16,7 @@ const GENERAL_REASONS = [
 ] as const;
 
 export const mockAnalysis: AnalysisProvider = {
-  key: 'analysis',
+  key: 'ai',
   mode: 'mock',
 
   async whyItWorked({ institutionSlug, title }) {
@@ -23,19 +25,53 @@ export const mockAnalysis: AnalysisProvider = {
     return rngFor('why', institutionSlug, title).pick(GENERAL_REASONS);
   },
 
-  async contentIdeas({ programKey, questions, rising, region }) {
+  async contentIdeas({ programKey, questions, topics, rising, region }) {
     const fixture = demandFixture(programKey);
     if (!fixture) return [];
     const words = region ? placeWords(region.scope, region.region, region.state) : null;
-    return fixture.ideas.flatMap((idea) => {
-      const question = questions.find((candidate) => candidate.questionIndex === idea.question);
+    const local = (text: string) => (words ? localize(text, words) : text);
+    return fixture.ideas.flatMap((idea): ContentIdea[] => {
+      // Each idea stands on a question students asked this month: one of the program's questions, or a topic's top one.
+      const question = idea.question === undefined ? undefined : questions.find((candidate) => candidate.questionIndex === idea.question);
+      const topic = idea.topic === undefined ? undefined : topics.find((candidate) => candidate.topic === idea.topic);
+      const basis = question ? { text: question.text, sourceUrl: question.sourceUrl, topic: question.topic } : topic;
+      if (!basis) return [];
       const trend = idea.trend === undefined ? null : (rising.find((candidate) => candidate.trendIndex === idea.trend)?.text ?? null);
-      return question ? [{ text: words ? localize(idea.text, words) : idea.text, basedOn: question.text, sourceUrl: question.sourceUrl, trend, format: idea.format, effort: idea.effort }] : [];
+      return [
+        {
+          title: local(idea.title),
+          text: local(idea.text),
+          hook: local(idea.hook),
+          points: idea.points.map(local),
+          basedOn: basis.text,
+          sourceUrl: basis.sourceUrl,
+          topic: basis.topic,
+          trend,
+          format: idea.format,
+          effort: idea.effort,
+        },
+      ];
     });
   },
 
   async fixAdvice(input) {
-    return writeFixAdvice(input);
+    const advice = writeFixAdvice(input);
+    if (input.result === 'strong') return { ...advice, readyFix: null };
+    const context = input.context;
+    const readyFix = writeReadyFix(input.checkKey, {
+      institutionName: context?.institutionName ?? 'your institution',
+      city: context?.city ?? 'your city',
+      institutionType: input.institutionType,
+      programNames: context?.programNames ?? [],
+      programName: input.programName,
+      institutionDetails: context?.institutionDetails ?? null,
+      programDetails: input.programName ? (context?.programDetails.get(input.programName) ?? null) : null,
+    });
+    return { ...advice, readyFix };
+  },
+
+  async findingFix(input) {
+    return writeFindingFix(input);
   },
 
   async rivalActions({ institutionType, opportunities }) {

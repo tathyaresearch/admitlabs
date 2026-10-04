@@ -130,8 +130,8 @@ export function ideaThing(idea: IdeaRow, place: string): Thing {
   let detail = `For students of ${idea.programName}.`;
   if (question) {
     const language = question.language === 'en' ? '' : `, in ${LANGUAGE_LABELS[question.language]}`;
-    const times = `${formatCount(question.count)} ${question.count === 1 ? 'time' : 'times'}`;
-    detail = `Built on a question asked about ${times} in ${place}${language}: “${question.text}”`;
+    const times = question.count === null ? '' : ` about ${formatCount(question.count)} ${question.count === 1 ? 'time' : 'times'}`;
+    detail = `Built on a question asked${times} in ${place}${language}: “${question.text}”`;
   }
   return {
     source: 'demand',
@@ -143,7 +143,7 @@ export function ideaThing(idea: IdeaRow, place: string): Thing {
     effort: idea.effort,
     programs: [idea.programName],
     format: idea.format,
-    question: question ? { text: question.text, count: question.count, language: question.language } : null,
+    question: question ? { text: question.text, count: question.count ?? 0, language: question.language } : null,
     month: idea.month,
   };
 }

@@ -63,11 +63,15 @@ export const SCORING_V1: ScoringConfig = {
     },
   },
 
+  // A part's word (version 2): Strong, Okay or Weak. The score behind it is unchanged.
   labels: [
     { label: 'Strong', min: 70, max: 100 },
-    { label: 'Needs work', min: 40, max: 69 },
-    { label: 'Getting started', min: 0, max: 39 },
+    { label: 'Okay', min: 40, max: 69 },
+    { label: 'Weak', min: 0, max: 39 },
   ],
+
+  // A fix's impact, from the points it could add to its part: High 12 or more, Medium 6 to 11, Low under 6.
+  impact: { highMinPoints: 12, mediumMinPoints: 6 },
 
   thresholds: {
     mode: 'fixed',

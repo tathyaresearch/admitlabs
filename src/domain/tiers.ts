@@ -2,6 +2,7 @@
 
 import { PLAN_RULES } from '../config/plans.ts';
 import { addMonths, daysBetween } from './dates.ts';
+import { formatInr } from './format.ts';
 import type { Tier } from './types.ts';
 
 export interface PlanRecord {
@@ -48,6 +49,15 @@ export function planReminder(plan: PlanRecord | null, now: Date): PlanReminder {
   if (daysLeft <= first) return { stage: 'ends_soon', daysLeft };
   return { stage: 'none', daysLeft };
 }
+
+/** Paid's price as it is written everywhere (spec section 5): "₹24,999 + GST". The amount stands alone, so it can be set in Inter. */
+export const PAID_PRICE = {
+  amount: formatInr(PLAN_RULES.paid.priceInr),
+  tax: PLAN_RULES.paid.plusGst ? '+ GST' : '',
+  text: `${formatInr(PLAN_RULES.paid.priceInr)}${PLAN_RULES.paid.plusGst ? ' + GST' : ''}`,
+  /** "for 6 months" */
+  term: `for ${PLAN_RULES.paid.lengthMonths} months`,
+} as const;
 
 export type PaidAskKind = 'ask_paid' | 'continue_paid';
 
