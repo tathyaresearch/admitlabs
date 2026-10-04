@@ -19,7 +19,7 @@ import type { ActionRow, MoveRow } from '@/lib/rivals/load';
 import type { AcrossCell, AcrossRow } from '@/rivals/across';
 import type { Standing } from '@/rivals/compare';
 import { placeLeadText, type PlaceLesson, type PlaceRow, type PlaceSide, type RankingRow, type RivalPlacesView } from '@/rivals/places';
-import { MOVE_KIND_LABELS, rivalCheckName, STANDING_LABELS } from '@/rivals/text';
+import { comparedOn, comparedOnShort, MOVE_KIND_LABELS, rivalCheckName, STANDING_LABELS } from '@/rivals/text';
 import audit from '@/components/audit/places.module.css';
 import styles from './city.module.css';
 
@@ -196,13 +196,38 @@ export function PlacesBoard({ view, opened }: { view: RivalPlacesView; opened: P
   );
 }
 
-function Result({ cell }: { cell: AcrossCell | null | undefined }) {
-  const summary = cell?.summary;
+function Result({ summary }: { summary: AcrossCell['summary'] | null | undefined }) {
   if (!summary || summary.kind === 'none') return <span className={styles.gridNote}>Not checked</span>;
   return summary.kind === 'single' ? (
     <ResultBar result={summary.result} share={summary.share} showPoints={false} size="sm" />
   ) : (
     <ResultBar result={summary.weakest.result} share={summary.weakest.share} showPoints={false} size="sm" />
+  );
+}
+
+/**
+ * A rival's program check beside several rivals: their result and yours on the programs you both
+ * offer, so both sides are measured the same way and "Leads" matches what is shown.
+ */
+function PairCell({ cell }: { cell: AcrossCell }) {
+  const pair = cell.pair;
+  return (
+    <span className={styles.pairCell}>
+      <span className={styles.gridCell}>
+        <Result summary={cell.summary} />
+        {pair?.lead === 'them' ? <span className={styles.leadsMark}>Leads</span> : null}
+      </span>
+      {pair ? (
+        <>
+          <span className={styles.pairYou}>
+            <span className={styles.pairLabel}>You</span>
+            <Result summary={pair.you} />
+            {pair.lead === 'you' ? <span className={styles.leadsMark}>Leads</span> : null}
+          </span>
+          <span className={styles.pairOn}>{comparedOnShort(pair.programs, pair.shared)}</span>
+        </>
+      ) : null}
+    </span>
   );
 }
 
@@ -279,6 +304,17 @@ export function PlaceDetail({
     );
   }
   const checks = checksForPlace(place.key).flatMap((definition) => rows.filter((row) => row.key === definition.key));
+  const rivals = ordered.filter((side) => !side.you);
+  // With one rival, your result is already on the programs you both offer: one note says which.
+  const programRow = checks.find((row) => getCheck(row.key).level === 'program');
+  const pairOf = programRow ? rivals.map((side) => programRow.cells[side.id]?.pair).find((pair) => pair) : undefined;
+  const programNote = !programRow
+    ? null
+    : rivals.length > 1
+      ? 'Each program check compares a rival with you on the programs you both offer, in that rival’s column.'
+      : pairOf
+        ? `Program checks: ${comparedOn(pairOf.programs, pairOf.shared).replace(/^Compared/, 'compared')}`
+        : null;
   return (
     <section id="opened" className={[audit.card, styles.opened].join(' ')} aria-label={`${place.name}, check by check`}>
       <div className={styles.placeCardHead}>
@@ -299,33 +335,48 @@ export function PlaceDetail({
               </tr>
             </thead>
             <tbody>
-              {checks.map((row) => (
-                <tr key={row.key}>
-                  <th scope="row">
-                    <Link href={checkHref(place.key, row.key)} scroll={false} className={styles.checkLink}>
-                      <CheckIcon check={row.key} size={15} />
-                      {rivalCheckName(row.key, institutionType, city)}
-                    </Link>
-                  </th>
-                  {ordered.map((side) => {
-                    const leads = (row.lead === 'rival' && row.leaders.includes(side.id)) || (row.lead === 'you' && side.you);
-                    return (
-                      <td key={side.id} className={leads ? styles.gridLead : undefined}>
-                        <span className={styles.gridCell}>
-                          <Result cell={row.cells[side.id]} />
-                          {leads ? <span className={styles.leadsMark}>Leads</span> : null}
-                        </span>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
+              {checks.map((row) => {
+                const paired = rivals.length > 1 && getCheck(row.key).level === 'program';
+                return (
+                  <tr key={row.key}>
+                    <th scope="row">
+                      <Link href={checkHref(place.key, row.key)} scroll={false} className={styles.checkLink}>
+                        <CheckIcon check={row.key} size={15} />
+                        {rivalCheckName(row.key, institutionType, city)}
+                      </Link>
+                    </th>
+                    {ordered.map((side) => {
+                      const cell = row.cells[side.id];
+                      if (paired) {
+                        if (side.you) {
+                          return (
+                            <td key={side.id}>
+                              <span className={styles.gridNote}>With each rival</span>
+                            </td>
+                          );
+                        }
+                        return <td key={side.id} className={cell?.pair?.lead === 'them' ? styles.gridLead : undefined}>{cell ? <PairCell cell={cell} /> : <span className={styles.gridNote}>Not checked</span>}</td>;
+                      }
+                      const leads = (row.lead === 'rival' && row.leaders.includes(side.id)) || (row.lead === 'you' && side.you);
+                      return (
+                        <td key={side.id} className={leads ? styles.gridLead : undefined}>
+                          <span className={styles.gridCell}>
+                            <Result summary={cell?.summary} />
+                            {leads ? <span className={styles.leadsMark}>Leads</span> : null}
+                          </span>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       ) : (
         <p className={audit.quiet}>Check by check shows once your Audit and a rival&apos;s have been compared.</p>
       )}
+      {checks.length && programNote ? <p className={audit.quiet}>{programNote}</p> : null}
       {lesson ? (
         <p className={styles.learn}>
           <span className={styles.learnLabel}>{lesson.title}</span>

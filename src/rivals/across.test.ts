@@ -131,9 +131,30 @@ describe('check by check across all your rivals', () => {
     const summary = fees.cells.you?.summary;
     assert.equal(summary?.kind, 'varies');
     if (summary?.kind === 'varies') assert.equal(summary.weakest.programName, 'BCA');
-    // Silverline is ahead on BBA, Highfield ahead on BCA: the one further ahead leads.
+    // Silverline is ahead of you on BBA, Highfield on BCA: each measured on the programs you both
+    // offer, both lead you, the one further ahead first.
     assert.equal(fees.lead, 'rival');
-    assert.deepEqual(fees.leaders, ['silverline']);
+    assert.deepEqual(fees.leaders, ['silverline', 'highfield']);
+    assert.equal(leadSentence(fees, SIDES), 'Silverline College and Highfield University lead here.');
+  });
+
+  test('a program check carries you on the same programs as each rival, so who leads matches what is shown', () => {
+    const rows = across([
+      [SILVERLINE, [score('fees_shown', 'okay', 6, 10, 'BBA')]],
+      [HIGHFIELD, [score('fees_shown', 'okay', 6, 10, 'BCA')]],
+      [NORTHBANK, [score('fees_shown', 'strong', 10, 10, 'MBA')]],
+    ]);
+    const fees = row(rows, 'fees_shown');
+    // Level with Silverline on BBA (Okay and Okay), behind Highfield on BCA (Weak and Okay).
+    assert.deepEqual(fees.cells.silverline?.pair, { you: { kind: 'single', result: 'okay', share: 0.6 }, lead: 'level', programs: ['BBA'], shared: true });
+    assert.deepEqual(fees.cells.highfield?.pair, { you: { kind: 'single', result: 'weak', share: 0.3 }, lead: 'them', programs: ['BCA'], shared: true });
+    // No program in common with Northbank: all of each side's, said so.
+    assert.equal(fees.cells.northbank?.pair?.shared, false);
+    assert.deepEqual(fees.cells.northbank?.pair?.programs, ['BBA', 'BCA']);
+    assert.deepEqual(fees.leaders, ['northbank', 'highfield']);
+    // An institution check has no pair: one result of yours for every rival.
+    const instagram = row(across([[SILVERLINE, [score('instagram_activity', 'strong', 20, 20)]]]), 'instagram_activity');
+    assert.equal(instagram.cells.silverline?.pair, undefined);
   });
 
   test('before your own Audit, nothing is compared', () => {

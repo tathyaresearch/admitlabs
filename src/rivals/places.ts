@@ -231,7 +231,9 @@ export function placeLesson({ place, rows, sides, posts = [], institutionType }:
     if (row.lead !== 'rival') continue;
     for (const side of leaders) {
       if (!row.leaders.includes(side.id)) continue;
-      const margin = share(row, side.id) - share(row, you.id);
+      const pair = row.cells[side.id]?.pair;
+      const yours = pair ? (pair.you.kind === 'none' ? -1 : pair.you.share) : share(row, you.id);
+      const margin = share(row, side.id) - yours;
       if (!best || margin > best.margin) best = { row, side, margin };
     }
   }

@@ -97,6 +97,8 @@ export interface CheckComparison {
   gap: number;
   /** For program checks: the programs compared, by your names. Empty for institution checks. */
   programs: string[];
+  /** For program checks: those are the programs you both offer. False when you have none in common, so all of each side's. */
+  shared: boolean;
   theirParts: CheckScore[];
   yourParts: CheckScore[];
 }
@@ -122,11 +124,11 @@ function averageMax(parts: readonly CheckScore[]): number {
 }
 
 /** Program checks compare the programs both sides offer; with none in common, all of each side's. */
-function sharedParts(yours: readonly CheckScore[], theirs: readonly CheckScore[]): { yours: CheckScore[]; theirs: CheckScore[] } {
+function sharedParts(yours: readonly CheckScore[], theirs: readonly CheckScore[]): { yours: CheckScore[]; theirs: CheckScore[]; shared: boolean } {
   const theirKeys = new Set(theirs.map((part) => part.programKey));
   const shared = new Set(yours.map((part) => part.programKey).filter((key) => theirKeys.has(key)));
-  if (shared.size === 0) return { yours: [...yours], theirs: [...theirs] };
-  return { yours: yours.filter((part) => shared.has(part.programKey)), theirs: theirs.filter((part) => shared.has(part.programKey)) };
+  if (shared.size === 0) return { yours: [...yours], theirs: [...theirs], shared: false };
+  return { yours: yours.filter((part) => shared.has(part.programKey)), theirs: theirs.filter((part) => shared.has(part.programKey)), shared: true };
 }
 
 /** Every check side by side, in the spec's order. */
@@ -134,7 +136,7 @@ export function compareChecks(yours: readonly CheckScore[], theirs: readonly Che
   return CHECKS.map((check) => {
     const mine = yours.filter((part) => part.key === check.key);
     const other = theirs.filter((part) => part.key === check.key);
-    const parts = check.level === 'program' ? sharedParts(mine, other) : { yours: mine, theirs: other };
+    const parts = check.level === 'program' ? sharedParts(mine, other) : { yours: mine, theirs: other, shared: false };
     const you = summarize(parts.yours);
     const them = summarize(parts.theirs);
     let lead: Lead = 'unknown';
@@ -145,7 +147,7 @@ export function compareChecks(yours: readonly CheckScore[], theirs: readonly Che
       lead = difference > EPSILON ? 'them' : difference < -EPSILON ? 'you' : 'level';
     }
     const programs = check.level === 'program' ? [...new Set(parts.yours.flatMap((part) => (part.programName ? [part.programName] : [])))].sort() : [];
-    return { key: check.key, pillar: check.pillar, them, you, lead, gap, programs, theirParts: parts.theirs, yourParts: parts.yours };
+    return { key: check.key, pillar: check.pillar, them, you, lead, gap, programs, shared: parts.shared, theirParts: parts.theirs, yourParts: parts.yours };
   });
 }
 

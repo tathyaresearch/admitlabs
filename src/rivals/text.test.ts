@@ -4,13 +4,23 @@ import { hasDashes } from '../domain/copy.ts';
 import { istDate } from '../domain/dates.ts';
 import { SAMPLE_MOVES } from '../sample/rivals.ts';
 import { CHECK_KEYS } from '../domain/types.ts';
-import { admissionPushText, checkPhrase, MOVE_KIND_LABELS, moveNotice, reviewTrendNote, STANDING_LABELS, suggestionReason } from './text.ts';
+import { admissionPushText, checkPhrase, comparedOn, comparedOnShort, MOVE_KIND_LABELS, moveNotice, reviewTrendNote, STANDING_LABELS, suggestionReason } from './text.ts';
 
 describe('why a rival is suggested', () => {
   test('who they are, where, and the programs they also offer', () => {
     assert.equal(suggestionReason('skilling', 'Guwahati', ['Digital Marketing', 'Hotel Management']), 'Skilling institute, Guwahati. Also offers Digital Marketing and Hotel Management.');
     assert.equal(suggestionReason('college', 'Tezpur', ['BBA']), 'College, Tezpur. Also offers BBA.');
     assert.equal(suggestionReason('university', 'Guwahati', ['BBA', 'BCA', 'B.Com']), 'University, Guwahati. Also offers BBA, BCA and B.Com.');
+  });
+});
+
+describe('what a program check compared', () => {
+  test('the programs you both offer, or all of them when there are none in common', () => {
+    assert.equal(comparedOn(['BBA', 'MBA'], true), 'Compared on BBA and MBA, the programs you both offer.');
+    assert.equal(comparedOn(['BBA'], true), 'Compared on BBA, the program you both offer.');
+    assert.equal(comparedOn(['BBA', 'BCA'], false), 'Compared on all of each side’s programs: you have none in common.');
+    assert.equal(comparedOnShort(['Data Analytics', 'Digital Marketing'], true), 'On Data Analytics and Digital Marketing');
+    assert.equal(comparedOnShort(['BBA'], false), 'All programs, none in common');
   });
 });
 

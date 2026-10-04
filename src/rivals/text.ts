@@ -103,3 +103,14 @@ export function sideWords(side: SideSummary): string {
   if (side.kind === 'varies') return `${RESULT_LABELS[side.weakest.result]}${side.weakest.programName ? ` (weakest: ${side.weakest.programName})` : ''}`;
   return 'Not checked';
 }
+
+/** What a program check compared: "Compared on BBA and MBA, the programs you both offer." */
+export function comparedOn(programs: readonly string[], shared: boolean): string {
+  if (!shared) return 'Compared on all of each side’s programs: you have none in common.';
+  return `Compared on ${joinNames(programs)}, the ${programs.length === 1 ? 'program' : 'programs'} you both offer.`;
+}
+
+/** The same, short, under a result in a table: "On BBA and MBA". */
+export function comparedOnShort(programs: readonly string[], shared: boolean): string {
+  return shared ? `On ${joinNames(programs)}` : 'All programs, none in common';
+}

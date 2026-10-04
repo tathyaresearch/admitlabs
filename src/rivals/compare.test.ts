@@ -156,6 +156,7 @@ describe('check by check', () => {
     const fees = find(items, 'fees_shown');
     assert.equal(fees.lead, 'them');
     assert.deepEqual(fees.programs, ['BBA']);
+    assert.equal(fees.shared, true);
     assert.equal(fees.yourParts.length, 1);
     assert.equal(fees.theirParts.length, 1);
     assert.equal(Math.round(fees.gap * 100) / 100, 17.5);
@@ -171,6 +172,7 @@ describe('check by check', () => {
     // The weakest program speaks for a side whose programs differ.
     assert.deepEqual(page.you.kind === 'varies' ? page.you.weakest : null, { result: 'weak', share: 0.3, programName: 'BCA' });
     assert.deepEqual(page.programs, ['BCA', 'MBA']);
+    assert.equal(page.shared, false);
     // Yours average 0.65 of the points, theirs 0.6.
     assert.equal(page.lead, 'you');
   });

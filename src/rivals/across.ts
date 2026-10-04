@@ -1,12 +1,14 @@
 // Check by check across all your rivals (B5): every check, you and each rival with the result,
 // and who leads. Built from each rival's comparison with you (compare.ts), so who leads here
 // always agrees with that rival's own page: a rival leads a check when its comparison says it
-// leads you. Pure.
+// leads you. A program check compares each rival with you on the programs you both offer, so
+// each rival's cell carries your result on those same programs: both sides measured the same way,
+// and who leads always matches what is shown. Pure.
 
 import { CHECKS } from '../domain/checks.ts';
 import { joinNames } from '../domain/format.ts';
 import type { CheckKey, Pillar } from '../domain/types.ts';
-import { summarize, type CheckComparison, type CheckScore, type SideSummary } from './compare.ts';
+import { summarize, type CheckComparison, type CheckScore, type Lead, type SideSummary } from './compare.ts';
 
 const EPSILON = 0.005;
 
@@ -16,10 +18,22 @@ export interface AcrossSide {
   you: boolean;
 }
 
+/** A rival's program check: you on the same programs as theirs, and who leads on them. */
+export interface AcrossPair {
+  you: SideSummary;
+  lead: Lead;
+  /** The programs compared, by your names. */
+  programs: string[];
+  /** Those are the programs you both offer (false: none in common, so all of each side's). */
+  shared: boolean;
+}
+
 export interface AcrossCell {
   summary: SideSummary;
   /** What was found for this side, program by program. */
   parts: CheckScore[];
+  /** A rival's program check: you on the programs you both offer. */
+  pair?: AcrossPair;
 }
 
 /** 'rival': a rival leads you here. 'level': no rival is ahead, and at least one is level with you. */
@@ -33,7 +47,10 @@ export interface AcrossRow {
   /** Your result, then each rival's, by side id. Null when that side was not compared. */
   cells: Record<string, AcrossCell | null>;
   lead: AcrossLead;
-  /** The rivals ahead of you by the most (lead 'rival'), or level with you (lead 'level'), by side id. */
+  /**
+   * The rivals ahead of you by the most (lead 'rival'), or level with you (lead 'level'), by side id.
+   * On a program check, every rival ahead of you on the programs you both offer, furthest first.
+   */
   leaders: string[];
 }
 
@@ -56,17 +73,28 @@ export function checksAcross(you: AcrossSide, rivals: readonly RivalComparisons[
     for (const { item } of items) for (const part of item?.yourParts ?? []) mine.set(part.checkId, part);
     const yours = [...mine.values()];
     const cells: Record<string, AcrossCell | null> = { [you.id]: yours.length ? { summary: summarize(yours), parts: yours } : null };
-    for (const { rival, item } of items) cells[rival.side.id] = item ? { summary: item.them, parts: item.theirParts } : null;
+    const program = check.level === 'program';
+    for (const { rival, item } of items) {
+      cells[rival.side.id] = item
+        ? { summary: item.them, parts: item.theirParts, ...(program ? { pair: { you: item.you, lead: item.lead, programs: item.programs, shared: item.shared } } : {}) }
+        : null;
+    }
 
     const known = items.filter(({ item }) => item && item.lead !== 'unknown');
     const ahead = known.filter(({ item }) => item?.lead === 'them');
     let lead: AcrossLead = 'unknown';
     let leaders: string[] = [];
     if (ahead.length) {
-      // The rivals furthest ahead lead; two that are level at the top both lead.
-      const best = Math.max(...ahead.map(({ item }) => share(item?.them ?? { kind: 'none' })));
       lead = 'rival';
-      leaders = ahead.filter(({ item }) => Math.abs(share(item?.them ?? { kind: 'none' }) - best) < EPSILON).map(({ rival }) => rival.side.id);
+      if (program) {
+        // Each rival measured against you on the programs you both offer: every one ahead leads you, furthest first.
+        const margin = (item: CheckComparison | null) => (item ? share(item.them) - share(item.you) : 0);
+        leaders = [...ahead].sort((a, b) => margin(b.item) - margin(a.item)).map(({ rival }) => rival.side.id);
+      } else {
+        // The rivals furthest ahead lead; two that are level at the top both lead.
+        const best = Math.max(...ahead.map(({ item }) => share(item?.them ?? { kind: 'none' })));
+        leaders = ahead.filter(({ item }) => Math.abs(share(item?.them ?? { kind: 'none' }) - best) < EPSILON).map(({ rival }) => rival.side.id);
+      }
     } else if (known.length) {
       const level = known.filter(({ item }) => item?.lead === 'level');
       lead = level.length ? 'level' : 'you';

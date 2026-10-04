@@ -14,7 +14,7 @@ import { ResultBar } from '@/components/ui/Results';
 import { checkLooksAt } from '@/domain/checks';
 import { PILLAR_LABELS, PILLAR_QUESTIONS, type InstitutionType } from '@/domain/types';
 import { leadSentence, type AcrossCell, type AcrossRow, type AcrossSide } from '@/rivals/across';
-import { rivalCheckName } from '@/rivals/text';
+import { comparedOn, rivalCheckName } from '@/rivals/text';
 import panel from '@/components/audit/panel.module.css';
 import styles from './rivals.module.css';
 import { auditFixPath, checkFixKey } from '@/domain/fix-key';
@@ -35,13 +35,28 @@ function learnText(row: AcrossRow): string {
   }
 }
 
-function Side({ side, cell, leads }: { side: AcrossSide; cell: AcrossCell | null | undefined; leads: boolean }) {
+function Side({ side, cell, leads, note }: { side: AcrossSide; cell: AcrossCell | null | undefined; leads: boolean; note?: string | null }) {
+  const pair = cell?.pair;
   return (
     <li className={styles.panelSide}>
       <p className={styles.panelSideHead}>
         <span className={styles.panelSideName}>{side.you ? 'You' : side.name}</span>
         {leads ? <span className={styles.panelSideTag}>Leads</span> : null}
       </p>
+      {pair ? (
+        <div className={styles.panelPair}>
+          <p className={panel.summaryNote}>{comparedOn(pair.programs, pair.shared)}</p>
+          <p className={styles.panelPairRow}>
+            <span>{side.name}</span>
+            {cell.summary.kind === 'none' ? null : <ResultBar result={cell.summary.kind === 'single' ? cell.summary.result : cell.summary.weakest.result} size="sm" />}
+          </p>
+          <p className={styles.panelPairRow}>
+            <span>You, on the same programs</span>
+            {pair.you.kind === 'none' ? null : <ResultBar result={pair.you.kind === 'single' ? pair.you.result : pair.you.weakest.result} size="sm" />}
+          </p>
+        </div>
+      ) : null}
+      {note ? <p className={panel.summaryNote}>{note}</p> : null}
       {cell && cell.parts.length ? (
         <ul className={panel.found}>
           {cell.parts.map((part) => (
@@ -104,7 +119,7 @@ export function RivalCheckPanel({ rows, sides, institutionType }: { rows: readon
           <div className={panel.summary}>
             <p className={panel.summaryTitle}>{leadSentence(row, sides)}</p>
             {learnText(row) ? <p className={panel.summaryNote}>{learnText(row)}</p> : null}
-            {row.programs.length ? <p className={panel.summaryNote}>Compared on {row.programs.join(', ')}.</p> : null}
+            {row.programs.length && rivals.length > 1 ? <p className={panel.summaryNote}>Each rival is compared with you on the programs you both offer.</p> : null}
             <Link href={auditFixPath(checkFixKey(row.key))} className={styles.panelLink}>
               {strong ? 'See your check' : 'See your check and how to fix it'}
               <Icon name="arrowRight" size={14} />
@@ -117,7 +132,7 @@ export function RivalCheckPanel({ rows, sides, institutionType }: { rows: readon
               {rivals.map((side) => (
                 <Side key={side.id} side={side} cell={row.cells[side.id]} leads={row.lead === 'rival' && row.leaders.includes(side.id)} />
               ))}
-              {you ? <Side side={you} cell={yours} leads={false} /> : null}
+              {you ? <Side side={you} cell={yours} leads={false} note={row.programs.length && rivals.length > 1 ? `Every program of yours compared with a rival: ${row.programs.join(', ')}.` : null} /> : null}
             </ul>
           </section>
         </div>

@@ -14,6 +14,7 @@ function gap(key: CheckKey, size: number, programs: string[] = []): CheckCompari
     lead: size > 0 ? 'them' : size < 0 ? 'you' : 'level',
     gap: size,
     programs,
+    shared: programs.length > 0,
     theirParts: [],
     yourParts: [],
   };

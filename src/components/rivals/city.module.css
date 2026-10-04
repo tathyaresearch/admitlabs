@@ -210,6 +210,30 @@ a.gridPlace:hover {
   font-weight: var(--weight-semibold);
 }
 
+/* A rival's program check beside several rivals: theirs, then yours on the same programs. */
+.pairCell {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.pairYou {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.pairLabel {
+  min-width: 2rem;
+  font: var(--type-caption-strong);
+  color: var(--text-muted);
+}
+
+.pairOn {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
 .gridNote {
   color: var(--text-muted);
 }
