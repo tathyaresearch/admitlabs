@@ -6,6 +6,27 @@
   gap: var(--space-2);
 }
 
+/* Picking the period, then sending. */
+.choose {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  max-width: 100%;
+}
+
+.price {
+  max-width: 34rem;
+  font: var(--type-small);
+  text-wrap: pretty;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .note {
   max-width: 34rem;
   font: var(--type-caption);

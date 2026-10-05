@@ -47,8 +47,19 @@
 }
 
 .offerName {
+  margin-bottom: var(--space-2);
   font: var(--type-caption-strong);
   color: var(--text-muted);
+}
+
+.offerFigure {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.planPriceLine {
+  display: block;
 }
 
 .offerAmount {

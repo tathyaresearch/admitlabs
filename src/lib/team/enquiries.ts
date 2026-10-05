@@ -5,6 +5,7 @@
 
 import { getCheck } from '@/domain/checks';
 import { parseFixKey } from '@/domain/fix-key';
+import { parsePaidMonths, type PaidMonths } from '@/domain/tiers';
 import type { Place } from '@/domain/types';
 import { createClient } from '@/lib/supabase/server';
 import type { EnquiryRole } from '@/site/enquiry';
@@ -27,10 +28,12 @@ export interface FormEnquiry extends EnquiryBase {
   message: string | null;
 }
 
-/** From the dashboard: an owner asks for Paid, or to continue it. */
+/** From the dashboard: an owner asks for Paid, or to continue it, Monthly or for 3 months. */
 export interface PaidAsk extends EnquiryBase {
   kind: 'ask_paid' | 'continue_paid';
   institutionId: string;
+  /** The period picked. Null on a request sent before there were two. */
+  paidMonths: PaidMonths | null;
 }
 
 /** From the sidebar's services card: someone at a Free or Paid institution asks to talk about the services. */
@@ -56,7 +59,7 @@ export async function loadEnquiries(): Promise<EnquiryRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('enquiries')
-    .select('id, created_at, kind, institution_id, name, institution, role, email, phone, program, message, fix_key, fix_title, handled_at')
+    .select('id, created_at, kind, institution_id, name, institution, role, email, phone, program, message, fix_key, fix_title, paid_months, handled_at')
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) throw new Error(`Could not load enquiries: ${error.message}`);
@@ -70,7 +73,7 @@ export async function loadEnquiries(): Promise<EnquiryRow[]> {
       return [{ ...base, kind: 'fix_request', institutionId: row.institution_id, fixKey: row.fix_key, fixTitle: row.fix_title, place }];
     }
     if (row.kind === 'ask_services') return row.institution_id ? [{ ...base, kind: 'ask_services', institutionId: row.institution_id }] : [];
-    if (row.kind !== 'work_with_us') return row.institution_id ? [{ ...base, kind: row.kind, institutionId: row.institution_id }] : [];
+    if (row.kind !== 'work_with_us') return row.institution_id ? [{ ...base, kind: row.kind, institutionId: row.institution_id, paidMonths: parsePaidMonths(row.paid_months) }] : [];
     // The database requires these for the form (the enquiries_form constraint).
     if (!row.name || !row.role || !row.phone) return [];
     return [{ ...base, kind: 'work_with_us', name: row.name, role: row.role, phone: row.phone, program: row.program, message: row.message }];

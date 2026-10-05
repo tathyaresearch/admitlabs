@@ -2,6 +2,7 @@
 // website uses a .example domain. Social links also use .example hosts, so no sample link
 // can ever point at a real account.
 
+import type { PaidMonths } from '../config/plans.ts';
 import type { AuditTrigger, InstitutionType, Tier } from '../domain/types.ts';
 
 export interface SampleProgram {
@@ -28,7 +29,11 @@ export interface SampleInstitution {
   isProspect: boolean;
   owner: string | null;
   members: readonly string[];
-  plan: { tier: Tier; startsAt: string; endsAt: string | null; setBy: string | null; freeProgramKey: string | null } | null;
+  /**
+   * The current plan. Paid: `paidMonths` is its period (1 or 3) and `startsAt` the day of the
+   * latest payment; `paidSince` is when Paid first began, for the history before a renewal.
+   */
+  plan: { tier: Tier; startsAt: string; endsAt: string | null; setBy: string | null; freeProgramKey: string | null; paidMonths?: PaidMonths; paidSince?: string } | null;
   /** How its new Audits and summaries go out (spec 25): false sends them automatically. True to start. */
   reviewFirst?: boolean;
   /** How this institution is used in the sample, for the seed summary. */
@@ -99,8 +104,8 @@ export const SAMPLE_INSTITUTIONS: readonly SampleInstitution[] = [
     isProspect: false,
     owner: 'owner@eastgate-university.example',
     members: ['member@eastgate-university.example'],
-    plan: { tier: 'paid', startsAt: '2026-04-15', endsAt: '2026-10-15', setBy: ADMIN_EMAIL, freeProgramKey: null },
-    role: 'Paid tier, 6 months of history. Plan ends 15 Oct 2026, so the 30 day reminder shows.',
+    plan: { tier: 'paid', startsAt: '2026-07-15', endsAt: '2026-10-15', setBy: ADMIN_EMAIL, freeProgramKey: null, paidMonths: 3, paidSince: '2026-04-15' },
+    role: 'Paid tier on 3 months, paid since April and renewed on 15 Jul, 6 months of history. Plan ends 15 Oct 2026, so the 30 day reminder shows.',
   },
   {
     slug: 'brightpath-skills',

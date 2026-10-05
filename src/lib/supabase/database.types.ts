@@ -918,6 +918,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["enquiry_kind"]
           message: string | null
           name: string | null
+          paid_months: number | null
           phone: string | null
           program: string | null
           role: Database["public"]["Enums"]["enquiry_role"] | null
@@ -936,6 +937,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["enquiry_kind"]
           message?: string | null
           name?: string | null
+          paid_months?: number | null
           phone?: string | null
           program?: string | null
           role?: Database["public"]["Enums"]["enquiry_role"] | null
@@ -954,6 +956,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["enquiry_kind"]
           message?: string | null
           name?: string | null
+          paid_months?: number | null
           phone?: string | null
           program?: string | null
           role?: Database["public"]["Enums"]["enquiry_role"] | null
@@ -1483,6 +1486,7 @@ export type Database = {
           ends_at: string | null
           free_program_id: string | null
           institution_id: string
+          paid_months: number | null
           set_by: string | null
           starts_at: string
           tier: Database["public"]["Enums"]["tier"]
@@ -1492,6 +1496,7 @@ export type Database = {
           ends_at?: string | null
           free_program_id?: string | null
           institution_id: string
+          paid_months?: number | null
           set_by?: string | null
           starts_at?: string
           tier?: Database["public"]["Enums"]["tier"]
@@ -1501,6 +1506,7 @@ export type Database = {
           ends_at?: string | null
           free_program_id?: string | null
           institution_id?: string
+          paid_months?: number | null
           set_by?: string | null
           starts_at?: string
           tier?: Database["public"]["Enums"]["tier"]
@@ -2286,6 +2292,7 @@ export type Database = {
           is_prospect: boolean | null
           name: string | null
           plan_ends_at: string | null
+          plan_months: number | null
           plan_starts_at: string | null
           plan_tier: Database["public"]["Enums"]["tier"] | null
           programs: number | null
@@ -2367,7 +2374,10 @@ export type Database = {
         Args: { p_institution: string }
         Returns: string
       }
-      ask_for_paid: { Args: { p_institution: string }; Returns: string }
+      ask_for_paid: {
+        Args: { p_institution: string; p_months: number }
+        Returns: string
+      }
       audit_waiting: {
         Args: { p_institution: string }
         Returns: {
@@ -2506,6 +2516,7 @@ export type Database = {
         Returns: {
           asked_at: string
           kind: Database["public"]["Enums"]["enquiry_kind"]
+          paid_months: number
         }[]
       }
       open_services_ask: { Args: { p_institution: string }; Returns: string }
@@ -2604,6 +2615,7 @@ export type Database = {
       set_plan: {
         Args: {
           p_institution: string
+          p_months?: number
           p_starts_at: string
           p_tier: Database["public"]["Enums"]["tier"]
         }

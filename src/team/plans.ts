@@ -1,10 +1,10 @@
-// What an Admin can do with an institution's plan (spec section 5): start Paid (6 months from
-// the day of payment, never in the future), make it a Client, or end the plan now. The database
-// checks the same rules in set_plan() and end_plan(). Pure.
+// What an Admin can do with an institution's plan (spec section 5): start Paid (Monthly or 3
+// months from the day of payment, never in the future), make it a Client, or end the plan now.
+// The database checks the same rules in set_plan() and end_plan(). Pure.
 
 import { addMonths, istDate, istParts } from '../domain/dates.ts';
 import { formatDate } from '../domain/format.ts';
-import { effectiveTier, paidPlanEndsAt, type PlanRecord } from '../domain/tiers.ts';
+import { effectiveTier, PAID_PRICE_BY_MONTHS, paidPlanEndsAt, type PaidMonths, type PlanRecord } from '../domain/tiers.ts';
 
 export type PlanAction = 'start_paid' | 'make_client' | 'end_plan';
 
@@ -49,22 +49,33 @@ export function istDay(date: Date): string {
   return `${year}-${pad(month)}-${pad(day)}`;
 }
 
-/** The start dates an Admin can pick for Paid: today, back to the first day whose 6 months have not run out. */
-export function paidStartRange(now: Date): { earliest: string; latest: string } {
-  // A plan that started 6 months ago to the day has just ended, so the earliest is the day after.
-  const earliest = addMonths(istDate(istDay(now)), -6);
+/** The start dates an Admin can pick for Paid: today, back to the first day whose period (1 or 3 months) has not run out. */
+export function paidStartRange(now: Date, months: PaidMonths): { earliest: string; latest: string } {
+  // A plan that started its period ago to the day has just ended, so the earliest is the day after.
+  const earliest = addMonths(istDate(istDay(now)), -months);
   return { earliest: istDay(new Date(earliest.getTime() + 86_400_000)), latest: istDay(now) };
 }
 
 /** When a Paid plan starts, from the day picked: today means now, an earlier day means 10 am India time that day. */
-export function paidStartFrom(day: string, now: Date): Date | null {
+export function paidStartFrom(day: string, now: Date, months: PaidMonths): Date | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
-  const { earliest, latest } = paidStartRange(now);
+  const { earliest, latest } = paidStartRange(now, months);
   if (day > latest || day < earliest) return null;
   return day === latest ? now : istDate(day, 10);
 }
 
-/** "Ends 15 Apr 2027": what the Admin will see before starting Paid on that day. */
-export function paidEndText(start: Date): string {
-  return `Ends ${formatDate(paidPlanEndsAt(start))}`;
+/** "Ends 15 Jan 2027": what the Admin will see before starting Paid on that day, for that period. */
+export function paidEndText(start: Date, months: PaidMonths): string {
+  return `Ends ${formatDate(paidPlanEndsAt(start, months))}`;
+}
+
+/** "Pick today, or a day in the last 3 months.": the days an Admin can pick, for that period. */
+export function paidStartHint(months: PaidMonths): string {
+  return `Pick today, or a day in the last ${months === 1 ? 'month' : `${months} months`}.`;
+}
+
+/** "₹24,999 + GST for 3 months, no auto-renew.": the price for the period, under the form. */
+export function paidTermsText(months: PaidMonths): string {
+  const price = PAID_PRICE_BY_MONTHS[months];
+  return `${price.text} ${price.term}, no auto-renew.`;
 }

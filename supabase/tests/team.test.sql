@@ -9,7 +9,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(59);
+select plan(66);
 
 insert into public.cities (name, state) values ('Teamton', 'Team State') on conflict do nothing;
 
@@ -208,17 +208,34 @@ reset role;
 select set_config('request.jwt.claims', '{"sub":"15000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 set local role authenticated;
 
-select lives_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'paid', now() - interval '10 days')$$, 'Admin starts Paid');
+select throws_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'paid', now())$$, 'P0001', 'plan_period', 'Starting Paid needs the period');
+select throws_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'paid', now(), 6)$$, 'P0001', 'plan_period', 'Monthly or 3 months, nothing else');
+select lives_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'paid', now() - interval '5 days', 1)$$, 'Admin starts Paid, Monthly');
 select is(
-  (select (ends_at at time zone 'Asia/Kolkata') = ((starts_at at time zone 'Asia/Kolkata') + interval '6 months') from public.plans where institution_id = '25000000-0000-4000-8000-00000000000c'),
+  (select (ends_at at time zone 'Asia/Kolkata') = ((starts_at at time zone 'Asia/Kolkata') + interval '1 month') and paid_months = 1 from public.plans where institution_id = '25000000-0000-4000-8000-00000000000c'),
   true,
-  'Paid always runs 6 months from its start'
+  'Monthly runs one month from its start'
 );
-select throws_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'paid', now() + interval '2 days')$$, 'P0001', 'plan_future', 'Never a start in the future');
-select throws_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'paid', now() - interval '200 days')$$, 'P0001', 'plan_over', 'Never a Paid plan that has already ended');
-select throws_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000a', 'paid', now())$$, 'P0001', 'not_signed_up', 'Only for institutions that have signed up');
+select throws_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'paid', now() - interval '40 days', 1)$$, 'P0001', 'plan_over', 'Never a Monthly plan that has already ended');
+select lives_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'paid', now() - interval '10 days', 3)$$, 'Admin starts Paid, 3 months');
+select is(
+  (select (ends_at at time zone 'Asia/Kolkata') = ((starts_at at time zone 'Asia/Kolkata') + interval '3 months') and paid_months = 3 from public.plans where institution_id = '25000000-0000-4000-8000-00000000000c'),
+  true,
+  '3 months runs 3 months from its start'
+);
+select throws_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'paid', now() + interval '2 days', 3)$$, 'P0001', 'plan_future', 'Never a start in the future');
+select throws_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'paid', now() - interval '100 days', 3)$$, 'P0001', 'plan_over', 'Never a Paid plan that has already ended');
+select throws_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000a', 'paid', now(), 3)$$, 'P0001', 'not_signed_up', 'Only for institutions that have signed up');
 select lives_ok($$select public.set_plan('25000000-0000-4000-8000-00000000000c', 'client', now() - interval '1 day')$$, 'Admin makes an institution a Client');
 select is((select ends_at from public.plans where institution_id = '25000000-0000-4000-8000-00000000000c'), null, 'which runs until an Admin ends it');
+select is((select paid_months from public.plans where institution_id = '25000000-0000-4000-8000-00000000000c'), null, 'with no Paid period');
+reset role;
+select throws_ok(
+  $$update public.plans set paid_months = 3 where institution_id = '25000000-0000-4000-8000-00000000000c'$$,
+  '23514', null, 'Only a Paid plan has a period'
+);
+select set_config('request.jwt.claims', '{"sub":"15000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+set local role authenticated;
 select lives_ok($$select public.end_plan('25000000-0000-4000-8000-00000000000c')$$, 'Admin ends a plan now');
 select is(private.effective_tier('25000000-0000-4000-8000-00000000000c'), 'free', 'and the institution moves to Free');
 select throws_ok($$select public.end_plan('25000000-0000-4000-8000-00000000000c')$$, 'P0001', 'no_active_plan', 'An ended plan cannot end again');

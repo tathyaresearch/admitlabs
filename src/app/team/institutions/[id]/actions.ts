@@ -11,14 +11,14 @@ import { LEAD_RULES } from '@/config/leads';
 import { TEAM_RULES } from '@/config/team';
 import { LEAD_SOURCES, type LeadSource } from '@/domain/types';
 import { istParts } from '@/domain/dates';
-import { effectiveTier, type PlanRecord } from '@/domain/tiers';
+import { effectiveTier, parsePaidMonths, type PlanRecord } from '@/domain/tiers';
 import { tidyText } from '@/domain/onboarding';
 import { ANY_COURSE_VALUE } from '@/leads/text';
 import { getViewer } from '@/lib/auth/viewer';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { writeRivalActions } from '@/rivals/jobs';
-import { paidStartFrom } from '@/team/plans';
+import { paidStartFrom, paidStartHint } from '@/team/plans';
 import { checkWork } from '@/team/work';
 
 export interface ActionState {
@@ -238,6 +238,7 @@ function planError(message: string): string {
   if (message.includes('plan_over')) return 'A Paid plan from that day would already have ended.';
   if (message.includes('not_signed_up')) return 'Only an institution that has signed up can have a plan.';
   if (message.includes('no_active_plan')) return 'There is no active plan to end.';
+  if (message.includes('plan_period')) return 'Pick the period they paid for: Monthly or 3 months.';
   if (message.includes('not_admin')) return NOT_ADMIN;
   return 'The plan could not be changed. Try again.';
 }
@@ -261,10 +262,12 @@ export async function startPaidAction(institutionId: string, previous: ActionSta
   const viewer = await teamUser();
   if (viewer?.teamRole !== 'admin') return reply(previous, 'error', NOT_ADMIN);
   const now = new Date();
-  const startsAt = paidStartFrom(String(formData.get('startsOn') ?? ''), now);
-  if (!startsAt) return reply(previous, 'error', 'Pick the day of payment: today, or a day in the last 6 months.');
+  const months = parsePaidMonths(formData.get('months'));
+  if (!months) return reply(previous, 'error', 'Pick the period they paid for: Monthly or 3 months.');
+  const startsAt = paidStartFrom(String(formData.get('startsOn') ?? ''), now, months);
+  if (!startsAt) return reply(previous, 'error', `Pick the day of payment: ${paidStartHint(months).replace('Pick ', '')}`);
   const supabase = await createClient();
-  const { error } = await supabase.rpc('set_plan', { p_institution: institutionId, p_tier: 'paid', p_starts_at: startsAt.toISOString() });
+  const { error } = await supabase.rpc('set_plan', { p_institution: institutionId, p_tier: 'paid', p_starts_at: startsAt.toISOString(), p_months: months });
   if (error) return reply(previous, 'error', planError(error.message));
   const { problem, waits } = await firstAudit(institutionId, viewer.userId);
   revalidatePath(pagePath(institutionId));

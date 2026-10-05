@@ -7,6 +7,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { parseFixKey } from '@/domain/fix-key';
+import { parsePaidMonths, type PaidMonths } from '@/domain/tiers';
 import { CHECK_KEYS, type CheckKey } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
 import { createClient } from '@/lib/supabase/server';
@@ -68,17 +69,19 @@ export interface AskResult {
 }
 
 /**
- * Subscribe now, or Renew now (C2): the owner's request lands in the team's Enquiries, and the
- * team writes back to complete payment. ask_for_paid() checks the owner and the plan again and
+ * Subscribe now, or Renew now (C2), for the period picked (Monthly or 3 months): the owner's
+ * request lands in the team's Enquiries, and the team writes back to complete payment. ask_for_paid() checks the owner and the plan again and
  * never sends a second open request. No online payment yet, and no email.
  */
-export async function askForPaidAction(): Promise<AskResult> {
+export async function askForPaidAction(months: PaidMonths): Promise<AskResult> {
   const viewer = await getViewer();
   if (!viewer?.membership || viewer.viewingAs || viewer.membership.role !== 'owner') {
     return { ok: false, askedAt: null, error: 'Only the owner of this account can subscribe or renew.' };
   }
+  const period = parsePaidMonths(months);
+  if (!period) return { ok: false, askedAt: null, error: 'Pick Monthly or 3 months.' };
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc('ask_for_paid', { p_institution: viewer.membership.institution.id });
+  const { data, error } = await supabase.rpc('ask_for_paid', { p_institution: viewer.membership.institution.id, p_months: period });
   if (error) {
     if (error.message.includes('nothing_to_ask')) return { ok: false, askedAt: null, error: 'There is nothing to subscribe to or renew on your plan right now.' };
     return { ok: false, askedAt: null, error: 'That did not send. Try again.' };

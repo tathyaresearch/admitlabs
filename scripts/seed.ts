@@ -15,7 +15,7 @@ import { pullDayOf, pullMonth } from '../src/demand/schedule.ts';
 import { istDate } from '../src/domain/dates.ts';
 import { formatDate, plural } from '../src/domain/format.ts';
 import { institutionDetailsToRow, programDetailsToRow } from '../src/domain/details.ts';
-import { paidPlanEndsAt } from '../src/domain/tiers.ts';
+import { DEFAULT_PAID_MONTHS, paidPlanEndsAt } from '../src/domain/tiers.ts';
 import { TIER_LABELS } from '../src/domain/types.ts';
 import type { Database, Json } from '../src/lib/supabase/database.types.ts';
 import { makeReport, reportsDue } from '../src/report/jobs.ts';
@@ -198,13 +198,17 @@ async function main(): Promise<void> {
     SAMPLE_INSTITUTIONS.flatMap((sample) => {
       if (!sample.plan) return [];
       const startsAt = istDate(sample.plan.startsAt, 10);
-      const endsAt = sample.plan.tier === 'paid' ? paidPlanEndsAt(startsAt) : sample.plan.endsAt ? istDate(sample.plan.endsAt, 10) : null;
+      const paidMonths = sample.plan.tier === 'paid' ? (sample.plan.paidMonths ?? DEFAULT_PAID_MONTHS) : null;
+      const endsAt = paidMonths ? paidPlanEndsAt(startsAt, paidMonths) : sample.plan.endsAt ? istDate(sample.plan.endsAt, 10) : null;
       return [
         {
           institution_id: institutionId(sample.slug),
           tier: sample.plan.tier,
-          starts_at: startsAt.toISOString(),
+          // A Paid plan that was renewed starts from when Paid first began while its history is
+          // made (its Audits read the plan), then moves to the day of the latest payment (below).
+          starts_at: istDate(sample.plan.paidSince ?? sample.plan.startsAt, 10).toISOString(),
           ends_at: endsAt?.toISOString() ?? null,
+          paid_months: paidMonths,
           set_by: userId(sample.plan.setBy),
           free_program_id: sample.plan.freeProgramKey ? programId(sample.slug, sample.plan.freeProgramKey) : null,
         },
@@ -515,6 +519,13 @@ async function main(): Promise<void> {
   }
   // Summary.
   const programCount = SAMPLE_INSTITUTIONS.reduce((sum, sample) => sum + sample.programs.length, 0);
+  // Renewed Paid plans: the current plan starts on the day of the latest payment.
+  for (const sample of SAMPLE_INSTITUTIONS) {
+    if (!sample.plan?.paidSince) continue;
+    const renewed = await db.from('plans').update({ starts_at: istDate(sample.plan.startsAt, 10).toISOString() }).eq('institution_id', institutionId(sample.slug));
+    if (renewed.error) throw new Error(`Could not date ${sample.name}'s renewal: ${renewed.error.message}`);
+  }
+
   const prospects = SAMPLE_INSTITUTIONS.filter((sample) => sample.isProspect).length;
   console.log('\nSample data ready.');
   console.log(`  Institutions ${SAMPLE_INSTITUTIONS.length} (${prospects} prospects, team only), programs ${programCount}, users ${SAMPLE_USERS.length}`);

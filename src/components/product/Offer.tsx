@@ -1,4 +1,5 @@
-// Plans, AdmitLabs clients and the FAQ. Prices, plan length and reminders come from config; the
+// Plans, AdmitLabs clients and the FAQ. Prices, plan length and reminders come from config (Paid's
+// card has the Monthly | 3 months toggle, ./PaidPrice.tsx); the
 // full comparison is the same table of what each plan sees that the dashboard's Plan page shows.
 
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
@@ -10,6 +11,7 @@ import { CLIENTS, FAQ, FAQ_TITLE, PLANS } from '@/product/content';
 import { wayIn } from '@/site/way-in';
 import sections from '@/components/site/sections.module.css';
 import site from '@/components/site/site.module.css';
+import { PaidPrice } from './PaidPrice';
 import { Title, vars } from './Sections';
 import styles from './product.module.css';
 
@@ -39,10 +41,14 @@ export function Plans() {
                   <h3 id={`plan-${card.key}`} className={styles.planName}>
                     {card.name}
                   </h3>
-                  <p className={styles.price}>
-                    <span className={`${styles.priceValue} num`}>{card.price}</span>
-                    <span className={styles.priceTerm}>{card.term}</span>
-                  </p>
+                  {paid ? (
+                    <PaidPrice />
+                  ) : (
+                    <p className={styles.price}>
+                      <span className={`${styles.priceValue} num`}>{card.price}</span>
+                      <span className={styles.priceTerm}>{card.term}</span>
+                    </p>
+                  )}
                   <p className={styles.planLine}>{card.line}</p>
                 </div>
                 <ul className={styles.points}>

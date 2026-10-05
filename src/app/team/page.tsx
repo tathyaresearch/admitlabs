@@ -24,7 +24,7 @@ export default async function TeamHomePage({ searchParams }: { searchParams: Pro
   await requireTeamViewer();
   const filters = parseFilters(await searchParams);
   const now = new Date();
-  const [{ rows, total }, counts, places] = await Promise.all([loadInstitutionList(filters, now), loadListCounts(now), loadPlaces()]);
+  const [{ rows, total }, counts, places] = await Promise.all([loadInstitutionList(filters), loadListCounts(), loadPlaces()]);
 
   // A count is "on" when the list shows exactly what it counts.
   const current = filtersQuery({ ...filters, sort: 'name', page: 1 });
@@ -32,7 +32,7 @@ export default async function TeamHomePage({ searchParams }: { searchParams: Pro
     { label: 'Signed up', value: counts.signedUp, href: filtersQuery({ ...NO_FILTERS, status: 'signed_up' }) },
     { label: 'Clients', value: counts.clients, href: filtersQuery({ ...NO_FILTERS, tier: 'client' }) },
     { label: 'Prospects', value: counts.prospects, href: filtersQuery({ ...NO_FILTERS, status: 'prospect' }) },
-    { label: `Paid ending in ${TEAM_RULES.paidEndingSoonDays} days`, value: counts.endingSoon, href: filtersQuery({ ...NO_FILTERS, tier: 'paid_ending' }) },
+    { label: 'Paid ending soon', value: counts.endingSoon, href: filtersQuery({ ...NO_FILTERS, tier: 'paid_ending' }) },
   ];
 
   return (

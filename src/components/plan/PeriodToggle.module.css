@@ -1,0 +1,74 @@
+/*
+  Monthly | 3 months (./PeriodToggle.tsx). Made from the theme's tokens, so it works on the
+  dashboard, on /drishti's dark band and inside an ivory card. Each option is at least 44 px tall
+  on a phone.
+*/
+
+.group {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  width: fit-content;
+  max-width: 100%;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-sm);
+  background: var(--field);
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  font: var(--type-label);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.option:hover {
+  color: var(--text);
+}
+
+.option[aria-checked='true'] {
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font-weight: var(--weight-heading);
+}
+
+/* "Save 17%": a small outlined tag, in the colour of the text around it. */
+.saving {
+  padding: 0.125rem 0.375rem;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-xs);
+  font-size: 0.6875rem;
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.sm .option {
+  padding: 0 var(--space-3);
+  font-size: var(--size-caption);
+}
+
+/* With a mouse there is room to be smaller. */
+@media (min-width: 48rem) {
+  .md .option {
+    min-height: 2.5rem;
+  }
+
+  .sm .option {
+    min-height: 2.25rem;
+  }
+}

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
-import { PAID_PRICE } from '../domain/tiers.ts';
+import { PAID_PRICE_LINE } from '../domain/tiers.ts';
 import { auditReadyEmail, auditReadySubject, type AuditReadyInput } from './ready-email.ts';
 
 // Free's Audit ready email (spec section 24): the three words, the top 3 fixes each with Let
@@ -48,7 +48,8 @@ describe('the Audit ready email', () => {
     const email = auditReadyEmail(INPUT, ['owner@northbank-college.example']);
     assert.match(email.text, /See what changed: http:\/\/localhost:3000\/#changed/);
     assert.match(email.text, /Subscribe now: http:\/\/localhost:3000\/plan/);
-    assert.ok(email.text.includes(`${PAID_PRICE.text} ${PAID_PRICE.term}, no auto-renew.`));
+    assert.ok(email.text.includes('₹9,999 + GST per month, or ₹24,999 + GST for 3 months, no auto-renew.'));
+    assert.ok(email.text.includes(`${PAID_PRICE_LINE}, no auto-renew.`));
     assert.ok(email.text.includes('Your next free Audit comes on 10 Dec 2026.'));
     const first = auditReadyEmail({ ...INPUT, first: true, auditUrl: 'http://localhost:3000/audit' }, ['owner@northbank-college.example']);
     assert.match(first.text, /See your Audit: http:\/\/localhost:3000\/audit/);

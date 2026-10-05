@@ -86,10 +86,11 @@ describe('sample institutions (spec section 20)', () => {
     assert.ok(SAMPLE_USERS.some((user) => user.membershipRole === 'member'));
   });
 
-  test('the Paid plan runs exactly 6 months from its start', () => {
+  test('a Paid plan runs exactly its period (1 or 3 months) from its start', () => {
     for (const institution of SAMPLE_INSTITUTIONS) {
       if (institution.plan?.tier !== 'paid') continue;
-      assert.equal(paidPlanEndsAt(istDate(institution.plan.startsAt, 10)).toISOString(), istDate(institution.plan.endsAt ?? '', 10).toISOString());
+      assert.ok(institution.plan.paidMonths === 1 || institution.plan.paidMonths === 3, institution.slug);
+      assert.equal(paidPlanEndsAt(istDate(institution.plan.startsAt, 10), institution.plan.paidMonths).toISOString(), istDate(institution.plan.endsAt ?? '', 10).toISOString());
     }
   });
 
@@ -224,7 +225,8 @@ describe('sample profiles', () => {
         }
         if (run.kind === 'own') {
           assert.ok(institution.plan && institution.claimedAt, `${institution.slug} own runs need a signup`);
-          const plan = { tier: institution.plan.tier, startsAt: istDate(institution.plan.startsAt, 10), endsAt: institution.plan.endsAt ? istDate(institution.plan.endsAt, 10) : null };
+          // A renewed Paid plan's history runs from when Paid first began.
+          const plan = { tier: institution.plan.tier, startsAt: istDate(institution.plan.paidSince ?? institution.plan.startsAt, 10), endsAt: institution.plan.endsAt ? istDate(institution.plan.endsAt, 10) : null };
           const schedule = auditSchedule(plan, istDate(run.day, 10));
           assert.ok(schedule, institution.slug);
           assert.equal(latestScheduledRun(schedule, istDate(run.day, 23))?.toISOString(), istDate(run.day, 10).toISOString(), `${institution.slug} ${run.day} is a scheduled day`);

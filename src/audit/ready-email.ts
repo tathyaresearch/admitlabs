@@ -4,7 +4,7 @@
 // dashboard, where the owner asks with one click. Pure.
 
 import { wordScoreText, type ScoreLabel } from '../domain/scores.ts';
-import { PAID_BUTTONS, PAID_PRICE } from '../domain/tiers.ts';
+import { PAID_BUTTONS, PAID_PRICE_LINE } from '../domain/tiers.ts';
 import { blocksHtml, blocksText, TURN_OFF_FOOTER, type BlockEmail } from '../email/blocks.ts';
 import type { EmailMessage } from '../providers/email.ts';
 
@@ -55,7 +55,7 @@ export function auditReadyParts(input: AuditReadyInput): BlockEmail {
       {
         kind: 'box',
         heading: 'Want the full picture?',
-        text: `Paid shows every check with its proof, all your programs, your rivals in full and what students in ${input.city} ask, with a summary every month. ${PAID_PRICE.text} ${PAID_PRICE.term}, no auto-renew.`,
+        text: `Paid shows every check with its proof, all your programs, your rivals in full and what students in ${input.city} ask, with a summary every month. ${PAID_PRICE_LINE}, no auto-renew.`,
         button: { label: PAID_BUTTONS.ask_paid, url: input.planUrl },
       },
       ...(input.nextAuditOn ? ([{ kind: 'small', text: `Your next free Audit comes on ${input.nextAuditOn}.` }] as const) : []),

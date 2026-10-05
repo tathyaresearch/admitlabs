@@ -19,8 +19,8 @@ import { pullDayOf } from '../demand/schedule.ts';
 import type { DemandRow } from '../demand/view.ts';
 import { istDate, monthKey } from '../domain/dates.ts';
 import { resultKey } from '../domain/scoring/score.ts';
-import { effectiveTier, paidPlanEndsAt, type PlanRecord } from '../domain/tiers.ts';
-import { CHECK_KEYS, type AuditKind, type AuditTrigger, type CheckKey, type InstitutionType } from '../domain/types.ts';
+import { DEFAULT_PAID_MONTHS, effectiveTier, paidPlanEndsAt, type PlanRecord } from '../domain/tiers.ts';
+import { CHECK_KEYS, type AuditKind, type AuditTrigger, type CheckKey, type InstitutionType, type Tier } from '../domain/types.ts';
 import { collect } from '../providers/collect.ts';
 import { mockAnalysis } from '../providers/mock/index.ts';
 import type { InstitutionRef } from '../providers/types.ts';
@@ -182,8 +182,16 @@ export function samplePlan(slug: string): PlanRecord | null {
   const plan = sampleInstitution(slug).plan;
   if (!plan) return null;
   const startsAt = istDate(plan.startsAt, 10);
-  const endsAt = plan.tier === 'paid' ? paidPlanEndsAt(startsAt) : plan.endsAt ? istDate(plan.endsAt, 10) : null;
-  return { tier: plan.tier, startsAt, endsAt };
+  const paidMonths = plan.tier === 'paid' ? (plan.paidMonths ?? DEFAULT_PAID_MONTHS) : null;
+  const endsAt = paidMonths ? paidPlanEndsAt(startsAt, paidMonths) : plan.endsAt ? istDate(plan.endsAt, 10) : null;
+  return { tier: plan.tier, startsAt, endsAt, paidMonths };
+}
+
+/** The tier on a past day: a Paid plan that was renewed counts from when Paid first began (`paidSince`). */
+function sampleTierOn(slug: string, asOf: Date): Tier {
+  const plan = samplePlan(slug);
+  const since = sampleInstitution(slug).plan?.paidSince;
+  return effectiveTier(plan && since ? { ...plan, startsAt: istDate(since, 10) } : plan, asOf);
 }
 
 /** The kind of an institution's own Audits: its plan's tier (Free covers its one program only). */
@@ -294,7 +302,7 @@ export function sampleMoves(rivalSlugs: readonly string[], from: Date, to: Date)
 export async function sampleRivalLessons(slug: string, day: string): Promise<RivalLesson[]> {
   const asOf = istDate(day, 9);
   // Paid and Client only, as the job does.
-  if (effectiveTier(samplePlan(slug), asOf) === 'free') return [];
+  if (sampleTierOn(slug, asOf) === 'free') return [];
   const [ownChain, rivals] = await Promise.all([sampleAuditChain(slug, 'own', day), sampleRivals(slug, day)]);
   const own = ownChain[ownChain.length - 1];
   if (!own || rivals.length === 0) return [];

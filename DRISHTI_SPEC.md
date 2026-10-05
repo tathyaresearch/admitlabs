@@ -4,7 +4,7 @@ Version 2.0 | 4 October 2026 | Owner: Manprit, AdmitLabs
 
 This is the single source of truth for building Drishti. If something is not in this spec, ask before deciding. Values marked **[ADJUSTABLE]** are starting values and must live in config, not be hard-coded.
 
-**Version 2 (October 2026)** builds the product around one line: what the internet says about you. The Audit is organised by place, three scores out of 100 with their words replace the big score, rivals come from your city, Demand picks 3 things to make each month, AdmitLabs clients get Leads, a short email arrives with each new Audit or month, the AdmitLabs team can review an Audit before the college sees it, and Paid is ₹24,999 + GST for 6 months. Version 1 (30 September 2026) is in the git history.
+**Version 2 (October 2026)** builds the product around one line: what the internet says about you. The Audit is organised by place, three scores out of 100 with their words replace the big score, rivals come from your city, Demand picks 3 things to make each month, AdmitLabs clients get Leads, a short email arrives with each new Audit or month, the AdmitLabs team can review an Audit before the college sees it, and Paid is ₹9,999 + GST per month, or ₹24,999 + GST for 3 months (from 5 October 2026; it was ₹24,999 + GST for 6 months). Version 1 (30 September 2026) is in the git history.
 
 ---
 
@@ -124,14 +124,18 @@ The addresses are settings in `.env` (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_U
 | Tier | Who | Cost | Length |
 |---|---|---|---|
 | Free | Any institution | ₹0 | Ongoing |
-| Paid | Non-clients | ₹24,999 + GST | 6 months from the day Paid starts |
+| Paid | Non-clients | ₹9,999 + GST per month, or ₹24,999 + GST for 3 months | 1 month or 3 months from the day Paid starts |
 | Client | AdmitLabs service clients | Included, with Leads | While the service is active (set by Admin) |
 
 Paid rules:
-- Only one paid plan: 6 months. No yearly plan. No discounts.
-- ₹24,999 plus GST, written "₹24,999 + GST" with "for 6 months". The price lives in config.
-- Starts on the day the institution signs up for Paid. In this build an Admin switches it on that day; payment comes later.
-- **No auto-renew.** Reminder 30 days before end and 7 days before end (in-app now; email later).
+- One paid plan, Paid, billed for one of two periods (decided 5 October 2026; until then one period of 6 months at ₹24,999 + GST). No yearly plan.
+  - **Monthly:** ₹9,999 plus GST, written "₹9,999 + GST per month".
+  - **3 months:** ₹24,999 plus GST, written "₹24,999 + GST for 3 months", with "Save 17%" beside it (worked out from the two prices: 3 monthly payments would be ₹29,997).
+- **No discount codes or offers.** The 3-month price is a fixed plan price.
+- Both prices live in one place in config (`PLAN_RULES.paid.periods` in `src/config/plans.ts`); everything else reads them from there.
+- A toggle "Monthly | 3 months" shows one price at a time on `/drishti` and the Plan page. 3 months shows first. It is a radio group (Tab, then the arrow keys) and each option is at least 44 px tall on a phone.
+- Starts on the day the institution signs up for Paid. In this build an Admin switches it on that day, for the period they paid for; payment comes later. The plan ends 1 month or 3 months after its start, by the period.
+- **No auto-renew.** Reminders (in-app now; email later): on Monthly, 7 days before the end; on 3 months, 30 days before the end, then 7 days before. "Renew now" shows from the first reminder, and the team's "Paid ending soon" follows the same days.
 - When a paid plan ends, the institution drops to Free. They keep seeing their last Audit.
 
 In this build, Admin sets an institution's tier manually. Payment comes later.
@@ -540,11 +544,11 @@ Keep it short enough to read in 5 minutes: about 7 pages, never more than 8.
 | Leads (`/leads`, Client only) | "What did our content bring in?": enquiries this month and the change from last month, the link that brought the most, every link with its count this month and before, then the list (name, course, link and date, with phone, email and city), newest first, with Download CSV, and deleting one student's data on request. Not a CRM: no calls, stages or follow ups |
 | Your AdmitLabs team (`/work`, Client only) | Opened from the card on Home. "What has our AdmitLabs team done?": what the team does next, soonest first, then everything it did, by month, newest first, each with the day and a link to see the work. Write to your team at hello@admitlabs.in |
 | Reports | Each month's summary (section 24) with its PDF, download, the score by month with every point's value |
-| Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans, Paid at ₹24,999 + GST for 6 months. "Subscribe now" on Free and "Renew now" from the first renewal reminder (see Subscribe now and Renew now below) |
+| Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans (Paid's two prices, one to a line). On Free, Paid's offer with the "Monthly | 3 months" toggle and "Subscribe now" for the period shown; "Renew now" from the first renewal reminder (see Subscribe now and Renew now below) |
 | Settings | Plain groups, each at its own address (a list on the left, a row on a phone): Institution (details, public links, the Google Maps listing, and details added by you, section 6), Programs (with the Free Audit program and details for each program), Rivals (who, and when they can change), Leads (Client: who gets each new enquiry by email, how long enquiries are kept, deleting a student's data), Team, Plan (with asking for Paid) and Notifications (what arrives, and when, and for each person the monthly summary email, or on Free the Audit ready email). Only the owner changes them |
 | Notifications | Alerts list, with filters by what each is about (Audit, Rivals, Students, Reports, Plan, each with its count, only the ones that have alerts). Each link says where it goes ("See what changed", "See the move"). Empty, or still short: what arrives here and when, for the plan |
 
-**Subscribe now and Renew now.** Wherever Paid is offered (the cards that say what Paid adds, a locked preview, the fix panel, What changed on Free, the Plan page, Settings, a Paid plan that ended), the owner clicks once: "Subscribe now" on Free, "Renew now" from the first renewal reminder. Online payment is not set up yet (it comes before launch, for example Razorpay, so the button goes straight to payment): after the click the page says "Thanks! The AdmitLabs team will contact you to complete payment.", and the request lands in the team's Enquiries with the institution and the owner's email; clicking again while one is open sends nothing new, and the page says when it was sent. The price (₹24,999 + GST for 6 months) and terms never change and no email is sent: the team writes back to complete payment and an Admin switches the plan on. Members see who can; Client has nothing to subscribe to. Let AdmitLabs fix this (section 7.7) works the same way.
+**Subscribe now and Renew now.** Wherever Paid is offered (the cards that say what Paid adds, a locked preview, the fix panel, What changed on Free, the Plan page, Settings, a Paid plan that ended), the owner clicks "Subscribe now" on Free, "Renew now" from the first renewal reminder, then picks Monthly or 3 months (3 months first; on renewal, the plan's own period) and sends ("Subscribe for 3 months", "Renew monthly"). Where the page shows the toggle already (the Plan page's offer), one click sends the period shown. Online payment is not set up yet (it comes before launch, for example Razorpay, so the button goes straight to payment): after the click the page says "Thanks! The AdmitLabs team will contact you to complete payment.", and the request lands in the team's Enquiries with the institution, the owner's email and the period picked; clicking again while one is open sends nothing new (it keeps the period picked last), and the page says when it was sent and for which period. The prices (₹9,999 + GST per month, or ₹24,999 + GST for 3 months) and terms never change and no email is sent: the team writes back to complete payment and an Admin switches the plan on for that period. Members see who can; Client has nothing to subscribe to. Let AdmitLabs fix this (section 7.7) works the same way.
 
 **Want us to do it for you?** On Free and Paid (never a Client, never the team), the sidebar has an ivory card just above the account, in the More menu on a phone: the three AdmitLabs services, one line each (Program Growth, Institution Branding, Admit Campaign), and "Talk to AdmitLabs". The owner or a member clicks it; the request lands in the team's Enquiries, one open request per institution, and the card says "Thanks! The AdmitLabs team will contact you." Compact, so the sidebar still fits a laptop screen.
 
@@ -555,10 +559,10 @@ Keep it short enough to read in 5 minutes: about 7 pages, never more than 8.
 | Team home | All institutions, sorted by the reason each needs attention, most urgent first, each row saying why: a Paid plan ending within 30 days, a Client with no team Audit this month, a score down 3 or more, signed up with no rivals, a prospect not signed up a week after their Audit was shared. Search, filter by type, city, state, score, tier, prospect or client; sort by name, score or last checked too. The team keeps the score as a number |
 | To review | Every new Audit and monthly summary waiting for the team's review, oldest first, each with the college, what it is, its plan, how long it has waited and what changed in one line; a count beside it in the team's menu. One opens the review: what changed since the last approved Audit, then the Audit place by place (or the summary line by line) to fix a result or a line, then "Approve and send" (section 25) |
 | Bulk Audit | Add many institutions at once (paste list or CSV), run Audits, see results in a table |
-| Institution detail | Everything the institution sees, plus private notes, tier control (Admin), manual refresh, and how its new Audits and summaries go out: "Review first" (on to start) or "Send automatically". For a Client, the Work log tab first: add what the team did or does next (Done or Next, one plain sentence, the day, a link when there is one), mark Next as done, remove an entry. It is what the Client sees. Then a Leads links tab: make a tracking link (a name such as "Reel: BBA placements", where it will be used, the program), copy it, see how many enquiries each brought this month and before, and archive one. Counts only |
+| Institution detail | Everything the institution sees, plus private notes, tier control (Admin: Start Paid asks for the period paid for, Monthly or 3 months, and the day of payment, and shows the end date), manual refresh, and how its new Audits and summaries go out: "Review first" (on to start) or "Send automatically". For a Client, the Work log tab first: add what the team did or does next (Done or Next, one plain sentence, the day, a link when there is one), mark Next as done, remove an entry. It is what the Client sees. Then a Leads links tab: make a tracking link (a name such as "Reel: BBA placements", where it will be used, the program), copy it, see how many enquiries each brought this month and before, and archive one. Counts only |
 | Share | Create a share link or PDF of a prospect's Audit, place by place with the three words |
 | Rival ads | Enter what rivals promise in their ads, by hand until Drishti can collect it. Each entry is also a "started ads" alert for the institutions that track that rival |
-| Enquiries | Everyone who wrote in through the website's Work with us form (name, role, institution, email, phone, program and message); owners who asked for Paid, or to continue it, from their dashboard (the institution, linked, and the owner's email); and owners who asked AdmitLabs to fix something (the institution, linked, the fix by name and place, and the owner's email). Newest first. New or All. Mark as handled, or back to new. Every team user sees them. No emails are sent |
+| Enquiries | Everyone who wrote in through the website's Work with us form (name, role, institution, email, phone, program and message); owners who asked for Paid, or to continue it, from their dashboard (the institution, linked, the period picked, Monthly or 3 months, with its price, and the owner's email); and owners who asked AdmitLabs to fix something (the institution, linked, the fix by name and place, and the owner's email). Newest first. New or All. Mark as handled, or back to new. Every team user sees them. No emails are sent |
 
 **Team rules**
 
@@ -666,7 +670,7 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 5. **Public data only**: the rules every result follows, in one framed band. Leads is the one exception, and says so: only what students send a client's college themselves
 6. **How it works**: four steps on a line that fills as the page moves: enter details, Drishti checks every place, see what the internet says, get a summary and a report every month
 7. **Sample report** (ivory): three of its pages fanned out, and the download of the full sample PDF, marked "Sample report. Fictional data." on every page
-8. **Plans**: Free and Paid (₹24,999 + GST for 6 months, no auto-renew), Paid on ivory, then every feature compared
+8. **Plans**: Free and Paid, Paid on ivory with the "Monthly | 3 months" toggle (3 months first: ₹24,999 + GST for 3 months with "Save 17%"; Monthly: ₹9,999 + GST per month; no auto-renew), then every feature compared
 9. **For AdmitLabs clients**: included free, with the team acting on it, and Leads: the enquiries their content brings, link by link
 10. **FAQ**: data sources, privacy, what "public data only" means, Leads, renewal
 11. **Final call to action**: "Get your free Audit", under the same light as the top of the page
@@ -724,7 +728,7 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 - Notes are team only.
 - A Client's work log: the team reads every log, adds to a Client's in its own name, marks Next as done and removes entries; the Client's own people read theirs while the service is active. No other plan sees one.
 - Marks done: people at the institution and the team read them; only the owner adds or takes one back, through `mark_done` and `undo_done`, and only for a check or finding the latest own Audit has something to fix in. Each person closes their own Start here.
-- Enquiries: anyone can send one, only through `submit_enquiry` (at most 3 a day from one email). An owner asks for Paid only through `ask_for_paid`, which checks the owner and the plan and keeps one open request per kind; the institution reads its own open request through `open_paid_ask`. An owner asks AdmitLabs to fix something only through `ask_admitlabs_fix`: the owner, Free or Paid, a fix in the latest own Audit, one open request per fix. Only the team reads Enquiries and marks them handled.
+- Enquiries: anyone can send one, only through `submit_enquiry` (at most 3 a day from one email). An owner asks for Paid only through `ask_for_paid`, which checks the owner, the plan and the period (1 or 3 months) and keeps one open request per kind; the institution reads its own open request through `open_paid_ask`. An owner asks AdmitLabs to fix something only through `ask_admitlabs_fix`: the owner, Free or Paid, a fix in the latest own Audit, one open request per fix. Only the team reads Enquiries and marks them handled.
 - Leads: only the institution's own people read them, never the team. Anyone can send one only through `submit_lead`: a live link, an institution that is a Client, and the spam checks of section 23. Only the owner deletes them, one enquiry or every enquiry from one phone or email. The team and the Client's own people (the owner and the members) make and archive links; the team reads counts by link through `lead_link_counts`; the institution's people read their own links. Lead settings: the owner changes them, the institution's people read them.
 - Email log: team only.
 - Review: a college reads its own Audits, their findings, its reports and summaries only once approved. The team sees what waits, changes results and lines (each change kept in `audit_edits`) and approves through `approve_audit` and `approve_report`; the team sets each college's `review_first`.
@@ -775,7 +779,7 @@ Each data source is a **provider** with one shared interface: it takes an instit
 7. **Plan limits enforced on the server.**
 8. **Monochrome. Bricolage Grotesque for words, Inter for numbers that stand on their own.** No em dashes or en dashes.
 9. **Opportunity, not shame** in every piece of copy.
-10. **No discounts** on any plan.
+10. **No discount codes or offers.** The 3-month price is a fixed plan price.
 11. **Readable at a glance**, everywhere: the dashboard, the PDFs, a shared Audit and the pictures of the product on `/drishti` and the website.
     - No shape, dot, square or colour without a name or number right next to it.
     - No chart that needs a key to understand.
@@ -814,7 +818,7 @@ Stop at the end of each phase for review. Do not start the next phase without ap
 | 3. Rivals | City suggestions and Nearby city, the ranking, place by place, the month's one line, lessons, the new alerts, a rival's page |
 | 4. Demand | Make these 3 and Mark as made, program and content signals, the best months, honest numbers |
 | 5. Leads | Team links, the public form and its spam checks, the Client's Leads page and CSV, alert emails to the local test inbox, keeping and deleting |
-| 6. Home, summary, PDFs, pricing | The new Home, the monthly summary by email and on Reports, the Audit ready email for Free, both waiting in To review when Review first is on, both PDFs, ₹24,999 + GST everywhere |
+| 6. Home, summary, PDFs, pricing | The new Home, the monthly summary by email and on Reports, the Audit ready email for Free, both waiting in To review when Review first is on, both PDFs, Paid's price everywhere |
 | 7. Product page, website, sign up and log in | `/drishti`, the website's Drishti parts and the pictures on sign up and log in; the mock page removed |
 
 **Later (not now):** connect real providers one by one, Claude API for analysis, Razorpay, reminders by email, a real email sender, WhatsApp, deployment of the dashboard to app.admitlabs.in.
@@ -888,7 +892,7 @@ The main AdmitLabs website, built in this app (section 4), in the **Spotlight** 
 **Rules:**
 
 - Say only who we work with, never who we don't.
-- No service prices on the website. No discounts.
+- No service prices on the website. No discount codes or offers.
 - No small labels above headings (the one exception: "Product" above Drishti by AdmitLabs), no numbered steps, no icons in boxes, and no two sections built the same way.
 - The pictures show a made up institution, Larkmoor University, in Bangalore, with made up neighbours (Calderwood College, Brackenfield University, Thornbury College): none is a real institution, and none of it is Drishti's own sample data (`src/site/scenes.ts`). They carry no caption.
 - Gradients: subtle and monochrome only (black to graphite, soft ivory tones), for light, depth and transitions. Never colour, neon or glow. The website and `/drishti` only (section 14).

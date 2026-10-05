@@ -11,7 +11,7 @@ import { nextPullOn } from '@/demand/schedule';
 import { alertsAhead } from '@/domain/alerts';
 import { institutionDetailLines, isEmptyProgram, programDetailLines, EMPTY_PROGRAM_DETAILS } from '@/domain/details';
 import { formatDate } from '@/domain/format';
-import { effectiveTier, planReminder } from '@/domain/tiers';
+import { effectiveTier, PAID_PRICE_BY_MONTHS, planReminder } from '@/domain/tiers';
 import { INSTITUTION_TYPE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS } from '@/domain/types';
 import { LEAD_RULES } from '@/config/leads';
 import { requireInstitutionViewer, type InstitutionViewer } from '@/lib/auth/guards';
@@ -334,7 +334,7 @@ function PlanGroup({ viewer, audit }: { viewer: InstitutionViewer; audit: AuditP
   const reminder = planReminder(plan, new Date());
   const schedule = SCHEDULES[tier];
   const facts = [
-    { label: 'Your plan', value: TIER_LABELS[tier] },
+    { label: 'Your plan', value: tier === 'paid' && plan?.paidMonths ? `${TIER_LABELS[tier]}, ${PAID_PRICE_BY_MONTHS[plan.paidMonths].label}` : TIER_LABELS[tier] },
     ...(plan && tier !== 'free' ? [{ label: 'Since', value: formatDate(plan.startsAt) }] : []),
     ...(tier === 'paid' && plan?.endsAt
       ? [{ label: 'Ends', value: `${formatDate(plan.endsAt)}${reminder.daysLeft !== null ? `, in ${reminder.daysLeft} ${reminder.daysLeft === 1 ? 'day' : 'days'}` : ''}. No auto-renew.` }]
@@ -346,7 +346,7 @@ function PlanGroup({ viewer, audit }: { viewer: InstitutionViewer; audit: AuditP
   ];
   return (
     <>
-      <Head title="Plan">What you are on, and until when. One plan, one price: no discounts, and no auto-renew.</Head>
+      <Head title="Plan">What you are on, and until when. Paid is monthly or for 3 months, with no auto-renew.</Head>
       <Card padding="md">
         <FactList items={facts} />
         <div className={styles.cardFoot}>

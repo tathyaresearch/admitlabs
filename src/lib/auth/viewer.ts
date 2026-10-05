@@ -8,7 +8,7 @@
 
 import { cookies } from 'next/headers';
 import { cache } from 'react';
-import { effectiveTier, type PlanRecord } from '@/domain/tiers';
+import { effectiveTier, parsePaidMonths, type PlanRecord } from '@/domain/tiers';
 import type { InstitutionType, MembershipRole, TeamRole, Tier } from '@/domain/types';
 import { createClient } from '@/lib/supabase/server';
 import { VIEW_AS_COOKIE } from '@/lib/team/view-as';
@@ -85,12 +85,13 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   }
   let plan: ViewerPlan | null = null;
   if (institution) {
-    const { data } = await supabase.from('plans').select('tier, starts_at, ends_at, free_program_id').eq('institution_id', institution.id).maybeSingle();
+    const { data } = await supabase.from('plans').select('tier, starts_at, ends_at, paid_months, free_program_id').eq('institution_id', institution.id).maybeSingle();
     if (data) {
       plan = {
         tier: data.tier,
         startsAt: new Date(data.starts_at),
         endsAt: data.ends_at ? new Date(data.ends_at) : null,
+        paidMonths: parsePaidMonths(data.paid_months),
         freeProgramId: data.free_program_id,
       };
     }

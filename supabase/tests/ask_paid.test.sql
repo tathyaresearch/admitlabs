@@ -4,8 +4,9 @@
 --
 -- Fixtures:
 --   F: Free, signed up, no rivals. owner-f, member-f.
---   P: Paid ending in 10 days, with a rival. owner-p.
---   L: Paid ending in 120 days, with a rival. owner-l.
+--   P: Paid (3 months) ending in 10 days, with a rival. owner-p.
+--   L: Paid (3 months) ending in 60 days, with a rival. owner-l.
+--   M: Paid (Monthly) ending in 10 days, and N: Paid (Monthly) ending in 5 days. owner-m, owner-n.
 --   C: Client, with a rival, no Audit run by the team. owner-c.
 --   S: Free, with a rival, its latest Audit down 5.
 --   X: a prospect whose team Audit was shared 10 days ago.
@@ -14,7 +15,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(26);
+select plan(37);
 
 insert into public.cities (name, state) values ('Guwahati', 'Assam') on conflict do nothing;
 insert into public.scoring_config (version, weights, result_shares, thresholds, labels, active)
@@ -26,7 +27,9 @@ insert into auth.users (id, email, aud, role) values
   ('18000000-0000-4000-8000-000000000003', 'owner-p@ask.test', 'authenticated', 'authenticated'),
   ('18000000-0000-4000-8000-000000000004', 'owner-l@ask.test', 'authenticated', 'authenticated'),
   ('18000000-0000-4000-8000-000000000005', 'owner-c@ask.test', 'authenticated', 'authenticated'),
-  ('18000000-0000-4000-8000-000000000006', 'team@ask.test', 'authenticated', 'authenticated');
+  ('18000000-0000-4000-8000-000000000006', 'team@ask.test', 'authenticated', 'authenticated'),
+  ('18000000-0000-4000-8000-000000000007', 'owner-m@ask.test', 'authenticated', 'authenticated'),
+  ('18000000-0000-4000-8000-000000000008', 'owner-n@ask.test', 'authenticated', 'authenticated');
 
 insert into public.team_users (user_id, role) values ('18000000-0000-4000-8000-000000000006', 'team');
 
@@ -37,7 +40,9 @@ insert into public.institutions (id, slug, name, type, city, state, website) val
   ('28000000-0000-4000-8000-00000000000c', 'ask-c', 'Ask C', 'college', 'Guwahati', 'Assam', 'https://ask-c.example'),
   ('28000000-0000-4000-8000-00000000000d', 'ask-s', 'Ask S', 'college', 'Guwahati', 'Assam', 'https://ask-s.example'),
   ('28000000-0000-4000-8000-00000000000e', 'ask-x', 'Ask X', 'college', 'Guwahati', 'Assam', 'https://ask-x.example'),
-  ('28000000-0000-4000-8000-000000000010', 'ask-r', 'Ask R', 'college', 'Guwahati', 'Assam', 'https://ask-r.example');
+  ('28000000-0000-4000-8000-000000000010', 'ask-r', 'Ask R', 'college', 'Guwahati', 'Assam', 'https://ask-r.example'),
+  ('28000000-0000-4000-8000-000000000011', 'ask-m', 'Ask M', 'college', 'Guwahati', 'Assam', 'https://ask-m.example'),
+  ('28000000-0000-4000-8000-000000000012', 'ask-n', 'Ask N', 'college', 'Guwahati', 'Assam', 'https://ask-n.example');
 
 insert into public.institution_status (institution_id, claimed, claimed_at, is_prospect) values
   ('28000000-0000-4000-8000-00000000000f', true, now() - interval '60 days', false),
@@ -45,27 +50,35 @@ insert into public.institution_status (institution_id, claimed, claimed_at, is_p
   ('28000000-0000-4000-8000-00000000000b', true, now() - interval '60 days', false),
   ('28000000-0000-4000-8000-00000000000c', true, now() - interval '60 days', false),
   ('28000000-0000-4000-8000-00000000000d', true, now() - interval '60 days', false),
-  ('28000000-0000-4000-8000-00000000000e', false, null, true);
+  ('28000000-0000-4000-8000-00000000000e', false, null, true),
+  ('28000000-0000-4000-8000-000000000011', true, now() - interval '30 days', false),
+  ('28000000-0000-4000-8000-000000000012', true, now() - interval '30 days', false);
 
 insert into public.memberships (user_id, institution_id, role) values
   ('18000000-0000-4000-8000-000000000001', '28000000-0000-4000-8000-00000000000f', 'owner'),
   ('18000000-0000-4000-8000-000000000002', '28000000-0000-4000-8000-00000000000f', 'member'),
   ('18000000-0000-4000-8000-000000000003', '28000000-0000-4000-8000-00000000000a', 'owner'),
   ('18000000-0000-4000-8000-000000000004', '28000000-0000-4000-8000-00000000000b', 'owner'),
-  ('18000000-0000-4000-8000-000000000005', '28000000-0000-4000-8000-00000000000c', 'owner');
+  ('18000000-0000-4000-8000-000000000005', '28000000-0000-4000-8000-00000000000c', 'owner'),
+  ('18000000-0000-4000-8000-000000000007', '28000000-0000-4000-8000-000000000011', 'owner'),
+  ('18000000-0000-4000-8000-000000000008', '28000000-0000-4000-8000-000000000012', 'owner');
 
-insert into public.plans (institution_id, tier, starts_at, ends_at) values
-  ('28000000-0000-4000-8000-00000000000f', 'free', now() - interval '60 days', null),
-  ('28000000-0000-4000-8000-00000000000a', 'paid', now() - interval '170 days', now() + interval '10 days'),
-  ('28000000-0000-4000-8000-00000000000b', 'paid', now() - interval '60 days', now() + interval '120 days'),
-  ('28000000-0000-4000-8000-00000000000c', 'client', now() - interval '60 days', null),
-  ('28000000-0000-4000-8000-00000000000d', 'free', now() - interval '60 days', null);
+insert into public.plans (institution_id, tier, starts_at, ends_at, paid_months) values
+  ('28000000-0000-4000-8000-00000000000f', 'free', now() - interval '60 days', null, null),
+  ('28000000-0000-4000-8000-00000000000a', 'paid', now() - interval '80 days', now() + interval '10 days', 3),
+  ('28000000-0000-4000-8000-00000000000b', 'paid', now() - interval '30 days', now() + interval '60 days', 3),
+  ('28000000-0000-4000-8000-00000000000c', 'client', now() - interval '60 days', null, null),
+  ('28000000-0000-4000-8000-00000000000d', 'free', now() - interval '60 days', null, null),
+  ('28000000-0000-4000-8000-000000000011', 'paid', now() - interval '20 days', now() + interval '10 days', 1),
+  ('28000000-0000-4000-8000-000000000012', 'paid', now() - interval '25 days', now() + interval '5 days', 1);
 
 insert into public.rivals (institution_id, rival_institution_id) values
   ('28000000-0000-4000-8000-00000000000a', '28000000-0000-4000-8000-000000000010'),
   ('28000000-0000-4000-8000-00000000000b', '28000000-0000-4000-8000-000000000010'),
   ('28000000-0000-4000-8000-00000000000c', '28000000-0000-4000-8000-000000000010'),
-  ('28000000-0000-4000-8000-00000000000d', '28000000-0000-4000-8000-000000000010');
+  ('28000000-0000-4000-8000-00000000000d', '28000000-0000-4000-8000-000000000010'),
+  ('28000000-0000-4000-8000-000000000011', '28000000-0000-4000-8000-000000000010'),
+  ('28000000-0000-4000-8000-000000000012', '28000000-0000-4000-8000-000000000010');
 
 insert into public.audits (id, institution_id, run_at, kind, trigger, overall, overall_change, discovered, trusted, chosen, config_version) values
   ('48000000-0000-4000-8000-0000000000d1', '28000000-0000-4000-8000-00000000000d', now() - interval '5 days', 'free', 'scheduled', 40, -5, 40, 40, 40, 1),
@@ -76,7 +89,10 @@ insert into public.share_links (token, institution_id, audit_id, created_by, cre
   ('ask-x-token', '28000000-0000-4000-8000-00000000000e', '48000000-0000-4000-8000-0000000000e1', '18000000-0000-4000-8000-000000000006', now() - interval '10 days', now() + interval '80 days');
 
 -- The rules match the app's ---------------------------------------------------------------
-select is(private.continue_paid_days(), 31, 'Asking to continue opens with the first reminder, 30 days out (PLAN_RULES), and a day more');
+select is(private.paid_reminder_days(3), 30, 'The first reminder on 3 months: 30 days before the end (PLAN_RULES.paid.periods)');
+select is(private.paid_reminder_days(1), 7, 'on Monthly: 7 days before the end');
+select is(private.paid_reminder_days(null), 30, 'a Paid plan with no period on record reminds like 3 months');
+select is(private.continue_paid_days(3), 31, 'Asking to continue opens with the first reminder, and a day more');
 select is(private.attention_score_drop(), 3, 'A drop of 3 needs attention (TEAM_RULES.attentionScoreDrop)');
 select is(private.attention_follow_up_days(), 7, 'A week after sharing (TEAM_RULES.followUpAfterDays)');
 
@@ -84,12 +100,15 @@ select is(private.attention_follow_up_days(), 7, 'A week after sharing (TEAM_RUL
 select set_config('request.jwt.claims', '{"sub":"18000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 set local role authenticated;
 
-select lives_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000f')$$, 'The owner on Free asks for Paid');
+select throws_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000f', 6)$$, '22023', 'bad_period', 'Subscribe now is Monthly or 3 months');
+select lives_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000f', 3)$$, 'The owner on Free asks for Paid, 3 months');
+select is((select paid_months from public.open_paid_ask('28000000-0000-4000-8000-00000000000f')), 3::smallint, 'The request says which period');
 select is(
-  public.ask_for_paid('28000000-0000-4000-8000-00000000000f'),
+  public.ask_for_paid('28000000-0000-4000-8000-00000000000f', 1),
   (select asked_at from public.open_paid_ask('28000000-0000-4000-8000-00000000000f')),
   'Asking again while it is open sends nothing new: the first time comes back'
 );
+select is((select paid_months from public.open_paid_ask('28000000-0000-4000-8000-00000000000f')), 1::smallint, 'with the period picked last');
 select is((select kind::text from public.open_paid_ask('28000000-0000-4000-8000-00000000000f')), 'ask_paid', 'It is a request for Paid');
 select is((select count(*)::int from public.enquiries), 0, 'An institution never reads Enquiries itself');
 reset role;
@@ -109,25 +128,36 @@ select is(
 select set_config('request.jwt.claims', '{"sub":"18000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 set local role authenticated;
 select is((select kind::text from public.open_paid_ask('28000000-0000-4000-8000-00000000000f')), 'ask_paid', 'A member sees the open request');
-select throws_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000f')$$, '42501', 'not_allowed', 'A member cannot ask');
+select throws_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000f', 3)$$, '42501', 'not_allowed', 'A member cannot ask');
 select is((select count(*)::int from public.open_paid_ask('28000000-0000-4000-8000-00000000000a')), 0, 'Nobody sees another institution''s request');
 reset role;
 
 -- Paid near its end asks to continue; earlier Paid and Client have nothing to ask -------------
 select set_config('request.jwt.claims', '{"sub":"18000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
 set local role authenticated;
-select lives_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000a')$$, 'Paid ending in 10 days asks to continue');
+select lives_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000a', 3)$$, '3 months ending in 10 days asks to continue');
 select is((select kind::text from public.open_paid_ask('28000000-0000-4000-8000-00000000000a')), 'continue_paid', 'It is a request to continue Paid');
 reset role;
 
 select set_config('request.jwt.claims', '{"sub":"18000000-0000-4000-8000-000000000004","role":"authenticated"}', true);
 set local role authenticated;
-select throws_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000b')$$, 'P0001', 'nothing_to_ask', 'Paid with months to go has nothing to ask');
+select throws_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000b', 3)$$, 'P0001', 'nothing_to_ask', '3 months with 60 days to go has nothing to ask');
+reset role;
+
+select set_config('request.jwt.claims', '{"sub":"18000000-0000-4000-8000-000000000007","role":"authenticated"}', true);
+set local role authenticated;
+select throws_ok($$select public.ask_for_paid('28000000-0000-4000-8000-000000000011', 1)$$, 'P0001', 'nothing_to_ask', 'Monthly with 10 days to go has nothing to ask yet');
+reset role;
+
+select set_config('request.jwt.claims', '{"sub":"18000000-0000-4000-8000-000000000008","role":"authenticated"}', true);
+set local role authenticated;
+select lives_ok($$select public.ask_for_paid('28000000-0000-4000-8000-000000000012', 1)$$, 'Monthly ending in 5 days asks to continue, monthly again');
+select is((select kind::text || ' ' || paid_months from public.open_paid_ask('28000000-0000-4000-8000-000000000012')), 'continue_paid 1', 'a request to continue, Monthly');
 reset role;
 
 select set_config('request.jwt.claims', '{"sub":"18000000-0000-4000-8000-000000000005","role":"authenticated"}', true);
 set local role authenticated;
-select throws_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000c')$$, 'P0001', 'nothing_to_ask', 'A Client has nothing to ask');
+select throws_ok($$select public.ask_for_paid('28000000-0000-4000-8000-00000000000c', 3)$$, 'P0001', 'nothing_to_ask', 'A Client has nothing to ask');
 reset role;
 
 -- The website's form still needs its fields ---------------------------------------------------
@@ -161,6 +191,8 @@ select is((select attention from public.team_institutions where id = '28000000-0
 select is((select attention from public.team_institutions where id = '28000000-0000-4000-8000-00000000000f'), 4, 'Then signed up with no rivals');
 select is((select attention from public.team_institutions where id = '28000000-0000-4000-8000-00000000000e'), 5, 'Then a prospect shared 10 days ago, not signed up');
 select is((select attention from public.team_institutions where id = '28000000-0000-4000-8000-00000000000b'), null, 'Paid with months to go and rivals picked needs nothing');
+select is((select attention from public.team_institutions where id = '28000000-0000-4000-8000-000000000012'), 1, 'Monthly is ending soon from 7 days before the end');
+select is((select attention from public.team_institutions where id = '28000000-0000-4000-8000-000000000011'), null, 'but not 10 days before');
 select is(
   (
     select array_agg(name order by attention nulls last, attention_order nulls last, name)

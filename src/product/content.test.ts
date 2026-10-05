@@ -47,14 +47,17 @@ describe('the product page copy', () => {
   test('prices, plan length and reminders come from the plan settings', () => {
     const [free, paid] = content.PLANS.cards;
     assert.equal(free?.price, '₹0');
+    // 3 months shows first; the toggle on the card switches to Monthly.
     assert.equal(paid?.price, '₹24,999');
-    assert.equal(PLAN_RULES.paid.priceInr, 24999);
-    assert.equal(paid?.term, `+ GST for ${PLAN_RULES.paid.lengthMonths} months`);
+    assert.equal(PLAN_RULES.paid.periods[3].priceInr, 24999);
+    assert.equal(PLAN_RULES.paid.periods[1].priceInr, 9999);
+    assert.equal(paid?.term, '+ GST for 3 months');
     assert.match(content.PLANS.fine, /does not renew on its own/);
-    assert.match(content.PLANS.fine, /30 days and 7 days/);
+    assert.match(content.PLANS.fine, /30 days before a 3-month plan ends, and 7 days before a monthly one/);
+    assert.doesNotMatch(content.PLANS.fine, /one price/);
     const renewal = content.FAQ.find((item) => item.question.includes('renew'));
-    assert.match(renewal?.answer ?? '', new RegExp(`${PLAN_RULES.paid.lengthMonths} months`));
-    assert.match(renewal?.answer ?? '', /30 days and 7 days/);
+    assert.match(renewal?.answer ?? '', /a month or 3 months from the day you pay/);
+    assert.match(renewal?.answer ?? '', /30 days before a 3-month plan ends, and 7 days before a monthly one/);
   });
 
   test('schedules, places, words and rival counts come from config', () => {
@@ -85,7 +88,7 @@ describe('the product page copy', () => {
     assert.match(content.FEATURES[1]?.lede ?? '', new RegExp(`${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals in your city`));
   });
 
-  test('the new product: three words, rivals in your city, Make these 3, Leads for clients and the one price', () => {
+  test('the new product: three words, rivals in your city, Make these 3, Leads for clients and the Paid price', () => {
     assert.match(content.FEATURES[0]?.lede ?? '', /Visibility, Trust and Chosen/);
     assert.match(content.FEATURES[1]?.question ?? '', /in our city/);
     assert.match(content.FEATURES[2]?.line ?? '', /Make these 3/);
@@ -94,7 +97,7 @@ describe('the product page copy', () => {
     const leads = content.FAQ.find((item) => item.question === 'What is Leads?');
     assert.match(leads?.answer ?? '', /AdmitLabs clients/);
     const [, paid] = content.PLANS.cards;
-    assert.equal(`${paid?.price} ${paid?.term}`, `₹24,999 + GST for ${PLAN_RULES.paid.lengthMonths} months`);
+    assert.equal(`${paid?.price} ${paid?.term}`, '₹24,999 + GST for 3 months');
     // Each word with its score out of 100 (October 2026), never a total.
     assert.match(content.FEATURES[0]?.lede ?? '', /out of 100/);
     assert.match(content.READS.lede, /out of 100/);

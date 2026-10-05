@@ -24,7 +24,7 @@ export const SCORE_BAND_LABELS: Readonly<Record<ScoreBand, string>> = {
   none: 'No Audit yet',
 };
 
-/** A plan, or "Ending soon": Paid plans ending within TEAM_RULES.paidEndingSoonDays (the count at the top of the list). */
+/** A plan, or "Ending soon": Paid plans from their first renewal reminder (7 days before the end on Monthly, 30 days on 3 months; the count at the top of the list). */
 export const PLAN_FILTERS = [...TIERS, 'paid_ending'] as const;
 export type PlanFilter = (typeof PLAN_FILTERS)[number];
 

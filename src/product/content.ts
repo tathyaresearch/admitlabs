@@ -9,7 +9,7 @@ import { SCHEDULES } from '../config/schedules.ts';
 import { SCORING_V1 } from '../config/scoring.v1.ts';
 import { checksForPillar } from '../domain/checks.ts';
 import { formatInr } from '../domain/format.ts';
-import { PAID_PRICE } from '../domain/tiers.ts';
+import { DEFAULT_PAID_MONTHS, PAID_PRICE_BY_MONTHS, PLAN_REMINDER_TEXT } from '../domain/tiers.ts';
 import { APP_OPEN } from '../lib/urls.ts';
 import { PILLAR_LABELS, PILLAR_QUESTIONS, PILLARS, PLACE_LABELS, PLACES, type CheckKey } from '../domain/types.ts';
 import { SAMPLE_REPORT_NOTE } from '../report/data.ts';
@@ -173,8 +173,6 @@ export const REPORT = {
   note: SAMPLE_REPORT_NOTE,
 } as const;
 
-const reminders = PLAN_RULES.paid.reminderDaysBefore.map((days) => `${days} days`).join(' and ');
-
 export interface PlanCard {
   key: 'free' | 'paid';
   name: string;
@@ -211,8 +209,9 @@ export const PLANS: { title: readonly [string, string]; lede: string; cards: rea
     {
       key: 'paid',
       name: 'Paid',
-      price: PAID_PRICE.amount,
-      term: `${PAID_PRICE.tax} ${PAID_PRICE.term}`,
+      // 3 months first; the card's toggle switches to Monthly (components/product/PaidPrice.tsx).
+      price: PAID_PRICE_BY_MONTHS[DEFAULT_PAID_MONTHS].amount,
+      term: `${PAID_PRICE_BY_MONTHS[DEFAULT_PAID_MONTHS].tax} ${PAID_PRICE_BY_MONTHS[DEFAULT_PAID_MONTHS].term}`,
       line: 'Here’s what’s changing every month.',
       points: [
         'Everything in Free',
@@ -227,7 +226,7 @@ export const PLANS: { title: readonly [string, string]; lede: string; cards: rea
       note: CTA.paidNote,
     },
   ],
-  fine: `Paid starts the day you pay and does not renew on its own. We remind you ${reminders} before it ends. One plan, one price.`,
+  fine: `Paid starts the day you pay and does not renew on its own. ${PLAN_REMINDER_TEXT} One plan, two ways to pay.`,
 };
 
 export const CLIENTS = {
@@ -267,7 +266,7 @@ export const FAQ: ReadonlyArray<{ question: string; answer: string }> = [
   },
   {
     question: 'Does Paid renew on its own?',
-    answer: `No. Paid lasts ${PLAN_RULES.paid.lengthMonths} months from the day you pay. We remind you ${reminders} before it ends. Then you move to Free and keep your last Audit.`,
+    answer: `No. Paid lasts a month or 3 months from the day you pay, as you pick. ${PLAN_REMINDER_TEXT} Then you move to Free and keep your last Audit.`,
   },
   {
     question: 'How often does Drishti check?',

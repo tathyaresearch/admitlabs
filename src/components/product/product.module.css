@@ -1335,6 +1335,14 @@
   color: var(--text-muted);
 }
 
+/* Paid: the toggle, then the price for the period picked. */
+.paidPrice {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+  margin-top: var(--space-1);
+}
+
 .planLine {
   font-size: 1.25rem;
   font-weight: var(--weight-heading);

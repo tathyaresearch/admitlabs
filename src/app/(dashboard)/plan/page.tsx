@@ -8,11 +8,13 @@ import { CellText } from '@/components/ui/Results';
 import { ENTITLEMENTS, PLAN_PAGE_GROUPS, type EntitlementCell, type EntitlementRow } from '@/config/entitlements';
 import { SCHEDULES } from '@/config/schedules';
 import { formatDate } from '@/domain/format';
-import { PAID_PRICE, planReminder } from '@/domain/tiers';
+import { PAID_PRICE_BY_MONTHS, PAID_PRICE_LINE, PAID_PRICES, PLAN_REMINDER_TEXT, planReminder } from '@/domain/tiers';
 import { TIER_LABELS, TIERS, type Tier } from '@/domain/types';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
+import { loadPaidAsk } from '@/lib/plan/ask';
 import { createClient } from '@/lib/supabase/server';
 import audit from '@/components/audit/audit.module.css';
+import { PaidOffer } from './PaidOffer';
 import styles from './plan.module.css';
 
 export const metadata = { title: 'Plan' };
@@ -21,14 +23,14 @@ const ROWS = new Map(ENTITLEMENTS.map((row) => [row.key, row]));
 
 const GROUP_ICONS: Readonly<Record<string, IconName>> = { Audit: 'audit', Rivals: 'rivals', Demand: 'demand', Leads: 'enquiry', 'Reports and emails': 'reports', 'AdmitLabs service': 'team' };
 
-/** The line under each plan's name: what it costs, or how it comes. */
+/** The line under each plan's name: what it costs, or how it comes. Paid: both periods, one to a line. */
 function priceLine(tier: Tier) {
   if (tier === 'paid') {
-    return (
-      <>
-        <span className="num">{PAID_PRICE.amount}</span> {PAID_PRICE.tax} {PAID_PRICE.term}
-      </>
-    );
+    return PAID_PRICES.map((price) => (
+      <span key={price.months} className={styles.planPriceLine}>
+        <span className="num">{price.amount}</span> {price.tax} {price.term}
+      </span>
+    ));
   }
   if (tier === 'free') return `One program, every ${SCHEDULES.free.auditEveryMonths} months`;
   return 'With your AdmitLabs service';
@@ -73,6 +75,7 @@ export default async function PlanPage() {
   const { tier, plan } = viewer;
   const reminder = planReminder(plan, new Date());
   const paidEnded = plan?.tier === 'paid' && reminder.stage === 'ended';
+  const askState = tier === 'free' ? await loadPaidAsk(viewer) : null;
 
   let freeProgramName: string | null = null;
   if (tier === 'free' && plan?.freeProgramId) {
@@ -105,7 +108,15 @@ export default async function PlanPage() {
         <div className={styles.kpis}>
           <KpiCard label="Your plan">
             <KpiWord>{TIER_LABELS[tier]}</KpiWord>
-            {plan ? <KpiNote>{tier === 'free' && paidEnded ? `Since ${formatDate(plan.endsAt as Date)}` : `Since ${formatDate(plan.startsAt)}`}</KpiNote> : null}
+            {plan ? (
+              <KpiNote>
+                {tier === 'free' && paidEnded
+                  ? `Since ${formatDate(plan.endsAt as Date)}`
+                  : tier === 'paid' && plan.paidMonths
+                    ? `${PAID_PRICE_BY_MONTHS[plan.paidMonths].label}, since ${formatDate(plan.startsAt)}`
+                    : `Since ${formatDate(plan.startsAt)}`}
+              </KpiNote>
+            ) : null}
           </KpiCard>
           {tier === 'paid' && plan?.endsAt && reminder.daysLeft !== null ? (
             <KpiCard label="Days left">
@@ -137,21 +148,13 @@ export default async function PlanPage() {
           title={`Your Paid plan ends ${daysText(reminder.daysLeft ?? 0)}, on ${formatDate(plan?.endsAt as Date)}.`}
           action={<PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}
         >
-          It does not renew on its own. When it ends you move to Free, and you keep your last Audit. Renew now to keep it, at the same price and terms.
+          It does not renew on its own. When it ends you move to Free, and you keep your last Audit. Renew now to keep it, monthly or for 3 months.
         </Notice>
       ) : null}
 
-      {tier === 'free' ? (
+      {tier === 'free' && askState ? (
         <Card inverted padding="lg" className={styles.offer}>
-          <div className={styles.offerPrice}>
-            <p className={styles.offerName}>Paid adds everything else</p>
-            <p className={styles.offerAmount}>
-              <span className="num">{PAID_PRICE.amount}</span>
-            </p>
-            <p className={styles.offerLength}>
-              {PAID_PRICE.tax} {PAID_PRICE.term}
-            </p>
-          </div>
+          <PaidOffer state={askState}>
           <ul className={styles.offerPoints}>
             <li>
               <Icon name="check" size={16} />
@@ -163,21 +166,19 @@ export default async function PlanPage() {
             </li>
             <li>
               <Icon name="check" size={16} />
-              No auto-renew. We remind you 30 days and 7 days before it ends.
+              No auto-renew. {PLAN_REMINDER_TEXT}
             </li>
             <li>
               <Icon name="check" size={16} />
-              One plan, one price
+              One plan, billed monthly or for 3 months
             </li>
           </ul>
-          <div className={styles.offerAsk}>
-            <PaidAction viewer={viewer} note={false} />
-          </div>
+          </PaidOffer>
         </Card>
       ) : null}
 
       <section className={audit.section} aria-labelledby="compare-title">
-        <SectionHead id="compare-title" icon="plan" title="Compare plans" help="What each plan sees in Drishti. No discounts: one plan, one price." />
+        <SectionHead id="compare-title" icon="plan" title="Compare plans" help="What each plan sees in Drishti. Paid is one plan, billed monthly or for 3 months." />
         <div className={styles.tableCard}>
           <div className={styles.tableScroll}>
             <table className={styles.compare}>
@@ -233,7 +234,7 @@ export default async function PlanPage() {
           </div>
         </div>
         <p className={styles.fine}>
-          Paid is {PAID_PRICE.text} {PAID_PRICE.term}, with no auto-renew. Clients get it as part of their AdmitLabs service.
+          Paid is {PAID_PRICE_LINE}, with no auto-renew. Clients get it as part of their AdmitLabs service.
         </p>
       </section>
     </div>

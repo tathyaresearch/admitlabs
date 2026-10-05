@@ -12,8 +12,6 @@ export const TEAM_RULES = {
   bulkMaxRows: 100,
   /** Institutions on each page of the team's list. */
   institutionsPerPage: 50,
-  /** A Paid plan counts as ending soon this many days before it ends. */
-  paidEndingSoonDays: 30,
   /** A score that drops by this much or more at an Audit needs attention. */
   attentionScoreDrop: 3,
   /** A prospect who has not signed up this many days after their Audit was shared needs a follow-up. */

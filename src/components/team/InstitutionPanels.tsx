@@ -7,10 +7,12 @@ import { useActionState, useOptimistic, useState, useTransition } from 'react';
 import type { ActionState } from '@/app/team/institutions/[id]/actions';
 import { Button } from '@/components/ui/Button';
 import { RadioGroup, SelectField, TextAreaField, TextField } from '@/components/ui/Form';
+import { PeriodToggle } from '@/components/plan/PeriodToggle';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { LEAD_RULES } from '@/config/leads';
 import { LEAD_SOURCE_LABELS, LEAD_SOURCES } from '@/domain/types';
-import { paidEndText, paidStartFrom, paidStartRange } from '@/team/plans';
+import { DEFAULT_PAID_MONTHS, type PaidMonths } from '@/domain/tiers';
+import { paidEndText, paidStartFrom, paidStartHint, paidStartRange, paidTermsText } from '@/team/plans';
 import { WORK_RULES } from '@/team/work';
 import { ANY_COURSE_OPTION, ANY_COURSE_VALUE } from '@/leads/text';
 import styles from './team.module.css';
@@ -156,21 +158,25 @@ export function ActionButton({
   );
 }
 
+/** Start Paid: the period the institution paid for (Monthly or 3 months, 3 months first) and the day of payment. */
 export function PaidStartForm({ action, now }: { action: Action; now: string }) {
   const [state, submit, pending] = useActionState(action, IDLE);
   const today = new Date(now);
-  const range = paidStartRange(today);
+  const [months, setMonths] = useState<PaidMonths>(DEFAULT_PAID_MONTHS);
+  const range = paidStartRange(today, months);
   const [day, setDay] = useState(range.latest);
-  const start = paidStartFrom(day, today);
+  const start = paidStartFrom(day, today, months);
   return (
     <form action={submit} className={styles.facts}>
+      <input type="hidden" name="months" value={months} />
+      <PeriodToggle value={months} onChange={setMonths} size="sm" label="Period paid for" />
       <div className={styles.inlineForm}>
         <TextField id="paid-start" name="startsOn" type="date" label="Day of payment" min={range.earliest} max={range.latest} value={day} onChange={(event) => setDay(event.target.value)} />
         <Button type="submit" size="md" loading={pending} disabled={!start}>
           Start Paid
         </Button>
       </div>
-      <p className={styles.formNote}>{start ? `${paidEndText(start)}. 6 months, no auto-renew.` : 'Pick today, or a day in the last 6 months.'}</p>
+      <p className={styles.formNote}>{start ? `${paidEndText(start, months)}. ${paidTermsText(months)}` : paidStartHint(months)}</p>
       <Reply state={state} />
     </form>
   );

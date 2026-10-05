@@ -5,8 +5,8 @@
 import { cache } from 'react';
 import { latestStoredAudit, ownHistory } from '@/audit/read';
 import type { StoredAudit } from '@/audit/view';
-import { TEAM_RULES } from '@/config/team';
 import { checkName } from '@/domain/checks';
+import { parsePaidMonths, type PaidMonths } from '@/domain/tiers';
 import { INSTITUTION_TYPES, type CheckKey, type InstitutionType, type MembershipRole, type TeamRole, type Tier } from '@/domain/types';
 import { createClient } from '@/lib/supabase/server';
 import { pageRange, scoreRange, searchPattern, type TeamFilters, type TeamStatus } from '@/team/filters';
@@ -22,6 +22,7 @@ export interface TeamListRow {
   status: TeamStatus;
   tier: Tier | null;
   planEndsAt: string | null;
+  planMonths: PaidMonths | null;
   programs: number;
   score: number | null;
   auditKind: string | null;
@@ -33,12 +34,9 @@ export interface TeamListRow {
   teamRefreshedAt: string | null;
 }
 
-/** The end of the window for Paid plans ending soon. */
-const endingSoonBy = (now: Date) => new Date(now.getTime() + TEAM_RULES.paidEndingSoonDays * 86_400_000).toISOString();
+const LIST_COLUMNS = 'id, name, type, city, state, website, status, tier, plan_ends_at, plan_months, programs, score, audit_kind, checked_at, claimed, score_change, rivals, shared_at, team_refreshed_at';
 
-const LIST_COLUMNS = 'id, name, type, city, state, website, status, tier, plan_ends_at, programs, score, audit_kind, checked_at, claimed, score_change, rivals, shared_at, team_refreshed_at';
-
-export async function loadInstitutionList(filters: TeamFilters, now: Date): Promise<{ rows: TeamListRow[]; total: number }> {
+export async function loadInstitutionList(filters: TeamFilters): Promise<{ rows: TeamListRow[]; total: number }> {
   const supabase = await createClient();
   let query = supabase.from('team_institutions').select(LIST_COLUMNS, { count: 'exact' });
   const pattern = searchPattern(filters.q);
@@ -47,7 +45,8 @@ export async function loadInstitutionList(filters: TeamFilters, now: Date): Prom
   if (filters.city) query = query.eq('city', filters.city);
   if (filters.state) query = query.eq('state', filters.state);
   if (filters.status) query = query.eq('status', filters.status);
-  if (filters.tier === 'paid_ending') query = query.eq('tier', 'paid').gt('plan_ends_at', now.toISOString()).lte('plan_ends_at', endingSoonBy(now));
+  // Ending soon: reason 1 in the view, from each plan's first renewal reminder.
+  if (filters.tier === 'paid_ending') query = query.eq('attention', 1);
   else if (filters.tier) query = query.eq('tier', filters.tier);
   if (filters.score === 'none') query = query.is('score', null);
   else if (filters.score) {
@@ -74,6 +73,7 @@ export async function loadInstitutionList(filters: TeamFilters, now: Date): Prom
       status: row.status as TeamStatus,
       tier: row.tier as Tier | null,
       planEndsAt: row.plan_ends_at,
+      planMonths: parsePaidMonths(row.plan_months),
       programs: row.programs ?? 0,
       score: row.score,
       auditKind: row.audit_kind,
@@ -94,14 +94,14 @@ export interface ListCounts {
   endingSoon: number;
 }
 
-export async function loadListCounts(now: Date): Promise<ListCounts> {
+export async function loadListCounts(): Promise<ListCounts> {
   const supabase = await createClient();
   const head = () => supabase.from('team_institutions').select('id', { count: 'exact', head: true });
   const [signedUp, clients, prospects, endingSoon] = await Promise.all([
     head().eq('status', 'signed_up'),
     head().eq('tier', 'client'),
     head().eq('status', 'prospect'),
-    head().eq('tier', 'paid').gt('plan_ends_at', now.toISOString()).lte('plan_ends_at', endingSoonBy(now)),
+    head().eq('attention', 1),
   ]);
   for (const result of [signedUp, clients, prospects, endingSoon]) if (result.error) throw new Error(`Could not count institutions: ${result.error.message}`);
   return { signedUp: signedUp.count ?? 0, clients: clients.count ?? 0, prospects: prospects.count ?? 0, endingSoon: endingSoon.count ?? 0 };

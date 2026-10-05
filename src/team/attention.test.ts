@@ -6,7 +6,7 @@ import { istDate } from '../domain/dates.ts';
 import { attentionReasons, type AttentionInput } from './attention.ts';
 
 const NOW = istDate('2026-10-03', 12);
-const ROW: AttentionInput = { claimed: true, tier: 'free', planEndsAt: null, scoreChange: 0, rivals: 3, sharedAt: null, teamRefreshedAt: null };
+const ROW: AttentionInput = { claimed: true, tier: 'free', planEndsAt: null, planMonths: null, scoreChange: 0, rivals: 3, sharedAt: null, teamRefreshedAt: null };
 const keys = (row: Partial<AttentionInput>) => attentionReasons({ ...ROW, ...row }, NOW).map((reason) => reason.key);
 const texts = (row: Partial<AttentionInput>) => attentionReasons({ ...ROW, ...row }, NOW).map((reason) => reason.text);
 
@@ -20,6 +20,9 @@ describe('why an institution needs attention', () => {
     assert.deepEqual(texts({ tier: 'paid', planEndsAt: istDate('2026-10-04', 9).toISOString() }), ['Paid ends tomorrow']);
     assert.deepEqual(texts({ tier: 'paid', planEndsAt: istDate('2026-10-03', 20).toISOString() }), ['Paid ends today']);
     assert.deepEqual(keys({ tier: 'paid', planEndsAt: istDate('2026-12-20', 0).toISOString() }), [], 'not yet ending soon');
+    assert.deepEqual(texts({ tier: 'paid', planMonths: 3, planEndsAt: istDate('2026-10-15', 0).toISOString() }), ['Paid ends in 12 days'], '3 months: from 30 days before the end');
+    assert.deepEqual(keys({ tier: 'paid', planMonths: 1, planEndsAt: istDate('2026-10-15', 0).toISOString() }), [], 'Monthly: not yet, 12 days out');
+    assert.deepEqual(texts({ tier: 'paid', planMonths: 1, planEndsAt: istDate('2026-10-09', 0).toISOString() }), ['Paid ends in 6 days'], 'Monthly: from 7 days before the end');
   });
 
   test('a Client with no Audit run by the team this month', () => {

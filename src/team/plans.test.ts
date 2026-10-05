@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { istDate } from '../domain/dates.ts';
 import type { PlanRecord } from '../domain/tiers.ts';
-import { paidEndText, paidStartFrom, paidStartRange, planActions, planDetail, planText } from './plans.ts';
+import { paidEndText, paidStartFrom, paidStartHint, paidStartRange, paidTermsText, planActions, planDetail, planText } from './plans.ts';
 
 const NOW = istDate('2026-09-30', 12);
 const plan = (tier: PlanRecord['tier'], starts: string, ends: string | null): PlanRecord => ({ tier, startsAt: istDate(starts, 10), endsAt: ends ? istDate(ends, 10) : null });
@@ -41,17 +41,32 @@ describe('what an Admin can do with a plan', () => {
 });
 
 describe('starting Paid', () => {
-  test('today, or an earlier day whose 6 months have not run out, never the future', () => {
-    assert.deepEqual(paidStartRange(NOW), { earliest: '2026-03-31', latest: '2026-09-30' });
-    assert.equal(paidStartFrom('2026-09-30', NOW), NOW);
-    assert.equal(paidStartFrom('2026-09-20', NOW)?.toISOString(), istDate('2026-09-20', 10).toISOString());
-    assert.equal(paidStartFrom('2026-10-01', NOW), null);
-    assert.equal(paidStartFrom('2026-03-30', NOW), null);
-    assert.equal(paidStartFrom('someday', NOW), null);
+  test('3 months: today, or an earlier day whose 3 months have not run out, never the future', () => {
+    assert.deepEqual(paidStartRange(NOW, 3), { earliest: '2026-07-01', latest: '2026-09-30' });
+    assert.equal(paidStartFrom('2026-09-30', NOW, 3), NOW);
+    assert.equal(paidStartFrom('2026-09-20', NOW, 3)?.toISOString(), istDate('2026-09-20', 10).toISOString());
+    assert.equal(paidStartFrom('2026-10-01', NOW, 3), null);
+    assert.equal(paidStartFrom('2026-06-30', NOW, 3), null);
+    assert.equal(paidStartFrom('someday', NOW, 3), null);
   });
 
-  test('always 6 months', () => {
-    assert.equal(paidEndText(istDate('2026-08-31', 10)), 'Ends 28 Feb 2027');
-    assert.equal(paidEndText(istDate('2026-09-30', 12)), 'Ends 30 Mar 2027');
+  test('Monthly: back to the first day whose month has not run out', () => {
+    assert.deepEqual(paidStartRange(NOW, 1), { earliest: '2026-08-31', latest: '2026-09-30' });
+    assert.equal(paidStartFrom('2026-08-31', NOW, 1)?.toISOString(), istDate('2026-08-31', 10).toISOString());
+    assert.equal(paidStartFrom('2026-08-30', NOW, 1), null);
+  });
+
+  test('the end date follows the period', () => {
+    assert.equal(paidEndText(istDate('2026-11-30', 10), 3), 'Ends 28 Feb 2027');
+    assert.equal(paidEndText(istDate('2026-09-30', 12), 3), 'Ends 30 Dec 2026');
+    assert.equal(paidEndText(istDate('2027-01-31', 10), 1), 'Ends 28 Feb 2027');
+    assert.equal(paidEndText(istDate('2026-09-30', 12), 1), 'Ends 30 Oct 2026');
+  });
+
+  test('what the form says, for each period', () => {
+    assert.equal(paidStartHint(3), 'Pick today, or a day in the last 3 months.');
+    assert.equal(paidStartHint(1), 'Pick today, or a day in the last month.');
+    assert.equal(paidTermsText(3), '₹24,999 + GST for 3 months, no auto-renew.');
+    assert.equal(paidTermsText(1), '₹9,999 + GST per month, no auto-renew.');
   });
 });

@@ -4,7 +4,7 @@ import { ActionButton } from '@/components/team/InstitutionPanels';
 import { EmptyState } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
 import { formatDateTime, plural } from '@/domain/format';
-import { PAID_PRICE } from '@/domain/tiers';
+import { PAID_PRICE_BY_MONTHS, PAID_PRICE_LINE } from '@/domain/tiers';
 import { PLACE_LABELS } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
@@ -36,13 +36,15 @@ function Handled({ enquiry }: { enquiry: EnquiryRow }) {
   );
 }
 
-/** An owner's request from the dashboard: what they asked for, who, and where to switch it on. */
+/** An owner's request from the dashboard: what they asked for, for which period, who, and where to switch it on. */
 function Ask({ enquiry }: { enquiry: PaidAsk }) {
+  const price = enquiry.paidMonths ? PAID_PRICE_BY_MONTHS[enquiry.paidMonths] : null;
   return (
     <article className={team.item} aria-labelledby={`enquiry-${enquiry.id}`}>
       <div className={team.itemHead}>
         <h2 id={`enquiry-${enquiry.id}`} className={team.itemTitle}>
           {enquiry.kind === 'ask_paid' ? 'Wants to subscribe to Paid' : 'Wants to renew Paid'}
+          {price ? `, ${price.label}` : ''}
         </h2>
         <Link href={`/team/institutions/${enquiry.institutionId}`} className={team.link}>
           {enquiry.institution}
@@ -58,7 +60,7 @@ function Ask({ enquiry }: { enquiry: PaidAsk }) {
         </a>
       </p>
       <p className={team.itemBody}>
-        Paid is {PAID_PRICE.text} {PAID_PRICE.term}, with no auto-renew. They clicked {enquiry.kind === 'ask_paid' ? 'Subscribe now' : 'Renew now'}: write back to complete payment, then an Admin switches it on from their page.
+        {price ? `They picked ${price.label}: ${price.text} ${price.term}` : `Paid is ${PAID_PRICE_LINE}`}, with no auto-renew. They clicked {enquiry.kind === 'ask_paid' ? 'Subscribe now' : 'Renew now'}: write back to complete payment, then an Admin switches it on from their page{price ? `, for ${price.months === 1 ? 'one month' : `${price.months} months`}` : ''}.
       </p>
       <Handled enquiry={enquiry} />
     </article>
