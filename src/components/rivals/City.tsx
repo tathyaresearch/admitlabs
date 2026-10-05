@@ -5,7 +5,7 @@
 // the check panel opens from ?check=<key>, a place from ?place=<key>.
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { StoredFinding } from '@/audit/places';
 import { PLACE_ICONS, ProofLine, Tag } from '@/components/audit/PlaceBits';
 import { Icon } from '@/components/ui/Icon';
@@ -13,8 +13,8 @@ import { CheckIcon } from '@/components/ui/Marks';
 import { ResultBar } from '@/components/ui/Results';
 import { checksForPlace, getCheck } from '@/domain/checks';
 import { formatDate, hostAndPath } from '@/domain/format';
-import type { ScoreLabel } from '@/domain/scores';
-import { EFFORT_LABELS, FINDING_KIND_LABELS, type CheckResult, type InstitutionType, type Place } from '@/domain/types';
+import { WORD_RESULTS } from '@/domain/scores';
+import { EFFORT_LABELS, FINDING_KIND_LABELS, type InstitutionType, type Place } from '@/domain/types';
 import type { ActionRow, MoveRow } from '@/lib/rivals/load';
 import type { AcrossCell, AcrossRow } from '@/rivals/across';
 import type { Standing } from '@/rivals/compare';
@@ -22,8 +22,6 @@ import { placeLeadText, type PlaceLesson, type PlaceRow, type PlaceSide, type Ra
 import { comparedOn, comparedOnShort, MOVE_KIND_LABELS, rivalCheckName, STANDING_LABELS } from '@/rivals/text';
 import audit from '@/components/audit/places.module.css';
 import styles from './city.module.css';
-
-const WORD_RESULT: Readonly<Record<ScoreLabel, CheckResult>> = { Strong: 'strong', Okay: 'okay', Weak: 'weak' };
 
 type Side = Pick<PlaceSide, 'id' | 'name' | 'you' | 'nearby'>;
 
@@ -52,13 +50,21 @@ function SideName({ side, rivalHref }: { side: Side; rivalHref?: (id: string) =>
   );
 }
 
-/** You and each rival, highest score first, with the three words and the small score. */
-export function Ranking({ rows, rivalHref }: { rows: readonly RankingRow[]; rivalHref?: (id: string) => string | null }) {
+/**
+ * You and each rival, highest score first, with the three words and the small score. `from`: how
+ * many rows away each starts (the product page's picture, whose rows slide into rank order).
+ */
+export function Ranking({ rows, rivalHref, from }: { rows: readonly RankingRow[]; rivalHref?: (id: string) => string | null; from?: ReadonlyMap<string, number> }) {
   return (
     <div className={audit.card}>
       <ol className={styles.ranking}>
         {rows.map((row) => (
-          <li key={row.id} className={[styles.rankRow, row.you ? styles.rankYou : ''].join(' ')}>
+          <li
+            key={row.id}
+            className={[styles.rankRow, row.you ? styles.rankYou : ''].join(' ')}
+            data-slide={from ? '' : undefined}
+            style={from ? ({ '--from': from.get(row.id) ?? 0 } as CSSProperties) : undefined}
+          >
             <span className={`${styles.rankPlace} num`}>{row.place ?? ''}</span>
             <SideName side={row} rivalHref={rivalHref} />
             {row.words.length ? (
@@ -105,8 +111,25 @@ function PlaceWord({ place, side }: { place: PlaceRow; side: Side }) {
   );
 }
 
+/** A place's name: a link that opens it, or its name alone (the product page's picture). */
+function PlaceName({ place, links, className, current }: { place: PlaceRow; links: boolean; className?: string; current?: boolean }) {
+  const name = (
+    <>
+      <Icon name={PLACE_ICONS[place.key]} size={current === undefined ? 18 : 16} />
+      {place.name}
+    </>
+  );
+  return links ? (
+    <Link href={placeHref(place.key)} scroll={false} className={className} aria-current={current ? 'true' : undefined}>
+      {name}
+    </Link>
+  ) : (
+    <span className={className}>{name}</span>
+  );
+}
+
 /** On a wide page: the five places down, you and each rival across. */
-function PlaceGrid({ view, opened }: { view: RivalPlacesView; opened: Place }) {
+function PlaceGrid({ view, opened, links }: { view: RivalPlacesView; opened: Place; links: boolean }) {
   const sides = sideOrder(view);
   return (
     <div className={[audit.card, styles.gridCard, styles.gridOnly].join(' ')}>
@@ -126,10 +149,7 @@ function PlaceGrid({ view, opened }: { view: RivalPlacesView; opened: Place }) {
             {view.places.map((place) => (
               <tr key={place.key} className={place.key === opened ? styles.gridOpen : undefined}>
                 <th scope="row">
-                  <Link href={placeHref(place.key)} scroll={false} className={styles.gridPlace} aria-current={place.key === opened ? 'true' : undefined}>
-                    <Icon name={PLACE_ICONS[place.key]} size={16} />
-                    {place.name}
-                  </Link>
+                  <PlaceName place={place} links={links} className={styles.gridPlace} current={place.key === opened} />
                 </th>
                 {sides.map((side) => (
                   <td key={side.id} className={place.cells[side.id]?.leads && place.key !== opened ? styles.gridLead : undefined}>
@@ -141,13 +161,15 @@ function PlaceGrid({ view, opened }: { view: RivalPlacesView; opened: Place }) {
           </tbody>
         </table>
       </div>
-      <p className={audit.quiet}>Website, Google and Social media say who leads. What people say and Other places show what was found for each side. Open a place to see it check by check.</p>
+      <p className={audit.quiet}>
+        Website, Google and Social media say who leads. What people say and Other places show what was found for each side.{links ? ' Open a place to see it check by check.' : ''}
+      </p>
     </div>
   );
 }
 
 /** On a phone: a card per place, each side in a row. */
-function PlaceCards({ view }: { view: RivalPlacesView }) {
+function PlaceCards({ view, links }: { view: RivalPlacesView; links: boolean }) {
   const sides = sideOrder(view);
   return (
     <div className={[styles.placeCards, styles.cardsOnly].join(' ')}>
@@ -155,10 +177,7 @@ function PlaceCards({ view }: { view: RivalPlacesView }) {
         <section key={place.key} className={audit.card} aria-labelledby={`place-card-${place.key}`}>
           <div className={styles.placeCardHead}>
             <h3 id={`place-card-${place.key}`} className={audit.cardTitle}>
-              <Link href={placeHref(place.key)} scroll={false} className={styles.placeCardTitle}>
-                <Icon name={PLACE_ICONS[place.key]} size={18} />
-                {place.name}
-              </Link>
+              <PlaceName place={place} links={links} className={styles.placeCardTitle} />
             </h3>
             <span className={audit.quiet}>{placeLeadText(place, sides)}</span>
           </div>
@@ -172,7 +191,7 @@ function PlaceCards({ view }: { view: RivalPlacesView }) {
                     {cell?.leads ? <span className={styles.leadsMark}>Leads</span> : null}
                   </span>
                   {place.scored && cell?.word ? (
-                    <ResultBar result={WORD_RESULT[cell.word]} share={cell.share ?? 0} showPoints={false} size="sm" />
+                    <ResultBar result={WORD_RESULTS[cell.word]} share={cell.share ?? 0} showPoints={false} size="sm" />
                   ) : (
                     <span className={styles.gridNote}>{place.scored ? 'Not checked yet' : (cell?.note ?? 'Not checked yet')}</span>
                   )}
@@ -186,12 +205,12 @@ function PlaceCards({ view }: { view: RivalPlacesView }) {
   );
 }
 
-/** Place by place: the table on a wide page, the cards on a phone. */
-export function PlacesBoard({ view, opened }: { view: RivalPlacesView; opened: Place }) {
+/** Place by place: the table on a wide page, the cards on a phone. `links` off: the places' names only (the product page). */
+export function PlacesBoard({ view, opened, links = true }: { view: RivalPlacesView; opened: Place; links?: boolean }) {
   return (
     <div className={styles.board}>
-      <PlaceGrid view={view} opened={opened} />
-      <PlaceCards view={view} />
+      <PlaceGrid view={view} opened={opened} links={links} />
+      <PlaceCards view={view} links={links} />
     </div>
   );
 }

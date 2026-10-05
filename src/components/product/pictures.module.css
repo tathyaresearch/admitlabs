@@ -66,272 +66,43 @@
   }
 }
 
-/* A piece of the dashboard on its stage: the dark page panel, with the app's own cards on it. Bars
-   by month stand a little taller here than on the dashboard's cards. */
+/* A part of Home the signup stage's light can find: it keeps the height of the part beside it. */
+.zone {
+  display: grid;
+  min-width: 0;
+}
+
+/* A piece of the dashboard on its stage: the dark page panel, with the app's own cards on it. */
 .picture {
-  --bars-min: 6rem;
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-6);
   min-width: 0;
   padding: var(--space-4);
   border-radius: 1rem;
   background: var(--surface-panel);
+  text-align: left;
   pointer-events: none;
   user-select: none;
 }
 
-.pictureCard {
-  container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--surface-raised);
-}
-
-/* The card that takes the height to spare, so the picture has no empty space. */
-.pictureGrow {
-  flex: 1;
-}
-
-/* Cards one under another, sharing the height with the card beside them. */
-.pictureColumn {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-/* Rivals and Demand on a wide stage: two columns once there is room. */
-@container (min-width: 52rem) {
-  .pictureWide {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
-  }
-}
-
-/* The latest move: what the rival changed. */
-.moveText {
-  font: var(--type-small);
-  font-weight: var(--weight-heading);
-  line-height: 1.45;
-}
-
-.pictureHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-1) var(--space-3);
-  font: var(--type-caption-strong);
-  color: var(--text-muted);
-}
-
-.pictureHead :global(.num) {
-  color: var(--text);
-}
-
-.pictureHeadNext {
-  margin-top: var(--space-2);
-}
-
-.pictureRank {
-  font-size: var(--size-body);
-  font-weight: var(--weight-heading);
-}
-
-.pictureTitle {
-  font: var(--type-card);
-  font-size: 1rem;
-  letter-spacing: var(--tracking-section);
-}
-
-.pictureMeta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font: var(--type-caption);
-  color: var(--text-muted);
-}
-
-/* The Audit picture: the score and its parts beside the fixes and every check, once there is room. */
 @container (min-width: 40rem) {
-  .auditPicture {
-    display: grid;
-    grid-template-columns: minmax(12rem, 0.62fr) minmax(0, 1fr);
+  .picture {
+    padding: var(--space-6);
   }
 }
 
-/* The score card spreads its parts over the height it shares with the fixes beside it. */
-.scoreCard {
-  justify-content: space-between;
-}
-
-.scoreGauge {
-  container-type: inline-size;
-  display: flex;
-  justify-content: center;
-  --gauge-max: 10.5rem;
-}
-
-.scoreCardMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
-  font-size: var(--size-caption);
-}
-
-.pillarBars {
+/* Two parts side by side once there is room: the Audit's fixes beside its places. */
+.pictureWide {
   display: grid;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--line-raised);
-}
-
-.pillarBar {
-  display: grid;
-  grid-template-columns: 1rem minmax(0, 1fr) minmax(2.5rem, 34%) 1.5rem;
-  align-items: center;
-  gap: var(--space-2);
-  font: var(--type-label);
-}
-
-.pillarTrack {
-  display: block;
-  height: 4px;
-  border-radius: var(--radius-full);
-  background: var(--chart-track);
-  overflow: hidden;
-}
-
-.pillarFill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--text);
-}
-
-.pillarValue {
-  font-weight: var(--weight-heading);
-  text-align: right;
-}
-
-/* A narrow card drops the bars: the scores say the same. */
-@container (max-width: 12rem) {
-  .pillarBar {
-    grid-template-columns: 1rem minmax(0, 1fr) 1.5rem;
-  }
-
-  .pillarTrack {
-    display: none;
-  }
-}
-
-.fixList {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.fixRow {
-  display: grid;
-  grid-template-columns: 1rem minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 2.75rem;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--surface-nested);
-}
-
-/* A narrow card (a phone) keeps the result and leaves out the points. */
-@container (max-width: 20rem) {
-  .fixRow {
-    grid-template-columns: 1rem minmax(0, 1fr) auto;
-  }
-
-  .fixRow > :nth-child(4) {
-    display: none;
-  }
-}
-
-.fixNumber {
-  font: var(--type-num-caption);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.fixName {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-6);
   min-width: 0;
-  font: var(--type-label);
-  font-weight: var(--weight-heading);
-  overflow-wrap: anywhere;
 }
 
-.fixGain {
-  font: var(--type-caption);
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.fixGain :global(.num) {
-  color: var(--text);
-  font-weight: var(--weight-heading);
-}
-
-/* Every check: each part's checks as one bar split by result, each count written under its piece. */
-.everyCheck {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.everyCheckPart {
-  display: grid;
-  grid-template-columns: 6.5rem minmax(0, 1fr);
-  align-items: start;
-  gap: var(--space-3);
-}
-
-.everyCheckName {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font: var(--type-label);
-}
-
-.everyCheckName svg {
-  color: var(--text-muted);
-}
-
-/* A narrow card puts the part's name over its bar. */
-@container (max-width: 22rem) {
-  .everyCheckPart {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-1);
+@container (min-width: 60rem) {
+  .pictureWide {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: start;
   }
-}
-
-.risingList {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.risingRow {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-
-.risingRow :global(.num) {
-  color: var(--text);
 }

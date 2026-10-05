@@ -2,34 +2,18 @@
 
 // Make these 3 this month (spec 9.4), as the version 2 mock was approved: one card each with
 // what to make, why, the program, the format, a hook line, the key points, where the question
-// was asked, and Mark as made (the owner; everyone else sees what was made). The month's other
-// ideas as rows that open, with the same parts.
+// was asked (./IdeaCard.tsx), and Mark as made (the owner; everyone else sees what was made). The
+// month's other ideas as rows that open, with the same parts.
 
 import { useOptimistic, useState, useTransition, type ReactNode } from 'react';
 import { Tag } from '@/components/audit/PlaceBits';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import audit from '@/components/audit/places.module.css';
+import { IdeaBody, IdeaCard, type IdeaItem } from './IdeaCard';
 import styles from './demand.module.css';
 
-export interface IdeaItem {
-  /** What a mark of it is about: '2026-09:<brief>'. */
-  key: string;
-  /** Its place in the list, from 1. */
-  index: number;
-  title: string;
-  why: string;
-  hook: string;
-  points: readonly string[];
-  /** "Reel", "Post". */
-  format: string | null;
-  program: string;
-  /** Where the question was asked, with its date: a link the server built. */
-  source: ReactNode;
-  /** What Mark as made saves. */
-  mark: { thing: string; month: string };
-  made: boolean;
-}
+export type { IdeaItem } from './IdeaCard';
 
 export interface MarkMadeRequest {
   check: null;
@@ -82,30 +66,6 @@ function MadeControl({ item, made, canMark, pending, onToggle }: { item: IdeaIte
   );
 }
 
-function IdeaBody({ item }: { item: IdeaItem }) {
-  return (
-    <>
-      {item.hook ? (
-        <p className={styles.ideaHook}>
-          <span className={styles.ideaLabel}>Hook</span>
-          {item.hook}
-        </p>
-      ) : null}
-      {item.points.length ? (
-        <div>
-          <p className={styles.ideaLabel}>Key points</p>
-          <ul className={styles.ideaPoints}>
-            {item.points.map((point) => (
-              <li key={point}>{point}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-      <div className={styles.ideaSource}>{item.source}</div>
-    </>
-  );
-}
-
 export function IdeaCards({ items, canMark, onMark, after }: { items: readonly IdeaItem[]; canMark: boolean; onMark: OnMark; after?: ReactNode }) {
   const { made, error, pending, toggle } = useMade(items, onMark);
   return (
@@ -119,24 +79,12 @@ export function IdeaCards({ items, canMark, onMark, after }: { items: readonly I
         {items.map((item) => {
           const isMade = made.has(item.key);
           return (
-            <li key={item.key} className={[audit.card, styles.ideaCard].join(' ')} data-made={isMade ? 'true' : undefined}>
-              <p className={styles.ideaTop}>
-                <span className={`${audit.fixIndex} num`} aria-hidden="true">
-                  {isMade ? <Icon name="check" size={14} /> : item.index}
-                </span>
-                {item.format ? <Tag strong>{item.format}</Tag> : null}
-                <Tag>{item.program}</Tag>
-              </p>
-              <h3 className={styles.ideaTitle}>
-                {isMade ? <span className="visually-hidden">Made: </span> : null}
-                {item.title}
-              </h3>
-              {item.why ? <p className={styles.ideaWhy}>{item.why}</p> : null}
-              <IdeaBody item={item} />
-              <div className={styles.ideaFoot}>
-                <MadeControl item={item} made={isMade} canMark={canMark} pending={pending} onToggle={toggle} />
-              </div>
-            </li>
+            <IdeaCard
+              key={item.key}
+              item={item}
+              made={isMade}
+              foot={<MadeControl item={item} made={isMade} canMark={canMark} pending={pending} onToggle={toggle} />}
+            />
           );
         })}
         {after}

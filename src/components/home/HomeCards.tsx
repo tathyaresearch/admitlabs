@@ -1,6 +1,7 @@
 // Home's smaller cards (spec section 13), as the version 2 mock was approved: the rivals' one line
 // with the latest alert, one demand highlight in honest words (a count only when the keyword tool
-// gives one), and for a Client the month's enquiries. Server components.
+// gives one), and for a Client the month's enquiries. Server components. The product page shows
+// them as pictures, with `links` off.
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -13,6 +14,7 @@ import { formatCount, formatDate, formatMonthName, plural } from '@/domain/forma
 import { soFarWords, type LeadsSummary } from '@/leads/summary';
 import type { Highlight } from '@/lib/demand/load';
 import type { RivalMove } from '@/lib/home/load';
+import { curlyQuotes } from '@/report/data';
 import audit from '@/components/audit/places.module.css';
 import styles from './today.module.css';
 
@@ -37,7 +39,21 @@ function Card({ id, icon, title, link, children }: { id: string; icon: IconName;
 }
 
 /** The rivals' one line, with the latest alert on Paid and Client. */
-export function RivalsLineCard({ city, line, latest, hasRivals, owner }: { city: string; line: string | null; latest: RivalMove | null; hasRivals: boolean; owner: boolean }) {
+export function RivalsLineCard({
+  city,
+  line,
+  latest,
+  hasRivals,
+  owner,
+  links = true,
+}: {
+  city: string;
+  line: string | null;
+  latest: RivalMove | null;
+  hasRivals: boolean;
+  owner: boolean;
+  links?: boolean;
+}) {
   if (!hasRivals) {
     return (
       <Card id="rivals-card-title" icon="rivals" title={`Your rivals in ${city}`} link={owner ? { href: '/rivals/choose', text: 'Pick rivals' } : { href: '/rivals', text: 'Open Rivals' }}>
@@ -46,11 +62,11 @@ export function RivalsLineCard({ city, line, latest, hasRivals, owner }: { city:
     );
   }
   return (
-    <Card id="rivals-card-title" icon="rivals" title={`Your rivals in ${city}`} link={{ href: '/rivals', text: 'Open Rivals' }}>
+    <Card id="rivals-card-title" icon="rivals" title={`Your rivals in ${city}`} link={links ? { href: '/rivals', text: 'Open Rivals' } : null}>
       <p className={styles.oneLine}>{line ?? 'Your rivals are being checked. Where you stand shows here soon.'}</p>
       {latest ? (
         <p className={`${audit.quiet} ${styles.foot}`}>
-          Latest: <span className={audit.strongText}>{latest.rivalName}</span> {latest.description}, {formatDate(latest.detectedAt)}.
+          Latest from <span className={audit.strongText}>{latest.rivalName}</span>, {formatDate(latest.detectedAt)}: {curlyQuotes(latest.description)}
         </p>
       ) : null}
     </Card>
@@ -58,17 +74,30 @@ export function RivalsLineCard({ city, line, latest, hasRivals, owner }: { city:
 }
 
 /** One demand highlight: the fastest rise for your programs, in words, with its source. */
-export function DemandHighlightCard({ highlight, history, city, nextUpdate }: { highlight: Highlight | null; history: readonly MonthCount[]; city: string; nextUpdate: string }) {
+export function DemandHighlightCard({
+  highlight,
+  history,
+  city,
+  nextUpdate,
+  links = true,
+}: {
+  highlight: Highlight | null;
+  history: readonly MonthCount[];
+  city: string;
+  nextUpdate: string;
+  links?: boolean;
+}) {
+  const link = links ? { href: '/demand', text: 'Open Demand' } : null;
   if (!highlight) {
     return (
-      <Card id="demand-card-title" icon="demand" title="What students want" link={{ href: '/demand', text: 'Open Demand' }}>
+      <Card id="demand-card-title" icon="demand" title="What students want" link={link}>
         <p className={audit.quiet}>What students in {city} search for and ask shows here after the next update, on {nextUpdate}. It is grouped, never personal.</p>
       </Card>
     );
   }
   const word = trendWord(highlight.changePct);
   return (
-    <Card id="demand-card-title" icon="demand" title="What students want" link={{ href: '/demand', text: 'Open Demand' }}>
+    <Card id="demand-card-title" icon="demand" title="What students want" link={link}>
       <p className={audit.quiet}>Rising fastest in {highlight.region} this month</p>
       <p className={styles.oneLine}>{highlight.text}</p>
       <p className={styles.metaLine}>

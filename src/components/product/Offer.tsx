@@ -109,7 +109,7 @@ export function Plans() {
   );
 }
 
-/** For AdmitLabs clients: one ivory block, the promise and who to write to. */
+/** For AdmitLabs clients: one ivory block, the promise, Leads and who to write to. */
 export function ForClients() {
   return (
     <section className={styles.clientsSection} data-theme="dark" aria-labelledby="clients-title">
@@ -119,6 +119,7 @@ export function ForClients() {
             <Title id="clients-title" lines={CLIENTS.title} light={false} />
             <p className={styles.clientsFor}>{CLIENTS.forWhom}</p>
             <p className={styles.clientsText}>{CLIENTS.text}</p>
+            <p className={styles.clientsText}>{CLIENTS.leads}</p>
           </div>
           <div className={styles.clientsSide}>
             <p className={styles.clientsLine}>{CLIENTS.line}</p>

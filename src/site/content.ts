@@ -6,9 +6,8 @@
 import { SITE_SETTINGS } from '../config/site.ts';
 import { APP_OPEN } from '../lib/urls.ts';
 import { RIVAL_RULES } from '../config/rivals.ts';
-import { CHECKS } from '../domain/checks.ts';
-import { PILLAR_LABELS, PILLARS, type Pillar } from '../domain/types.ts';
-import { SCORE } from '../product/content.ts';
+import { PILLAR_LABELS, PILLARS, PLACES, type Pillar } from '../domain/types.ts';
+import { READS } from '../product/content.ts';
 
 export const CTA = {
   primary: 'Get your free Audit',
@@ -70,15 +69,15 @@ export const SYSTEM = {
     pillar,
     name: PILLAR_LABELS[pillar],
     line: PILLAR_LINES[pillar],
-    checks: SCORE.pillars.find((entry) => entry.pillar === pillar)?.checks ?? [],
+    checks: READS.words.find((entry) => entry.pillar === pillar)?.checks ?? [],
   })),
   loop: {
     title: 'Measure. Fix. Repeat.',
     note: 'The same loop every month, so you always know what changed and what comes next.',
     steps: [
-      { name: 'Measure', who: 'Drishti', line: 'Your Audit: where you stand on all three, and what holds you back.' },
+      { name: 'Measure', who: 'Drishti', line: 'Your Audit: what the internet says about you, and what holds you back.' },
       { name: 'Fix', who: 'Our team', line: 'We build the content and pages that close the biggest gaps first.' },
-      { name: 'Repeat', who: 'A report every month', line: 'What changed, where you rank, and the next things to fix.' },
+      { name: 'Repeat', who: 'Every month', line: 'A summary and a report: what changed, where you stand in your city, and what to fix next.' },
     ],
     /** On the way back round the loop. */
     back: 'Next month',
@@ -109,10 +108,10 @@ export const DRISHTI = {
   /** The page's only small label above a heading, as the user asked. */
   eyebrow: 'Product',
   title: 'Drishti by AdmitLabs.',
-  lede: 'See where you stand, who’s ahead, and what students want.',
+  lede: 'See what the internet says about you, who’s ahead in your city, and what students want.',
   stats: [
-    { value: CHECKS.length, label: 'checks in every Audit' },
-    { value: RIVAL_RULES.max, label: 'rivals tracked, side by side' },
+    { value: PLACES.length, label: 'places checked' },
+    { value: RIVAL_RULES.max, label: 'rivals in your city' },
     { value: 1, label: 'report every month' },
   ],
   free: 'Free to start.',
@@ -155,7 +154,11 @@ export const FAQ = {
     { question: 'Do you run ads?', answer: 'No. We create content only. We don’t run, buy or manage ads.' },
     { question: 'Who do you work with?', answer: 'Private colleges, private universities, and skilling and training institutes, for professional and career programs.' },
     { question: 'Do we own the pages and content?', answer: 'Yes. The pages we build and everything on them are yours.' },
-    { question: 'Is Drishti free?', answer: 'Yes, to start. Your first Audit is free, and Free stays free. Paid adds every check, your rivals in full, what students want and a report every month.' },
+    {
+      question: 'Is Drishti free?',
+      answer:
+        'Yes, to start. Your first Audit is free, and Free stays free. Paid adds everything Drishti finds, your rivals in your city place by place, three things to make each month, and a summary and a report every month.',
+    },
     {
       question: 'How do we start?',
       answer: APP_OPEN ? 'Get your free Audit. It takes about two minutes. Or tell us about your institution, and we’ll get back to you.' : CLOSED.howToStart,

@@ -86,11 +86,11 @@ export default async function PlanPage() {
   const refresh = schedule.manualRefresh === 'none' ? 'No extra refresh' : schedule.manualRefresh === 'once_a_month' ? 'Plus one extra refresh a month' : 'Refreshed any time by the AdmitLabs team';
 
   const lead = paidEnded
-    ? `Your Paid plan ended on ${formatDate(plan.endsAt as Date)}. You're on Free now, and you still see your last Audit score.`
+    ? `Your Paid plan ended on ${formatDate(plan.endsAt as Date)}. You're on Free now, and you still see your last Audit.`
     : tier === 'free'
-      ? 'You see your overall score and its three parts, and the top 3 things working and to fix, for one program. A new free Audit is ready every 3 months.'
+      ? `You see Visibility, Trust and Chosen, place by place, and your top 3 fixes and strengths with proof, for one program. A new free Audit is ready every ${SCHEDULES.free.auditEveryMonths} months.`
       : tier === 'paid'
-        ? 'You see everything Drishti finds: every check with its source, all your programs, your rivals, what students want, and a monthly report.'
+        ? 'You see everything Drishti finds, with proof: all your programs, your rivals in your city place by place, what students want, and a summary and a report every month.'
         : 'You are an AdmitLabs client: everything in Paid, and the AdmitLabs team acts on it with you.';
 
   return (

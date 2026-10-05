@@ -1,16 +1,17 @@
 // The product page's words (spec section 15), in AdmitLabs' voice: short, plain, confident. Every
 // number comes from config, so the page always says what the product does: prices, plan length,
-// reminders, schedules, the number of checks and rivals. Pure, and checked by tests (no dashes,
-// curly quotes, numbers from config).
+// reminders, schedules, the places, the rivals and what makes a word. Pure, and checked by tests
+// (no dashes, curly quotes, numbers from config).
 
 import { PLAN_RULES } from '../config/plans.ts';
 import { RIVAL_RULES } from '../config/rivals.ts';
 import { SCHEDULES } from '../config/schedules.ts';
-import { CHECKS, checksForPillar } from '../domain/checks.ts';
+import { SCORING_V1 } from '../config/scoring.v1.ts';
+import { checksForPillar } from '../domain/checks.ts';
 import { formatInr } from '../domain/format.ts';
 import { PAID_PRICE } from '../domain/tiers.ts';
 import { APP_OPEN } from '../lib/urls.ts';
-import { PILLAR_LABELS, PILLARS, type Pillar } from '../domain/types.ts';
+import { PILLAR_LABELS, PILLAR_QUESTIONS, PILLARS, PLACE_LABELS, PLACES, type CheckKey } from '../domain/types.ts';
 import { SAMPLE_REPORT_NOTE } from '../report/data.ts';
 
 /** The one line of AdmitLabs proof, as the user worded it. No client names. */
@@ -31,9 +32,9 @@ export const CLOSED = {
 
 export const HERO = {
   /** The headline is the spec's; the last words sit in an inverted block. */
-  title: 'See where you stand, who’s ahead, and what',
+  title: 'See what the internet says about you, who’s ahead in your city, and what',
   highlight: 'students want.',
-  lede: 'Drishti checks how your institution looks to students online, tracks your rivals, and listens to what students ask. Every month.',
+  lede: 'Drishti checks what students see about you in five places, tracks the rivals in your city, and listens to what students ask. Every month.',
   trust: 'Public data only. Every result shows its source and date.',
 } as const;
 
@@ -54,16 +55,16 @@ export const PROBLEM = {
   lede: 'Here’s what it found for a sample university, and where each answer came from.',
   card: {
     checked: 'Last checked',
-    score: 'How do students see us?',
-    /** After the number of checks: where the score came from. */
-    scoreSource: 'checks, public pages',
-    rivals: 'Who’s ahead of us?',
+    words: 'What does the internet say about us?',
+    /** Under the three words, beside the five places' marks: where they came from. */
+    wordsSource: 'From five places, public pages only',
+    rivals: 'Who’s ahead in our city?',
     you: 'You',
     rivalsSource: 'From each one’s own Audit',
     demand: 'What are students asking?',
     /** Before the city: where the questions came from. */
     demandSource: 'Asked most in',
-    /** Before the search rising fastest, under the questions. */
+    /** Before the program rising fastest, under the questions. */
     rising: 'Rising fastest:',
     /** What a question's count is, for screen readers ("asked about 96 times"). */
     asked: 'asked about',
@@ -90,59 +91,66 @@ export const FEATURES: readonly Feature[] = [
   {
     key: 'audit',
     name: 'Audit',
-    question: 'How do we look?',
-    lede: `A score out of 100 from ${CHECKS.length} checks: how easily students find you, trust you and choose you. Then what to fix first, ranked by the points it could add.`,
-    line: `Your score out of 100 from ${CHECKS.length} checks, and what to fix first.`,
+    question: 'What does the internet say about us?',
+    lede: 'Five places, checked the way a student sees you. Three words: Visibility, Trust and Chosen. Then what to fix first.',
+    line: 'Three words from five places, and what to fix first.',
   },
   {
     key: 'rivals',
     name: 'Rivals',
-    question: 'Who’s ahead of us?',
-    lede: `Pick ${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals. See where you lead, where they lead, and what changed.`,
-    line: `Pick ${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals. See where you lead, where they lead, and what changed.`,
+    question: 'Who’s ahead in our city?',
+    lede: `Pick ${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals in your city. One line a month on who’s ahead and where, then every place side by side.`,
+    line: 'One line a month on who’s ahead, then every place side by side.',
   },
   {
     key: 'demand',
     name: 'Demand',
     question: 'What do students want?',
-    lede: 'What students in your city search for, ask and worry about, every month.',
-    line: 'What students in your city search for, ask and worry about, every month.',
+    lede: 'What students in your city search for and ask. Then Make these 3: what to post this month, and why.',
+    line: 'Make these 3 this month, and the programs rising in your city.',
   },
 ];
 
-/** The rules every result follows, as one band: the promise, then what it means. */
+/** The rules every result follows, as one band: the promise, then what it means, and the one exception. */
 export const TRUST = {
   name: 'Public data only',
-  title: 'Nothing private. Ever.',
-  points: ['Every result shows what was found, where and when.', 'Learn from rivals, never copy. They never know you track them.', 'Demand is grouped. Never one student.'],
+  title: 'Only what anyone can see.',
+  points: [
+    'Every result shows what was found, where and when.',
+    'Learn from rivals, never copy. They never know you track them.',
+    'Demand is grouped. Never one student.',
+    'Leads is the one exception: only what students send your college themselves.',
+  ],
 } as const;
 
-const PILLAR_QUESTIONS: Readonly<Record<Pillar, string>> = {
-  discovered: 'Can students find you?',
-  trusted: 'Do they believe you?',
-  chosen: 'Is it easy to pick you?',
+/** A check's name as the website and this page list it, for any city and any type of institution. */
+const LISTED_NAMES: Partial<Record<CheckKey, string>> = {
+  google_search: 'Search from your city',
+  approvals: 'Approvals or skilling recognition',
 };
 
+const [STRONG, OKAY, WEAK] = SCORING_V1.labels;
+
 /**
- * The score, inside the Audit: the total, then the three parts side by side with every check's
- * result, and what each result earns. The label names the feature it belongs to. `pillars` (with
- * each check by name) is also the website's.
+ * How Drishti reads you, inside the Audit: five places, three words. Each word with its question
+ * and the checks behind it, each with its place and its result; then what makes a word Strong,
+ * Okay or Weak. No total score. The label names the feature it belongs to. `words` (with each
+ * check by name) is also the website's.
  */
-export const SCORE = {
+export const READS = {
   label: 'Inside Audit',
-  title: `One score, from ${CHECKS.length} checks.`,
-  lede: 'Each check earns points. They add up to three parts, each a question a student asks. Your score is the three, averaged.',
-  total: 'Overall score',
-  /** Under the total: how it is made. */
-  totalHow: 'The three parts below, averaged.',
-  resultsTitle: 'What each result earns',
-  /** Under the results: how a check made for each program shows. */
-  perProgram: 'Checks run per program show the weakest program.',
-  pillars: PILLARS.map((pillar) => ({
+  title: 'Five places. Three words.',
+  lede: 'Drishti checks what a student sees about you in five places. Each check feeds one of three words, and each word answers a question a student asks.',
+  places: PLACES.map((place) => PLACE_LABELS[place]),
+  keyTitle: 'What makes a word',
+  /** Each word's range, out of 100, from the scoring settings. */
+  key: [STRONG, OKAY, WEAK].flatMap((range) => (range ? [{ word: range.label, min: range.min, max: range.max }] : [])),
+  keyNote: 'Each word comes from the points its checks earn. A check made for each program shows its weakest program.',
+  words: PILLARS.map((pillar) => ({
     pillar,
     name: PILLAR_LABELS[pillar],
     question: PILLAR_QUESTIONS[pillar],
-    checks: checksForPillar(pillar).map((check) => (check.key === 'approvals' ? 'Approvals or skilling recognition' : check.name)),
+    checks: checksForPillar(pillar).map((check) => LISTED_NAMES[check.key] ?? check.name),
   })),
 };
 
@@ -150,15 +158,15 @@ export const STEPS = {
   title: ['Four steps.', 'Then every month.'],
   items: [
     { title: 'Tell us who you are', text: APP_OPEN ? 'Your name, city, programs and public links. About two minutes.' : CLOSED.firstStep },
-    { title: 'Drishti checks everything', text: 'Google, your website, social media, reviews and AI answers. Public pages only.' },
-    { title: 'See where you stand', text: 'Your score, what’s working, and what to fix first.' },
-    { title: 'Get a report every month', text: 'With Paid, a short PDF on the 1st: your score, your rivals, what students want, and 3 things to do.' },
+    { title: 'Drishti checks every place', text: 'Your website, Google, social media, what people say and other places. Public pages only.' },
+    { title: 'See what the internet says', text: 'Three words, what’s good, and what to fix first.' },
+    { title: 'Get a summary and a report every month', text: 'With Paid, an email and a short PDF on the 1st: the three words, your rivals, what students want, and 3 things to do.' },
   ],
 } as const;
 
 export const REPORT = {
   title: ['A short report on the 1st.', 'Read it in five minutes.'],
-  lede: 'With Paid, one short PDF on the 1st of every month: your score and what changed, what to fix, your rivals, what students want in your city, and 3 things to do.',
+  lede: 'With Paid, a summary by email and one short PDF on the 1st of every month: the three words and what changed, what the internet says place by place, what to fix first, your rivals in your city, what students want, and 3 things to do.',
   /** The hero's second button, down to the sample. */
   see: 'See the sample report',
   download: 'Download the sample report',
@@ -181,21 +189,21 @@ export interface PlanCard {
 export const PLANS: { title: readonly [string, string]; lede: string; cards: readonly PlanCard[]; fine: string } = {
   /** Two lines: the start, then the next step. */
   title: [APP_OPEN ? 'Start free.' : CLOSED.plansTitle, 'Go deeper with Paid.'],
-  lede: 'Free shows where you stand. Paid shows what’s changing, every month.',
+  lede: 'Free shows what the internet says about you. Paid shows what’s changing, every month.',
   cards: [
     {
       key: 'free',
       name: 'Free',
       price: formatInr(PLAN_RULES.free.priceInr),
       term: 'For as long as you like',
-      line: 'Here’s where you stand.',
+      line: 'Here’s what the internet says.',
       points: [
-        'Your score, and Discovered, Trusted and Chosen',
-        'Your top 3 strengths and top 3 fixes',
+        'Visibility, Trust and Chosen, place by place',
+        'Your top 3 fixes and strengths, with proof',
         'One program',
-        'Ahead or behind each rival',
-        'One rising trend in your city',
-        `A new Audit every ${SCHEDULES.free.auditEveryMonths} months`,
+        'Ahead or behind each rival, and the month’s one line',
+        'The first of Make these 3, and one rising program',
+        `A new Audit every ${SCHEDULES.free.auditEveryMonths} months, with an email when it’s ready`,
       ],
       cta: CTA.primary,
       note: APP_OPEN ? 'No payment details needed.' : CLOSED.freeNote,
@@ -208,12 +216,11 @@ export const PLANS: { title: readonly [string, string]; lede: string; cards: rea
       line: 'Here’s what’s changing every month.',
       points: [
         'Everything in Free',
-        'Every check, with its source and date',
-        'All programs, every fix ranked, and your score history',
-        'The full rival comparison, their best content, moves and ads',
-        'Everything students ask and worry about, and what they say about you',
-        'Alerts when a rival moves or demand spikes',
-        'A PDF report every month',
+        'Everything we found, with proof, and every fix ranked',
+        'All programs, and your progress month by month',
+        'Your rivals place by place, what to learn from them, and alerts',
+        'All of Make these 3, and everything students ask',
+        'A summary by email and a PDF report every month',
         'A new Audit every month, plus one extra refresh',
       ],
       cta: CTA.paid,
@@ -228,7 +235,8 @@ export const CLIENTS = {
   forWhom: 'For AdmitLabs clients',
   /** Two lines: the fact, then the promise. */
   title: ['Included.', 'And we act on it.'],
-  text: 'Drishti comes with every AdmitLabs service. Each month our team reads your Audit, your rivals and what students ask, then gets to work on it with you.',
+  text: 'Drishti comes with every AdmitLabs service. Each month our team reads what the internet says about you, your rivals and what students ask, then gets to work on it with you.',
+  leads: 'And Leads shows the enquiries your content brings, link by link.',
   line: 'We’ll fix it for you.',
   cta: 'Talk to AdmitLabs',
   email: 'hello@admitlabs.in',
@@ -240,7 +248,7 @@ export const FAQ: ReadonlyArray<{ question: string; answer: string }> = [
   {
     question: 'Where does Drishti get its data?',
     answer:
-      'Only from places a student or parent can see: Google search and your Google profile, your website, Instagram, YouTube, Facebook and LinkedIn, Google’s page speed test, and the answers AI assistants give. Demand listens to Google, YouTube, Instagram, Reddit, X and Quora. Every result shows where it was found and when.',
+      'Only from what a student or parent can see, in five places: your website, Google, social media, what people say on Reddit, Quora and forums, and other places such as news and listing sites. Demand listens to search trends, YouTube, Instagram, Reddit and Quora. Every result shows where it was found and when.',
   },
   {
     question: 'What does “public data only” mean?',
@@ -253,16 +261,21 @@ export const FAQ: ReadonlyArray<{ question: string; answer: string }> = [
       'People from your institution: the owner, and anyone the owner invites. The AdmitLabs team can see them too, to help. Rivals never know you track them. Demand counts topics and questions; it never stores or shows individual students.',
   },
   {
+    question: 'What is Leads?',
+    answer:
+      'For AdmitLabs clients: the enquiries your content brings, link by link. Each post, reel or bio gets its own link to a short enquiry form. What a student sends there goes to your college, and only your college’s people see it. It is the one place Drishti keeps student details, and only what students send you themselves.',
+  },
+  {
     question: 'Does Paid renew on its own?',
-    answer: `No. Paid lasts ${PLAN_RULES.paid.lengthMonths} months from the day you pay. We remind you ${reminders} before it ends. Then you move to Free and keep your last Audit score.`,
+    answer: `No. Paid lasts ${PLAN_RULES.paid.lengthMonths} months from the day you pay. We remind you ${reminders} before it ends. Then you move to Free and keep your last Audit.`,
   },
   {
-    question: 'How often does our score update?',
-    answer: `Free brings a new Audit every ${SCHEDULES.free.auditEveryMonths} months. Paid brings one every month, plus one extra refresh a month.`,
+    question: 'How often does Drishti check?',
+    answer: `Free brings a new Audit every ${SCHEDULES.free.auditEveryMonths} months. Paid brings one every month, plus one extra refresh a month. Demand updates every month for both.`,
   },
   {
-    question: 'What if our score is low?',
-    answer: 'Then you know exactly where to start. Every fix shows what was found, why it matters to a student and how hard it is to do, ranked by the points it could add.',
+    question: 'What if a word says Weak?',
+    answer: 'Then you know exactly where to start. Every fix shows what was found, why it matters to a student and how hard it is to do. The ones that matter most come first.',
   },
   {
     question: 'Who is Drishti for?',
@@ -276,7 +289,7 @@ export const FINAL = {
 } as const;
 
 export const FOOTER = {
-  tagline: 'See where you stand, who’s ahead, and what students want. Every month.',
+  tagline: 'See what the internet says about you, who’s ahead in your city, and what students want. Every month.',
   site: { label: 'AdmitLabs', href: 'https://admitlabs.in' },
   note: 'Public data only.',
 } as const;

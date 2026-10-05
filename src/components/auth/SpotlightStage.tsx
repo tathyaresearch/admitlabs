@@ -2,11 +2,11 @@
 
 // The left side of /signup, the spotlight: Drishti's Home for the sample university lies in the
 // dark, and the cursor is a soft light that shows it. Where the light falls the dashboard comes
-// alive: the score counts up and its arc draws, the bars fill, the searches by month grow. Home is
-// larger than the stage and drifts the other way as the light moves, so the light can reach all of
-// it. With no cursor (a phone or a touch screen), or when the cursor rests, the light moves through
-// Home on its own; on a phone Home glides under a light that stays put. Reduced motion: the light
-// rests on the score.
+// alive: the three words settle in turn, the things to do come in, the rivals' line comes up, the
+// searches by month grow and their count counts up. Home is larger than the stage and drifts the
+// other way as the light moves, so the light can reach all of it. With no cursor (a phone or a
+// touch screen), or when the cursor rests, the light moves through Home on its own; on a phone
+// Home glides under a light that stays put. Reduced motion: the light rests on the three words.
 
 import { useEffect, useRef, type ReactNode } from 'react';
 import { approach, countUp, easeInOut, finePointer, frameLoop, reducedMotion, replay } from './motion';
@@ -36,8 +36,10 @@ interface Point {
 
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
 
-type Stop = 'score' | 'pillars' | 'rivals' | 'demand';
-const TOUR: readonly Stop[] = ['score', 'rivals', 'demand', 'pillars'];
+type Stop = 'words' | 'things' | 'rivals' | 'demand';
+const TOUR: readonly Stop[] = ['words', 'rivals', 'demand', 'things'];
+/** How far down each part the light rests. */
+const DOWN: Readonly<Record<Stop, number>> = { words: 0.5, things: 0.4, rivals: 0.4, demand: 0.5 };
 
 export function SpotlightStage({ children }: { children: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
@@ -75,15 +77,10 @@ export function SpotlightStage({ children }: { children: ReactNode }) {
       still = { x: box.width * 0.56, y: box.height * 0.6 };
       frame.style.scale = String(k);
       for (const zone of zones) zoneBoxes.set(zone, local(zone));
-      const zone = (name: string) => zones.find((each) => each.dataset.zone === name);
-      const gauge = zone('score')?.querySelector('figure');
-      if (gauge) stops.set('score', centre(local(gauge)));
-      const score = zone('score');
-      if (score) stops.set('pillars', centre(local(score), 0.8));
-      const rivals = zone('rivals');
-      if (rivals) stops.set('rivals', centre(local(rivals), 0.4));
-      const demand = zone('demand');
-      if (demand) stops.set('demand', centre(local(demand), 0.5));
+      for (const stop of TOUR) {
+        const zone = zones.find((each) => each.dataset.zone === stop);
+        if (zone) stops.set(stop, centre(local(zone), DOWN[stop]));
+      }
     };
 
     // How far Home may drift: never so far that its far edges come into the stage.
@@ -111,9 +108,9 @@ export function SpotlightStage({ children }: { children: ReactNode }) {
       stage.style.setProperty('--ly', `${light.y.toFixed(1)}px`);
       frame.style.translate = `${pan.x.toFixed(1)}px ${pan.y.toFixed(1)}px`;
     };
-    // The light on the score: where it starts, and where it stays for reduced motion.
+    // The light on the three words: where it starts, and where it stays for reduced motion.
     const rest = () => {
-      const aim = aimAt(stops.get('score') ?? { x: 300, y: 260 });
+      const aim = aimAt(stops.get('words') ?? { x: 300, y: 260 });
       Object.assign(pan, aim.pan);
       Object.assign(light, aim.light);
       draw();
@@ -137,28 +134,17 @@ export function SpotlightStage({ children }: { children: ReactNode }) {
     }
     stage.dataset.live = 'true';
 
-    // A part of Home comes alive as the light reaches it: numbers count up, the score's arc draws,
-    // and the bars fill (CSS, keyed on data-play).
+    // A part of Home comes alive as the light reaches it: the words settle, the rows come in and
+    // the bars grow (CSS, keyed on data-play), and counts count up. A list's own numbers (1, 2, 3)
+    // stay as they are.
     const played = new Map<HTMLElement, number>();
     const counts: Array<() => void> = [];
     const play = (zone: HTMLElement) => {
       replay(zone, 'data-play');
-      const gauge = zone.querySelector('figure svg');
-      const number = gauge?.querySelector<SVGTextElement>('text');
-      const arc = gauge?.querySelectorAll('path')[1];
-      if (number) {
-        number.dataset.value ??= number.textContent ?? '';
-        if (/^\d+$/.test(number.dataset.value)) counts.push(countUp(number, Number(number.dataset.value), 1400));
-      }
-      if (arc) {
-        arc.setAttribute('pathLength', '100');
-        arc.animate([{ strokeDasharray: '0 100' }, { strokeDasharray: '100 0' }], { duration: 1400, easing: 'cubic-bezier(0.33, 1, 0.68, 1)' });
-      }
       for (const element of zone.querySelectorAll<HTMLElement>('.num')) {
-        if (element.closest('figure')) continue;
         element.dataset.value ??= element.textContent ?? '';
         const match = /^(\+?)(\d+)(%?)$/.exec(element.dataset.value);
-        if (match) counts.push(countUp(element, Number(match[2]), 1100, match[1], match[3]));
+        if (match && Number(match[2]) >= 10) counts.push(countUp(element, Number(match[2]), 1100, match[1], match[3]));
       }
     };
 
@@ -204,7 +190,7 @@ export function SpotlightStage({ children }: { children: ReactNode }) {
           from = { pan: { ...pan }, light: { ...light } };
           leg = now;
         }
-        const aim = aimAt(stops.get(TOUR[tour] ?? 'score') ?? { x: 300, y: 260 });
+        const aim = aimAt(stops.get(TOUR[tour] ?? 'words') ?? { x: 300, y: 260 });
         const t = easeInOut(Math.min(1, (now - leg) / GLIDE));
         const s = now / 1000;
         const sway = { x: Math.sin(s * 0.9) * 9 * t, y: Math.cos(s * 0.7) * 6 * t };

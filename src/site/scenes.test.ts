@@ -3,6 +3,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, test } from 'node:test';
 import { hasDashes } from '../domain/copy.ts';
+import { scoreLabel } from '../domain/scores.ts';
 import * as scenes from './scenes.ts';
 
 // The website's pictures (2026-10-02): a made-up institution in Bangalore, no caption, and the
@@ -62,15 +63,23 @@ describe('the website’s pictures', () => {
     for (const path of outside) assert.doesNotMatch(readFileSync(path, 'utf8'), /gradient\(/, path);
   });
 
-  test('the Drishti window’s closing lines match its numbers', () => {
-    const { fixes, rivals } = scenes.DASHBOARD;
-    assert.equal(fixes.items.length, 3);
-    const total = fixes.items.reduce((sum, fix) => sum + fix.points, 0);
-    assert.equal(fixes.note, `All three could add up to ${total} points.`);
+  test('the Drishti window: three words from their points, 3 things from the three features, a rank that matches its rows', () => {
+    const { words, things, rivals, demand } = scenes.DASHBOARD;
+    assert.deepEqual(
+      words.items.map((item) => item.name),
+      ['Visibility', 'Trust', 'Chosen'],
+    );
+    for (const item of words.items) assert.equal(item.word, scoreLabel(item.value), item.name);
+    assert.deepEqual(
+      things.items.map((item) => item.from),
+      ['Audit', 'Rivals', 'Make these 3'],
+    );
     const you = rivals.rows.findIndex((row) => row.you);
     assert.equal(rivals.rank, '2nd');
     assert.equal(you, 1);
-    assert.equal(rivals.note, `Next step: catching ${rivals.rows[0].name}.`);
+    assert.equal(rivals.of, rivals.rows.length);
+    assert.match(rivals.line, new RegExp(`^This month, ${rivals.rows[0].name} is ahead on`));
+    assert.equal(demand.months.at(-1)?.value, demand.searches, 'the newest month is the count the window names');
   });
 
   test('the season is planned week by week, busiest when students decide', () => {

@@ -4,38 +4,19 @@
 // this month" (Paid and Client: a fix from the Audit, a lesson from rivals and one of Make these
 // 3, by impact) or "Fix these first" (Free: the top 3 fixes). Each says where it comes from, its
 // place and check (or the rival, or the format and program) as a small label, its impact (or how
-// often students asked), its effort and programs; then Mark as done (Mark as made for an idea)
-// and, on a fix for Free and Paid, Let AdmitLabs fix this. Everyone else sees what was done.
+// often students asked), its effort and programs (./ThingList.tsx); then Mark as done (Mark as
+// made for an idea) and, on a fix for Free and Paid, Let AdmitLabs fix this. Everyone else sees
+// what was done.
 
-import Link from 'next/link';
 import { useOptimistic, useState, useTransition } from 'react';
-import { ImpactTags } from '@/components/audit/PlaceBits';
 import { FixActions, type FixActionHandlers, type FixActionState } from '@/components/audit/FixActions';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import type { Difficulty, Impact } from '@/domain/types';
-import { THING_SOURCE_LABELS, type ThingSource } from '@/report/things';
 import audit from '@/components/audit/places.module.css';
+import { ThingList, type HomeThing } from './ThingList';
 import styles from './today.module.css';
 
-export interface HomeThing {
-  key: string;
-  source: ThingSource;
-  title: string;
-  label: string;
-  href: string;
-  impact: Impact | null;
-  effort: Difficulty | null;
-  programs: readonly string[];
-  /** For an idea: how often its question was asked, said instead of an impact. */
-  weight: string | null;
-  /** A fix: marked and asked about by its id. */
-  fixId: string | null;
-  /** A lesson or an idea: what Mark as done saves. */
-  mark: { thing: string; month: string } | null;
-  /** A lesson or an idea marked done. A fix's mark is in the fix state. */
-  done: boolean;
-}
+export type { HomeThing } from './ThingList';
 
 interface ThingMark {
   check: null;
@@ -121,35 +102,16 @@ export function HomeThings({
         </div>
       </div>
       {items.length ? (
-        <ol className={[audit.card, audit.fixes, styles.things].join(' ')}>
-          {items.map((item, index) => (
-            <li key={item.key} className={audit.fixRow}>
-              <span className={`${audit.fixIndex} num`} aria-hidden="true">
-                {index + 1}
-              </span>
-              <span className={audit.fixBody}>
-                <span className={audit.fixLabel}>
-                  <span className={styles.thingSource}>{THING_SOURCE_LABELS[item.source]}</span>
-                  <span>{item.label}</span>
-                </span>
-                <Link href={item.href} className={styles.thingTitle}>
-                  {item.title}
-                </Link>
-                <span className={audit.tags}>
-                  {item.weight ? <span className={audit.asked}>{item.weight}</span> : null}
-                  <ImpactTags impact={item.impact} effort={item.effort} programs={item.programs} />
-                </span>
-              </span>
-              <span className={audit.fixActions}>
-                {item.fixId ? (
-                  <FixActions fix={{ id: item.fixId, title: item.title }} state={fixState} handlers={fixHandlers} />
-                ) : (
-                  <MarkThing item={item} canMark={fixState.canMark} onMark={onMarkThing} />
-                )}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <ThingList
+          items={items}
+          actions={(item) =>
+            item.fixId ? (
+              <FixActions fix={{ id: item.fixId, title: item.title }} state={fixState} handlers={fixHandlers} />
+            ) : (
+              <MarkThing item={item} canMark={fixState.canMark} onMark={onMarkThing} />
+            )
+          }
+        />
       ) : (
         <p className={audit.quiet}>{empty}</p>
       )}

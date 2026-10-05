@@ -2,35 +2,33 @@
 
 // The left side of /login: the Drishti eye, big, in the middle, and around it four pieces of the
 // dashboard for the sample university. The cards lean with the cursor at different depths, and each
-// plays in turn: the score counts up to its number as its arc draws, the rivals change places into
-// rank order, the questions students ask come in one by one, the searches by month grow. The eye
-// follows the cursor; when the cursor rests it watches each card as it changes, and while someone
-// types their email it looks at the field. It blinks now and then, and when touched. On a phone the
-// cards are small tags around the eye, and everything plays on its own. Reduced motion: the eye
-// open, every card full, nothing moves.
+// plays in turn: Visibility, Trust and Chosen settle one by one with their bars, the rivals change
+// places into rank order, the questions students ask come in one by one, the searches by month
+// grow. The eye follows the cursor; when the cursor rests it watches each card as it changes, and
+// while someone types their email it looks at the field. It blinks now and then, and when touched.
+// On a phone the cards are small tags around the eye (the words' tag names each word in turn), and
+// everything plays on its own. Reduced motion: the eye open, every card full, nothing moves.
 
 import { useEffect, useRef, type CSSProperties } from 'react';
-import { ScoreGauge } from '@/components/charts/ScoreGauge';
 import { Icon } from '@/components/ui/Icon';
-import { PillarIcon } from '@/components/ui/Marks';
-import { Delta, ScoreLabel } from '@/components/ui/Results';
-import { ordinal } from '@/domain/format';
+import { formatCount, ordinal } from '@/domain/format';
+import { PILLAR_ICONS } from '@/graphics/icons';
 import { BigEye } from './BigEye';
 import { approach, countUp, finePointer, frameLoop, reducedMotion, replay } from './motion';
 import type { StageData } from './stage-data';
 import styles from './stage.module.css';
 
-type Card = 'score' | 'rivals' | 'asked' | 'trend';
-const ORDER: readonly Card[] = ['score', 'rivals', 'asked', 'trend'];
+type Card = 'words' | 'rivals' | 'asked' | 'trend';
+const ORDER: readonly Card[] = ['words', 'rivals', 'asked', 'trend'];
 
 /** The cards' own space, in pixels, scaled to fit the stage, with the eye in its middle. */
 const DESK = { width: 980, height: 800 };
 /** Where each card stands on the desk (its top left corner), how wide, and how near it floats. */
 const PLACES: Record<Card, { x: number; y: number; width: number; depth: number }> = {
-  score: { x: 30, y: 20, width: 300, depth: 1 },
-  rivals: { x: 650, y: 40, width: 320, depth: 0.6 },
+  words: { x: 30, y: 40, width: 310, depth: 1 },
+  rivals: { x: 650, y: 20, width: 320, depth: 0.6 },
   asked: { x: 620, y: 470, width: 350, depth: 0.85 },
-  trend: { x: 40, y: 480, width: 270, depth: 0.45 },
+  trend: { x: 30, y: 480, width: 300, depth: 0.45 },
 };
 /** The eye's width on the desk. */
 const EYE_WIDTH = 250;
@@ -258,20 +256,33 @@ export function WatchStage({ data }: { data: StageData }) {
       watching = key;
     };
 
+    // The words' tag names one word at a time.
+    const tagWord = (index: number) => {
+      const word = data.words[index];
+      const name = at(chip('words'), '[data-name]');
+      const value = at(chip('words'), '[data-word]');
+      if (word && name && value) {
+        name.textContent = word.label;
+        value.textContent = word.word;
+      }
+    };
+
     const films: Record<Card, () => Promise<void>> = {
-      score: async () => {
-        const figure = at(card('score'), '[data-count-root]');
+      words: async () => {
         instantly(() => {
-          phase('score', 'start');
-          figure?.setAttribute('data-count-state', 'ready');
-          for (const number of [at(card('score'), '[data-count]'), at(chip('score'), '[data-to]')]) if (number) number.textContent = '0';
+          phase('words', 'start');
+          card('words')?.style.setProperty('--shown', '0');
         });
         await wait(160, timers);
-        figure?.setAttribute('data-count-state', 'run');
-        phase('score', 'run');
-        count(at(card('score'), '[data-count]'), data.score, 1400);
-        count(at(chip('score'), '[data-to]'), data.score, 1400);
-        await wait(1900, timers);
+        phase('words', 'run');
+        for (let shown = 1; shown <= data.words.length && alive; shown += 1) {
+          card('words')?.style.setProperty('--shown', String(shown));
+          tagWord(shown - 1);
+          const tag = chip('words');
+          if (tag) replay(tag, 'data-tick');
+          await wait(650, timers);
+        }
+        await wait(700, timers);
       },
       rivals: async () => {
         phase('rivals', 'names');
@@ -296,15 +307,12 @@ export function WatchStage({ data }: { data: StageData }) {
       trend: async () => {
         instantly(() => {
           phase('trend', 'start');
-          const percent = at(card('trend'), '[data-to]');
-          if (percent) percent.textContent = '0%';
-          const tag = at(chip('trend'), '[data-to]');
-          if (tag) tag.textContent = '+0%';
+          const searches = at(card('trend'), '[data-to]');
+          if (searches && data.trend.count !== null) searches.textContent = '0';
         });
         await wait(160, timers);
         phase('trend', 'run');
-        count(at(card('trend'), '[data-to]'), data.trend.changePct, 1300, '', '%');
-        count(at(chip('trend'), '[data-to]'), data.trend.changePct, 1300, '+', '%');
+        if (data.trend.count !== null) count(at(card('trend'), '[data-to]'), data.trend.count, 1300);
         await wait(1900, timers);
       },
     };
@@ -340,7 +348,7 @@ export function WatchStage({ data }: { data: StageData }) {
       document.removeEventListener('submit', onSubmit, true);
       eye.removeEventListener('pointerenter', blink);
     };
-  }, [asked?.count, data.questions.length, data.score, data.trend.changePct]);
+  }, [asked?.count, data.questions.length, data.trend.count, data.words]);
 
   return (
     <div ref={root} className={styles.watch} aria-hidden="true">
@@ -353,11 +361,9 @@ export function WatchStage({ data }: { data: StageData }) {
               <span>Rising fastest in {data.city}</span>
             </p>
             <p className={styles.miniBig}>
-              <Icon name="arrowUp" size={18} />
-              <span className="num" data-to>
-                {data.trend.changePct}%
-              </span>
-              <span className={styles.miniMuted}>since last month</span>
+              <Icon name="arrowUpRight" size={18} />
+              <span className={styles.miniBigWord}>{data.trend.word}</span>
+              <span className={styles.miniMuted}>this month</span>
             </p>
             <p className={styles.miniTitle}>{data.trend.text}</p>
             <div className={styles.miniMonths}>
@@ -368,7 +374,17 @@ export function WatchStage({ data }: { data: StageData }) {
               ))}
             </div>
             <p className={styles.miniMeta}>
-              Search trends · <span className="num">{data.trend.count}</span> searches
+              Search trends
+              {data.trend.count !== null ? (
+                <>
+                  {' '}
+                  · About{' '}
+                  <span className="num" data-to>
+                    {formatCount(data.trend.count)}
+                  </span>{' '}
+                  searches a month
+                </>
+              ) : null}
             </p>
           </div>
         </div>
@@ -376,7 +392,7 @@ export function WatchStage({ data }: { data: StageData }) {
         <div className={styles.float} style={place('rivals')}>
           <div className={`${styles.mini} ${styles.miniRivals}`} data-card="rivals">
             <p className={styles.miniHead}>
-              <span>Your rank</span>
+              <span>Rivals in {data.city}</span>
               {you ? (
                 <span className={styles.miniRank}>
                   <span className="num">{ordinal(you.rank)}</span> of {data.rivals.length}
@@ -395,34 +411,29 @@ export function WatchStage({ data }: { data: StageData }) {
                 </li>
               ))}
             </ol>
+            {data.line ? <p className={styles.miniLine}>{data.line}</p> : null}
           </div>
         </div>
 
-        <div className={styles.float} style={place('score')}>
-          <div className={`${styles.mini} ${styles.miniScore}`} data-card="score">
+        <div className={styles.float} style={place('words')}>
+          <div className={`${styles.mini} ${styles.miniWords}`} data-card="words">
             <p className={styles.miniHead}>
-              <span>Overall score</span>
+              <span>What the internet says</span>
               <span>Checked {data.checked}</span>
             </p>
-            <div className={styles.miniGauge}>
-              <ScoreGauge score={data.score} countUp />
-            </div>
-            <p className={styles.miniScoreMeta}>
-              <ScoreLabel score={data.score} />
-              <Delta change={data.change} since="last Audit" size="sm" />
-            </p>
-            <ul className={styles.miniPillars}>
-              {data.pillars.map((pillar) => (
-                <li key={pillar.key}>
-                  <PillarIcon pillar={pillar.key} size={14} />
-                  <span>{pillar.label}</span>
+            <ul className={styles.miniWordList}>
+              {data.words.map((word, index) => (
+                <li key={word.key} style={{ '--i': index } as CSSProperties}>
+                  <Icon name={PILLAR_ICONS[word.key]} size={16} />
+                  <span>{word.label}</span>
                   <span className={styles.miniTrack}>
-                    <i style={{ width: `${pillar.score}%` }} />
+                    <i style={{ width: `${word.score}%` }} />
                   </span>
-                  <span className="num">{pillar.score}</span>
+                  <span className={styles.miniWord}>{word.word}</span>
                 </li>
               ))}
             </ul>
+            <p className={styles.miniAnswer}>{data.answer}</p>
           </div>
         </div>
 
@@ -445,14 +456,13 @@ export function WatchStage({ data }: { data: StageData }) {
         </div>
       </div>
 
-      <div className={styles.chip} data-chip="score">
-        <span className={`${styles.chipValue} num`} data-to>
-          {data.score}
+      <div className={styles.chip} data-chip="words">
+        <span className={styles.chipWord} data-name>
+          {data.words[0]?.label}
         </span>
-        <span className={styles.chipTrack}>
-          <i style={{ width: `${data.score}%` }} />
+        <span className={styles.chipText} data-word>
+          {data.words[0]?.word}
         </span>
-        <span className={styles.chipWord}>{data.label}</span>
       </div>
       <div className={styles.chip} data-chip="rivals">
         <span className={styles.chipLadder}>
@@ -476,9 +486,7 @@ export function WatchStage({ data }: { data: StageData }) {
             <i key={index} style={{ height: `${Math.max(14, Math.round((value / top) * 100))}%`, '--i': index } as CSSProperties} />
           ))}
         </span>
-        <span className={`${styles.chipValue} num`} data-to>
-          +{data.trend.changePct}%
-        </span>
+        <span className={styles.chipText}>{data.trend.word}</span>
       </div>
 
       <div className={styles.eyeWrap} data-eye-wrap>

@@ -148,24 +148,29 @@ export const DASHBOARD = {
   nav: ['Home', 'Audit', 'Rivals', 'Demand', 'Reports'],
   title: 'Home',
   question: 'How are we doing this month?',
-  score: { title: 'Overall score', overall: 73, label: 'Strong', change: 14, since: 'April' },
-  pillars: [
-    { name: 'Visibility', value: 75 },
-    { name: 'Trust', value: 69 },
-    { name: 'Chosen', value: 74 },
-  ],
-  fixes: {
-    title: 'Fix these first',
-    unit: 'points',
+  words: {
+    title: 'Visibility, Trust and Chosen',
+    /** Each word, on a thin bar of the points behind it, out of 100, and what to fix first in it. */
     items: [
-      { name: 'Placement proof', points: 4 },
-      { name: 'Review rating', points: 3 },
-      { name: 'Google search', points: 3 },
+      { name: 'Visibility', word: 'Strong', value: 75, fix: 'AI answers' },
+      { name: 'Trust', word: 'Okay', value: 69, fix: 'Placements' },
+      { name: 'Chosen', word: 'Strong', value: 74, fix: 'Admission steps' },
     ],
-    note: 'All three could add up to 10 points.',
+    /** Before each word's weakest check. */
+    fixFirst: 'Fix first',
+    answer: 'Students can find you. Next step: earning their trust.',
+  },
+  things: {
+    title: 'Do these 3 things this month',
+    items: [
+      { title: 'Reply to every Google review', from: 'Audit' },
+      { title: 'Publish your BBA placement results', from: 'Rivals' },
+      { title: 'Last year’s BBA placements, one student per reel', from: 'Make these 3' },
+    ],
+    note: 'A fix, a lesson from your rivals and one of Make these 3.',
   },
   rivals: {
-    title: 'Your rank',
+    title: `Your rivals in ${CITY}`,
     rank: '2nd',
     of: 4,
     rows: [
@@ -174,17 +179,18 @@ export const DASHBOARD = {
       { name: OTHERS.brackenfield.name, score: 52, you: false },
       { name: OTHERS.thornbury.name, score: 45, you: false },
     ],
-    note: `Next step: catching ${OTHERS.calderwood.name}.`,
+    line: `This month, ${OTHERS.calderwood.name} is ahead on placement proof and Instagram.`,
   },
   demand: {
     title: `Rising fastest in ${CITY}`,
     topic: 'BCA with AI and Machine Learning',
-    change: 24,
+    word: 'Rising',
+    searches: 350,
     months: [
       { month: 'Apr', value: 199 },
-      { month: 'May', value: 214 },
-      { month: 'Jun', value: 236 },
-      { month: 'Jul', value: 262 },
+      { month: 'May', value: 217 },
+      { month: 'Jun', value: 243 },
+      { month: 'Jul', value: 282 },
       { month: 'Aug', value: 350 },
     ],
   },

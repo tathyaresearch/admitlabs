@@ -1,16 +1,15 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { pillarChecks } from '../audit/view.ts';
 import { CHECKS, checksForPillar } from '../domain/checks.ts';
 import { PILLARS } from '../domain/types.ts';
 import { reportTexts, SAMPLE_REPORT_NOTE } from '../report/data.ts';
 import { sampleReportData } from '../sample/report.ts';
 import { CITY, DASHBOARD, INSTITUTION, OTHERS } from '../site/scenes.ts';
 import { asLarkmoor } from './larkmoor.ts';
-import { loadShowcase } from './showcase.ts';
+import { loadShowcase, topQuestions } from './showcase.ts';
 
-// What the product page shows: one fictional institution in the sample report's month, so the
-// previews agree with the PDF the page offers, under the website's names.
+// What the product page shows: one fictional institution in the sample report's month, as Paid sees
+// it, so the pictures agree with the PDF the page offers, under the website's names.
 
 /** Every word in plain data. */
 function words(value: unknown): string[] {
@@ -23,9 +22,9 @@ function words(value: unknown): string[] {
 }
 
 /** The sample world's names and places, and the scripts of its Hindi and Assamese questions. */
-const SAMPLE_WORLD = /eastgate|silverline|highfield|northbank|guwahati|gauhati|dispur|assam|six mile|gs road|781\d{3}|[ऀ-ॿঀ-৿]/i;
+const SAMPLE_WORLD = /eastgate|silverline|highfield|northbank|guwahati|gauhati|dispur|assam|six mile|gs road|781\d{3}|[\u0900-\u097F\u0980-\u09FF]/i;
 
-describe('the product page previews', () => {
+describe('the product page pictures', () => {
   test('built once, from the sample world', async () => {
     const first = loadShowcase();
     assert.equal(loadShowcase(), first, 'the same promise every time');
@@ -34,114 +33,128 @@ describe('the product page previews', () => {
     assert.equal(showcase.institution.city, 'Bangalore');
   });
 
-  test('the Audit, rivals and Demand all agree with the sample report', async () => {
-    const { audit, rivals, demand, report } = await loadShowcase();
-    assert.equal(audit.scores.overall, report.score.overall);
-    assert.equal(audit.changes.overall, 1);
-    assert.equal(audit.fixes.length > 3, true);
+  test('the three words, rivals and Demand all agree with the sample report', async () => {
+    const { audit, answer, things, rivals, demand, report } = await loadShowcase();
     assert.deepEqual(
-      rivals.rows.map((row) => [row.name, row.overall, row.you]),
-      [
-        ['Calderwood College', 77, false],
-        ['Larkmoor University', 73, true],
-        ['Brackenfield University', 52, false],
-        ['Thornbury College', 45, false],
-      ],
+      audit.words.map((word) => [word.name, word.word]),
+      report.words.map((word) => [word.name, word.word]),
     );
+    assert.equal(answer, report.answer);
     assert.deepEqual(
+      things.map((thing) => thing.title),
+      report.summary.lines.things,
+    );
+    assert.equal(rivals.line, report.rivals?.line);
+    assert.deepEqual(
+      rivals.view.ranking.map((row) => [row.name, row.overall]),
       report.rivals?.ranking.map((row) => [row.name, row.overall]),
-      rivals.rows.map((row) => [row.name, row.overall]),
     );
-    assert.ok(rivals.moves.length > 0 && rivals.moves.every((move) => move.detectedAt.startsWith('2026-08')));
-    assert.equal(demand.place, 'Bangalore');
-    assert.ok(demand.view.topTrend);
-    assert.ok(demand.view.ideas.length >= 3);
+    assert.deepEqual(
+      demand.picks.map((pick) => pick.idea.title),
+      report.demand?.picks.map((pick) => pick.title),
+    );
     assert.equal(report.sample, SAMPLE_REPORT_NOTE);
   });
 
-  test('the feature pictures: every rival on each pillar, and the fastest rise month by month', async () => {
-    const { rivals, demand } = await loadShowcase();
+  test('Home: the one line, the three words, 3 things from the three features, the rivals’ line and the fastest rise', async () => {
+    const { audit, answer, things, rivals, demand } = await loadShowcase();
     assert.deepEqual(
-      rivals.spread.map((row) => [row.pillar, row.rank, row.of]),
+      audit.words.map((word) => [word.name, word.word]),
       [
-        ['discovered', 1, 4],
-        ['trusted', 2, 4],
-        ['chosen', 2, 4],
+        ['Visibility', 'Strong'],
+        ['Trust', 'Okay'],
+        ['Chosen', 'Strong'],
       ],
     );
+    assert.equal(answer, 'Students can find you. Next step: earning their trust.');
     assert.deepEqual(
-      demand.topHistory.map((point) => point.month),
+      things.map((thing) => thing.source),
+      ['audit', 'rivals', 'demand'],
+    );
+    assert.equal(rivals.line, 'This month, Calderwood College is ahead on placement proof and Instagram.');
+    assert.ok(rivals.latest?.detectedAt.startsWith('2026-08'));
+    assert.equal(demand.highlight?.text, 'BCA with AI and Machine Learning');
+    assert.equal(demand.highlight?.count, 350);
+    assert.deepEqual(
+      demand.history.map((point) => point.month),
       ['2026-04', '2026-05', '2026-06', '2026-07', '2026-08'],
       'every pull up to the report month, oldest first',
     );
-    assert.equal(demand.topHistory.at(-1)?.count, demand.view.topTrend?.count, 'the newest month is the one the tile names');
+    assert.equal(demand.history.at(-1)?.count, demand.highlight?.count, 'the newest month is the one the card names');
   });
 
-  test('the score’s ledger: every check, in its part, with the result its weakest program earned', async () => {
-    const { audit } = await loadShowcase();
-    const parts = pillarChecks(audit);
-    assert.deepEqual(
-      parts.map((part) => part.pillar),
-      [...PILLARS],
-    );
-    for (const part of parts) {
-      assert.deepEqual(
-        part.checks.map((check) => check.key),
-        checksForPillar(part.pillar).map((check) => check.key),
-        part.pillar,
-      );
-    }
-    assert.equal(
-      parts.reduce((sum, part) => sum + part.checks.length, 0),
-      CHECKS.length,
-    );
-    // A check made for each program shows its weakest: Placement proof is missing for one program.
-    const placement = parts.flatMap((part) => part.checks).find((check) => check.key === 'placement_proof');
-    assert.equal(placement?.result, 'missing');
-    // The parts with fewer checks than the longest end in empty slots: Trusted, one.
-    const slots = Math.max(...parts.map((part) => part.checks.length));
-    assert.deepEqual(
-      parts.map((part) => slots - part.checks.length),
-      [0, 1, 0],
-    );
-    // The total is the three parts, averaged: the only numbers the ledger shows add up.
-    const { discovered, trusted, chosen, overall } = audit.scores;
-    assert.equal(Math.round((discovered + trusted + chosen) / 3), overall);
-  });
-
-  test('the problem card: the sample’s score, its place among its rivals, what students ask most and the search rising fastest', async () => {
+  test('the feature pictures: the places with what to fix first, the ranking place by place, Make these 3', async () => {
     const { audit, rivals, demand } = await loadShowcase();
-    assert.equal(audit.scores.overall, 73);
-    assert.equal(rivals.rows.length, 4);
-    assert.equal(rivals.rows.find((row) => row.you)?.rank, 2);
-    assert.equal(rivals.rows[0]?.name, 'Calderwood College');
+    assert.equal(audit.topFixes.length, 3);
+    assert.deepEqual(
+      audit.places.map((place) => place.name),
+      ['Website', 'Google', 'Social media', 'What people say', 'Other places'],
+    );
+    assert.ok(audit.places.find((place) => place.key === 'google')?.found.every((row) => row.proof?.url && row.proof.date));
+    assert.deepEqual(
+      rivals.view.ranking.map((row) => [row.place, row.name, row.overall, row.you]),
+      [
+        [1, 'Calderwood College', 77, false],
+        [2, 'Larkmoor University', 73, true],
+        [3, 'Brackenfield University', 52, false],
+        [4, 'Thornbury College', 45, false],
+      ],
+    );
+    assert.equal(rivals.view.places.length, 5);
+    assert.equal(rivals.opened, 'google');
+    assert.equal(demand.picks.length, 3);
+    assert.ok(demand.signals.trends.filter((trend) => trend.kind === 'rising').length >= 5);
+  });
+
+  test('How Drishti reads you: every check under its word, in its place, with the result its weakest program earned', async () => {
+    const { audit } = await loadShowcase();
+    const found = new Map(audit.places.flatMap((place) => place.found).flatMap((row) => (row.checkKey ? [[row.checkKey, row] as const] : [])));
+    for (const pillar of PILLARS) {
+      for (const check of checksForPillar(pillar)) assert.ok(found.get(check.key)?.result, check.key);
+    }
+    assert.equal(found.size, CHECKS.length);
+    // A check made for each program shows its weakest: Placements is missing for one program.
+    assert.equal(found.get('placement_proof')?.result, 'missing');
+  });
+
+  test('the problem card: the three words, its place among its rivals, what students ask most and the program rising fastest', async () => {
+    const { rivals, demand } = await loadShowcase();
+    assert.equal(rivals.view.ranking.find((row) => row.you)?.place, 2);
+    assert.equal(rivals.view.ranking.length, 4);
     // The three questions asked most, most first, each with where it was asked.
-    const asked = demand.view.questions.slice(0, 3);
+    const asked = topQuestions(demand.signals, 3);
     assert.deepEqual(
       asked.map((question) => question.count),
       [96, 91, 88],
     );
-    assert.ok(asked.every((question) => question.meta.platform === 'quora'));
-    // Under them, a second source: the search rising fastest, with its numbers.
-    assert.equal(demand.view.topTrend?.text, 'BCA with AI and Machine Learning');
-    assert.equal(demand.view.topTrend?.count, 350);
-    assert.equal(Math.round(demand.view.topTrend?.changePct ?? 0), 24);
+    assert.ok(asked.every((question) => question.site === 'Quora'));
     assert.equal(demand.place, 'Bangalore');
   });
 
-  test("the website's names and numbers: Larkmoor University, Bangalore, and its three rivals", async () => {
-    const { institution, audit, rivals, demand } = await loadShowcase();
+  test("the website's window agrees: Larkmoor University, Bangalore, its words, things, rivals and the fastest rise", async () => {
+    const { institution, audit, answer, things, rivals, demand } = await loadShowcase();
     assert.equal(institution.name, INSTITUTION.name);
     assert.equal(demand.place, CITY);
-    assert.deepEqual([...rivals.names.values()].sort(), Object.values(OTHERS).map((other) => other.name).sort());
-    assert.equal(audit.scores.overall, DASHBOARD.score.overall);
+    assert.deepEqual(rivals.view.ranking.filter((row) => !row.you).map((row) => row.name).sort(), Object.values(OTHERS).map((other) => other.name).sort());
     assert.deepEqual(
-      DASHBOARD.pillars.map((pillar) => pillar.value),
-      [audit.scores.discovered, audit.scores.trusted, audit.scores.chosen],
+      DASHBOARD.words.items.map((item) => [item.name, item.word, item.value, item.fix]),
+      audit.words.map((word) => [word.name, word.word, word.score, word.fixFirst?.name]),
+    );
+    assert.equal(DASHBOARD.words.answer, answer);
+    assert.deepEqual(
+      DASHBOARD.things.items.map((item) => item.title),
+      things.map((thing) => thing.title),
     );
     assert.deepEqual(
-      rivals.rows.map((row) => row.overall),
       DASHBOARD.rivals.rows.map((row) => row.score),
+      rivals.view.ranking.map((row) => row.overall),
+    );
+    assert.equal(DASHBOARD.rivals.line, rivals.line);
+    assert.equal(DASHBOARD.demand.topic, demand.highlight?.text);
+    assert.equal(DASHBOARD.demand.searches, demand.highlight?.count);
+    assert.deepEqual(
+      DASHBOARD.demand.months.map((month) => month.value),
+      demand.history.map((point) => point.count),
     );
   });
 

@@ -57,6 +57,6 @@ export const CODE_COPY = {
   newHere: 'New here?',
   signUp: 'Sign up',
   /** The one line on the left side, on a wide screen. */
-  line: 'See where you stand. Every month.',
+  line: 'See what the internet says about you. Every month.',
   trust: 'Public data only. Every result shows its source and the date it was checked.',
 } as const;

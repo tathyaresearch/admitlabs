@@ -242,10 +242,10 @@ function addedFor(fix: FixView, input: ReportInput): ReturnType<typeof addedByYo
   });
 }
 
-function rivalsPart(input: ReportInput): ReportData['rivals'] {
-  if (input.rivals.length === 0) return null;
+/** You and each rival as place by place compares them: your Audit, and each rival's own. */
+export function reportSides(input: Pick<ReportInput, 'institution' | 'audit' | 'yourChecks' | 'findings' | 'rivals'>): PlaceSide[] {
   const { institution, audit } = input;
-  const sides: PlaceSide[] = [
+  return [
     { id: institution.id, name: institution.name, you: true, nearby: false, scores: audit.scores, checks: input.yourChecks, findings: input.findings },
     ...input.rivals.map(
       (rival): PlaceSide => ({
@@ -259,6 +259,11 @@ function rivalsPart(input: ReportInput): ReportData['rivals'] {
       }),
     ),
   ];
+}
+
+function rivalsPart(input: ReportInput): ReportData['rivals'] {
+  if (input.rivals.length === 0) return null;
+  const sides = reportSides(input);
   const view = rivalPlaces(sides);
   const names = new Map(input.rivals.map((rival) => [rival.id, rival.name]));
   const moves = [...input.moves].sort((a, b) => b.detectedAt.localeCompare(a.detectedAt));

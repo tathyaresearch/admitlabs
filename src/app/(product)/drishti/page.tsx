@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { CountUp } from '@/components/product/CountUp';
 import { Faq, ForClients, Plans } from '@/components/product/Offer';
 import { ReportShowcase } from '@/components/product/ReportShowcase';
-import { Features, FinalCall, Hero, Problem, Score, Steps, Trust } from '@/components/product/Sections';
+import { Features, FinalCall, Hero, Problem, Reads, Steps, Trust } from '@/components/product/Sections';
 import { SiteFooter } from '@/components/site/Footer';
 import { SiteHeader } from '@/components/site/Header';
 import { PRODUCT_URL } from '@/lib/urls';
@@ -48,7 +47,7 @@ export default async function ProductPage() {
         <Hero showcase={showcase} />
         <Problem showcase={showcase} />
         <Features showcase={showcase} />
-        <Score showcase={showcase} />
+        <Reads showcase={showcase} />
         <Trust />
         <Steps />
         <ReportShowcase data={showcase.report} />
@@ -58,7 +57,6 @@ export default async function ProductPage() {
         <FinalCall />
       </main>
       <SiteFooter />
-      <CountUp />
     </div>
   );
 }

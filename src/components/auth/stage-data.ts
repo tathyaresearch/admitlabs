@@ -1,57 +1,58 @@
-// What the left sides of /signup and /login show: Larkmoor University, Bangalore, from the product
-// page's sample (src/product/showcase.ts, the sample world through the real scoring engine), as
-// plain data their motion can use in the browser.
+// What the left side of /login shows: Larkmoor University, Bangalore, from the product page's
+// sample (src/product/showcase.ts, the sample world through the real scoring engine), as plain
+// data its motion can use in the browser.
 
-import { askedOn } from '@/components/product/Previews';
+import { trendWord } from '@/demand/text';
 import { formatDate } from '@/domain/format';
-import { PILLAR_LABELS, PILLARS, type Pillar } from '@/domain/types';
-import { PLATFORM_NAMES } from '@/graphics/platforms';
-import type { Showcase } from '@/product/showcase';
+import type { ScoreLabel } from '@/domain/scores';
+import type { Pillar } from '@/domain/types';
+import { topQuestions, type Showcase } from '@/product/showcase';
 
 export interface StageData {
   name: string;
   city: string;
   /** When the Audit ran: "15 Aug 2026". */
   checked: string;
-  score: number;
-  label: string;
-  change: number | null;
-  pillars: Array<{ key: Pillar; label: string; score: number }>;
-  /** In rank order; `from`: how many rows away each starts, in the order of their names. */
+  /** Visibility, Trust and Chosen, each with its word and the points behind it, out of 100. */
+  words: Array<{ key: Pillar; label: string; word: ScoreLabel; score: number }>;
+  /** The one line from the three words. */
+  answer: string;
+  /** In rank order, with the small score; `from`: how many rows away each starts, in the order of their names. */
   rivals: Array<{ id: string; name: string; score: number; rank: number; you: boolean; from: number }>;
+  /** The month's one line about rivals. */
+  line: string | null;
   /** The questions asked most, with the site each was asked on. */
   questions: Array<{ text: string; count: number; platform: string }>;
-  /** The search rising fastest, and its searches by month, oldest first. */
-  trend: { text: string; changePct: number; count: number; history: number[] };
+  /** The program rising fastest, its word, its searches a month when counted, and its searches by month, oldest first. */
+  trend: { text: string; word: string; count: number | null; history: number[] };
 }
 
 export function stageData(showcase: Showcase): StageData {
-  const { audit, rivals, demand, home, institution } = showcase;
-  const byName = [...rivals.rows].sort((a, b) => a.name.localeCompare(b.name)).map((row) => row.id);
-  // A trend with a real count, so the picture never shows a made up figure (spec 9.5).
-  const top = demand.view.rising.find((row) => row.count !== null) ?? demand.view.topTrend;
+  const { audit, rivals, demand, institution } = showcase;
+  const ranking = rivals.view.ranking;
+  const byName = [...ranking].sort((a, b) => a.name.localeCompare(b.name)).map((row) => row.id);
+  const top = demand.highlight;
   return {
     name: institution.name,
     city: institution.city,
-    checked: formatDate(home.checkedAt),
-    score: audit.scores.overall,
-    label: audit.label,
-    change: audit.changes.overall,
-    pillars: PILLARS.map((pillar) => ({ key: pillar, label: PILLAR_LABELS[pillar], score: audit.scores[pillar] })),
-    rivals: rivals.rows.map((row, index) => ({
+    checked: formatDate(showcase.checkedAt),
+    words: audit.words.map((entry) => ({ key: entry.pillar, label: entry.name, word: entry.word, score: entry.score })),
+    answer: showcase.answer,
+    rivals: ranking.map((row, index) => ({
       id: row.id,
       name: row.you ? 'You' : row.name,
       score: row.overall ?? 0,
-      rank: row.rank ?? index + 1,
+      rank: row.place ?? index + 1,
       you: row.you,
       from: byName.indexOf(row.id) - index,
     })),
-    questions: demand.view.questions.slice(0, 3).map((row) => ({ text: row.text, count: row.count ?? 0, platform: PLATFORM_NAMES[askedOn(row)] })),
+    line: rivals.line,
+    questions: topQuestions(demand.signals, 3).map((question) => ({ text: question.text, count: question.count, platform: question.site })),
     trend: {
       text: top?.text ?? '',
-      changePct: Math.round(top?.changePct ?? 0),
-      count: top?.count ?? 0,
-      history: demand.topHistory.map((point) => point.count),
+      word: (top ? trendWord(top.changePct) : null) ?? '',
+      count: top?.count ?? null,
+      history: demand.history.map((point) => point.count),
     },
   };
 }

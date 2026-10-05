@@ -4,8 +4,10 @@ import { describe, test } from 'node:test';
 import { PLAN_RULES } from '../config/plans.ts';
 import { RIVAL_RULES } from '../config/rivals.ts';
 import { SCHEDULES } from '../config/schedules.ts';
+import { SCORING_V1 } from '../config/scoring.v1.ts';
 import { CHECKS } from '../domain/checks.ts';
 import { hasDashes } from '../domain/copy.ts';
+import { PLACE_LABELS, PLACES } from '../domain/types.ts';
 import * as content from './content.ts';
 
 // The product page's words: every number from config, no dashes, curly quotes only.
@@ -29,7 +31,7 @@ describe('the product page copy', () => {
   });
 
   test('the headline is the spec’s, and the proof line is as the user worded it', () => {
-    assert.equal(`${content.HERO.title} ${content.HERO.highlight}`, 'See where you stand, who’s ahead, and what students want.');
+    assert.equal(`${content.HERO.title} ${content.HERO.highlight}`, 'See what the internet says about you, who’s ahead in your city, and what students want.');
     assert.equal(content.PROOF_LINE, 'From AdmitLabs. 120+ education companies worked with.');
     assert.equal(content.CTA.primary, 'Get your free Audit');
     assert.equal(content.CTA.paid, 'Start with a free Audit');
@@ -55,20 +57,46 @@ describe('the product page copy', () => {
     assert.match(renewal?.answer ?? '', /30 days and 7 days/);
   });
 
-  test('schedules, checks and rival counts come from config', () => {
-    assert.ok(content.PLANS.cards[0]?.points.includes(`A new Audit every ${SCHEDULES.free.auditEveryMonths} months`));
+  test('schedules, places, words and rival counts come from config', () => {
+    assert.ok(content.PLANS.cards[0]?.points.includes(`A new Audit every ${SCHEDULES.free.auditEveryMonths} months, with an email when it’s ready`));
     // The Paid card says monthly, with one extra refresh: the schedule must still say so.
     assert.equal(SCHEDULES.paid.auditEveryMonths, 1);
     assert.equal(SCHEDULES.paid.manualRefresh, 'once_a_month');
+    // How Drishti reads you: every check under its word, the five places in their order, and what
+    // makes a word from the scoring settings.
     assert.equal(
-      content.SCORE.pillars.reduce((sum, pillar) => sum + pillar.checks.length, 0),
+      content.READS.words.reduce((sum, word) => sum + word.checks.length, 0),
       CHECKS.length,
     );
-    assert.match(content.SCORE.title, new RegExp(`${CHECKS.length} checks`));
-    assert.match(content.FEATURES[0]?.line ?? '', new RegExp(`${CHECKS.length} checks`));
-    assert.match(content.FEATURES[1]?.line ?? '', new RegExp(`${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals`));
+    assert.deepEqual(
+      content.READS.words.map((word) => word.name),
+      ['Visibility', 'Trust', 'Chosen'],
+    );
+    assert.deepEqual(
+      content.READS.places,
+      PLACES.map((place) => PLACE_LABELS[place]),
+    );
+    assert.deepEqual(
+      content.READS.key,
+      SCORING_V1.labels.map((band) => ({ word: band.label, min: band.min, max: band.max })),
+    );
+    assert.equal(content.READS.title, `${content.READS.places.length === 5 ? 'Five' : content.READS.places.length} places. Three words.`);
     // The website's Drishti section keeps its own line for each feature.
-    assert.match(content.FEATURES[1]?.lede ?? '', new RegExp(`${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals`));
+    assert.match(content.FEATURES[1]?.lede ?? '', new RegExp(`${RIVAL_RULES.min} to ${RIVAL_RULES.max} rivals in your city`));
+  });
+
+  test('the new product: three words, rivals in your city, Make these 3, Leads for clients and the one price', () => {
+    assert.match(content.FEATURES[0]?.lede ?? '', /Visibility, Trust and Chosen/);
+    assert.match(content.FEATURES[1]?.question ?? '', /in our city/);
+    assert.match(content.FEATURES[2]?.line ?? '', /Make these 3/);
+    assert.match(content.CLIENTS.leads, /Leads/);
+    assert.ok(content.TRUST.points.some((point) => point.startsWith('Leads is the one exception')));
+    const leads = content.FAQ.find((item) => item.question === 'What is Leads?');
+    assert.match(leads?.answer ?? '', /AdmitLabs clients/);
+    const [, paid] = content.PLANS.cards;
+    assert.equal(`${paid?.price} ${paid?.term}`, `₹24,999 + GST for ${PLAN_RULES.paid.lengthMonths} months`);
+    // No score anywhere in the words: the three words say it.
+    for (const text of ALL) assert.doesNotMatch(text, /score out of|overall score|\/100/i, text);
   });
 
   test('each feature opens with its name, its question and one short line', () => {
@@ -89,15 +117,15 @@ describe('the product page copy', () => {
     for (const text of texts(content.PROBLEM.card)) assert.doesNotMatch(text, /\d/, text);
   });
 
-  test('the score shows only its total and its three parts: no other numbers in its words', () => {
-    for (const text of [content.SCORE.lede, content.SCORE.total, content.SCORE.totalHow, content.SCORE.perProgram]) assert.doesNotMatch(text, /\d/, text);
+  test('How Drishti reads you shows no total: its words carry no numbers of their own', () => {
+    for (const text of [content.READS.title, content.READS.lede, content.READS.keyTitle, content.READS.keyNote]) assert.doesNotMatch(text, /\d/, text);
   });
 
-  test('no small labels above headings but the score’s, which names its feature; the pictures carry no caption: only the sample PDF says it is a sample', () => {
+  test('no small labels above headings but How Drishti reads you’s, which names its feature; the pictures carry no caption: only the sample PDF says it is a sample', () => {
     const keys = (value: unknown): string[] =>
       Array.isArray(value) ? value.flatMap(keys) : value && typeof value === 'object' ? Object.entries(value).flatMap(([key, entry]) => [key, ...keys(entry)]) : [];
     assert.equal(keys(Object.fromEntries(Object.entries(content))).includes('eyebrow'), false);
-    assert.equal(content.SCORE.label, `Inside ${content.FEATURES[0]?.name}`);
+    assert.equal(content.READS.label, `Inside ${content.FEATURES[0]?.name}`);
     const pictures = readFileSync(new URL('../components/product/Previews.tsx', import.meta.url), 'utf8');
     assert.doesNotMatch(pictures, /Sample institution|Fictional data/);
     assert.equal(content.REPORT.note, 'Sample report. Fictional data.');
@@ -110,8 +138,8 @@ describe('the product page copy', () => {
     }
   });
 
-  test('the FAQ covers data sources, privacy, public data only and renewal', () => {
+  test('the FAQ covers data sources, privacy, public data only, Leads and renewal', () => {
     const questions = content.FAQ.map((item) => item.question).join(' | ');
-    for (const topic of ['get its data', 'public data only', 'see our results', 'renew']) assert.ok(questions.includes(topic), topic);
+    for (const topic of ['get its data', 'public data only', 'see our results', 'Leads', 'renew']) assert.ok(questions.includes(topic), topic);
   });
 });

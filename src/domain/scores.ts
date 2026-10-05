@@ -45,6 +45,9 @@ export function nextBandText(score: number, config: Pick<ScoringConfig, 'labels'
   return rounded === top.min ? `Right where ${top.label} starts` : `${points(rounded - top.min)} above where ${top.label} starts`;
 }
 
+/** A word as the result bar shows it: Strong, Okay or Weak, with a thin bar of the points behind it. */
+export const WORD_RESULTS: Readonly<Record<ScoreLabel, CheckResult>> = { Strong: 'strong', Okay: 'okay', Weak: 'weak' };
+
 /** What a result earns of a check's points, 0 to 1: how far its bar fills when no points are given. */
 export function resultShare(result: CheckResult, config: Pick<ScoringConfig, 'resultShares'> = SCORING_V1): number {
   return config.resultShares[result];

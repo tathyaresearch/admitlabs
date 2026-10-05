@@ -75,7 +75,7 @@ export function TrendList({ trends, showProgram, showRegion, scale }: { trends: 
             <TrendWordLabel word={trend.word} />
           </span>
           <span className={styles.trendTrack} aria-hidden="true">
-            <span className={trend.kind === 'falling' ? styles.trendFillFalling : styles.trendFill} style={{ width: `${Math.max(4, (Math.abs(trend.changePct ?? 0) / biggest) * 100)}%` }} />
+            <span className={trend.kind === 'falling' ? styles.trendFillFalling : styles.trendFill} style={{ width: `${Math.max(4, (Math.abs(trend.changePct ?? 0) / biggest) * 100)}%` }} data-fill />
           </span>
           <span className={styles.trendMeta}>
             <Searches trend={trend} />

@@ -1,99 +1,161 @@
 // What the product page shows: one fictional institution in the month of the sample report
-// (August 2026), so every preview on the page agrees with the PDF it offers. Worked out from the
-// sample world in memory with the real scoring engine (src/sample/world.ts), then shown under the
-// website's names: the sample world's Eastgate University, Guwahati, is Larkmoor University,
+// (August 2026), so every picture on the page agrees with the PDF it offers. Worked out from the
+// sample world in memory with the real scoring engine (src/sample/world.ts), the way the dashboard
+// works it out for Paid: the Audit by place with the three words, Home's 3 things, the rivals in
+// its city place by place with the month's one line, and Demand with Make these 3. Then shown under
+// the website's names: the sample world's Eastgate University, Guwahati, is Larkmoor University,
 // Bangalore, here (./larkmoor.ts). No database. Built once per server; the page is prerendered, so
 // in practice once per build.
 
-import { overviewView, scoresByMonth, type AuditView, type ScoreSet } from '../audit/view.ts';
+import { auditPlaces, type AuditPlacesView } from '../audit/places.ts';
+import { auditVerdict } from '../audit/verdict.ts';
 import { DEMAND_RULES } from '../config/demand.ts';
-import { regionPlace } from '../demand/regions.ts';
-import { demandView, type DemandRow, type DemandView } from '../demand/view.ts';
-import { istDate, monthKey } from '../domain/dates.ts';
-import type { InstitutionType } from '../domain/types.ts';
-import { buildReport, type ReportData } from '../report/data.ts';
+import { nextPullOn } from '../demand/schedule.ts';
+import type { DemandSignals, TrendRow } from '../demand/signals.ts';
+import { PLATFORM_LABELS, platformOf } from '../demand/text.ts';
+import { istDate } from '../domain/dates.ts';
+import type { InstitutionType, Place } from '../domain/types.ts';
+import type { Highlight } from '../lib/demand/load.ts';
+import type { RivalMove } from '../lib/home/load.ts';
+import { buildReport, reportSides, type ReportData } from '../report/data.ts';
 import { monthEnd } from '../report/schedule.ts';
-import { ladder, type LadderRow } from '../rivals/compare.ts';
-import { pillarSpread, type PillarSpread } from '../rivals/trend.ts';
-import { rivalsVerdict } from '../rivals/verdict.ts';
+import { threeThings, type MonthPick, type Thing } from '../report/things.ts';
+import { openingPlace, rivalPlaces, type RivalPlacesView } from '../rivals/places.ts';
 import { DEMAND_MONTHS } from '../sample/demand.ts';
 import { SAMPLE_RIVALS } from '../sample/index.ts';
 import { SAMPLE_REPORT, sampleReportInput } from '../sample/report.ts';
-import { sampleDemand, sampleMoves, type SampleMoveRow } from '../sample/world.ts';
+import { sampleDemand, sampleMoves } from '../sample/world.ts';
 import { asLarkmoor } from './larkmoor.ts';
+
+export interface MonthCount {
+  month: string;
+  count: number;
+}
 
 export interface Showcase {
   institution: { id: string; name: string; type: InstitutionType; city: string };
-  audit: AuditView;
-  /** For the picture of Home: when the Audit ran, and the scores by month. */
-  home: { checkedAt: string; trend: Array<{ month: string; scores: ScoreSet }> };
+  /** When the Audit ran. */
+  checkedAt: string;
+  /** The one line from the three words, as Home starts. */
+  answer: string;
+  /** The Audit by place: the three words, Fix these first, the five places. */
+  audit: AuditPlacesView;
+  /** Home's Do these 3 things this month: a fix, a lesson from rivals and one of Make these 3. */
+  things: Thing[];
   rivals: {
-    rows: LadderRow[];
-    /** You and every rival on each pillar, as the Rivals page draws them. */
-    spread: PillarSpread[];
-    verdict: string;
-    /** The month's moves, newest first, as the Rivals page lists them. */
-    moves: Array<SampleMoveRow & { id: string }>;
-    names: ReadonlyMap<string, string>;
+    /** The month's one line. */
+    line: string | null;
+    /** The ranking and place by place, you among your rivals. */
+    view: RivalPlacesView;
+    /** The place the Rivals page opens on: where the one ahead leads you most. */
+    opened: Place;
+    /** The latest move of the month, as Home names it. */
+    latest: RivalMove | null;
   };
   demand: {
-    view: DemandView;
     place: string;
-    today: Date;
-    /** The fastest rise's searches in each month's pull, oldest first, as the Demand page draws them. */
-    topHistory: Array<{ month: string; count: number }>;
+    signals: DemandSignals;
+    /** The month's Make these 3, in their order. */
+    picks: MonthPick[];
+    /** Home's demand highlight: the fastest rise for the programs, and its searches by month. */
+    highlight: Highlight | null;
+    history: MonthCount[];
+    /** When Demand updates next, as Home says it. */
+    nextUpdate: string;
   };
-  /** The sample report, for the page previews of it and the PDF the page offers. */
+  /** The sample report, for the page's pictures of it and the PDF the page offers. */
   report: ReportData;
 }
 
-/** A topic's count in each month's pull up to `month`, found the way the dashboard finds it (src/demand/read.ts). */
-async function sampleTopicHistory(topic: Pick<DemandRow, 'programKey' | 'kind' | 'text'>, month: string, current: readonly DemandRow[]): Promise<Array<{ month: string; count: number }>> {
+export interface AskedMost {
+  key: string;
+  text: string;
+  count: number;
+  /** Where it was asked: "Quora". */
+  site: string;
+  program: string;
+}
+
+/** The questions students ask most, across the programs, each once and most first, with the site each was asked on. Only counted ones. */
+export function topQuestions(signals: DemandSignals, limit: number): AskedMost[] {
+  const all = signals.asks
+    .flatMap((program) => [...program.topics.flatMap((topic) => topic.questions), ...program.other].map((question) => ({ question, program: program.programName })))
+    .filter(({ question }) => question.count !== null)
+    .sort((a, b) => (b.question.count ?? 0) - (a.question.count ?? 0) || a.question.text.localeCompare(b.question.text));
+  const unique = all.filter(({ question }, index) => all.findIndex((other) => other.question.text === question.text) === index);
+  return unique.slice(0, limit).map(({ question, program }) => ({
+    key: question.key,
+    text: question.text,
+    count: question.count ?? 0,
+    site: PLATFORM_LABELS[question.platform ?? platformOf(question.sourceUrl) ?? ''] ?? 'Forums',
+    program,
+  }));
+}
+
+/** A trend's searches in each month's pull up to `month`, oldest first, found the way Home finds them (src/demand/read.ts). */
+async function sampleTopicHistory(trend: TrendRow, scope: 'city' | 'state', month: string): Promise<MonthCount[]> {
   const months = DEMAND_MONTHS.filter((each) => each <= month).slice(-DEMAND_RULES.historyMonths);
-  const pulls = await Promise.all(months.map(async (each) => ({ month: each, rows: each === month ? current : (await sampleDemand(SAMPLE_REPORT.slug, each)).rows })));
+  const pulls = await Promise.all(months.map(async (each) => ({ month: each, rows: (await sampleDemand(SAMPLE_REPORT.slug, each, scope)).rows })));
   return pulls.flatMap((pull) => {
-    const row = pull.rows.find((entry) => entry.programKey === topic.programKey && entry.kind === topic.kind && entry.text === topic.text);
+    const row = pull.rows.find((entry) => entry.programKey === trend.programKey && entry.kind === 'rising' && entry.text === trend.text);
     return row && row.count !== null ? [{ month: pull.month, count: row.count }] : [];
   });
 }
 
-/** A rival's change since its Audit before, from its history. */
-function lastChange(history: ReadonlyArray<{ overall: number }>): number | null {
-  const [before, latest] = history.slice(-2);
-  return before && latest ? latest.overall - before.overall : null;
+/** Home's highlight, as demand_highlight() picks it: the fastest rise across the programs' pulls. */
+function highlightOf(trend: TrendRow, month: string): Highlight {
+  return {
+    text: trend.text,
+    changePct: trend.changePct,
+    count: trend.searches,
+    countSource: trend.searchesUrl,
+    sourceUrl: trend.sourceUrl,
+    foundAt: trend.foundAt,
+    programName: trend.programName,
+    region: trend.region,
+    month,
+  };
 }
 
 async function build(): Promise<Showcase> {
   const input = await sampleReportInput();
-  const { institution, audit } = input;
-  const pulled = await sampleDemand(SAMPLE_REPORT.slug, input.month);
-  const demand = demandView(pulled.rows, { singleProgram: false, skills: institution.type === 'skilling' });
-  const scored = input.rivals.flatMap((rival) => (rival.audit ? [{ name: rival.name, scores: rival.audit.scores }] : []));
+  const { institution, audit, month } = input;
+  const previous = [...input.history].reverse().find((row) => row.runAt < audit.runAt) ?? null;
+  const view = auditPlaces(audit, input.findings, {
+    institutionType: institution.type,
+    city: institution.city,
+    programNames: input.programNames,
+    previousRunAt: previous?.runAt ?? null,
+  });
+  const rivalNames = new Map(input.rivals.map((rival) => [rival.id, rival.name]));
+  const places = rivalPlaces(reportSides(input));
+
   const rivalSlugs = SAMPLE_RIVALS.filter(([tracker]) => tracker === SAMPLE_REPORT.slug).map(([, rival]) => rival);
-  const moves = sampleMoves(rivalSlugs, istDate(`${input.month}-01`), new Date(monthEnd(input.month).getTime() - 1));
+  const [move] = sampleMoves(rivalSlugs, istDate(`${month}-01`), new Date(monthEnd(month).getTime() - 1));
+
+  const signals = input.demand.signals;
+  if (!signals?.month) throw new Error('The sample report has no Demand.');
+  const top = signals.trends.find((trend) => trend.kind === 'rising') ?? null;
 
   return asLarkmoor<Showcase>({
     institution: { id: institution.id, name: institution.name, type: institution.type, city: institution.city },
-    audit: overviewView(audit, { institutionType: institution.type, programNames: input.programNames }),
-    home: { checkedAt: audit.runAt, trend: scoresByMonth(input.history, (runAt) => monthKey(new Date(runAt))) },
+    checkedAt: audit.runAt,
+    answer: auditVerdict(audit.scores),
+    audit: view,
+    things: threeThings({ fixes: view.fixes, lessons: input.lessons, picks: input.picks, rivalNames }),
     rivals: {
-      rows: ladder(
-        { id: institution.id, name: institution.name, overall: audit.scores.overall, change: audit.changes.overall },
-        input.rivals.map((rival) => ({ id: rival.id, name: rival.name, overall: rival.audit?.scores.overall ?? null, change: rival.audit ? lastChange(rival.history) : null })),
-      ),
-      spread: pillarSpread(
-        { id: institution.id, name: institution.name, scores: audit.scores },
-        input.rivals.map((rival) => ({ id: rival.id, name: rival.name, scores: rival.audit?.scores ?? null })),
-      ),
-      verdict: rivalsVerdict(audit.scores, scored),
-      moves: moves.map((move, index) => ({ ...move, id: `move-${index}` })),
-      names: new Map(input.rivals.map((rival) => [rival.id, rival.name])),
+      line: input.line,
+      view: places,
+      opened: openingPlace(places, institution.id),
+      latest: move ? { ...move, id: 'move-0', rivalName: rivalNames.get(move.rivalId) ?? 'A rival' } : null,
     },
     demand: {
-      view: demand,
-      place: regionPlace(pulled.region),
-      today: new Date(pulled.pulledAt),
-      topHistory: demand.topTrend ? await sampleTopicHistory(demand.topTrend, input.month, pulled.rows) : [],
+      place: institution.city,
+      signals,
+      picks: [...input.picks].sort((a, b) => a.rank - b.rank),
+      highlight: top ? highlightOf(top, signals.month) : null,
+      history: top ? await sampleTopicHistory(top, top.region === institution.city ? 'city' : 'state', month) : [],
+      nextUpdate: nextPullOn(input.madeAt).toISOString(),
     },
     report: buildReport(input),
   });

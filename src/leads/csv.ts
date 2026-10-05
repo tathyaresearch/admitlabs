@@ -1,7 +1,8 @@
 // The Leads list as a CSV file, for the college's own people (spec section 23). Phone numbers are
-// written as digits only (919876543210), so a spreadsheet shows no apostrophe; any other cell that
-// starts like a spreadsheet formula gets a leading apostrophe, so a name typed into the public form
-// can never run as one. Pure.
+// written in groups with spaces (91 98765 43210): Excel and Google Sheets keep that as text, so it
+// reads in full, with no apostrophe and never as 9.19877E+11. Any other cell that starts like a
+// spreadsheet formula gets a leading apostrophe, so a name typed into the public form can never run
+// as one. Pure.
 
 import { istParts, istTime } from '../domain/dates.ts';
 import { LEAD_SOURCE_LABELS, type LeadSource } from '../domain/types.ts';
@@ -35,9 +36,16 @@ export function csvCell(value: string | null): string {
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-/** A stored phone number ('+919876543210') as digits only: '919876543210'. Never a formula, so it needs no apostrophe. */
+/**
+ * A stored phone number ('+919876543210') in groups with spaces: '91 98765 43210'. A spreadsheet
+ * reads that as text, never as a number, and it starts with no formula character, so it needs no
+ * apostrophe either. A number in another shape goes in groups of five.
+ */
 export function csvPhone(phone: string): string {
-  return phone.replace(/\D/g, '');
+  const digits = phone.replace(/\D/g, '');
+  const india = /^91(\d{5})(\d{5})$/.exec(digits);
+  if (india) return `91 ${india[1]} ${india[2]}`;
+  return digits.match(/\d{1,5}/g)?.join(' ') ?? '';
 }
 
 /** The file: a header, then one row per enquiry, newest first as given. With a BOM so spreadsheets read every name right. */

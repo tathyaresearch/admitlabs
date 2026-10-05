@@ -319,40 +319,59 @@
   gap: 0.3125rem;
 }
 
-/* The score: the number and its word on one line, the bar under them. */
-.cardScore {
+/* The three words: each name with its icon, then its word on a thin bar of the points behind it,
+   the bars lined up in one column. */
+.cardWords {
+  display: grid;
+  gap: var(--space-1);
+  list-style: none;
+}
+
+.cardWord {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7.25rem;
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: 1.875rem;
+  font-size: 0.875rem;
+}
+
+.cardWord + .cardWord {
+  border-top: 1px solid var(--card-line);
+}
+
+.cardWordName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-weight: var(--weight-heading);
+}
+
+.cardWordName svg {
+  flex: none;
+  color: var(--slate);
+}
+
+/* The product's own result bar, held to the card's bar width (two classes, so it wins over the
+   bar's own size whatever order the styles load in). */
+.cardWord [data-result] {
+  --bar-width: 3.75rem;
+  justify-self: start;
+  font-size: 0.8125rem;
+}
+
+/* The month's one line about rivals, at the foot of their panel, over where it came from. */
+.cardFootStack {
   display: grid;
   gap: var(--space-2);
 }
 
-.cardScoreLine {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.cardScoreNumber {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.15em;
-}
-
-.cardScoreNumber :global(.num):first-child {
-  font-size: 2.25rem;
-  font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.045em;
-}
-
-.cardScoreNumber small {
-  font-size: 0.875rem;
-  color: var(--slate);
-}
-
-.cardWord {
+.cardLine {
   font-size: 0.8125rem;
   font-weight: var(--weight-heading);
+  line-height: 1.45;
+  text-wrap: pretty;
 }
 
 .cardTrack {
@@ -719,11 +738,6 @@
   background: radial-gradient(45% 40% at 100% 0%, rgba(242, 232, 214, 0.045), transparent 70%), var(--black);
 }
 
-.scoreTop {
-  display: grid;
-  gap: var(--space-6);
-}
-
 .scoreHead {
   display: grid;
   align-content: start;
@@ -745,53 +759,6 @@
   letter-spacing: -0.005em;
 }
 
-.total {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-5);
-  border: 1px solid var(--hair-2);
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #17171b 0%, #101013 100%);
-}
-
-.totalCaption {
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--slate);
-}
-
-.totalLabel {
-  margin-top: var(--space-1);
-  font-size: 0.9375rem;
-  font-weight: var(--weight-heading);
-}
-
-.totalLine {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-4);
-}
-
-.totalScore {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.2rem;
-}
-
-.totalScore :global(.num):first-child {
-  font-size: 2.75rem;
-  font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.045em;
-}
-
-.totalScore small {
-  font-size: 0.875rem;
-  color: var(--slate);
-}
-
-.totalTrack,
 .ledgerTrack {
   display: block;
   height: 4px;
@@ -800,11 +767,6 @@
   background: rgba(242, 232, 214, 0.12);
 }
 
-.totalTrack {
-  margin-top: var(--space-1);
-}
-
-.totalTrack i,
 .ledgerTrack i {
   display: block;
   height: 100%;
@@ -812,26 +774,20 @@
   background: var(--ivory);
 }
 
-.totalHow {
+/* Whose checks these are: the sample, and when it was checked. */
+.ledgerCaption {
+  margin-top: var(--space-8);
   font-size: 0.8125rem;
   color: var(--slate);
 }
 
-@media (min-width: 64rem) {
-  .scoreTop {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
-    column-gap: var(--space-16);
-    align-items: end;
-  }
-}
-
-/* The table. Each part is a column (a block on a phone): its header, then its checks, one to a row.
-   The rows sit in slots of one height, so they line up across the columns; a part with fewer
-   checks ends in an empty slot, ruled like the rest. */
+/* The table. Each word is a column (a block on a phone): its header, then its checks, one to a
+   row, each with its place. The rows sit in slots of one height, so they line up across the
+   columns; a word with fewer checks ends in an empty slot, ruled like the rest. */
 .ledger {
-  --row-h: 2.25rem;
+  --row-h: 3rem;
   display: grid;
-  margin-top: var(--space-6);
+  margin-top: var(--space-3);
   overflow: clip;
   border: 1px solid var(--hair-2);
   border-radius: 1.25rem;
@@ -847,8 +803,8 @@
   border-top: 1px solid var(--hair-2);
 }
 
-/* A part's header. On a phone: its name with its score on the same line, the question under the
-   name, the bar across. In a column: the name, the question, the score, the bar. */
+/* A word's header. On a phone: its name with the word on the same line, the question under the
+   name, the bar across. In a column: the name, the question, the word, the bar. */
 .ledgerHead {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -884,23 +840,12 @@
   color: var(--slate);
 }
 
-.ledgerScore {
+.ledgerWord {
   grid-area: score;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.2rem;
-}
-
-.ledgerScore :global(.num):first-child {
-  font-size: 1.75rem;
+  font-size: 1.375rem;
   font-weight: var(--weight-heading);
   line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.ledgerScore small {
-  font-size: 0.8125rem;
-  color: var(--slate);
+  letter-spacing: -0.02em;
 }
 
 .ledgerTrack {
@@ -908,7 +853,8 @@
   margin-top: var(--space-3);
 }
 
-/* The checks: a name, then its result: the bar one width, the word in one column after it. */
+/* The checks: a name with its place under it, then its result: the bar one width, the word in one
+   column after it. */
 .ledgerRows {
   --bar-w: 3.75rem;
   --word-w: 3.75rem;
@@ -938,12 +884,22 @@
 }
 
 .ledgerCheck {
+  display: grid;
   min-width: 0;
+  line-height: 1.3;
+}
+
+.ledgerCheckName {
   overflow: hidden;
   font-size: 0.875rem;
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--grey-200);
+}
+
+.ledgerPlace {
+  font-size: 0.75rem;
+  color: var(--slate);
 }
 
 /* An empty slot: only where the parts stand side by side. */
@@ -959,16 +915,19 @@
     --word-w: 3.5rem;
   }
 
-  .ledgerCheck {
+  .ledgerCheckName {
     font-size: 0.8125rem;
   }
 }
 
 @media (min-width: 60rem) {
-  .ledger {
-    --row-h: 2.5rem;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .ledgerCaption {
     margin-top: var(--space-10);
+  }
+
+  .ledger {
+    --row-h: 3.125rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .ledgerPart {
@@ -989,12 +948,9 @@
       'track';
   }
 
-  .ledgerScore {
+  .ledgerWord {
     margin-top: var(--space-4);
-  }
-
-  .ledgerScore :global(.num):first-child {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   .ledgerEmpty {
@@ -1002,8 +958,8 @@
   }
 }
 
-/* What each result earns, compact: one line on a wide screen; on a phone one result to a line,
-   its bar and word in one column and what it earns in the next. */
+/* What makes a word, compact: one line on a wide screen; on a phone one word to a line, the word
+   in one column and its range in the next. */
 .ledgerKey {
   display: grid;
   gap: var(--space-3);
@@ -1032,8 +988,16 @@
   font-size: 0.8125rem;
 }
 
+.resultWord {
+  font-weight: var(--weight-heading);
+}
+
 .resultShare {
   color: var(--slate);
+}
+
+.resultShare :global(.num) {
+  color: var(--ivory);
 }
 
 .ledgerNote {
@@ -1213,18 +1177,13 @@
   color: var(--slate);
 }
 
-/* What "Drishti checks everything" names, as a row of marks under it. */
+/* The five places "Drishti checks every place" names, as a row of marks under it. */
 .stepMarks {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
   margin-top: var(--space-2);
-  list-style: none;
   color: var(--slate);
-}
-
-.stepMarks li {
-  display: flex;
 }
 
 @media (min-width: 64rem) {
@@ -1657,7 +1616,21 @@
       view-timeline: --picture block;
     }
 
-    /* The Audit: the score counts up (./CountUp.tsx), the bars fill to their points. */
+    /* The Audit: the three words settle in turn, then the bars fill to their points. */
+    .audit [data-word] {
+      animation: lift linear both;
+      animation-timeline: --picture;
+      animation-range: cover 8% cover 22%;
+    }
+
+    .audit :nth-child(2) > [data-word] {
+      animation-range: cover 12% cover 26%;
+    }
+
+    .audit :nth-child(3) > [data-word] {
+      animation-range: cover 16% cover 30%;
+    }
+
     .audit [data-fill] {
       transform-origin: left;
       animation: fill-across linear both;
@@ -1665,7 +1638,7 @@
       animation-range: cover 18% cover 42%;
     }
 
-    /* Rivals: the rows slide from the order of their names into rank order, then the bars fill. */
+    /* Rivals: the ranking slides from the order of the names into rank order, then the bars fill. */
     .rivals [data-slide] {
       animation: take-place linear both;
       animation-timeline: --picture;
@@ -1679,18 +1652,12 @@
       animation-range: cover 30% cover 46%;
     }
 
-    /* Demand: the months grow in turn, and the counts come in once their bars stand. */
+    /* Demand: the programs' bars grow to their rise. */
     .demand [data-fill] {
-      transform-origin: bottom;
-      animation: grow-up linear both;
+      transform-origin: left;
+      animation: fill-across linear both;
       animation-timeline: --picture;
-      animation-range: cover calc(14% + var(--i, 0) * 3%) cover calc(30% + var(--i, 0) * 3%);
-    }
-
-    .demand :has(+ [data-fill]) {
-      animation: appear linear both;
-      animation-timeline: --picture;
-      animation-range: cover 36% cover 46%;
+      animation-range: cover 34% cover 52%;
     }
 
     /* The problem card's bars fill as it comes up the screen. Their tracks clip them, so they follow
@@ -1706,19 +1673,7 @@
       animation-range: cover 12% cover 32%;
     }
 
-    /* The score's bar fills as it comes up the screen; its track clips it, so it follows its card. */
-    .total {
-      view-timeline: --total block;
-    }
-
-    .total [data-fill] {
-      transform-origin: left;
-      animation: fill-across linear both;
-      animation-timeline: --total;
-      animation-range: cover 10% cover 35%;
-    }
-
-    /* The parts' bars, then their checks', fill as the table comes up the screen. */
+    /* The words' bars, then their checks', fill as the table comes up the screen. */
     .ledger {
       view-timeline: --ledger block;
     }
@@ -1733,18 +1688,6 @@
 
     .ledgerRow [data-fill] {
       animation-range: cover 10% cover 28%;
-    }
-
-    /* What each result earns: each bar fills to its share, one after the other. */
-    .results {
-      view-timeline: --results block;
-    }
-
-    .results [data-fill] {
-      transform-origin: left;
-      animation: fill-across linear both;
-      animation-timeline: --results;
-      animation-range: entry calc(20% + var(--order, 0) * 15%) cover calc(40% + var(--order, 0) * 6%);
     }
 
     /* How it works: the line fills as the steps pass the middle of the screen. */
@@ -1797,20 +1740,8 @@
   }
 }
 
-@keyframes grow-up {
-  from {
-    scale: 1 0;
-  }
-}
-
 @keyframes take-place {
   from {
     translate: 0 calc(var(--from, 0) * (100% + 2px));
-  }
-}
-
-@keyframes appear {
-  from {
-    opacity: 0;
   }
 }

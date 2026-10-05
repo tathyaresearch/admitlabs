@@ -1,6 +1,7 @@
 // Drishti on the website, on black: what it is and its three numbers, then its three questions
 // as a short editorial list beside the product itself, a made-up institution's Home in an app
-// window (src/site/scenes.ts, never the product's own sample data). Then the way in.
+// window (src/site/scenes.ts, never the product's own sample data): the three words, the 3 things
+// to do this month, the rivals in its city and what students want. Then the way in.
 
 import type { CSSProperties } from 'react';
 import { ProductLockup } from '@/components/ui/Brand';
@@ -26,7 +27,7 @@ const vars = (values: Record<string, string | number>) => values as CSSPropertie
 const [TITLE_NAME, ...TITLE_REST] = DRISHTI.title.split(' ');
 
 function DashboardPicture() {
-  const { score, pillars, fixes, rivals, demand } = DASHBOARD;
+  const { words, things, rivals, demand } = DASHBOARD;
   const top = Math.max(...demand.months.map((entry) => entry.value));
   return (
     <div className={styles.window} aria-hidden="true">
@@ -55,44 +56,37 @@ function DashboardPicture() {
           <p className={styles.appQuestion}>{DASHBOARD.question}</p>
           <div className={styles.panels}>
             <div className={styles.panel}>
-              <p className={styles.panelLabel}>{score.title}</p>
-              <p className={styles.score}>
-                <span className="num">{score.overall}</span>
-                <small className="num">/100</small>
-              </p>
-              <p className={styles.scoreMeta}>
-                <span className={styles.chip}>{score.label}</span>
-                <span>
-                  <Icon name="arrowUp" size={12} />
-                  {score.change} since {score.since}
-                </span>
-              </p>
-              <ul className={styles.pillars}>
-                {pillars.map((pillar) => (
-                  <li key={pillar.name}>
-                    <span>{pillar.name}</span>
+              <p className={styles.panelLabel}>{words.title}</p>
+              <ul className={styles.words}>
+                {words.items.map((word) => (
+                  <li key={word.name}>
+                    <span>{word.name}</span>
                     <span className={styles.bar}>
-                      <i style={vars({ width: `${pillar.value}%` })} />
+                      <i style={vars({ width: `${word.value}%` })} />
                     </span>
-                    <span className="num">{pillar.value}</span>
+                    <span className={styles.word}>{word.word}</span>
+                    <span className={styles.fixFirst}>
+                      {words.fixFirst} <strong>{word.fix}</strong>
+                    </span>
                   </li>
                 ))}
               </ul>
+              <p className={styles.panelNote}>{words.answer}</p>
             </div>
             <div className={styles.panel}>
-              <p className={styles.panelLabel}>{fixes.title}</p>
+              <p className={styles.panelLabel}>{things.title}</p>
               <ol className={styles.fixes}>
-                {fixes.items.map((fix, index) => (
-                  <li key={fix.name}>
+                {things.items.map((thing, index) => (
+                  <li key={thing.title}>
                     <span className={`${styles.fixRank} num`}>{index + 1}</span>
-                    {fix.name}
-                    <span className={styles.points}>
-                      <span className="num">+{fix.points}</span> {fixes.unit}
+                    <span className={styles.thing}>
+                      {thing.title}
+                      <span className={styles.from}>{thing.from}</span>
                     </span>
                   </li>
                 ))}
               </ol>
-              <p className={styles.panelNote}>{fixes.note}</p>
+              <p className={styles.panelNote}>{things.note}</p>
             </div>
             <div className={`${styles.panel} ${styles.wideOnly}`}>
               <p className={styles.panelLabel}>
@@ -112,15 +106,18 @@ function DashboardPicture() {
                   </li>
                 ))}
               </ul>
-              <p className={styles.panelNote}>{rivals.note}</p>
+              <p className={styles.panelNote}>{rivals.line}</p>
             </div>
             <div className={`${styles.panel} ${styles.wideOnly}`}>
               <p className={styles.panelLabel}>{demand.title}</p>
               <p className={styles.rise}>
-                <Icon name="arrowUp" size={14} />
-                <span className="num">{demand.change}%</span>
+                <Icon name="arrowUpRight" size={14} />
+                <span>{demand.word}</span>
               </p>
               <p className={styles.topic}>{demand.topic}</p>
+              <p className={styles.searches}>
+                About <span className="num">{demand.searches}</span> searches a month
+              </p>
               <ul className={styles.months}>
                 {demand.months.map((entry, index) => (
                   <li key={entry.month} className={index === demand.months.length - 1 ? styles.latest : undefined}>

@@ -12,12 +12,7 @@ import styles from './charts.module.css';
 /** The number's letter spacing, in em: a touch tight, like the other big numbers. */
 const TRACKING = -0.04;
 
-/**
- * `countUp`: the product page counts the number up and draws the arc as the gauge comes into view
- * (src/components/product/CountUp.tsx: data-count on the number, the state on the figure, a
- * normalised length on the arc). Elsewhere, and without script or motion, it simply shows.
- */
-export function ScoreGauge({ score, label = 'Overall score', countUp = false }: { score: number; label?: string; countUp?: boolean }) {
+export function ScoreGauge({ score, label = 'Overall score' }: { score: number; label?: string }) {
   const value = Math.max(0, Math.min(100, Math.round(score)));
   const shape = scoreGauge(value, bandStarts(), TRACKING);
   const words = new Map(bandTicks().map((tick) => [tick.start, tick.lines]));
@@ -26,10 +21,10 @@ export function ScoreGauge({ score, label = 'Overall score', countUp = false }: 
     .map((tick) => `${tick.lines[0]} ${tick.lines[1]}`)
     .join(', ');
   return (
-    <figure className={styles.gauge} role="img" aria-label={`${label}: ${value} out of 100, ${scoreLabel(value)}. ${ticks}.`} data-count-root={countUp ? '' : undefined}>
+    <figure className={styles.gauge} role="img" aria-label={`${label}: ${value} out of 100, ${scoreLabel(value)}. ${ticks}.`}>
       <svg viewBox={GAUGE_VIEWBOX} aria-hidden="true">
         <path d={shape.track} className={styles.gaugeTrack} strokeWidth={stroke} />
-        {shape.value ? <path d={shape.value} className={styles.gaugeValue} strokeWidth={stroke} pathLength={countUp ? 100 : undefined} data-draw={countUp || undefined} /> : null}
+        {shape.value ? <path d={shape.value} className={styles.gaugeValue} strokeWidth={stroke} /> : null}
         {shape.notches.map((notch) => (
           <line key={`${notch.x1}-${notch.y1}`} {...notch} className={styles.gaugeNotch} />
         ))}
@@ -53,7 +48,6 @@ export function ScoreGauge({ score, label = 'Overall score', countUp = false }: 
           textAnchor="middle"
           className={styles.gaugeNumber}
           style={{ fontSize: shape.number.size, letterSpacing: `${TRACKING}em` }}
-          data-count={countUp ? value : undefined}
         >
           {value}
         </text>

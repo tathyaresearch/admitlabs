@@ -1,31 +1,29 @@
 // The product page, /drishti, in the website's Spotlight style: the hero with Home itself, the
 // problem (most teams guess, Drishti checks) beside a card of the sample university's answers, the
-// three features (each opening with a bar that stays while its pictures pass), the score as a table
-// of its three parts, the rules, how it works and the final call. Plans, clients and the FAQ are in
-// ./Offer.tsx; the sample report in ./ReportShowcase.tsx. The header, footer, frame, buttons and
-// light are the website's.
+// three features (each opening with a bar that stays while its pictures pass), how Drishti reads
+// you (five places, three words), the rules, how it works and the final call. Plans, clients and
+// the FAQ are in ./Offer.tsx; the sample report in ./ReportShowcase.tsx. The header, footer, frame,
+// buttons and light are the website's.
 
-import type { CSSProperties, JSX } from 'react';
+import { Fragment, type CSSProperties, type JSX } from 'react';
+import { PLACE_ICONS } from '@/components/audit/PlaceBits';
 import { Frame } from '@/components/site/Frame';
 import { ProductLockup } from '@/components/ui/Brand';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
-import { Mark, PillarIcon } from '@/components/ui/Marks';
-import { ResultBar, ScoreLabel } from '@/components/ui/Results';
-import { pillarChecks } from '@/audit/view';
-import { SCORING_V1 } from '@/config/scoring.v1';
-import { CHECKS } from '@/domain/checks';
-import { formatDate, ordinal, plural } from '@/domain/format';
-import { scoreLabel } from '@/domain/scores';
-import { PILLAR_LABELS, RESULTS, type CheckResult, type Pillar } from '@/domain/types';
-import type { IconRef } from '@/graphics/icons';
-import { PLATFORM_ICONS, PLATFORM_NAMES } from '@/graphics/platforms';
-import { CTA, FEATURES, FEATURES_HEAD, FINAL, HERO, PROBLEM, PROOF_LINE, REPORT, SCORE, STEPS, TRUST, type Feature } from '@/product/content';
-import type { Showcase } from '@/product/showcase';
+import { ResultBar } from '@/components/ui/Results';
+import { checksForPillar } from '@/domain/checks';
+import { formatDate, ordinal } from '@/domain/format';
+import { WORD_RESULTS } from '@/domain/scores';
+import { PLACE_LABELS, PLACES } from '@/domain/types';
+import { PILLAR_ICONS } from '@/graphics/icons';
+import { PLATFORM_NAMES } from '@/graphics/platforms';
+import { CTA, FEATURES, FEATURES_HEAD, FINAL, HERO, PROBLEM, PROOF_LINE, READS, REPORT, STEPS, TRUST, type Feature } from '@/product/content';
+import { topQuestions, type Showcase } from '@/product/showcase';
 import { wayIn } from '@/site/way-in';
 import sections from '@/components/site/sections.module.css';
 import site from '@/components/site/site.module.css';
-import { AppWindow, askedOn, AuditPicture, DemandPicture, RivalsPicture } from './Previews';
+import { AppWindow, AuditPicture, DemandPicture, RivalsPicture } from './Previews';
 import styles from './product.module.css';
 
 /** "Get your free Audit", or while Drishti is not open yet, "Talk to us" (src/site/way-in.ts). */
@@ -56,15 +54,15 @@ function lede(text: string) {
   );
 }
 
-/** The headline in two lines on a wide screen: "See where you stand, who’s ahead," then "and what students want." */
-function heroLines(title: string): readonly [string, string] {
-  const cut = title.lastIndexOf(', ');
-  return cut < 0 ? [title, ''] : [title.slice(0, cut + 1), title.slice(cut + 2)];
+/** The headline in three lines on a wide screen: "See what the internet says about you," then "who’s ahead in your city," then "and what students want." */
+function heroLines(title: string): string[] {
+  const parts = title.split(', ');
+  return parts.map((part, index) => (index < parts.length - 1 ? `${part},` : part));
 }
 
 /** The promise under the light, the two ways in, then Home itself. */
 export function Hero({ showcase }: { showcase: Showcase }) {
-  const [first, rest] = heroLines(HERO.title);
+  const lines = heroLines(HERO.title);
   return (
     <section className={`${styles.hero} ${site.grain}`} data-theme="dark" aria-labelledby="hero-title">
       <div className={styles.beam} aria-hidden="true" />
@@ -73,10 +71,20 @@ export function Hero({ showcase }: { showcase: Showcase }) {
       <div className={`${site.container} ${styles.heroContent}`}>
         <ProductLockup size="lg" motion="rise" className={styles.lockup} />
         <h1 id="hero-title" className={styles.heroTitle}>
-          <span className={styles.heroLine}>{first}</span>{' '}
-          <span className={styles.heroLine}>
-            {rest} <span className={styles.highlight}>{HERO.highlight}</span>
-          </span>
+          {lines.map((line, index) => (
+            <Fragment key={line}>
+              <span className={styles.heroLine}>
+                {line}
+                {index === lines.length - 1 ? (
+                  <>
+                    {' '}
+                    <span className={styles.highlight}>{HERO.highlight}</span>
+                  </>
+                ) : null}
+              </span>
+              {index < lines.length - 1 ? ' ' : null}
+            </Fragment>
+          ))}
         </h1>
         <p className={styles.heroLede}>{lede(HERO.lede)}</p>
         <div className={styles.heroActions}>
@@ -104,31 +112,32 @@ export function Hero({ showcase }: { showcase: Showcase }) {
   );
 }
 
-/** Where the Audit looks, as marks: Google, your website, social media, reviews and AI answers. */
-const CHECKED_MARKS: ReadonlyArray<{ key: string; icon: IconRef }> = [
-  { key: 'google', icon: PLATFORM_ICONS.google },
-  { key: 'website', icon: PLATFORM_ICONS.website },
-  { key: 'instagram', icon: PLATFORM_ICONS.instagram },
-  { key: 'youtube', icon: PLATFORM_ICONS.youtube },
-  { key: 'reviews', icon: { kind: 'line', name: 'star' } },
-  { key: 'ai', icon: PLATFORM_ICONS.ai_assistants },
-];
+/** The five places the Audit looks, as the dashboard's own marks for them. */
+function PlaceMarks({ size }: { size: number }) {
+  return (
+    <>
+      {PLACES.map((place) => (
+        <Icon key={place} name={PLACE_ICONS[place]} size={size} />
+      ))}
+    </>
+  );
+}
 
 /**
  * The problem: most teams guess, Drishti checks. The headline with its line beside it, then one wide
  * Drishti card, dense like the dashboard: a top bar with the sample university and when it was
  * checked, then its answers to the three questions side by side (stacked on a phone), each with
- * where it came from: its score from the Audit's checks of public pages, its place among its rivals
- * from each one's own Audit, and the questions asked most with their site and count, with the
- * search rising fastest under them.
+ * where it came from: Visibility, Trust and Chosen from the Audit's five places; its place among
+ * the rivals in its city, from each one's own Audit, with the month's one line; and the questions
+ * asked most with their site and count, with the program rising fastest under them, in words.
  */
 export function Problem({ showcase }: { showcase: Showcase }) {
   const { card } = PROBLEM;
   const { audit, institution, rivals, demand } = showcase;
-  const score = audit.scores.overall;
-  const you = rivals.rows.find((row) => row.you);
-  // A trend with a real count, so the picture never shows a made up figure (spec 9.5).
-  const top = demand.view.rising.find((row) => row.count !== null) ?? demand.view.topTrend;
+  const ranking = rivals.view.ranking;
+  const you = ranking.find((row) => row.you);
+  const questions = topQuestions(demand.signals, 3);
+  const rising = demand.highlight;
   return (
     <section className={styles.problem} data-theme="light" aria-labelledby="problem-title">
       <div className={site.container}>
@@ -145,36 +154,31 @@ export function Problem({ showcase }: { showcase: Showcase }) {
               <strong>{institution.name}</strong>, {institution.city}
             </span>
             <span>
-              {card.checked} {formatDate(showcase.home.checkedAt)}
+              {card.checked} {formatDate(showcase.checkedAt)}
             </span>
           </p>
 
           <div className={styles.cardPanels}>
-            <section className={styles.cardPanel} aria-labelledby="card-score">
-              <h3 id="card-score" className={styles.cardQuestion}>
-                {card.score}
+            <section className={styles.cardPanel} aria-labelledby="card-words">
+              <h3 id="card-words" className={styles.cardQuestion}>
+                {card.words}
               </h3>
-              <div className={styles.cardScore}>
-                <p className={styles.cardScoreLine}>
-                  <span className={styles.cardScoreNumber}>
-                    <span className="num">{score}</span>
-                    <small className="num">/100</small>
-                  </span>
-                  <span className={styles.cardWord}>{scoreLabel(score)}</span>
-                </p>
-                <span className={styles.cardTrack} aria-hidden="true">
-                  <i style={{ width: `${score}%` }} data-fill />
-                </span>
-              </div>
+              <ul className={styles.cardWords}>
+                {audit.words.map((word) => (
+                  <li key={word.pillar} className={styles.cardWord}>
+                    <span className={styles.cardWordName}>
+                      <Icon name={PILLAR_ICONS[word.pillar]} size={16} />
+                      {word.name}
+                    </span>
+                    <ResultBar result={WORD_RESULTS[word.word]} share={word.score / 100} showPoints={false} size="sm" />
+                  </li>
+                ))}
+              </ul>
               <p className={`${styles.cardSource} ${styles.cardFoot}`}>
                 <span className={styles.cardMarks} aria-hidden="true">
-                  {CHECKED_MARKS.map((mark) => (
-                    <Mark key={mark.key} icon={mark.icon} size={13} />
-                  ))}
+                  <PlaceMarks size={13} />
                 </span>
-                <span>
-                  <span className="num">{CHECKS.length}</span> {card.scoreSource}
-                </span>
+                <span>{card.wordsSource}</span>
               </p>
             </section>
 
@@ -183,16 +187,16 @@ export function Problem({ showcase }: { showcase: Showcase }) {
                 <h3 id="card-rivals" className={styles.cardQuestion}>
                   {card.rivals}
                 </h3>
-                {you?.rank ? (
+                {you?.place ? (
                   <p className={styles.cardRank}>
-                    <span className="num">{ordinal(you.rank)}</span> of <span className="num">{rivals.rows.length}</span>
+                    <span className="num">{ordinal(you.place)}</span> of <span className="num">{ranking.length}</span>
                   </p>
                 ) : null}
               </div>
               <ol className={styles.cardLadder}>
-                {rivals.rows.map((row) => (
+                {ranking.map((row) => (
                   <li key={row.id} className={`${styles.cardRung} ${row.you ? styles.cardRungYou : ''}`}>
-                    <span className={`${styles.cardRungRank} num`}>{row.rank}</span>
+                    <span className={`${styles.cardRungRank} num`}>{row.place}</span>
                     <span className={styles.cardRungName}>{row.you ? card.you : row.name}</span>
                     <span className={styles.cardTrack} aria-hidden="true">
                       <i style={{ width: `${row.overall ?? 0}%` }} data-fill />
@@ -201,7 +205,10 @@ export function Problem({ showcase }: { showcase: Showcase }) {
                   </li>
                 ))}
               </ol>
-              <p className={`${styles.cardSource} ${styles.cardFoot}`}>{card.rivalsSource}</p>
+              <div className={`${styles.cardFoot} ${styles.cardFootStack}`}>
+                {rivals.line ? <p className={styles.cardLine}>{rivals.line}</p> : null}
+                <p className={styles.cardSource}>{card.rivalsSource}</p>
+              </div>
             </section>
 
             <section className={styles.cardPanel} aria-labelledby="card-demand">
@@ -214,11 +221,11 @@ export function Problem({ showcase }: { showcase: Showcase }) {
                 </p>
               </div>
               <ol className={styles.cardAsked}>
-                {demand.view.questions.slice(0, 3).map((question) => (
-                  <li key={question.id} className={styles.cardAsk}>
+                {questions.map((question) => (
+                  <li key={question.key} className={styles.cardAsk}>
                     <span className={styles.cardAskText}>{question.text}</span>
                     <span className={styles.cardMeta}>
-                      {PLATFORM_NAMES[askedOn(question)]}
+                      {question.site}
                       <span aria-hidden="true"> · </span>
                       <span className="visually-hidden">, {card.asked} </span>
                       <span className="num">{question.count}</span>
@@ -227,17 +234,12 @@ export function Problem({ showcase }: { showcase: Showcase }) {
                   </li>
                 ))}
               </ol>
-              {top ? (
+              {rising ? (
                 <p className={`${styles.cardTrend} ${styles.cardFoot}`}>
                   <span>
-                    {card.rising} <strong>{top.text}</strong>
-                    {top.count !== null ? <>, about {plural(top.count, 'search', 'searches')}</> : null}
+                    {card.rising} <strong>{rising.text}</strong>
                   </span>
-                  <span className={styles.cardMeta}>
-                    {PLATFORM_NAMES.search_trends}
-                    <span aria-hidden="true"> · </span>
-                    <span className="num">+{Math.round(top.changePct ?? 0)}%</span>
-                  </span>
+                  <span className={styles.cardMeta}>{PLATFORM_NAMES.search_trends}</span>
                 </p>
               ) : null}
             </section>
@@ -305,83 +307,62 @@ export function Features({ showcase }: { showcase: Showcase }) {
   );
 }
 
-const QUESTIONS = Object.fromEntries(SCORE.pillars.map((part) => [part.pillar, part.question])) as Readonly<Record<Pillar, string>>;
-
-/** What a result earns, from the scoring settings: a share (a number, in Inter), or words. */
-function Earns({ result }: { result: CheckResult }) {
-  const share = SCORING_V1.resultShares[result];
-  if (share >= 1) return <>every point</>;
-  if (share <= 0) return <>none yet</>;
-  return <span className="num">{Math.round(share * 100)}%</span>;
-}
-
 /**
- * One score, inside the Audit: the words and the sample's total, then a table of the three parts
- * side by side (stacked on a phone), each with its question, its score on a thin bar and every
- * check's result, then what each result earns. The checks sit in slots of one height, so the rows
- * line up across the parts; a part with fewer checks ends in an empty slot. A check made for each
- * program shows its weakest program, as the Audit's own grid of checks does. The only numbers are
- * the total and the three part scores.
+ * How Drishti reads you, inside the Audit: five places, three words. The three words side by side
+ * (stacked on a phone), each with its question, its word on a thin bar of the points behind it,
+ * and every check behind it, one to a row, with its place and its result (a check made for each
+ * program shows its weakest program, as the Audit does). The checks sit in slots of one height, so
+ * the rows line up across the words; a word with fewer checks ends in an empty slot. Then, compact,
+ * what makes a word Strong, Okay or Weak. No total score.
  */
-export function Score({ showcase }: { showcase: Showcase }) {
+export function Reads({ showcase }: { showcase: Showcase }) {
   const { audit, institution } = showcase;
-  const parts = pillarChecks(audit);
+  const found = new Map(audit.places.flatMap((place) => place.found).flatMap((row) => (row.checkKey ? [[row.checkKey, row] as const] : [])));
+  const parts = READS.words.map((entry) => ({
+    ...entry,
+    word: audit.words.find((word) => word.pillar === entry.pillar) ?? null,
+    checks: checksForPillar(entry.pillar).map((check) => ({ key: check.key, place: PLACE_LABELS[check.place], row: found.get(check.key) ?? null, name: found.get(check.key)?.name ?? check.name })),
+  }));
   const slots = Math.max(...parts.map((part) => part.checks.length));
   return (
-    <section id="score" className={styles.score} data-theme="dark" aria-labelledby="score-title">
+    <section id="reads" className={styles.score} data-theme="dark" aria-labelledby="reads-title">
       <div className={site.container}>
-        <div className={styles.scoreTop}>
-          <div className={`${styles.scoreHead} ${site.reveal}`}>
-            <p className={styles.featureTag}>
-              <Icon name="audit" size={15} />
-              {SCORE.label}
-            </p>
-            <h2 id="score-title" className={`${site.title} ${site.titleLight} ${styles.heading}`}>
-              {SCORE.title}
-            </h2>
-            <p className={styles.lede}>{SCORE.lede}</p>
-          </div>
-          <div className={`${styles.total} ${site.reveal}`}>
-            <p className={styles.totalCaption}>
-              {institution.name}, a sample. Checked {formatDate(showcase.home.checkedAt)}.
-            </p>
-            <p className={styles.totalLabel}>{SCORE.total}</p>
-            <p className={styles.totalLine}>
-              <span className={styles.totalScore}>
-                <span className="num">{audit.scores.overall}</span>
-                <small className="num">/100</small>
-              </span>
-              <ScoreLabel score={audit.scores.overall} />
-            </p>
-            <span className={styles.totalTrack} aria-hidden="true">
-              <i style={{ width: `${audit.scores.overall}%` }} data-fill />
-            </span>
-            <p className={styles.totalHow}>{SCORE.totalHow}</p>
-          </div>
+        <div className={`${styles.scoreHead} ${site.reveal}`}>
+          <p className={styles.featureTag}>
+            <Icon name="audit" size={15} />
+            {READS.label}
+          </p>
+          <h2 id="reads-title" className={`${site.title} ${site.titleLight} ${styles.heading}`}>
+            {READS.title}
+          </h2>
+          <p className={styles.lede}>{READS.lede}</p>
         </div>
 
+        <p className={`${styles.ledgerCaption} ${site.reveal}`}>
+          {institution.name}, a sample. Checked {formatDate(showcase.checkedAt)}.
+        </p>
         <div className={`${styles.ledger} ${site.reveal}`}>
           {parts.map((part) => (
-            <section key={part.pillar} className={styles.ledgerPart} aria-labelledby={`part-${part.pillar}`}>
+            <section key={part.pillar} className={styles.ledgerPart} aria-labelledby={`word-${part.pillar}`}>
               <header className={styles.ledgerHead}>
-                <h3 id={`part-${part.pillar}`} className={styles.ledgerName}>
-                  <PillarIcon pillar={part.pillar} size={18} />
-                  {PILLAR_LABELS[part.pillar]}
+                <h3 id={`word-${part.pillar}`} className={styles.ledgerName}>
+                  <Icon name={PILLAR_ICONS[part.pillar]} size={18} />
+                  {part.name}
                 </h3>
-                <p className={styles.ledgerQuestion}>{QUESTIONS[part.pillar]}</p>
-                <p className={styles.ledgerScore}>
-                  <span className="num">{audit.scores[part.pillar]}</span>
-                  <small className="num">/100</small>
-                </p>
+                <p className={styles.ledgerQuestion}>{part.question}</p>
+                <p className={styles.ledgerWord}>{part.word?.word}</p>
                 <span className={styles.ledgerTrack} aria-hidden="true">
-                  <i style={{ width: `${audit.scores[part.pillar]}%` }} data-fill />
+                  <i style={{ width: `${part.word?.score ?? 0}%` }} data-fill />
                 </span>
               </header>
-              <ul className={styles.ledgerRows} aria-label={`${PILLAR_LABELS[part.pillar]} checks`}>
+              <ul className={styles.ledgerRows} aria-label={`${part.name} checks`}>
                 {part.checks.map((check) => (
                   <li key={check.key} className={styles.ledgerRow}>
-                    <span className={styles.ledgerCheck}>{check.name}</span>
-                    <ResultBar result={check.result} points={check.points} max={check.maxPoints} showPoints={false} size="sm" />
+                    <span className={styles.ledgerCheck}>
+                      <span className={styles.ledgerCheckName}>{check.name}</span>
+                      <span className={styles.ledgerPlace}>{check.place}</span>
+                    </span>
+                    {check.row?.result ? <ResultBar result={check.row.result} share={check.row.share ?? 0} showPoints={false} size="sm" /> : null}
                   </li>
                 ))}
                 {Array.from({ length: slots - part.checks.length }, (_, index) => (
@@ -393,18 +374,18 @@ export function Score({ showcase }: { showcase: Showcase }) {
         </div>
 
         <div className={`${styles.ledgerKey} ${site.reveal}`}>
-          <h3 className={styles.ledgerKeyTitle}>{SCORE.resultsTitle}</h3>
+          <h3 className={styles.ledgerKeyTitle}>{READS.keyTitle}</h3>
           <ul className={styles.results}>
-            {RESULTS.map((result, index) => (
-              <li key={result} className={styles.result} style={vars({ '--order': index })}>
-                <ResultBar result={result} size="sm" />
+            {READS.key.map((band) => (
+              <li key={band.word} className={styles.result}>
+                <span className={styles.resultWord}>{band.word}</span>
                 <span className={styles.resultShare}>
-                  <Earns result={result} />
+                  <span className="num">{band.min}</span> to <span className="num">{band.max}</span>
                 </span>
               </li>
             ))}
           </ul>
-          <p className={styles.ledgerNote}>{SCORE.perProgram}</p>
+          <p className={styles.ledgerNote}>{READS.keyNote}</p>
         </div>
       </div>
     </section>
@@ -438,7 +419,7 @@ export function Trust() {
   );
 }
 
-/** Four steps on a line that fills as the page moves; under "Drishti checks everything", where it looks. */
+/** Four steps on a line that fills as the page moves; under "Drishti checks every place", the five places. */
 export function Steps() {
   return (
     <section id="how" className={`${styles.steps} ${site.grain}`} data-theme="dark" aria-labelledby="how-title">
@@ -450,13 +431,9 @@ export function Steps() {
               <h3 className={styles.stepTitle}>{step.title}</h3>
               <p className={styles.stepText}>{step.text}</p>
               {index === 1 ? (
-                <ul className={styles.stepMarks} aria-hidden="true">
-                  {CHECKED_MARKS.map((mark) => (
-                    <li key={mark.key}>
-                      <Mark icon={mark.icon} size={20} />
-                    </li>
-                  ))}
-                </ul>
+                <p className={styles.stepMarks} aria-hidden="true">
+                  <PlaceMarks size={20} />
+                </p>
               ) : null}
             </li>
           ))}

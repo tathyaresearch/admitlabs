@@ -151,14 +151,16 @@ describe('Download CSV', () => {
     ]);
     assert.ok(csv.startsWith('﻿Sent,Name,Phone,Email,City,Course,Link,Used on\r\n'));
     const [, first, second] = csv.slice(1).split('\r\n');
-    assert.equal(first, '2026-09-28 14:05,Ankita Baruah,919876543210,ankita@mail.example,Guwahati,Data Analytics,Reel: Data Analytics placements,Instagram');
-    assert.equal(second, `2026-09-27 10:30,"Das, Bikash",919876543211,,,,,`);
+    assert.equal(first, '2026-09-28 14:05,Ankita Baruah,91 98765 43210,ankita@mail.example,Guwahati,Data Analytics,Reel: Data Analytics placements,Instagram');
+    assert.equal(second, `2026-09-27 10:30,"Das, Bikash",91 98765 43211,,,,,`);
   });
 
-  test('phone numbers as digits only, so no apostrophe shows', () => {
-    assert.equal(csvPhone('+919876543210'), '919876543210');
-    assert.equal(csvPhone('+910000010037'), '910000010037');
-    assert.equal(csvCell(csvPhone('+919876543210')), '919876543210');
+  test('phone numbers in groups with spaces: text in a spreadsheet, with no apostrophe and never 9.19877E+11', () => {
+    assert.equal(csvPhone('+919876543210'), '91 98765 43210');
+    assert.equal(csvPhone('+910000010037'), '91 00000 10037');
+    assert.equal(csvCell(csvPhone('+919876543210')), '91 98765 43210');
+    // Another shape still goes in groups, so it never reads as one long number.
+    assert.equal(csvPhone('+4412345678901'), '44123 45678 901');
   });
 
   test('a cell that starts like a formula can never run as one', () => {
