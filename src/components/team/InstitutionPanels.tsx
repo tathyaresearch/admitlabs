@@ -12,6 +12,7 @@ import { LEAD_RULES } from '@/config/leads';
 import { LEAD_SOURCE_LABELS, LEAD_SOURCES } from '@/domain/types';
 import { paidEndText, paidStartFrom, paidStartRange } from '@/team/plans';
 import { WORK_RULES } from '@/team/work';
+import { ANY_COURSE_OPTION, ANY_COURSE_VALUE } from '@/leads/text';
 import styles from './team.module.css';
 
 type Action = (previous: ActionState, formData: FormData) => Promise<ActionState>;
@@ -79,7 +80,7 @@ export function WorkForm({ action, today }: { action: Action; today: string }) {
   );
 }
 
-/** Makes a tracking link for a Client: a name, where it will be used, and one of its programs. */
+/** Makes a tracking link for a Client: a name, where it will be used, and one of its programs, or any course (a general form). */
 export function LeadLinkForm({ action, programs }: { action: Action; programs: ReadonlyArray<{ id: string; name: string }> }) {
   const [state, submit, pending] = useActionState(action, IDLE);
   return (
@@ -87,7 +88,13 @@ export function LeadLinkForm({ action, programs }: { action: Action; programs: R
       <TextField id="lead-link-name" name="name" label="Name" hint="Where it goes, so everyone knows it: Instagram bio, Reel: BBA placements." maxLength={LEAD_RULES.linkNameMax} required />
       <div className={styles.workFields}>
         <SelectField id="lead-link-used" name="used_on" label="Used on" defaultValue="instagram" options={LEAD_SOURCES.map((source) => ({ value: source, label: LEAD_SOURCE_LABELS[source] }))} />
-        <SelectField id="lead-link-program" name="program" label="Program" defaultValue={programs[0]?.id} options={programs.map((program) => ({ value: program.id, label: program.name }))} />
+        <SelectField
+          id="lead-link-program"
+          name="program"
+          label="Program"
+          defaultValue={programs[0]?.id}
+          options={[...programs.map((program) => ({ value: program.id, label: program.name })), { value: ANY_COURSE_VALUE, label: ANY_COURSE_OPTION }]}
+        />
       </div>
       <div className={styles.inlineForm}>
         <Button type="submit" size="sm" icon="plus" loading={pending}>

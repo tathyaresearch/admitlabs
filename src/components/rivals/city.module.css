@@ -76,22 +76,29 @@
   text-decoration-color: currentColor;
 }
 
+/* Each word's name small, its number out of 100, bar and word under it. */
 .rankWords {
   grid-area: words;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-5);
-  font: var(--type-small);
-  font-weight: var(--weight-semibold);
+  gap: var(--space-2) var(--space-5);
+}
+
+/* On a wide card the three words sit in equal columns, so they line up from row to row. */
+@container (min-width: 46rem) {
+  .rankWords {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .rankWord {
-  display: inline-flex;
-  gap: var(--space-1);
+  display: grid;
+  gap: 0.25rem;
 }
 
 .rankWordName {
-  font-weight: var(--weight-regular);
+  font: var(--type-caption);
   color: var(--text-muted);
 }
 

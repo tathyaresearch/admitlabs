@@ -27,6 +27,8 @@ export interface ReportWord {
   pillar: Pillar;
   name: string;
   question: string;
+  /** Out of 100. */
+  score: number;
   word: ScoreLabel;
   /** "Up from Okay in August", or null when it held. */
   moved: string | null;
@@ -112,6 +114,7 @@ export function reportWords(words: readonly WordView[]): ReportWord[] {
     pillar: word.pillar,
     name: word.name,
     question: word.question,
+    score: Math.round(word.score),
     word: word.word,
     moved: word.moved,
     fixFirst: word.fixFirst ? `${word.fixFirst.name}, ${RESULT_LABELS[word.fixFirst.result]}` : null,

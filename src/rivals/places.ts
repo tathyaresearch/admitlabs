@@ -41,8 +41,8 @@ export interface RankingRow {
   /** 1 is the highest score. Equal scores share a place. Null until checked. */
   place: number | null;
   overall: number | null;
-  /** Visibility, Trust and Chosen, each with its word. Empty until checked. */
-  words: Array<{ pillar: Pillar; name: string; word: ScoreLabel }>;
+  /** Visibility, Trust and Chosen, each with its score out of 100 and its word. Empty until checked. */
+  words: Array<{ pillar: Pillar; name: string; score: number; word: ScoreLabel }>;
 }
 
 export interface PlaceCell {
@@ -124,7 +124,9 @@ export function rivalPlaces(sides: readonly PlaceSide[]): RivalPlacesView {
       nearby: side.nearby,
       place: side.scores ? 1 + scored.filter((other) => (other.scores?.overall ?? 0) > (side.scores?.overall ?? 0)).length : null,
       overall: side.scores?.overall ?? null,
-      words: side.scores ? PILLARS.map((pillar) => ({ pillar, name: PILLAR_LABELS[pillar], word: scoreLabel(side.scores?.[pillar] ?? 0) })) : [],
+      words: side.scores
+        ? PILLARS.map((pillar) => ({ pillar, name: PILLAR_LABELS[pillar], score: Math.round(side.scores?.[pillar] ?? 0), word: scoreLabel(side.scores?.[pillar] ?? 0) }))
+        : [],
     }),
   );
 

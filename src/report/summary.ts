@@ -7,13 +7,15 @@
 import type { WordView } from '../audit/places.ts';
 import { previousMonth } from '../domain/dates.ts';
 import { formatMonthName, joinNames, plural } from '../domain/format.ts';
-import type { ScoreLabel } from '../domain/scores.ts';
+import { wordScoreText, type ScoreLabel } from '../domain/scores.ts';
 import { EFFORT_LABELS, IMPACT_LABELS, PILLARS, type Pillar } from '../domain/types.ts';
 import { THING_SOURCE_LABELS, THING_SOURCES, type Thing, type ThingSource } from './things.ts';
 
 export interface SummaryWord {
   pillar: Pillar;
   name: string;
+  /** Out of 100. Null in a summary kept before the numbers showed (October 2026). */
+  score: number | null;
   word: ScoreLabel;
   /** "Up from Okay in August", or the word's question when it held. */
   note: string;
@@ -83,15 +85,20 @@ export interface SummaryInput {
 
 const lower = (text: string) => `${text.charAt(0).toLowerCase()}${text.slice(1)}`;
 
-/** "Trust is up from Weak in August.", "No word moved since August.", or the first Audit's words. */
+/** A word as a summary says it: "Visibility 79/100 (Strong)", or the word alone in an old summary. */
+export function summaryWordText(word: Pick<SummaryWord, 'name' | 'score' | 'word'>): string {
+  return word.score === null ? `${word.name} ${word.word}` : wordScoreText(word.name, word.score, word.word);
+}
+
+/** "Trust is up from Weak in August, now 45/100 (Okay).", "No word moved since August: ...", or the first Audit's words. */
 export function wordsLine(words: readonly WordView[], options: { firstAudit: boolean; previousRunAt: string | null }): string {
-  const all = words.map((word) => `${word.name} ${word.word}`);
+  const all = words.map((word) => wordScoreText(word.name, word.score, word.word));
   if (options.firstAudit) return `Your first Audit: ${joinNames(all)}.`;
   const moved = words.filter((word) => word.moved);
   if (moved.length === 0) {
     return options.previousRunAt ? `No word moved since ${formatMonthName(options.previousRunAt.slice(0, 7))}: ${joinNames(all)}.` : `${joinNames(all)}.`;
   }
-  return moved.map((word) => `${word.name} is ${lower(word.moved ?? '')}.`).join(' ');
+  return moved.map((word) => `${word.name} is ${lower(word.moved ?? '')}, now ${Math.round(word.score)}/100 (${word.word}).`).join(' ');
 }
 
 /**
@@ -144,7 +151,7 @@ export function buildSummary(input: SummaryInput): MonthlySummary {
   const things = input.things.slice(0, 3);
   return {
     month: input.month,
-    words: input.words.map((word) => ({ pillar: word.pillar, name: word.name, word: word.word, note: word.moved ?? word.question })),
+    words: input.words.map((word) => ({ pillar: word.pillar, name: word.name, score: Math.round(word.score), word: word.word, note: word.moved ?? word.question })),
     lines: {
       words: wordsLine(input.words, { firstAudit: input.firstAudit, previousRunAt: input.previousRunAt }),
       things: things.map((thing) => thing.title),
@@ -168,9 +175,9 @@ export function summaryTargets(summary: MonthlySummary): SummaryTarget[] {
   return SUMMARY_TARGETS.filter((target) => summaryLine(summary, target) !== null);
 }
 
-/** "Your September: Visibility Strong, Trust Okay, Chosen Strong". */
+/** "Your September: Visibility 75/100 (Strong), Trust 69/100 (Okay), Chosen 74/100 (Strong)". */
 export function summarySubject(summary: Pick<MonthlySummary, 'month' | 'words'>): string {
-  return `Your ${formatMonthName(summary.month)}: ${summary.words.map((word) => `${word.name} ${word.word}`).join(', ')}`;
+  return `Your ${formatMonthName(summary.month)}: ${summary.words.map(summaryWordText).join(', ')}`;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -184,7 +191,15 @@ export function parseSummary(value: unknown): MonthlySummary | null {
   if (!Array.isArray(words) || !isRecord(lines) || !Array.isArray(things)) return null;
   const parsedWords = words.flatMap((word): SummaryWord[] =>
     isRecord(word) && PILLARS.includes(word.pillar as Pillar) && isText(word.name) && WORDS.includes(word.word as string) && isText(word.note)
-      ? [{ pillar: word.pillar as Pillar, name: word.name, word: word.word as ScoreLabel, note: word.note }]
+      ? [
+          {
+            pillar: word.pillar as Pillar,
+            name: word.name,
+            score: typeof word.score === 'number' && Number.isFinite(word.score) ? Math.max(0, Math.min(100, Math.round(word.score))) : null,
+            word: word.word as ScoreLabel,
+            note: word.note,
+          },
+        ]
       : [],
   );
   if (parsedWords.length !== words.length || !isText(lines.words) || !isText(lines.move) || !Array.isArray(lines.things) || !lines.things.every(isText)) return null;

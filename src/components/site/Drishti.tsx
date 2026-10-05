@@ -64,6 +64,10 @@ function DashboardPicture() {
                     <span className={styles.bar}>
                       <i style={vars({ width: `${word.value}%` })} />
                     </span>
+                    <span className={styles.wordNumber}>
+                      <span className="num">{word.value}</span>
+                      <span className="num">/100</span>
+                    </span>
                     <span className={styles.word}>{word.word}</span>
                     <span className={styles.fixFirst}>
                       {words.fixFirst} <strong>{word.fix}</strong>

@@ -2,7 +2,8 @@
 
 // The left side of /login: the Drishti eye, big, in the middle, and around it four pieces of the
 // dashboard for the sample university. The cards lean with the cursor at different depths, and each
-// plays in turn: Visibility, Trust and Chosen settle one by one with their bars, the rivals change
+// plays in turn: Visibility, Trust and Chosen settle one by one with their numbers out of 100 and
+// their bars, the rivals change
 // places into rank order, the questions students ask come in one by one, the searches by month
 // grow. The eye follows the cursor; when the cursor rests it watches each card as it changes, and
 // while someone types their email it looks at the field. It blinks now and then, and when touched.
@@ -260,10 +261,12 @@ export function WatchStage({ data }: { data: StageData }) {
     const tagWord = (index: number) => {
       const word = data.words[index];
       const name = at(chip('words'), '[data-name]');
-      const value = at(chip('words'), '[data-word]');
-      if (word && name && value) {
+      const score = at(chip('words'), '[data-score]');
+      const label = at(chip('words'), '[data-label]');
+      if (word && name && score && label) {
         name.textContent = word.label;
-        value.textContent = word.word;
+        score.textContent = String(word.score);
+        label.textContent = word.word;
       }
     };
 
@@ -429,6 +432,10 @@ export function WatchStage({ data }: { data: StageData }) {
                   <span className={styles.miniTrack}>
                     <i style={{ width: `${word.score}%` }} />
                   </span>
+                  <span className={styles.miniNumber}>
+                    <span className="num">{word.score}</span>
+                    <span className="num">/100</span>
+                  </span>
                   <span className={styles.miniWord}>{word.word}</span>
                 </li>
               ))}
@@ -456,12 +463,17 @@ export function WatchStage({ data }: { data: StageData }) {
         </div>
       </div>
 
-      <div className={styles.chip} data-chip="words">
+      <div className={`${styles.chip} ${styles.chipStack}`} data-chip="words">
         <span className={styles.chipWord} data-name>
           {data.words[0]?.label}
         </span>
-        <span className={styles.chipText} data-word>
-          {data.words[0]?.word}
+        <span className={styles.chipLine} data-word>
+          <span className={`${styles.chipValue} num`} data-score>
+            {data.words[0]?.score}
+          </span>
+          <span className={styles.chipText} data-label>
+            {data.words[0]?.word}
+          </span>
         </span>
       </div>
       <div className={styles.chip} data-chip="rivals">

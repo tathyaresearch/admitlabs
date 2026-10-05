@@ -1,5 +1,5 @@
-// "Ask for Paid", or "Ask to continue Paid", with its state loaded on the server (once per
-// request), ready to drop into any card, panel or notice that offers Paid.
+// "Subscribe now", or "Renew now", with its state loaded on the server (once per request), ready
+// to drop into any card, panel or notice that offers Paid.
 
 import { askForPaidAction } from '@/app/(dashboard)/actions';
 import type { InstitutionViewer } from '@/lib/auth/guards';
@@ -15,7 +15,7 @@ export async function PaidAction({
   viewer: InstitutionViewer;
   variant?: 'primary' | 'secondary';
   size?: 'sm' | 'md';
-  note?: boolean | 'short';
+  note?: boolean;
 }) {
   const state = await loadPaidAsk(viewer);
   return <AskPaid state={state} onAsk={askForPaidAction} variant={variant} size={size} note={note} />;

@@ -68,19 +68,37 @@ export interface AskResult {
 }
 
 /**
- * The owner asks AdmitLabs for Paid, or to continue it (C2). It lands in the team's Enquiries;
- * ask_for_paid() checks the owner and the plan again and never sends a second open request.
- * No payment and no email.
+ * Subscribe now, or Renew now (C2): the owner's request lands in the team's Enquiries, and the
+ * team writes back to complete payment. ask_for_paid() checks the owner and the plan again and
+ * never sends a second open request. No online payment yet, and no email.
  */
 export async function askForPaidAction(): Promise<AskResult> {
   const viewer = await getViewer();
   if (!viewer?.membership || viewer.viewingAs || viewer.membership.role !== 'owner') {
-    return { ok: false, askedAt: null, error: 'Only the owner of this account can ask for Paid.' };
+    return { ok: false, askedAt: null, error: 'Only the owner of this account can subscribe or renew.' };
   }
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('ask_for_paid', { p_institution: viewer.membership.institution.id });
   if (error) {
-    if (error.message.includes('nothing_to_ask')) return { ok: false, askedAt: null, error: 'There is nothing to ask for on your plan right now.' };
+    if (error.message.includes('nothing_to_ask')) return { ok: false, askedAt: null, error: 'There is nothing to subscribe to or renew on your plan right now.' };
+    return { ok: false, askedAt: null, error: 'That did not send. Try again.' };
+  }
+  revalidatePath('/', 'layout');
+  return { ok: true, askedAt: data, error: null };
+}
+
+/**
+ * Talk to AdmitLabs, from the sidebar's services card (Free and Paid): the owner or a member asks
+ * the team about its services. ask_admitlabs_services() checks the plan again and keeps one open
+ * request per institution. No email.
+ */
+export async function askServicesAction(): Promise<AskResult> {
+  const viewer = await getViewer();
+  if (!viewer?.membership || viewer.viewingAs) return { ok: false, askedAt: null, error: 'That did not send. Reload the page and try again.' };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('ask_admitlabs_services', { p_institution: viewer.membership.institution.id });
+  if (error) {
+    if (error.message.includes('already_client')) return { ok: false, askedAt: null, error: 'You already work with AdmitLabs: write to your team any time.' };
     return { ok: false, askedAt: null, error: 'That did not send. Try again.' };
   }
   revalidatePath('/', 'layout');

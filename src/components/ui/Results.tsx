@@ -44,6 +44,38 @@ export function ResultBar({ result, points, max, share, showPoints = true, size 
   );
 }
 
+/**
+ * Visibility, Trust or Chosen as a number out of 100 (in Inter), with its word small beside it
+ * (Strong, Okay or Weak, so the number means something at a glance) and a thin bar of the score.
+ * `stack`: the number and the word, the bar under them (tiles and headers). `row`: all three on
+ * one line (lists and tables). Readers hear "79 out of 100, Strong".
+ */
+export function WordScore({ score, size = 'md', layout = 'stack' }: { score: number; size?: 'sm' | 'md' | 'lg'; layout?: 'stack' | 'row' }) {
+  const value = Math.max(0, Math.min(100, Math.round(score)));
+  const word = scoreLabel(value);
+  const track = (
+    <span className={styles.wordTrack} aria-hidden="true">
+      <span className={styles.fill} style={{ '--share': value / 100 } as CSSProperties} data-fill />
+    </span>
+  );
+  return (
+    <span className={[styles.wordScore, styles[`word-${size}`], styles[`word-${layout}`]].join(' ')} data-score={value}>
+      <span className={styles.wordLine}>
+        <span className={styles.wordNumber}>
+          <span className="num">{value}</span>
+          <span className={`${styles.wordOf} num`} aria-hidden="true">
+            /100
+          </span>
+          <span className="visually-hidden"> out of 100,</span>
+        </span>
+        {layout === 'row' ? track : null}
+        <ScoreLabel label={word} />
+      </span>
+      {layout === 'stack' ? track : null}
+    </span>
+  );
+}
+
 /** Strong, Okay or Weak, from the score bands in the scoring config. */
 export function ScoreLabel({ score, label }: { score?: number; label?: ScoreLabelName }) {
   const value = label ?? scoreLabel(score ?? 0);

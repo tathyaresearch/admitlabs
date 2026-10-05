@@ -1196,7 +1196,7 @@ export type Database = {
           id: string
           institution_id: string
           name: string
-          program_id: string
+          program_id: string | null
           used_on: Database["public"]["Enums"]["lead_source"]
         }
         Insert: {
@@ -1207,7 +1207,7 @@ export type Database = {
           id?: string
           institution_id: string
           name: string
-          program_id: string
+          program_id?: string | null
           used_on: Database["public"]["Enums"]["lead_source"]
         }
         Update: {
@@ -1218,7 +1218,7 @@ export type Database = {
           id?: string
           institution_id?: string
           name?: string
-          program_id?: string
+          program_id?: string | null
           used_on?: Database["public"]["Enums"]["lead_source"]
         }
         Relationships: [
@@ -2363,6 +2363,10 @@ export type Database = {
         Args: { p_fix_key: string; p_fix_title: string; p_institution: string }
         Returns: string
       }
+      ask_admitlabs_services: {
+        Args: { p_institution: string }
+        Returns: string
+      }
       ask_for_paid: { Args: { p_institution: string }; Returns: string }
       audit_waiting: {
         Args: { p_institution: string }
@@ -2377,7 +2381,7 @@ export type Database = {
         Args: {
           p_institution: string
           p_name: string
-          p_program: string
+          p_program?: string
           p_used_on: Database["public"]["Enums"]["lead_source"]
         }
         Returns: {
@@ -2504,6 +2508,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["enquiry_kind"]
         }[]
       }
+      open_services_ask: { Args: { p_institution: string }; Returns: string }
       purge_old_leads: { Args: { p_now?: string }; Returns: number }
       record_actions: {
         Args: {
@@ -2717,6 +2722,7 @@ export type Database = {
         | "ask_paid"
         | "continue_paid"
         | "fix_request"
+        | "ask_services"
       enquiry_role:
         | "founder_director"
         | "principal_dean"
@@ -2934,6 +2940,7 @@ export const Constants = {
         "ask_paid",
         "continue_paid",
         "fix_request",
+        "ask_services",
       ],
       enquiry_role: [
         "founder_director",

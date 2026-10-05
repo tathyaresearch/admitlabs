@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
 import { EYE_EM, eyeSvg } from '@/graphics/eye';
 
-export const alt = 'Drishti by AdmitLabs. See what the internet says about you, who’s ahead in your city, and what students want.';
+export const alt = 'Drishti by AdmitLabs. See where you stand, who’s ahead, and what students want.';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -52,12 +52,11 @@ export default async function Image() {
             <span style={{ color: IVORY, fontWeight: 400 }}>Labs</span>
           </span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', marginTop: 'auto', fontSize: 70, fontWeight: 600, lineHeight: 1.04, letterSpacing: -2.8 }}>
-          <div style={{ display: 'flex' }}>See what the internet says</div>
-          <div style={{ display: 'flex' }}>about you, who’s ahead in</div>
-          <div style={{ display: 'flex' }}>your city, and what</div>
+        <div style={{ display: 'flex', flexDirection: 'column', marginTop: 'auto', fontSize: 84, fontWeight: 600, lineHeight: 1.02, letterSpacing: -3.5 }}>
+          <div style={{ display: 'flex' }}>See where you stand,</div>
+          <div style={{ display: 'flex' }}>who’s ahead, and what</div>
           <div style={{ display: 'flex' }}>
-            <span style={{ background: IVORY, color: BLACK, padding: '0 10px', borderRadius: 6 }}>students want.</span>
+            <span style={{ background: IVORY, color: BLACK, padding: '0 12px', borderRadius: 6 }}>students want.</span>
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 56, paddingTop: 22, borderTop: `1px solid #303237`, fontSize: 24, color: SLATE }}>

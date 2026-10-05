@@ -15,7 +15,7 @@ import { IMPACT_LABELS, PILLAR_LABELS, PILLARS } from '../../domain/types.ts';
 import { THING_SOURCE_LABELS } from '../things.ts';
 import type { ReportData } from '../data.ts';
 import type { ReportFix, ReportFixRow, ReportPlace, ReportPlaceItem, ReportProof, ReportWord } from '../places.ts';
-import { AmountBar, arrowValue, BigNumber, CheckIcon, clamp, Footer, Keep, Lockup, PillarIcon, PlatformIcon, ResultBar, SectionTitle, WordBar } from './parts.ts';
+import { AmountBar, arrowValue, BigNumber, CheckIcon, clamp, Footer, Keep, Lockup, PillarIcon, PlatformIcon, ResultBar, ScoreCell, SectionTitle, WordBar, WordNumber } from './parts.ts';
 import { COLORS, NUM, PAGE, styles } from './theme.ts';
 
 const CONTENT_WIDTH = PAGE.width - PAGE.side * 2;
@@ -98,7 +98,7 @@ function ProofLine({ proof, compact = false }: { proof: ReportProof; compact?: b
 
 // 1. Cover --------------------------------------------------------------------------------------
 
-/** Visibility, Trust and Chosen, side by side: each word big, with its question and how it moved. */
+/** Visibility, Trust and Chosen, side by side: each number out of 100 big with its word, its question and how it moved. */
 export function WordColumns({ words, dark }: { words: readonly ReportWord[]; dark: boolean }): ReactElement {
   const ink = dark ? COLORS.ivory : COLORS.black;
   const quiet = dark ? COLORS.slate : COLORS.muted;
@@ -113,7 +113,7 @@ export function WordColumns({ words, dark }: { words: readonly ReportWord[]; dar
           style: dark ? { width: THIRD, paddingTop: 12, borderTopWidth: 0.75, borderTopColor: COLORS.lineDark } : { width: THIRD, padding: 10, backgroundColor: COLORS.panel, borderRadius: 4 },
         },
         h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 5 } }, h(PillarIcon, { pillar: word.pillar, size: 10, color: ink }), h(Text, { style: { fontSize: 9, fontWeight: 600, color: ink } }, word.name)),
-        h(Text, { style: { fontSize: dark ? 30 : 20, fontWeight: 600, letterSpacing: dark ? -0.9 : -0.5, lineHeight: 1, color: ink, marginTop: dark ? 12 : 7 } }, word.word),
+        h(View, { style: { marginTop: dark ? 12 : 7 } }, h(WordNumber, { score: word.score, word: word.word, size: dark ? 28 : 19, ink, quiet, track: dark ? COLORS.lineDark : COLORS.track })),
         h(Text, { style: { fontSize: 8, lineHeight: 1.35, color: quiet, marginTop: dark ? 7 : 5, ...clamp(2) } }, word.question),
         word.moved ? h(Text, { style: { fontSize: 8, fontWeight: 600, lineHeight: 1.35, color: ink, marginTop: 2, ...clamp(1) } }, word.moved) : null,
       ),
@@ -440,7 +440,7 @@ function FixesPart({ data, compact }: PageProps): ReactElement {
 
 // 5. Rivals ----------------------------------------------------------------------------------------------
 
-const RANK_COLUMNS = { place: 30, score: 38, word: 60 } as const;
+const RANK_COLUMNS = { place: 26, score: 34, word: 82 } as const;
 
 function RivalsPart({ data, compact }: PageProps): ReactElement {
   const rivals = data.rivals;
@@ -488,7 +488,7 @@ function RivalsPart({ data, compact }: PageProps): ReactElement {
             ),
             h(Text, { style: { ...NUM, width: RANK_COLUMNS.score, textAlign: 'right', fontSize: 8, color: COLORS.muted } }, row.overall === null ? '' : String(row.overall)),
             ...(row.words.length
-              ? row.words.map((word, wordIndex) => h(Text, { key: wordIndex, style: { width: RANK_COLUMNS.word, paddingLeft: 12, fontSize: 8.5, fontWeight: word === 'Strong' ? 600 : 400 } }, word))
+              ? row.words.map((word, wordIndex) => h(ScoreCell, { key: wordIndex, score: word.score, word: word.word, width: RANK_COLUMNS.word }))
               : [h(Text, { key: 'none', style: { width: RANK_COLUMNS.word * 3, paddingLeft: 12, fontSize: 7.5, color: COLORS.muted } }, 'Not checked yet')]),
           ),
         ),
@@ -691,11 +691,11 @@ function LeadsPart({ data }: PageProps): ReactElement | null {
 const PROGRESS_COLUMNS = [
   { key: 'month', label: 'Month', width: 58 },
   { key: 'score', label: 'Score', width: 40 },
-  { key: 'discovered', label: 'Visibility', width: 66 },
-  { key: 'trusted', label: 'Trust', width: 66 },
-  { key: 'chosen', label: 'Chosen', width: 66 },
+  { key: 'discovered', label: 'Visibility', width: 84 },
+  { key: 'trusted', label: 'Trust', width: 84 },
+  { key: 'chosen', label: 'Chosen', width: 84 },
   { key: 'change', label: 'Change', width: 0 },
-  { key: 'place', label: 'Among rivals', width: 80 },
+  { key: 'place', label: 'Among rivals', width: 66 },
 ] as const;
 
 function ProgressPart({ data }: PageProps): ReactElement {
@@ -704,7 +704,7 @@ function ProgressPart({ data }: PageProps): ReactElement {
     return column?.width ? { width: column.width } : { flex: 1 };
   };
   return h(Part, {
-    head: { eyebrow: 'Progress and sources', title: 'Month by month', lead: 'Your score, small, and the three words each month, with your place among your rivals.' },
+    head: { eyebrow: 'Progress and sources', title: 'Month by month', lead: 'Your overall score, small, and Visibility, Trust and Chosen out of 100 each month, with your place among your rivals.' },
     first: h(
       View,
       null,
@@ -719,7 +719,11 @@ function ProgressPart({ data }: PageProps): ReactElement {
           { key: row.month, style: { flexDirection: 'row', alignItems: 'center', paddingVertical: 5, paddingHorizontal: 6, backgroundColor: index === data.progress.length - 1 ? COLORS.panel : undefined, borderBottomWidth: 0.75, borderBottomColor: COLORS.line } },
           h(Text, { style: { ...cell('month'), fontSize: 8.5, fontWeight: 600 } }, row.label),
           h(Text, { style: { ...NUM, ...cell('score'), fontSize: 8, color: COLORS.muted } }, String(row.score)),
-          ...PILLARS.map((pillar, wordIndex) => h(Text, { key: pillar, style: { ...cell(pillar), fontSize: 8.5, fontWeight: row.words[wordIndex] === 'Strong' ? 600 : 400 } }, row.words[wordIndex] ?? '')),
+          ...PILLARS.map((pillar, wordIndex) => {
+            const word = row.words[wordIndex];
+            const width = PROGRESS_COLUMNS.find((column) => column.key === pillar)?.width ?? 84;
+            return word ? h(ScoreCell, { key: pillar, score: word.score, word: word.word, width, inset: 0 }) : h(Text, { key: pillar, style: cell(pillar) }, '');
+          }),
           h(Text, { style: { ...cell('change'), fontSize: 8, color: COLORS.muted } }, row.change ? (arrowValue(row.change) ?? row.change) : 'First Audit'),
           h(Text, { style: { ...cell('place'), fontSize: 8, color: COLORS.muted } }, row.place ?? ''),
         ),

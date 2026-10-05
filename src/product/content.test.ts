@@ -31,7 +31,7 @@ describe('the product page copy', () => {
   });
 
   test('the headline is the spec’s, and the proof line is as the user worded it', () => {
-    assert.equal(`${content.HERO.title} ${content.HERO.highlight}`, 'See what the internet says about you, who’s ahead in your city, and what students want.');
+    assert.equal(`${content.HERO.title} ${content.HERO.highlight}`, 'See where you stand, who’s ahead, and what students want.');
     assert.equal(content.PROOF_LINE, 'From AdmitLabs. 120+ education companies worked with.');
     assert.equal(content.CTA.primary, 'Get your free Audit');
     assert.equal(content.CTA.paid, 'Start with a free Audit');
@@ -95,8 +95,10 @@ describe('the product page copy', () => {
     assert.match(leads?.answer ?? '', /AdmitLabs clients/);
     const [, paid] = content.PLANS.cards;
     assert.equal(`${paid?.price} ${paid?.term}`, `₹24,999 + GST for ${PLAN_RULES.paid.lengthMonths} months`);
-    // No score anywhere in the words: the three words say it.
-    for (const text of ALL) assert.doesNotMatch(text, /score out of|overall score|\/100/i, text);
+    // Each word with its score out of 100 (October 2026), never a total.
+    assert.match(content.FEATURES[0]?.lede ?? '', /out of 100/);
+    assert.match(content.READS.lede, /out of 100/);
+    for (const text of ALL) assert.doesNotMatch(text, /overall score|total score/i, text);
   });
 
   test('each feature opens with its name, its question and one short line', () => {
@@ -117,8 +119,8 @@ describe('the product page copy', () => {
     for (const text of texts(content.PROBLEM.card)) assert.doesNotMatch(text, /\d/, text);
   });
 
-  test('How Drishti reads you shows no total: its words carry no numbers of their own', () => {
-    for (const text of [content.READS.title, content.READS.lede, content.READS.keyTitle, content.READS.keyNote]) assert.doesNotMatch(text, /\d/, text);
+  test('How Drishti reads you shows no total: its words carry no numbers of their own but the scale, out of 100', () => {
+    for (const text of [content.READS.title, content.READS.lede, content.READS.keyTitle, content.READS.keyNote]) assert.doesNotMatch(text.replace(/out of 100/g, ''), /\d/, text);
   });
 
   test('no small labels above headings but How Drishti reads you’s, which names its feature; the pictures carry no caption: only the sample PDF says it is a sample', () => {

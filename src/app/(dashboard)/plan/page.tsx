@@ -66,8 +66,8 @@ function daysText(days: number): string {
 }
 
 // Plan answers "What's in our plan?": the plan and its dates, what to do next (on Free, what Paid
-// adds and "Ask for Paid"; near the end of Paid, the reminder and "Ask to continue Paid"), then
-// one table that compares the plans.
+// adds and "Subscribe now"; near the end of Paid, the reminder and "Renew now"), then one table
+// that compares the plans.
 export default async function PlanPage() {
   const viewer = await requireInstitutionViewer();
   const { tier, plan } = viewer;
@@ -137,8 +137,7 @@ export default async function PlanPage() {
           title={`Your Paid plan ends ${daysText(reminder.daysLeft ?? 0)}, on ${formatDate(plan?.endsAt as Date)}.`}
           action={<PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}
         >
-          It does not renew on its own. When it ends you move to Free, and you keep your last Audit score. Ask AdmitLabs to continue it: the same price and
-          terms, and nothing is paid here.
+          It does not renew on its own. When it ends you move to Free, and you keep your last Audit. Renew now to keep it, at the same price and terms.
         </Notice>
       ) : null}
 
@@ -156,7 +155,7 @@ export default async function PlanPage() {
           <ul className={styles.offerPoints}>
             <li>
               <Icon name="check" size={16} />
-              Every check, every program, your rivals, what students want and a monthly report
+              Everything Drishti finds, every program, your rivals place by place, what students want, and a summary and a report every month
             </li>
             <li>
               <Icon name="check" size={16} />
@@ -172,7 +171,7 @@ export default async function PlanPage() {
             </li>
           </ul>
           <div className={styles.offerAsk}>
-            <PaidAction viewer={viewer} note="short" />
+            <PaidAction viewer={viewer} note={false} />
           </div>
         </Card>
       ) : null}

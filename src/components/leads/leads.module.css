@@ -87,3 +87,63 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* A link: its name, then its address, small. */
+.linkCell {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.linkUrl {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Copy and archive, and the one more click to archive. */
+.linkActions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.confirmText {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+/* Make a link: the name across, then where it is used and the course side by side. */
+.linkForm {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 44rem;
+}
+
+.linkFields {
+  display: grid;
+  align-items: start;
+  gap: var(--space-4);
+}
+
+@container (min-width: 36rem) {
+  .linkFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.linkFormFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.formStatus {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.formStatus[data-status='done'] {
+  color: var(--text);
+}

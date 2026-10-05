@@ -13,6 +13,7 @@ import { LEAD_SOURCES, type LeadSource } from '@/domain/types';
 import { istParts } from '@/domain/dates';
 import { effectiveTier, type PlanRecord } from '@/domain/tiers';
 import { tidyText } from '@/domain/onboarding';
+import { ANY_COURSE_VALUE } from '@/leads/text';
 import { getViewer } from '@/lib/auth/viewer';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -108,7 +109,7 @@ function todayInIndia(): string {
 
 // Leads tracking links (a Client's) ------------------------------------------------------------------
 
-/** A tracking link for a Client's content: a name, where it is used, one program. Counts only come back. */
+/** A tracking link for a Client's content: a name, where it is used, one program or any course. Counts only come back. */
 export async function createLeadLinkAction(institutionId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
   if (!(await teamUser())) return reply(previous, 'error', NOT_TEAM);
   const name = tidyText(String(formData.get('name') ?? '').replace(/\s+/g, ' ').trim());
@@ -117,9 +118,9 @@ export async function createLeadLinkAction(institutionId: string, previous: Acti
   if (name.length < 2) return reply(previous, 'error', 'Name the link, like "Reel: BBA placements".');
   if (name.length > LEAD_RULES.linkNameMax) return reply(previous, 'error', `Keep the name under ${LEAD_RULES.linkNameMax} characters.`);
   if (!(LEAD_SOURCES as readonly string[]).includes(usedOn)) return reply(previous, 'error', 'Say where the link will be used.');
-  if (!program) return reply(previous, 'error', 'Choose the program the link is for.');
+  if (!program) return reply(previous, 'error', 'Choose the program the link is for, or any course.');
   const supabase = await createClient();
-  const { error } = await supabase.rpc('create_lead_link', { p_institution: institutionId, p_name: name, p_used_on: usedOn as LeadSource, p_program: program });
+  const { error } = await supabase.rpc('create_lead_link', { p_institution: institutionId, p_name: name, p_used_on: usedOn as LeadSource, p_program: program === ANY_COURSE_VALUE ? undefined : program });
   if (error) {
     const message = error.message.includes('not_client')
       ? 'Only an AdmitLabs Client has tracking links.'

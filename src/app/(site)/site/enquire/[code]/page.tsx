@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ code: str
   const robots = { index: false, follow: false } as const;
   const { code } = await params;
   const form = APP_OPEN && CODE.test(code) ? await loadLeadForm(code) : null;
-  const title = !form ? 'Enquiry form' : form.open ? `Ask ${form.college} about ${form.programName}` : `${form.college}: this form is closed`;
+  const title = !form ? 'Enquiry form' : form.open ? `Ask ${form.college} about ${form.programName ?? 'a course'}` : `${form.college}: this form is closed`;
   return { title: { absolute: title }, robots, referrer: 'no-referrer' };
 }
 

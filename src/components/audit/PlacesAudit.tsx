@@ -208,7 +208,7 @@ export function PlacesAudit(props: PlacesAuditProps) {
 
       {props.progress ? (
         <section className={styles.block} aria-labelledby="progress-title">
-          <SectionTitle id="progress-title" icon="demand" title="Progress, month by month" help="Each month’s score, small, with the three words, your place among your rivals and the checks that moved." />
+          <SectionTitle id="progress-title" icon="demand" title="Progress, month by month" help="Each month’s overall score, small, with Visibility, Trust and Chosen out of 100, your place among your rivals and the checks that moved." />
           <ProgressSection
             months={props.progress.months}
             history={props.progress.history}

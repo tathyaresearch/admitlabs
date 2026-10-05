@@ -27,7 +27,7 @@ export interface ApprovedBefore {
 }
 
 export interface ReviewChanges {
-  words: Array<{ pillar: Pillar; name: string; word: ScoreLabel; before: ScoreLabel | null }>;
+  words: Array<{ pillar: Pillar; name: string; score: number; word: ScoreLabel; before: ScoreLabel | null; scoreBefore: number | null }>;
   checks: Array<{ key: CheckKey; name: string; program: string | null; before: CheckResult; after: CheckResult }>;
   findings: { added: StoredFinding[]; gone: string[] };
 }
@@ -48,8 +48,10 @@ export function reviewChanges(
     words: PILLARS.map((pillar) => ({
       pillar,
       name: PILLAR_LABELS[pillar],
+      score: Math.round(audit.scores[pillar]),
       word: scoreLabel(audit.scores[pillar], config),
       before: before ? scoreLabel(before.scores[pillar], config) : null,
+      scoreBefore: before ? Math.round(before.scores[pillar]) : null,
     })),
     checks: before
       ? audit.checks.flatMap((check) => {
@@ -76,7 +78,9 @@ export function reviewChanges(
 /** The changes in one line, for To review: "Visibility Weak to Okay, 2 checks moved, 1 new finding". */
 export function changesLine(changes: ReviewChanges, first: boolean): string {
   if (first) return 'First Audit: nothing to compare with';
-  const words = changes.words.filter((word) => word.before && word.before !== word.word).map((word) => `${word.name} ${word.before} to ${word.word}`);
+  const words = changes.words
+    .filter((word) => word.before && word.before !== word.word)
+    .map((word) => `${word.name} ${word.before} to ${word.word} (${word.scoreBefore} to ${word.score} out of 100)`);
   const parts = [
     words.length ? words.join(', ') : 'No word moved',
     changes.checks.length ? `${changes.checks.length} ${changes.checks.length === 1 ? 'check' : 'checks'} moved` : null,

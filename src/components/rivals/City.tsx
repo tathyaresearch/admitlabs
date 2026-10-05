@@ -10,7 +10,7 @@ import type { StoredFinding } from '@/audit/places';
 import { PLACE_ICONS, ProofLine, Tag } from '@/components/audit/PlaceBits';
 import { Icon } from '@/components/ui/Icon';
 import { CheckIcon } from '@/components/ui/Marks';
-import { ResultBar } from '@/components/ui/Results';
+import { ResultBar, WordScore } from '@/components/ui/Results';
 import { checksForPlace, getCheck } from '@/domain/checks';
 import { formatDate, hostAndPath } from '@/domain/format';
 import { WORD_RESULTS } from '@/domain/scores';
@@ -51,7 +51,7 @@ function SideName({ side, rivalHref }: { side: Side; rivalHref?: (id: string) =>
 }
 
 /**
- * You and each rival, highest score first, with the three words and the small score. `from`: how
+ * You and each rival, highest score first, with each word out of 100 and the small score. `from`: how
  * many rows away each starts (the product page's picture, whose rows slide into rank order).
  */
 export function Ranking({ rows, rivalHref, from }: { rows: readonly RankingRow[]; rivalHref?: (id: string) => string | null; from?: ReadonlyMap<string, number> }) {
@@ -72,7 +72,7 @@ export function Ranking({ rows, rivalHref, from }: { rows: readonly RankingRow[]
                 {row.words.map((word) => (
                   <span key={word.pillar} className={styles.rankWord}>
                     <span className={styles.rankWordName}>{word.name}</span>
-                    {word.word}
+                    <WordScore score={word.score} size="sm" layout="row" />
                   </span>
                 ))}
               </span>

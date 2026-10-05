@@ -32,7 +32,7 @@ export const CLOSED = {
 
 export const HERO = {
   /** The headline is the spec's; the last words sit in an inverted block. */
-  title: 'See what the internet says about you, who’s ahead in your city, and what',
+  title: 'See where you stand, who’s ahead, and what',
   highlight: 'students want.',
   lede: 'Drishti checks what students see about you in five places, tracks the rivals in your city, and listens to what students ask. Every month.',
   trust: 'Public data only. Every result shows its source and date.',
@@ -92,8 +92,8 @@ export const FEATURES: readonly Feature[] = [
     key: 'audit',
     name: 'Audit',
     question: 'What does the internet say about us?',
-    lede: 'Five places, checked the way a student sees you. Three words: Visibility, Trust and Chosen. Then what to fix first.',
-    line: 'Three words from five places, and what to fix first.',
+    lede: 'Five places, checked the way a student sees you. Visibility, Trust and Chosen, each out of 100. Then what to fix first.',
+    line: 'Three scores out of 100 from five places, and what to fix first.',
   },
   {
     key: 'rivals',
@@ -132,20 +132,20 @@ const LISTED_NAMES: Partial<Record<CheckKey, string>> = {
 const [STRONG, OKAY, WEAK] = SCORING_V1.labels;
 
 /**
- * How Drishti reads you, inside the Audit: five places, three words. Each word with its question
- * and the checks behind it, each with its place and its result; then what makes a word Strong,
- * Okay or Weak. No total score. The label names the feature it belongs to. `words` (with each
+ * How Drishti reads you, inside the Audit: five places, three words. Each word with its question,
+ * its score out of 100 and the checks behind it, each with its place and its result; then what
+ * makes a word Strong, Okay or Weak. No total score. The label names the feature it belongs to. `words` (with each
  * check by name) is also the website's.
  */
 export const READS = {
   label: 'Inside Audit',
   title: 'Five places. Three words.',
-  lede: 'Drishti checks what a student sees about you in five places. Each check feeds one of three words, and each word answers a question a student asks.',
+  lede: 'Drishti checks what a student sees about you in five places. Each check adds points to one of three scores out of 100, each answering a question a student asks, each with its word.',
   places: PLACES.map((place) => PLACE_LABELS[place]),
   keyTitle: 'What makes a word',
   /** Each word's range, out of 100, from the scoring settings. */
   key: [STRONG, OKAY, WEAK].flatMap((range) => (range ? [{ word: range.label, min: range.min, max: range.max }] : [])),
-  keyNote: 'Each word comes from the points its checks earn. A check made for each program shows its weakest program.',
+  keyNote: 'Each score is the points its checks earn. A check made for each program shows its weakest program.',
   words: PILLARS.map((pillar) => ({
     pillar,
     name: PILLAR_LABELS[pillar],
@@ -198,7 +198,7 @@ export const PLANS: { title: readonly [string, string]; lede: string; cards: rea
       term: 'For as long as you like',
       line: 'Here’s what the internet says.',
       points: [
-        'Visibility, Trust and Chosen, place by place',
+        'Visibility, Trust and Chosen out of 100, place by place',
         'Your top 3 fixes and strengths, with proof',
         'One program',
         'Ahead or behind each rival, and the month’s one line',
@@ -289,7 +289,7 @@ export const FINAL = {
 } as const;
 
 export const FOOTER = {
-  tagline: 'See what the internet says about you, who’s ahead in your city, and what students want. Every month.',
+  tagline: 'See where you stand, who’s ahead, and what students want. Every month.',
   site: { label: 'AdmitLabs', href: 'https://admitlabs.in' },
   note: 'Public data only.',
 } as const;

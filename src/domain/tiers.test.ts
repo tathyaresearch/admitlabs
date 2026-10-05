@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { istDate } from './dates.ts';
-import { effectiveTier, paidAskKind, paidPlanEndsAt, planReminder, type PlanRecord } from './tiers.ts';
+import { effectiveTier, PAID_BUTTONS, PAID_THANKS, paidAskKind, paidPlanEndsAt, planReminder, type PlanRecord } from './tiers.ts';
 
 const now = istDate('2026-09-30', 12);
 const paid = (startsAt: string, endsAt: string): PlanRecord => ({ tier: 'paid', startsAt: istDate(startsAt, 10), endsAt: istDate(endsAt, 10) });
@@ -93,5 +93,12 @@ describe('what an owner can ask AdmitLabs for (mirrors private.paid_ask_kind)', 
 
   test('Client never asks', () => {
     assert.equal(paidAskKind({ tier: 'client', startsAt: istDate('2026-03-02'), endsAt: null }, istDate('2026-10-03', 12)), null);
+  });
+});
+
+describe('the payment buttons (October 2026): online payment comes before launch', () => {
+  test('Subscribe now on Free, Renew now near the end of Paid, and the team completes payment', () => {
+    assert.deepEqual(PAID_BUTTONS, { ask_paid: 'Subscribe now', continue_paid: 'Renew now' });
+    assert.equal(PAID_THANKS, 'Thanks! The AdmitLabs team will contact you to complete payment.');
   });
 });

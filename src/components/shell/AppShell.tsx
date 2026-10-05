@@ -1,7 +1,8 @@
 // The dashboard frame. Desktop: a sidebar with "Drishti by AdmitLabs" at the top left (home),
-// whose dashboard this is and their plan under it, the pages in the middle and the account at the
-// bottom, beside the page on a raised panel. Phone: a slim top bar (the same lockup,
-// notifications, account) and a bottom bar with the main pages.
+// whose dashboard this is and their plan under it, the pages in the middle, a card just above the
+// account at the bottom when there is one (the services card, on Free and Paid), beside the page
+// on a raised panel. Phone: a slim top bar (the same lockup, notifications, account) and a bottom
+// bar with the main pages, the card in its More menu.
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -37,10 +38,12 @@ interface AppShellProps {
   badges?: Readonly<Record<string, number>>;
   /** The pages on the phone's bottom bar when there are more than fit (src/components/shell/nav.ts). */
   mobilePrimary?: readonly string[];
+  /** A card just above the account in the sidebar, and in the phone's More menu. */
+  card?: { side: ReactNode; menu: ReactNode };
   children: ReactNode;
 }
 
-export function AppShell({ sections, homeHref, email, roleLabel, context, showNotifications = true, unread = 0, banner, badges, mobilePrimary, children }: AppShellProps) {
+export function AppShell({ sections, homeHref, email, roleLabel, context, showNotifications = true, unread = 0, banner, badges, mobilePrimary, card, children }: AppShellProps) {
   const notificationsLabel = unread ? `Notifications, ${unread} new` : 'Notifications';
   const sideBadges = { ...badges, ...(showNotifications && unread ? { '/notifications': unread } : {}) };
   return (
@@ -66,6 +69,7 @@ export function AppShell({ sections, homeHref, email, roleLabel, context, showNo
           <SideNav sections={sections} badges={Object.keys(sideBadges).length ? sideBadges : undefined} />
         </div>
         <div className={styles.sidebarFoot}>
+          {card?.side}
           <AccountMenu variant="side" email={email} roleLabel={roleLabel} institutionName={context.title} />
         </div>
       </aside>
@@ -98,7 +102,7 @@ export function AppShell({ sections, homeHref, email, roleLabel, context, showNo
         </div>
       </div>
 
-      <MobileNav sections={sections} primary={mobilePrimary} />
+      <MobileNav sections={sections} primary={mobilePrimary} extra={card?.menu} />
     </div>
   );
 }

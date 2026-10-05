@@ -2,7 +2,8 @@
 
 // The enquiry form a tracking link opens (spec section 23), as the version 2 mock was approved: an
 // ivory card with the college's name and the program, the fields, the consent line above the
-// button, then the thanks. A hidden field and the signed start time turn bots away.
+// button, then the thanks. A general link names no program: the student picks the course. A
+// hidden field and the signed start time turn bots away.
 
 import { useActionState } from 'react';
 import type { LeadFormState } from '@/app/(site)/site/enquire/[code]/actions';
@@ -28,8 +29,8 @@ export function LeadForm({
 }: {
   action: Action;
   college: string;
-  programName: string;
-  programId: string;
+  programName: string | null;
+  programId: string | null;
   programs: ReadonlyArray<{ id: string; name: string }>;
   consent: string;
   started: string;
@@ -51,7 +52,7 @@ export function LeadForm({
   return (
     <div className={styles.card}>
       <p className={styles.college}>{college}</p>
-      <h1 className={styles.title}>Ask about {programName}</h1>
+      <h1 className={styles.title}>{programName ? `Ask about ${programName}` : 'Ask about a course'}</h1>
       <p className={styles.quiet}>Leave your details and the admissions team will contact you.</p>
       <form key={state.attempt} action={submit} className={styles.fields} noValidate>
         <input type="hidden" name="started" value={started} />
@@ -78,7 +79,8 @@ export function LeadForm({
           name="program"
           label="Course"
           options={programs.map((program) => ({ value: program.id, label: program.name }))}
-          defaultValue={value('program') || (programs.some((program) => program.id === programId) ? programId : programs[0]?.id)}
+          placeholder={programId ? undefined : 'Choose a course'}
+          defaultValue={value('program') || (programId && programs.some((program) => program.id === programId) ? programId : programId ? programs[0]?.id : '')}
           error={state.errors.program}
         />
         <TextField id="lead-city" name="city" label="Your city (optional)" autoComplete="address-level2" defaultValue={value('city')} error={state.errors.city} />

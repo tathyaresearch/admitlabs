@@ -7,9 +7,8 @@ import type { ProgressMonth } from '@/audit/progress';
 import type { HistoryRow, MovedCheck } from '@/audit/view';
 import { DataTable } from '@/components/ui/DataTable';
 import { Icon } from '@/components/ui/Icon';
-import { Change, ResultBar } from '@/components/ui/Results';
+import { Change, ResultBar, WordScore } from '@/components/ui/Results';
 import { formatDate, formatMonth, joinNames, ordinal } from '@/domain/format';
-import { scoreLabel as wordFor } from '@/domain/scores';
 import { PILLAR_LABELS, PILLARS, RESULTS } from '@/domain/types';
 import styles from './audit.module.css';
 
@@ -123,7 +122,7 @@ export function ProgressSection({
                 </td>
                 {PILLARS.map((pillar) => (
                   <td key={pillar} className={styles.progressWord}>
-                    {wordFor(row.scores[pillar])}
+                    <WordScore score={row.scores[pillar]} size="sm" layout="row" />
                   </td>
                 ))}
                 {showPlace ? <td className={styles.progressNumber}>{row.place ? <Place place={row.place} /> : <span className={styles.progressQuiet}>Not scored</span>}</td> : null}
@@ -147,7 +146,9 @@ export function ProgressSection({
               {PILLARS.map((pillar) => (
                 <span key={pillar} className={styles.progressPart}>
                   {PILLAR_LABELS[pillar]}
-                  <span className={styles.progressWord}>{wordFor(row.scores[pillar])}</span>
+                  <span className={styles.progressWord}>
+                    <WordScore score={row.scores[pillar]} size="sm" layout="row" />
+                  </span>
                 </span>
               ))}
             </div>

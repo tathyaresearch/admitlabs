@@ -59,6 +59,93 @@
   font-size: var(--size-body);
 }
 
+/* A part's score: the number out of 100, its word small beside it, a thin bar. ---------------- */
+
+.wordScore {
+  display: inline-grid;
+  gap: 0.5em;
+  min-width: 0;
+  line-height: 1;
+  color: var(--text);
+}
+
+.word-stack {
+  display: grid;
+}
+
+.wordLine {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375em 0.6em;
+}
+
+.wordNumber {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+.wordNumber > :global(.num):first-child {
+  font-weight: var(--weight-heading);
+  letter-spacing: -0.03em;
+}
+
+.wordOf {
+  margin-left: 0.1em;
+  color: var(--text-muted);
+}
+
+.wordTrack {
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--chart-track);
+}
+
+.word-row .wordTrack {
+  flex: none;
+  width: var(--bar-width);
+}
+
+/* Home's tiles: the number large. */
+.word-lg .wordNumber > :global(.num):first-child {
+  font-size: clamp(1.875rem, 1.5rem + 1.3vw, 2.5rem);
+}
+
+.word-lg .wordOf {
+  font-size: var(--size-small);
+}
+
+/* The Audit's top, a shared Audit, headers. */
+.word-md .wordNumber > :global(.num):first-child {
+  font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem);
+}
+
+.word-md .wordOf {
+  font-size: var(--size-caption);
+}
+
+/* Rows and tables: one line, the number at the size of the text. */
+.word-sm {
+  --bar-width: 1.75rem;
+  font-size: var(--size-caption);
+}
+
+.word-sm .wordNumber > :global(.num):first-child {
+  font-size: var(--size-small);
+}
+
+.word-sm .wordOf {
+  font-size: 0.6875rem;
+}
+
+.word-sm .scoreLabel {
+  padding: 0.25em 0.45em;
+  font-size: 0.6875rem;
+}
+
 .scoreLabel {
   display: inline-flex;
   align-items: center;

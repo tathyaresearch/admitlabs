@@ -37,7 +37,7 @@ export function StartGuide({
     {
       done: true,
       title: 'See what was found',
-      text: `${words}. Each word comes from what students see about you in 5 places, with the proof for each.`,
+      text: `${words}. Each score comes from what students see about you in 5 places, with the proof for each.`,
       link: { href: '/audit', text: 'See your Audit' },
     },
     firstFix

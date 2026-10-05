@@ -5,16 +5,15 @@
 // the FAQ are in ./Offer.tsx; the sample report in ./ReportShowcase.tsx. The header, footer, frame,
 // buttons and light are the website's.
 
-import { Fragment, type CSSProperties, type JSX } from 'react';
+import type { CSSProperties, JSX } from 'react';
 import { PLACE_ICONS } from '@/components/audit/PlaceBits';
 import { Frame } from '@/components/site/Frame';
 import { ProductLockup } from '@/components/ui/Brand';
 import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
-import { ResultBar } from '@/components/ui/Results';
+import { ResultBar, WordScore } from '@/components/ui/Results';
 import { checksForPillar } from '@/domain/checks';
 import { formatDate, ordinal } from '@/domain/format';
-import { WORD_RESULTS } from '@/domain/scores';
 import { PLACE_LABELS, PLACES } from '@/domain/types';
 import { PILLAR_ICONS } from '@/graphics/icons';
 import { PLATFORM_NAMES } from '@/graphics/platforms';
@@ -54,15 +53,15 @@ function lede(text: string) {
   );
 }
 
-/** The headline in three lines on a wide screen: "See what the internet says about you," then "who’s ahead in your city," then "and what students want." */
-function heroLines(title: string): string[] {
-  const parts = title.split(', ');
-  return parts.map((part, index) => (index < parts.length - 1 ? `${part},` : part));
+/** The headline in two lines on a wide screen: "See where you stand, who’s ahead," then "and what students want." */
+function heroLines(title: string): readonly [string, string] {
+  const cut = title.lastIndexOf(', ');
+  return cut < 0 ? [title, ''] : [title.slice(0, cut + 1), title.slice(cut + 2)];
 }
 
 /** The promise under the light, the two ways in, then Home itself. */
 export function Hero({ showcase }: { showcase: Showcase }) {
-  const lines = heroLines(HERO.title);
+  const [first, rest] = heroLines(HERO.title);
   return (
     <section className={`${styles.hero} ${site.grain}`} data-theme="dark" aria-labelledby="hero-title">
       <div className={styles.beam} aria-hidden="true" />
@@ -71,20 +70,10 @@ export function Hero({ showcase }: { showcase: Showcase }) {
       <div className={`${site.container} ${styles.heroContent}`}>
         <ProductLockup size="lg" motion="rise" className={styles.lockup} />
         <h1 id="hero-title" className={styles.heroTitle}>
-          {lines.map((line, index) => (
-            <Fragment key={line}>
-              <span className={styles.heroLine}>
-                {line}
-                {index === lines.length - 1 ? (
-                  <>
-                    {' '}
-                    <span className={styles.highlight}>{HERO.highlight}</span>
-                  </>
-                ) : null}
-              </span>
-              {index < lines.length - 1 ? ' ' : null}
-            </Fragment>
-          ))}
+          <span className={styles.heroLine}>{first}</span>{' '}
+          <span className={styles.heroLine}>
+            {rest} <span className={styles.highlight}>{HERO.highlight}</span>
+          </span>
         </h1>
         <p className={styles.heroLede}>{lede(HERO.lede)}</p>
         <div className={styles.heroActions}>
@@ -170,7 +159,7 @@ export function Problem({ showcase }: { showcase: Showcase }) {
                       <Icon name={PILLAR_ICONS[word.pillar]} size={16} />
                       {word.name}
                     </span>
-                    <ResultBar result={WORD_RESULTS[word.word]} share={word.score / 100} showPoints={false} size="sm" />
+                    <WordScore score={word.score} size="sm" layout="row" />
                   </li>
                 ))}
               </ul>
@@ -309,7 +298,7 @@ export function Features({ showcase }: { showcase: Showcase }) {
 
 /**
  * How Drishti reads you, inside the Audit: five places, three words. The three words side by side
- * (stacked on a phone), each with its question, its word on a thin bar of the points behind it,
+ * (stacked on a phone), each with its question, its number out of 100 with its word and a thin bar,
  * and every check behind it, one to a row, with its place and its result (a check made for each
  * program shows its weakest program, as the Audit does). The checks sit in slots of one height, so
  * the rows line up across the words; a word with fewer checks ends in an empty slot. Then, compact,
@@ -350,10 +339,11 @@ export function Reads({ showcase }: { showcase: Showcase }) {
                   {part.name}
                 </h3>
                 <p className={styles.ledgerQuestion}>{part.question}</p>
-                <p className={styles.ledgerWord}>{part.word?.word}</p>
-                <span className={styles.ledgerTrack} aria-hidden="true">
-                  <i style={{ width: `${part.word?.score ?? 0}%` }} data-fill />
-                </span>
+                {part.word ? (
+                  <div className={styles.ledgerWord}>
+                    <WordScore score={part.word.score} size="md" />
+                  </div>
+                ) : null}
               </header>
               <ul className={styles.ledgerRows} aria-label={`${part.name} checks`}>
                 {part.checks.map((check) => (

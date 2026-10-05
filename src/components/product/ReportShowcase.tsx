@@ -50,7 +50,9 @@ function Cover({ data }: { data: ReportData }) {
           {data.words.map((word) => (
             <p key={word.pillar} className={papers.barHead}>
               <span>{word.name}</span>
-              <span className={papers.barValue}>{word.word}</span>
+              <span className={papers.barValue}>
+                <span className="num">{word.score}/100</span> {word.word}
+              </span>
             </p>
           ))}
         </div>
@@ -71,7 +73,9 @@ function Summary({ data }: { data: ReportData }) {
           {data.words.map((word) => (
             <p key={word.pillar} className={papers.barHead}>
               <span>{word.name}</span>
-              <span className={papers.barValue}>{word.word}</span>
+              <span className={papers.barValue}>
+                <span className="num">{word.score}/100</span> {word.word}
+              </span>
             </p>
           ))}
         </div>

@@ -1,6 +1,7 @@
-// Asking AdmitLabs for Paid (C2): what the owner can ask for now, and the request already sent.
+// Subscribe now and Renew now (C2): what the owner can ask for now, and the request already sent.
 // The database decides again when the request is made (ask_for_paid), and turns away anything
-// else. Price and terms never change here, and nothing is paid online.
+// else. Price and terms never change here. Payment is completed with the team until online
+// payment is set up (README, Before launch).
 
 import { cache } from 'react';
 import { paidAskKind, type PaidAskKind } from '@/domain/tiers';

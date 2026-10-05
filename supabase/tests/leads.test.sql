@@ -11,7 +11,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(43);
+select plan(50);
 
 insert into public.cities (name, state) values ('Leadsville', 'Lead State') on conflict do nothing;
 
@@ -132,6 +132,8 @@ select set_config('request.jwt.claims', '{"sub":"15000000-0000-4000-8000-0000000
 select isnt_empty($$select 1 from public.leads$$, 'A member reads them too');
 select throws_ok($$select public.save_lead_settings('25000000-0000-4000-8000-00000000000c', array['m@leads-c.example'], 12::smallint)$$, '42501', 'not_owner', 'but only the owner changes the settings');
 select throws_ok($$select public.delete_leads('25000000-0000-4000-8000-00000000000c', null, '+910000000008')$$, '42501', 'not_owner', 'and only the owner deletes');
+select throws_ok($$select * from public.create_lead_link('25000000-0000-4000-8000-00000000000c', 'Bio', 'instagram', '35000000-0000-4000-8000-0000000000c1')$$, '42501', 'not_allowed', 'A member sees the links, but only the owner makes one');
+select throws_ok($$select public.archive_lead_link('45000000-0000-4000-8000-000000000001')$$, '42501', 'not_allowed', 'or archives one');
 
 -- The AdmitLabs team -------------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"15000000-0000-4000-8000-000000000004","role":"authenticated"}', true);
@@ -160,7 +162,31 @@ select lives_ok($$select public.archive_lead_link('45000000-0000-4000-8000-00000
 select set_config('request.jwt.claims', '{"sub":"15000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 
 select results_eq($$select open from public.lead_form('lcl1aaaa')$$, $$values (false)$$, 'An archived link''s form closes at once');
-select throws_ok($$select * from public.create_lead_link('25000000-0000-4000-8000-00000000000c', 'Bio', 'instagram', '35000000-0000-4000-8000-0000000000c1')$$, '42501', 'not_team', 'The college does not make its own links');
+select matches(
+  (select code from public.create_lead_link('25000000-0000-4000-8000-00000000000c', 'Website: enquiry form', 'website', null)),
+  '^[0-9a-f]{8}$',
+  'The owner of a Client makes its own links too: here a general form, for any course'
+);
+select results_eq(
+  $$select f.program_id, f.program_name, f.open from public.lead_form((select code from public.lead_links where name = 'Website: enquiry form')) f$$,
+  $$values (null::uuid, null::text, true)$$,
+  'Its form names no program: the student picks the course'
+);
+select throws_ok(
+  format($$select public.submit_lead(%L, 'Kiran Eleven', '+910000000031')$$, (select code from public.lead_links where name = 'Website: enquiry form')),
+  '22023', 'bad_program', 'An enquiry through it needs a course'
+);
+select isnt(
+  public.submit_lead((select code from public.lead_links where name = 'Website: enquiry form'), 'Kiran Eleven', '+910000000031', null, null, '35000000-0000-4000-8000-0000000000c2'),
+  null::uuid,
+  'and takes the one the student picked'
+);
+select is(
+  (select program_name from public.lead_link_counts('25000000-0000-4000-8000-00000000000c') where name = 'Website: enquiry form'),
+  null,
+  'Its counts show with no program'
+);
+select throws_ok($$select * from public.create_lead_link('25000000-0000-4000-8000-00000000000d', 'Bio', 'instagram', null)$$, '42501', 'not_allowed', 'never for another college');
 select throws_ok($$select public.save_lead_settings('25000000-0000-4000-8000-00000000000c', array['a@x.example', 'b@x.example', 'c@x.example', 'd@x.example'], 12::smallint)$$, '22023', 'too_many_emails', 'Up to 3 addresses');
 select throws_ok($$select public.save_lead_settings('25000000-0000-4000-8000-00000000000c', array['not an email'], 12::smallint)$$, '22023', 'bad_email', 'each one an email');
 select throws_ok($$select public.save_lead_settings('25000000-0000-4000-8000-00000000000c', array['', ' '], 12::smallint)$$, '22023', 'no_email', 'at least one');

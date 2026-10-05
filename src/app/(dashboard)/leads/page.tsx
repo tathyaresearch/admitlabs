@@ -9,13 +9,17 @@ import { KpiCard, KpiNote, KpiNumber } from '@/components/ui/Kpi';
 import { PageHead } from '@/components/ui/Layout';
 import { PlatformMark } from '@/components/ui/Marks';
 import { monthKey, previousMonth } from '@/domain/dates';
-import { formatCount, formatDate, formatMonth, formatMonthName, joinNames, plural } from '@/domain/format';
+import { formatCount, formatDate, formatMonth, formatMonthName, hostAndPath, joinNames, plural } from '@/domain/format';
 import { LEAD_SOURCE_LABELS, type LeadSource } from '@/domain/types';
 import type { Platform } from '@/graphics/platforms';
 import { byLink, leadsSummary, monthWords, soFarWords, type LinkCount } from '@/leads/summary';
+import { ANY_COURSE } from '@/leads/text';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
+import { loadPrograms } from '@/lib/audit/load';
 import { loadHasLeads, loadLeadsPage, type LeadRow } from '@/lib/leads/load';
+import { SITE_URL } from '@/lib/urls';
 import { formatPhone } from '@/site/enquiry';
+import { LinkActions, NewLinkForm } from './LinkTools';
 import audit from '@/components/audit/places.module.css';
 import styles from '@/components/leads/leads.module.css';
 
@@ -32,8 +36,9 @@ function UsedOn({ usedOn }: { usedOn: LeadSource }) {
 
 // Leads answers "What did our content bring in?" for an AdmitLabs Client (spec section 23), as the
 // version 2 mock was approved: this month against last month, the link that brought the most,
-// every link with its counts, then every enquiry, newest first, with Download CSV. The team, in
-// "view as" too, sees the counts only. Not a CRM: no calls, stages or notes.
+// every link with its counts, then every enquiry, newest first, with Download CSV. The owner makes
+// and archives links here too (one course, or any course for a general form); everyone copies
+// them. The team, in "view as" too, sees the counts only. Not a CRM: no calls, stages or notes.
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const viewer = await requireInstitutionViewer();
   if (!(await loadHasLeads(viewer))) notFound();
@@ -41,6 +46,15 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const all = (await searchParams).all === '1';
   const data = await loadLeadsPage(viewer, { all });
   const owner = role === 'owner' && !viewer.viewingAs;
+  // The owner makes links while the forms are open (a Client).
+  const canMake = owner && data.open;
+  const programs = canMake ? (await loadPrograms(institution.id)).filter((program) => !program.archived) : [];
+  const makeLink = canMake ? (
+    <div className={audit.card}>
+      <p className={audit.columnTitle}>Make a link</p>
+      <NewLinkForm programs={programs.map((program) => ({ id: program.id, name: program.name }))} />
+    </div>
+  ) : null;
 
   const thisMonth = monthKey(new Date());
   const lastMonth = previousMonth(thisMonth);
@@ -67,14 +81,17 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       key: 'link',
       header: 'Link',
       render: (link) => (
-        <span className={styles.linkName}>
-          {link.name}
-          {link.archivedAt ? <Tag>Closed</Tag> : null}
+        <span className={styles.linkCell}>
+          <span className={styles.linkName}>
+            {link.name}
+            {link.archivedAt ? <Tag>Closed</Tag> : null}
+          </span>
+          <span className={styles.linkUrl}>{hostAndPath(`${SITE_URL}/enquire/${link.code}`)}</span>
         </span>
       ),
     },
     { key: 'used', header: 'Used on', render: (link) => <UsedOn usedOn={link.usedOn} /> },
-    { key: 'program', header: 'Program', render: (link) => link.programName },
+    { key: 'program', header: 'Course', render: (link) => link.programName ?? ANY_COURSE },
     {
       key: 'this',
       header: 'This month',
@@ -90,6 +107,11 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     },
     { key: 'last', header: formatMonthName(lastMonth), align: 'end', numeric: true, render: (link) => formatCount(link.lastMonth) },
     { key: 'all', header: 'In all', align: 'end', numeric: true, render: (link) => formatCount(link.total) },
+    {
+      key: 'form',
+      header: 'Form',
+      render: (link) => (link.archivedAt ? <span className={audit.quiet}>Closed</span> : <LinkActions url={`${SITE_URL}/enquire/${link.code}`} linkId={link.id} canArchive={owner} />),
+    },
   ];
 
   const leadColumns: Column<LeadRow>[] = [
@@ -114,9 +136,14 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       </div>
 
       {links.length === 0 ? (
-        <EmptyState icon="enquiry" title="No tracking links yet">
-          The AdmitLabs team makes a link for each place your content goes, like your Instagram bio or a reel. Each one opens a short form for {institution.name}, and every enquiry shows here.
-        </EmptyState>
+        <>
+          <EmptyState icon="enquiry" title="No tracking links yet">
+            {canMake
+              ? `Make a link for each place your content goes, like your Instagram bio or a reel, or ask the AdmitLabs team. Each one opens a short form for ${institution.name}, and every enquiry shows here.`
+              : `Your account owner or the AdmitLabs team makes a link for each place your content goes, like your Instagram bio or a reel. Each one opens a short form for ${institution.name}, and every enquiry shows here.`}
+          </EmptyState>
+          {makeLink}
+        </>
       ) : (
         <>
           <section className={styles.kpis} aria-label="This month">
@@ -146,10 +173,20 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
           </section>
 
           <section className={audit.block} aria-labelledby="links-title">
-            <SectionTitle id="links-title" icon="share" title="By link" help="Each link the AdmitLabs team made for your content, and what it brought." />
+            <SectionTitle
+              id="links-title"
+              icon="share"
+              title="By link"
+              help={
+                canMake
+                  ? 'Each link opens a short form for one course, or any course. Make one for each place your content goes; the AdmitLabs team can make them too.'
+                  : 'Each link made for your content, and what it brought.'
+              }
+            />
             <div className={audit.card}>
               <DataTable caption="Enquiries by link" hideCaption columns={linkColumns} rows={links} rowKey={(link) => link.id} />
             </div>
+            {makeLink}
           </section>
 
           <section className={audit.block} aria-labelledby="list-title">

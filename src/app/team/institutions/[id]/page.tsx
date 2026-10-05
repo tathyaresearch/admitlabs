@@ -52,6 +52,7 @@ import {
   stopLinkAction,
 } from './actions';
 import audit from '@/components/audit/audit.module.css';
+import { ANY_COURSE } from '@/leads/text';
 import styles from '@/components/team/team.module.css';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -400,7 +401,7 @@ function LeadLinksTab({ institution, links, client }: { institution: TeamInstitu
     <div className={styles.tabStack}>
       <p className={styles.formNote}>
         {client
-          ? `Each link opens a short form for ${institution.name} and one of its programs. Enquiries go to ${institution.name} only: the team sees counts, never a student’s details.`
+          ? `Each link opens a short form for ${institution.name} and one of its programs, or any course for a general form. Their owner can make links too. Enquiries go to ${institution.name} only: the team sees counts, never a student’s details.`
           : 'Their AdmitLabs service has ended, so their forms are closed. Counts only.'}
       </p>
       {client ? (
@@ -420,7 +421,7 @@ function LeadLinksTab({ institution, links, client }: { institution: TeamInstitu
                   </p>
                   <p className={styles.itemMeta}>
                     <span>{LEAD_SOURCE_LABELS[link.usedOn]}</span>
-                    <span>{link.programName}</span>
+                    <span>{link.programName ?? ANY_COURSE}</span>
                     <span>Since {formatDate(link.createdAt)}</span>
                     <span>
                       {plural(link.thisMonth, 'enquiry', 'enquiries')} this month, {link.total} in all

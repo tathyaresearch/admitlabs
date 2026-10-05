@@ -45,6 +45,12 @@ export function nextBandText(score: number, config: Pick<ScoringConfig, 'labels'
   return rounded === top.min ? `Right where ${top.label} starts` : `${points(rounded - top.min)} above where ${top.label} starts`;
 }
 
+/** A part's score out of 100 in words, for a sentence or an email subject: "Visibility 79/100 (Strong)". */
+export function wordScoreText(name: string, score: number, word?: ScoreLabel): string {
+  const value = Math.max(0, Math.min(100, Math.round(score)));
+  return `${name} ${value}/100 (${word ?? scoreLabel(value)})`;
+}
+
 /** A word as the result bar shows it: Strong, Okay or Weak, with a thin bar of the points behind it. */
 export const WORD_RESULTS: Readonly<Record<ScoreLabel, CheckResult>> = { Strong: 'strong', Okay: 'okay', Weak: 'weak' };
 

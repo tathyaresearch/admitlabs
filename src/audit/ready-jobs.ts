@@ -78,7 +78,7 @@ export async function sendAuditReadyEmails(
         institution: institution.name,
         program: planResult.data?.free_program_id ? (names.get(planResult.data.free_program_id) ?? null) : null,
         city: institution.city,
-        words: view.words.map((word) => ({ name: word.name, word: word.word, note: word.moved ?? word.question })),
+        words: view.words.map((word) => ({ name: word.name, score: Math.round(word.score), word: word.word, note: word.moved ?? word.question })),
         fixes: view.topFixes.map((fix) => ({
           title: fix.title,
           meta: [`${PLACE_LABELS[fix.place]}, ${fix.label}`, `Impact ${IMPACT_LABELS[fix.impact]}`, fix.effort ? `Effort ${EFFORT_LABELS[fix.effort]}` : null].filter(Boolean).join(' · '),

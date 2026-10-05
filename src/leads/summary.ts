@@ -11,7 +11,8 @@ export interface LinkCount {
   code: string;
   name: string;
   usedOn: LeadSource;
-  programName: string;
+  /** Null for a general link, where the student picks the course. */
+  programName: string | null;
   createdAt: string;
   archivedAt: string | null;
   thisMonth: number;

@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 import type { FixView, FoundRowView, GoodView, PlaceView, ProofView, ThinView, WordView } from '@/audit/places';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { CheckIcon } from '@/components/ui/Marks';
-import { ResultBar } from '@/components/ui/Results';
+import { ResultBar, WordScore } from '@/components/ui/Results';
 import { formatDate, hostAndPath } from '@/domain/format';
 import { readyFixText, type ReadyFix } from '@/domain/ready-fix';
 import { EFFORT_LABELS, FINDING_KIND_LABELS, IMPACT_LABELS, RESULT_LABELS, type CheckResult, type Difficulty, type FindingKind, type Impact, type Pillar, type Place } from '@/domain/types';
@@ -57,7 +57,7 @@ export function SectionTitle({ icon, title, help, action, id }: { icon?: IconNam
   );
 }
 
-/** Visibility, Trust and Chosen as three tiles: the word large, its question, what to fix first in it. */
+/** Visibility, Trust and Chosen as three tiles: the number out of 100 large with its word beside it and a thin bar, its question, what to fix first in it. */
 export function WordTiles({ words, compact = false, fixHref }: { words: readonly WordView[]; compact?: boolean; fixHref?: (key: string) => string }) {
   return (
     <div className={[styles.wordTiles, compact ? styles.wordTilesCompact : ''].join(' ')}>
@@ -67,9 +67,9 @@ export function WordTiles({ words, compact = false, fixHref }: { words: readonly
             <Icon name={WORD_ICONS[word.pillar]} size={16} />
             {word.name}
           </p>
-          <p className={styles.wordValue} data-word={word.word}>
-            {word.word}
-          </p>
+          <div className={styles.wordValue} data-word={word.word}>
+            <WordScore score={word.score} size={compact ? 'md' : 'lg'} />
+          </div>
           <p className={styles.wordQuestion}>{word.question}</p>
           {word.moved ? <p className={styles.wordMoved}>{word.moved}</p> : null}
           {word.fixFirst ? (
@@ -94,7 +94,7 @@ export function WordTiles({ words, compact = false, fixHref }: { words: readonly
   );
 }
 
-/** "What do these mean?": the words and their questions, what makes each Strong, Okay or Weak, and a check's four results. */
+/** "What do these mean?": the words and their questions, how each score out of 100 makes Strong, Okay or Weak, and a check's four results. */
 export function WordsMeaning() {
   return (
     <details className={styles.meaning}>
@@ -117,7 +117,7 @@ export function WordsMeaning() {
             <dd>Is it easy to pick you? Program pages, fees, admission steps, enquiry, and your website on a phone.</dd>
           </div>
         </dl>
-        <p className={styles.quiet}>Each word comes from the checks behind it, out of 100: Strong from 70, Okay from 40, Weak below 40.</p>
+        <p className={styles.quiet}>Each is a score out of 100 from the checks behind it, with its word: Strong from 70, Okay from 40, Weak below 40.</p>
         <p className={styles.quiet}>Each check is Strong, Okay, Weak or Missing: Strong earns all of its points, Okay 60%, Weak 30% and Missing none.</p>
       </div>
     </details>

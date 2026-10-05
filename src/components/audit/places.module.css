@@ -240,13 +240,11 @@
   color: var(--text-muted);
 }
 
+/* The number out of 100, its word beside it and the bar under them (WordScore). */
 .wordValue {
-  font: var(--weight-title) clamp(1.875rem, 1.5rem + 1.3vw, 2.5rem) / 1.05 var(--font-sans);
-  letter-spacing: var(--tracking-title);
-}
-
-.wordTilesCompact .wordValue {
-  font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem);
+  display: grid;
+  min-width: 0;
+  margin-block: var(--space-1);
 }
 
 .wordQuestion {
@@ -273,7 +271,7 @@
   color: var(--text-muted);
 }
 
-/* Stacked on a phone: each word a short row, the word on the right. */
+/* Stacked on a phone: each word a short row, the number and its word on the right. */
 @container (max-width: 39.99rem) {
   .wordTile {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -292,7 +290,8 @@
   .wordValue {
     grid-area: value;
     align-self: center;
-    font-size: 1.625rem;
+    justify-self: end;
+    margin-block: 0;
   }
 
   .wordQuestion {

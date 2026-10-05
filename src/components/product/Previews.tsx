@@ -17,6 +17,7 @@ import { PageHead } from '@/components/ui/Layout';
 import { Tabs } from '@/components/ui/Tabs';
 import { LANGUAGE_TAGS } from '@/demand/text';
 import { formatDate } from '@/domain/format';
+import { wordScoreText } from '@/domain/scores';
 import { IDEA_FORMAT_LABELS } from '@/domain/types';
 import type { Showcase } from '@/product/showcase';
 import type { MonthPick, Thing } from '@/report/things';
@@ -148,7 +149,7 @@ export function SidebarPicture({ name }: { name: string }) {
 
 /** What a reader hears instead of a picture of Home. */
 export function homeSummary(showcase: Showcase): string {
-  const words = showcase.audit.words.map((word) => `${word.name} ${word.word}`).join(', ');
+  const words = showcase.audit.words.map((word) => wordScoreText(word.name, word.score, word.word)).join(', ');
   return `The Drishti dashboard’s Home for ${showcase.institution.name}: ${words}. ${showcase.answer} Then 3 things to do this month, the rivals in ${showcase.institution.city} and what students want.`;
 }
 

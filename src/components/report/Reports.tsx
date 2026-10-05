@@ -6,11 +6,11 @@
 import type { ReactNode } from 'react';
 import { AnchorButton } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { Counted } from '@/components/ui/Results';
+import { Counted, WordScore } from '@/components/ui/Results';
 import { formatDate, formatMonth } from '@/domain/format';
 import { reportFacts, type ReportRow } from '@/lib/reports/load';
 import { THING_SOURCE_LABELS } from '@/report/things';
-import type { MonthlySummary } from '@/report/summary';
+import { summaryWordText, type MonthlySummary } from '@/report/summary';
 import audit from '@/components/audit/places.module.css';
 import styles from './report.module.css';
 
@@ -40,7 +40,7 @@ export function SummaryBody({ summary }: { summary: MonthlySummary }) {
         {summary.words.map((word) => (
           <div key={word.pillar} className={styles.word}>
             <span className={styles.wordName}>{word.name}</span>
-            <span className={styles.wordValue}>{word.word}</span>
+            <span className={styles.wordValue}>{word.score === null ? word.word : <WordScore score={word.score} size="md" />}</span>
             <span className={styles.wordNote}>{word.note}</span>
           </div>
         ))}
@@ -113,7 +113,7 @@ export function EarlierMonths({ reports }: { reports: readonly ReportRow[] }) {
             <p className={styles.rowMonth}>
               {formatMonth(report.month)}
               <span className={styles.rowFacts}>
-                {report.summary ? <span>{report.summary.words.map((word) => `${word.name} ${word.word}`).join(', ')}</span> : null}
+                {report.summary ? <span>{report.summary.words.map(summaryWordText).join(', ')}</span> : null}
                 <Facts report={report} />
               </span>
             </p>
@@ -136,7 +136,7 @@ export function EarlierMonths({ reports }: { reports: readonly ReportRow[] }) {
   );
 }
 
-/** Free: what the monthly summary and report hold, with the one "Ask for Paid" action and the sample. */
+/** Free: what the monthly summary and report hold, with the one "Subscribe now" action and the sample. */
 export function ReportsUnlockCard({ place, action }: { place: string; action: ReactNode }) {
   const items = [
     'A summary and a PDF on the 1st of every month, for the month just ended',

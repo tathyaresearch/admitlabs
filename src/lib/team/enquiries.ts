@@ -1,5 +1,6 @@
-// Enquiries for the team area: the website's "Work with us" form, and requests from an owner's
-// dashboard: for Paid, and to let AdmitLabs fix something in their Audit. Row level security lets only team users read them
+// Enquiries for the team area: the website's "Work with us" form, and requests from a dashboard:
+// to subscribe or renew, to talk about the services, and to let AdmitLabs fix something in their
+// Audit. Row level security lets only team users read them
 // (supabase/migrations/20261007120000_enquiries.sql and 20261010120000_ask_paid_attention.sql).
 
 import { getCheck } from '@/domain/checks';
@@ -32,6 +33,12 @@ export interface PaidAsk extends EnquiryBase {
   institutionId: string;
 }
 
+/** From the sidebar's services card: someone at a Free or Paid institution asks to talk about the services. */
+export interface ServicesAsk extends EnquiryBase {
+  kind: 'ask_services';
+  institutionId: string;
+}
+
 /** From the Audit: an owner asks AdmitLabs to fix one thing, named as they saw it, with its place. */
 export interface FixAsk extends EnquiryBase {
   kind: 'fix_request';
@@ -42,7 +49,7 @@ export interface FixAsk extends EnquiryBase {
   place: Place | null;
 }
 
-export type EnquiryRow = FormEnquiry | PaidAsk | FixAsk;
+export type EnquiryRow = FormEnquiry | PaidAsk | ServicesAsk | FixAsk;
 
 /** Newest first. */
 export async function loadEnquiries(): Promise<EnquiryRow[]> {
@@ -62,6 +69,7 @@ export async function loadEnquiries(): Promise<EnquiryRow[]> {
       const place = !fix ? null : fix.kind === 'check' ? getCheck(fix.checkKey).place : (places.get(`${row.institution_id}:${fix.findingKey}`) ?? null);
       return [{ ...base, kind: 'fix_request', institutionId: row.institution_id, fixKey: row.fix_key, fixTitle: row.fix_title, place }];
     }
+    if (row.kind === 'ask_services') return row.institution_id ? [{ ...base, kind: 'ask_services', institutionId: row.institution_id }] : [];
     if (row.kind !== 'work_with_us') return row.institution_id ? [{ ...base, kind: row.kind, institutionId: row.institution_id }] : [];
     // The database requires these for the form (the enquiries_form constraint).
     if (!row.name || !row.role || !row.phone) return [];

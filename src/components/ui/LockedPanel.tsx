@@ -19,7 +19,7 @@ interface LockedPanelProps {
   placeholder: ReactNode;
   actionLabel?: string;
   actionHref?: string;
-  /** Takes the place of the link: "Ask for Paid". */
+  /** Takes the place of the link: "Subscribe now". */
   action?: ReactNode;
 }
 

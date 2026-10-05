@@ -129,7 +129,8 @@ export interface RivalRankRow {
   nearby: boolean;
   place: number | null;
   overall: number | null;
-  words: ScoreLabel[];
+  /** Visibility, Trust and Chosen, each out of 100 with its word. */
+  words: Array<{ score: number; word: ScoreLabel }>;
 }
 
 export interface RivalPlaceCell {
@@ -183,7 +184,7 @@ export interface ReportData {
     bestMonths: Array<{ program: string; text: string }>;
   } | null;
   leads: { line: string; total: number; links: ReportLeadLink[]; moreLinks: number } | null;
-  progress: Array<{ month: string; label: string; score: number; words: ScoreLabel[]; change: string | null; place: string | null }>;
+  progress: Array<{ month: string; label: string; score: number; words: Array<{ score: number; word: ScoreLabel }>; change: string | null; place: string | null }>;
   /** Where everything was found, and when: each place's items carry their own source and date. */
   sources: Array<{ label: string; text: string }>;
   /** Paid only: "Want AdmitLabs to do this for you? hello@admitlabs.in". */
@@ -269,7 +270,14 @@ function rivalsPart(input: ReportInput): ReportData['rivals'] {
   const moves = [...input.moves].sort((a, b) => b.detectedAt.localeCompare(a.detectedAt));
   return {
     line: input.line,
-    ranking: view.ranking.map((row) => ({ name: row.name, you: row.you, nearby: row.nearby, place: row.place, overall: row.overall, words: row.words.map((word) => word.word) })),
+    ranking: view.ranking.map((row) => ({
+      name: row.name,
+      you: row.you,
+      nearby: row.nearby,
+      place: row.place,
+      overall: row.overall,
+      words: row.words.map((word) => ({ score: word.score, word: word.word })),
+    })),
     places: view.places.map((place) => ({
       key: place.key,
       name: place.name,
@@ -342,7 +350,7 @@ function progressPart(input: ReportInput): ReportData['progress'] {
     month: row.month,
     label: formatMonthShort(row.month),
     score: row.scores.overall,
-    words: PILLARS.map((pillar) => scoreLabel(row.scores[pillar])),
+    words: PILLARS.map((pillar) => ({ score: Math.round(row.scores[pillar]), word: scoreLabel(row.scores[pillar]) })),
     change: shortChange(row.change),
     place: row.place ? `${ordinal(row.place.rank)} of ${row.place.of}` : null,
   }));

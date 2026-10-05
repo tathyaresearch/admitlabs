@@ -8,7 +8,7 @@ import { PAID_PRICE } from '@/domain/tiers';
 import { PLACE_LABELS } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
-import { loadEnquiries, type EnquiryRow, type FixAsk, type FormEnquiry, type PaidAsk } from '@/lib/team/enquiries';
+import { loadEnquiries, type EnquiryRow, type FixAsk, type FormEnquiry, type PaidAsk, type ServicesAsk } from '@/lib/team/enquiries';
 import { ENQUIRY_ROLE_LABELS, formatPhone } from '@/site/enquiry';
 import { setEnquiryHandledAction } from './actions';
 import audit from '@/components/audit/audit.module.css';
@@ -42,7 +42,7 @@ function Ask({ enquiry }: { enquiry: PaidAsk }) {
     <article className={team.item} aria-labelledby={`enquiry-${enquiry.id}`}>
       <div className={team.itemHead}>
         <h2 id={`enquiry-${enquiry.id}`} className={team.itemTitle}>
-          {enquiry.kind === 'ask_paid' ? 'Asks for Paid' : 'Asks to continue Paid'}
+          {enquiry.kind === 'ask_paid' ? 'Wants to subscribe to Paid' : 'Wants to renew Paid'}
         </h2>
         <Link href={`/team/institutions/${enquiry.institutionId}`} className={team.link}>
           {enquiry.institution}
@@ -58,8 +58,35 @@ function Ask({ enquiry }: { enquiry: PaidAsk }) {
         </a>
       </p>
       <p className={team.itemBody}>
-        Paid is {PAID_PRICE.text} {PAID_PRICE.term}, with no auto-renew. Write back, then an Admin switches it on from their page.
+        Paid is {PAID_PRICE.text} {PAID_PRICE.term}, with no auto-renew. They clicked {enquiry.kind === 'ask_paid' ? 'Subscribe now' : 'Renew now'}: write back to complete payment, then an Admin switches it on from their page.
       </p>
+      <Handled enquiry={enquiry} />
+    </article>
+  );
+}
+
+/** Someone at a Free or Paid institution clicked Talk to AdmitLabs on the sidebar's services card. */
+function ServicesRequest({ enquiry }: { enquiry: ServicesAsk }) {
+  return (
+    <article className={team.item} aria-labelledby={`enquiry-${enquiry.id}`}>
+      <div className={team.itemHead}>
+        <h2 id={`enquiry-${enquiry.id}`} className={team.itemTitle}>
+          Wants to talk about our services
+        </h2>
+        <Link href={`/team/institutions/${enquiry.institutionId}`} className={team.link}>
+          {enquiry.institution}
+        </Link>
+      </div>
+      <p className={team.itemMeta}>
+        <span>Sent {formatDateTime(enquiry.createdAt)}, from their dashboard</span>
+      </p>
+      <p className={styles.contact}>
+        <span>From:</span>
+        <a className={team.link} href={`mailto:${enquiry.email}`}>
+          {enquiry.email}
+        </a>
+      </p>
+      <p className={team.itemBody}>They saw Program Growth, Institution Branding and Admit Campaign. Write back to talk about what they need.</p>
       <Handled enquiry={enquiry} />
     </article>
   );
@@ -95,6 +122,7 @@ function FixRequest({ enquiry }: { enquiry: FixAsk }) {
 
 function Enquiry({ enquiry }: { enquiry: EnquiryRow }) {
   if (enquiry.kind === 'work_with_us') return <FormRow enquiry={enquiry} />;
+  if (enquiry.kind === 'ask_services') return <ServicesRequest enquiry={enquiry} />;
   return enquiry.kind === 'fix_request' ? <FixRequest enquiry={enquiry} /> : <Ask enquiry={enquiry} />;
 }
 
@@ -126,9 +154,9 @@ function FormRow({ enquiry }: { enquiry: FormEnquiry }) {
   );
 }
 
-// Enquiries: who wrote in through the website's "Work with us" form, and owners who asked for
-// Paid from their dashboard, newest first. New ones until someone on the team marks them handled.
-// No emails are sent.
+// Enquiries: who wrote in through the website's "Work with us" form, and requests from dashboards
+// (to subscribe or renew, to talk about the services, to fix something), newest first. New ones
+// until someone on the team marks them handled. No emails are sent.
 export default async function EnquiriesPage({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
   await requireTeamViewer();
   const showAll = (await searchParams).show === 'all';
@@ -141,7 +169,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
       <PageHead
         title="Enquiries"
         question="Who wants to work with us?"
-        caption={[`${fresh.length} new`, `${plural(all.length, 'enquiry', 'enquiries')} in all`, 'From the website’s Work with us form, and requests from dashboards: for Paid, or to fix something']}
+        caption={[`${fresh.length} new`, `${plural(all.length, 'enquiry', 'enquiries')} in all`, 'From the website’s Work with us form, and requests from dashboards: to subscribe or renew, to talk about our services, or to fix something']}
       />
       <nav className={styles.filter} aria-label="Show">
         <Link href="/team/enquiries" className={styles.filterLink} aria-current={showAll ? undefined : 'page'}>
@@ -162,7 +190,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
         <EmptyState icon="enquiry" title={all.length === 0 ? 'No enquiries yet' : 'Nothing new'}>
           <p>
             {all.length === 0
-              ? 'They arrive here when someone sends the Work with us form on the website, or an owner asks for Paid from their dashboard. Each one shows who it is, how to reach them and what they need.'
+              ? 'They arrive here when someone sends the Work with us form on the website, or clicks Subscribe now, Renew now or Talk to AdmitLabs in their dashboard. Each one shows who it is, how to reach them and what they need.'
               : 'Every enquiry has been handled. See them all under All.'}
           </p>
         </EmptyState>

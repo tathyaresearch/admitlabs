@@ -19,6 +19,7 @@ import { checkName } from '@/domain/checks';
 import { monthKey, previousMonth } from '@/domain/dates';
 import { auditFixPath } from '@/domain/fix-key';
 import { formatDate } from '@/domain/format';
+import { wordScoreText } from '@/domain/scores';
 import { planReminder } from '@/domain/tiers';
 import { leadsSummary } from '@/leads/summary';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
@@ -64,9 +65,10 @@ function homeThing(thing: Thing, done: ReadonlySet<string>): HomeThing {
 }
 
 // Home answers "How are we doing this month?" (spec section 13), as the version 2 mock was
-// approved: the one line from the three words, the three words with what to fix first in each,
-// a Client's team and enquiries, the things to do this month, what changed since the last Audit,
-// then the rivals' one line and one demand highlight. No score and no gauge.
+// approved: the one line from the three words, the three words (each out of 100, with its word
+// and a thin bar) with what to fix first in each, a Client's team and enquiries, the things to do
+// this month, what changed since the last Audit, then the rivals' one line and one demand
+// highlight. No overall score and no gauge.
 export default async function HomePage() {
   const viewer = await requireInstitutionViewer();
   const { institution, role } = viewer.membership;
@@ -95,7 +97,7 @@ export default async function HomePage() {
         title={`Your Paid plan ends in ${reminder.daysLeft} ${reminder.daysLeft === 1 ? 'day' : 'days'}.`}
         action={<PaidAction viewer={viewer} variant="secondary" size="sm" note={false} />}
       >
-        It does not renew on its own. When it ends you move to Free and keep your last Audit. Ask AdmitLabs to continue it: the same price and terms, and nothing is paid here.
+        It does not renew on its own. When it ends you move to Free and keep your last Audit. Renew now to keep it, at the same price and terms.
       </Notice>
     ) : null;
   const clientCards =
@@ -176,7 +178,7 @@ export default async function HomePage() {
       : [],
   );
   const firstFix = view.fixes[0];
-  const words = view.words.map((word) => `${word.name} ${word.word}`).join(', ');
+  const words = view.words.map((word) => wordScoreText(word.name, word.score, word.word)).join(', ');
 
   return (
     <div className={audit.page}>

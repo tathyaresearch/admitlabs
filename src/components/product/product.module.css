@@ -319,8 +319,7 @@
   gap: 0.3125rem;
 }
 
-/* The three words: each name with its icon, then its word on a thin bar of the points behind it,
-   the bars lined up in one column. */
+/* The three words: each name with its icon, then its number out of 100, a thin bar and its word. */
 .cardWords {
   display: grid;
   gap: var(--space-1);
@@ -329,7 +328,7 @@
 
 .cardWord {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 7.25rem;
+  grid-template-columns: minmax(0, 1fr) 9.5rem;
   align-items: center;
   column-gap: var(--space-3);
   min-height: 1.875rem;
@@ -355,10 +354,9 @@
 
 /* The product's own result bar, held to the card's bar width (two classes, so it wins over the
    bar's own size whatever order the styles load in). */
-.cardWord [data-result] {
-  --bar-width: 3.75rem;
+.cardWord [data-score] {
+  --bar-width: 2.5rem;
   justify-self: start;
-  font-size: 0.8125rem;
 }
 
 /* The month's one line about rivals, at the foot of their panel, over where it came from. */
@@ -560,7 +558,7 @@
 
 @media (min-width: 75rem) {
   .cardPanels {
-    grid-template-columns: minmax(0, 2.5fr) minmax(0, 3.5fr) minmax(0, 6fr);
+    grid-template-columns: minmax(0, 3.3fr) minmax(0, 3.5fr) minmax(0, 5.2fr);
   }
 
   .cardPanel:nth-child(3) {
@@ -759,21 +757,6 @@
   letter-spacing: -0.005em;
 }
 
-.ledgerTrack {
-  display: block;
-  height: 4px;
-  overflow: hidden;
-  border-radius: var(--radius-full);
-  background: rgba(242, 232, 214, 0.12);
-}
-
-.ledgerTrack i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--ivory);
-}
-
 /* Whose checks these are: the sample, and when it was checked. */
 .ledgerCaption {
   margin-top: var(--space-8);
@@ -803,15 +786,14 @@
   border-top: 1px solid var(--hair-2);
 }
 
-/* A word's header. On a phone: its name with the word on the same line, the question under the
-   name, the bar across. In a column: the name, the question, the word, the bar. */
+/* A word's header. On a phone: its name, the question under it, and its number out of 100 with
+   its word and bar on the right. In a column: the name, the question, then the number. */
 .ledgerHead {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
     'name score'
-    'question score'
-    'track track';
+    'question score';
   align-items: center;
   column-gap: var(--space-3);
   padding-bottom: var(--space-4);
@@ -842,15 +824,8 @@
 
 .ledgerWord {
   grid-area: score;
-  font-size: 1.375rem;
-  font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.ledgerTrack {
-  grid-area: track;
-  margin-top: var(--space-3);
+  display: grid;
+  min-width: 0;
 }
 
 /* The checks: a name with its place under it, then its result: the bar one width, the word in one
@@ -944,13 +919,11 @@
     grid-template-areas:
       'name'
       'question'
-      'score'
-      'track';
+      'score';
   }
 
   .ledgerWord {
     margin-top: var(--space-4);
-    font-size: 1.75rem;
   }
 
   .ledgerEmpty {
@@ -1678,7 +1651,7 @@
       view-timeline: --ledger block;
     }
 
-    .ledgerTrack [data-fill],
+    .ledgerHead [data-fill],
     .ledgerRow [data-fill] {
       transform-origin: left;
       animation: fill-across linear both;

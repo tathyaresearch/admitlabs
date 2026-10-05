@@ -61,6 +61,12 @@ export const PAID_PRICE = {
 
 export type PaidAskKind = 'ask_paid' | 'continue_paid';
 
+/** The button for each request: on Free, and from the first renewal reminder. */
+export const PAID_BUTTONS: Readonly<Record<PaidAskKind, string>> = { ask_paid: 'Subscribe now', continue_paid: 'Renew now' };
+
+/** Online payment is not set up yet: after the click, the team writes back to complete it (README, Before launch). */
+export const PAID_THANKS = 'Thanks! The AdmitLabs team will contact you to complete payment.';
+
 /**
  * What an owner can ask AdmitLabs for now: Paid on Free (a Paid plan that ended counts as Free),
  * to continue Paid from the first renewal reminder, nothing on Client or earlier in Paid. Mirrors

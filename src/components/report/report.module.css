@@ -71,6 +71,7 @@
   color: var(--text-muted);
 }
 
+/* The number out of 100 and its word (WordScore), or the word alone in an old summary. */
 .wordValue {
   font: var(--weight-title) 1.25rem / 1.1 var(--font-sans);
   letter-spacing: var(--tracking-section);

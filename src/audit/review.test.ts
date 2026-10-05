@@ -53,7 +53,7 @@ describe('what changed since the last approved Audit', () => {
         ['Fees', 'B.Sc Data Analytics', 'weak', 'okay'],
       ],
     );
-    assert.equal(changesLine(changes, false), 'Visibility Okay to Strong, 6 checks moved');
+    assert.equal(changesLine(changes, false), 'Visibility Okay to Strong (62 to 78 out of 100), 6 checks moved');
   });
 
   test('findings new and gone', async () => {

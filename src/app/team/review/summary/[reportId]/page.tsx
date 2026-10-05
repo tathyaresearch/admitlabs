@@ -10,7 +10,7 @@ import { formatDate, formatMonth, formatMonthName } from '@/domain/format';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
 import { loadSummaryReview } from '@/report/jobs';
-import { SUMMARY_TARGET_LABELS, thingLine } from '@/report/summary';
+import { SUMMARY_TARGET_LABELS, thingLine, summaryWordText } from '@/report/summary';
 import { waitedFor } from '@/team/review';
 import { approveSummaryAction, fixSummaryLineAction } from '../../actions';
 import audit from '@/components/audit/places.module.css';
@@ -53,7 +53,7 @@ export default async function SummaryReviewPage({ params }: { params: Promise<{ 
     return { target: line.target, label: SUMMARY_TARGET_LABELS[line.target], value: line.value, meta: thing ? thingLine(thing) : null, changed: changed.get(line.target) ?? null };
   });
   const editCount = state.edits.length;
-  const words = state.summary.words.map((word) => `${word.name} ${word.word}`).join(', ');
+  const words = state.summary.words.map(summaryWordText).join(', ');
 
   return (
     <div className={[audit.page, styles.withBar].join(' ')}>
@@ -81,7 +81,7 @@ export default async function SummaryReviewPage({ params }: { params: Promise<{ 
         <div className={audit.card}>
           <p className={audit.miniTitle}>Visibility, Trust and Chosen</p>
           <p className={audit.quiet}>
-            {state.summary.words.map((word) => `${word.name} ${word.word} (${word.note})`).join('. ')}. From the approved Audit: a result is fixed in that Audit’s review.
+            {state.summary.words.map((word) => `${summaryWordText(word)}: ${word.note}`).join('. ')}. From the approved Audit: a result is fixed in that Audit’s review.
           </p>
         </div>
         <div className={audit.card}>

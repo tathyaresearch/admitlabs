@@ -7,8 +7,9 @@ import { createClient } from '@/lib/supabase/server';
 export interface LeadForm {
   linkId: string;
   college: string;
-  programId: string;
-  programName: string;
+  /** Null for a general form, where the student picks the course. */
+  programId: string | null;
+  programName: string | null;
   programs: Array<{ id: string; name: string }>;
   open: boolean;
   closedReason: 'archived' | 'not_client' | null;

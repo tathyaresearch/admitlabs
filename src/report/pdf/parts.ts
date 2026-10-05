@@ -60,6 +60,55 @@ export function ResultBar({
 }
 
 /**
+ * Visibility, Trust or Chosen in a table: the number out of 100 in Inter, a thin bar of it, then
+ * the word, so the number means something at a glance.
+ */
+export function ScoreCell({ score, word, width, inset = 12 }: { score: number; word: ScoreLabel; width: number; inset?: number }): ReactElement {
+  const bar = 14;
+  const height = 2.5;
+  const fill = Math.max(0, Math.min(1, score / 100));
+  return h(
+    View,
+    { style: { width, flexDirection: 'row', alignItems: 'center', gap: 4, paddingLeft: inset } },
+    h(Text, { style: { ...NUM, fontSize: 8.5, fontWeight: 600, lineHeight: 1 } }, String(score), h(Text, { style: { fontSize: 6, fontWeight: 400, color: COLORS.muted } }, '/100')),
+    h(
+      View,
+      { style: { width: bar, height, borderRadius: height / 2, backgroundColor: COLORS.track } },
+      fill > 0 ? h(View, { style: { width: bar * fill, height, borderRadius: height / 2, backgroundColor: COLORS.black } }) : null,
+    ),
+    h(Text, { style: { fontSize: 7.5, fontWeight: word === 'Strong' ? 600 : 400, lineHeight: 1 } }, word),
+  );
+}
+
+/**
+ * A word's number large, out of 100, with the word small beside it and a thin bar under them:
+ * the word columns on the cover, This month in short and a shared Audit.
+ */
+export function WordNumber({ score, word, size, ink, quiet, track }: { score: number; word: ScoreLabel; size: number; ink: string; quiet: string; track: string }): ReactElement {
+  const height = 2.5;
+  const fill = Math.max(0, Math.min(1, score / 100));
+  return h(
+    View,
+    null,
+    h(
+      View,
+      { style: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 } },
+      h(Text, { style: { ...NUM, fontSize: size, fontWeight: 600, letterSpacing: -size * 0.03, lineHeight: 1, color: ink } }, String(score), h(Text, { style: { fontSize: size * 0.36, fontWeight: 400, color: quiet } }, '/100')),
+      h(
+        Text,
+        { style: { fontSize: 7.5, fontWeight: 600, lineHeight: 1, color: ink, paddingVertical: 2, paddingHorizontal: 4, borderWidth: 0.75, borderColor: ink, borderRadius: 2, marginBottom: size * 0.08 } },
+        word,
+      ),
+    ),
+    h(
+      View,
+      { style: { height, marginTop: 6, borderRadius: height / 2, backgroundColor: track } },
+      fill > 0 ? h(View, { style: { width: `${fill * 100}%`, height, borderRadius: height / 2, backgroundColor: ink } }) : null,
+    ),
+  );
+}
+
+/**
  * A place's word for one side (Strong, Okay or Weak): a thin bar of the share of the place's points
  * it earned, then the word, in bold where that side leads the place.
  */

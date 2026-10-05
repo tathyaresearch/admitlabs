@@ -765,7 +765,7 @@ export default async function DesignSystemPage() {
                 <ChecksTable view={SAMPLE_VIEW} />
               </Specimen>
             </div>
-            <UnlockCard moreFixes={14} moreStrengths={5} lockedPrograms={2} action={<Button icon="mail">Ask for Paid</Button>} />
+            <UnlockCard moreFixes={14} moreStrengths={5} lockedPrograms={2} action={<Button iconAfter="arrowRight">Subscribe now</Button>} />
           </Section>
 
           <Section id="data" title="Data" description="One hero number per view. Every finding carries its source and the date it was checked.">

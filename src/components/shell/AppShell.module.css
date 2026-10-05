@@ -529,3 +529,24 @@
   padding-top: var(--space-3);
   border-top: 1px solid var(--line-raised);
 }
+
+/* A laptop screen: the sidebar a little tighter, so the pages, the services card and the account
+   all fit without scrolling. */
+@media (min-width: 64rem) and (max-height: 50rem) {
+  .sidebar {
+    gap: var(--space-4);
+    padding-bottom: var(--space-3);
+  }
+
+  .brand {
+    padding-top: var(--space-2);
+  }
+
+  .sidebarNav {
+    gap: var(--space-3);
+  }
+
+  .navLink {
+    min-height: 2rem;
+  }
+}

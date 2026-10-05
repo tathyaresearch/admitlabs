@@ -1,7 +1,7 @@
 // What changed since the last Audit (spec section 13), as the version 2 mock was approved: each
 // word that moved, each check that moved with its result before and after, the fixes marked done
 // that this Audit checked; then, for Paid and Client, the rivals' alerts and the fast rises in
-// what students search, in words. Free sees what Paid adds. No score: Home has none.
+// what students search, in words. Free sees what Paid adds. Each word with its number out of 100.
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -14,6 +14,7 @@ import { trendWord } from '@/demand/text';
 import { formatDate, joinNames } from '@/domain/format';
 import type { CheckKey } from '@/domain/types';
 import type { RivalMove, Spike } from '@/lib/home/load';
+import { wordScoreText } from '@/domain/scores';
 import audit from '@/components/audit/places.module.css';
 import styles from './today.module.css';
 
@@ -77,15 +78,12 @@ export function WhatChanged({
               <ul className={audit.plainList}>
                 {movedWords.map((word) => (
                   <li key={word.pillar}>
-                    <span className={audit.strongText}>
-                      {word.name} {word.word}
-                    </span>
-                    , {inLine(word.moved ?? '')}
+                    <span className={audit.strongText}>{wordScoreText(word.name, word.score, word.word)}</span>, {inLine(word.moved ?? '')}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className={audit.quiet}>No word moved: {words.map((word) => `${word.name} ${word.word}`).join(', ')}.</p>
+              <p className={audit.quiet}>No word moved: {words.map((word) => wordScoreText(word.name, word.score, word.word)).join(', ')}.</p>
             )}
           </div>
 

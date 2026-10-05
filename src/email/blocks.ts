@@ -8,6 +8,8 @@ import { EMAIL_COLORS, escapeHtml } from './layout.ts';
 
 const FONT = "'Bricolage Grotesque', 'Segoe UI', Arial, sans-serif";
 const MUTED = '#5E6066';
+/** Numbers that stand on their own, in Inter, as on screen. */
+const NUM_FONT = "'Inter', 'Segoe UI', Arial, sans-serif";
 const PANEL = '#F2E8D6';
 
 export type EmailBlock =
@@ -15,7 +17,7 @@ export type EmailBlock =
   | { kind: 'title'; text: string }
   | { kind: 'heading'; text: string }
   | { kind: 'text'; text: string; strong?: string }
-  | { kind: 'words'; words: ReadonlyArray<{ name: string; word: string; note: string }> }
+  | { kind: 'words'; words: ReadonlyArray<{ name: string; score: number | null; word: string; note: string }> }
   | { kind: 'list'; items: ReadonlyArray<{ title: string; meta: string | null; link?: { label: string; url: string } }> }
   | { kind: 'buttons'; buttons: ReadonlyArray<{ label: string; url: string; quiet?: boolean }> }
   | { kind: 'box'; heading: string; text: string; button: { label: string; url: string } }
@@ -54,7 +56,7 @@ function blockHtml(block: EmailBlock): string {
       return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:4px 0 10px;border-collapse:separate;border-spacing:0"><tr>${block.words
         .map(
           (word, index) =>
-            `<td width="33%" style="padding:0 ${index < block.words.length - 1 ? '8px' : '0'} 0 0;vertical-align:top"><div style="padding:12px;border:1px solid ${c.line};border-radius:10px;background:${c.card}"><p style="margin:0;font:600 12px/1.3 ${FONT};color:${MUTED}">${escapeHtml(word.name)}</p><p style="margin:4px 0 2px;font:800 20px/1.1 ${FONT};color:${c.black}">${escapeHtml(word.word)}</p><p style="margin:0;font:400 12px/1.35 ${FONT};color:${MUTED}">${escapeHtml(word.note)}</p></div></td>`,
+            `<td width="33%" style="padding:0 ${index < block.words.length - 1 ? '8px' : '0'} 0 0;vertical-align:top"><div style="padding:12px;border:1px solid ${c.line};border-radius:10px;background:${c.card}"><p style="margin:0;font:600 12px/1.3 ${FONT};color:${MUTED}">${escapeHtml(word.name)}</p>${wordValueHtml(word)}<p style="margin:0;font:400 12px/1.35 ${FONT};color:${MUTED}">${escapeHtml(word.note)}</p></div></td>`,
         )
         .join('')}</tr></table>`;
     case 'list':
@@ -74,6 +76,18 @@ function blockHtml(block: EmailBlock): string {
 }
 
 /** The laid out version. */
+/** A word's tile in an email: its number out of 100 with the word beside it and a thin bar, or the word alone in an old summary. */
+function wordValueHtml(word: { score: number | null; word: string }): string {
+  const c = EMAIL_COLORS;
+  if (word.score === null) return `<p style="margin:4px 0 2px;font:800 20px/1.1 ${FONT};color:${c.black}">${escapeHtml(word.word)}</p>`;
+  const share = Math.max(0, Math.min(100, word.score));
+  return (
+    `<p style="margin:6px 0 6px;font:800 22px/1 ${NUM_FONT};color:${c.black}">${share}<span style="font:500 11px/1 ${NUM_FONT};color:${MUTED}">/100</span>` +
+    `<span style="display:inline-block;margin-left:8px;padding:3px 6px;border:1px solid ${c.black};border-radius:4px;font:700 11px/1 ${FONT};color:${c.black};vertical-align:3px">${escapeHtml(word.word)}</span></p>` +
+    `<div style="height:4px;margin:0 0 8px;border-radius:2px;background:${c.line}"><div style="width:${share}%;height:4px;border-radius:2px;background:${c.black}"></div></div>`
+  );
+}
+
 export function blocksHtml(email: BlockEmail): string {
   const c = EMAIL_COLORS;
   const title = email.blocks.find((block) => block.kind === 'title');
@@ -110,7 +124,7 @@ export function blocksText(email: BlockEmail): string {
         lines.push(block.strong ? `${block.strong}${block.text ? ` ${block.text}` : ''}` : block.text);
         break;
       case 'words':
-        lines.push(block.words.map((word) => `${word.name}: ${word.word}. ${word.note}`).join('\n'));
+        lines.push(block.words.map((word) => `${word.name}: ${word.score === null ? word.word : `${word.score}/100, ${word.word}`}. ${word.note}`).join('\n'));
         break;
       case 'list':
         lines.push(block.items.map((item, index) => [`${index + 1}. ${item.title}`, item.meta ? `   ${item.meta}` : null, item.link ? `   ${item.link.label}: ${item.link.url}` : null].filter(Boolean).join('\n')).join('\n'));

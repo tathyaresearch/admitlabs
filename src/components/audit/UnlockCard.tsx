@@ -1,4 +1,4 @@
-// Free: the one card that says what Paid adds, with the one "Ask for Paid" action on the page.
+// Free: the one card that says what Paid adds, with the one "Subscribe now" action on the page.
 // It names what is locked and counts it; nothing locked is sent to the page.
 
 import type { ReactNode } from 'react';

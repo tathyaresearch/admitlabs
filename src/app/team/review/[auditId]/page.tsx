@@ -195,8 +195,11 @@ export default async function ReviewPage({ params }: { params: Promise<{ auditId
                 <ul className={audit.plainList}>
                   {changes.words.map((word) => (
                     <li key={word.pillar}>
-                      <span className={audit.strongText}>{word.name}</span> {word.word}
-                      <span className={audit.quiet}>, {wordMoved(word.word, word.before)}</span>
+                      <span className={audit.strongText}>{word.name}</span> {word.score}/100 ({word.word})
+                      <span className={audit.quiet}>
+                        , {wordMoved(word.word, word.before)}
+                        {word.scoreBefore !== null ? `, ${word.scoreBefore}/100 before` : ''}
+                      </span>
                     </li>
                   ))}
                 </ul>

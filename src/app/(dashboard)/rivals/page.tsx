@@ -159,7 +159,7 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
           id="ranking-title"
           icon="rivals"
           title="The ranking"
-          help={`You and your rivals${nearby ? '' : ` in ${institution.city}`}, from each one’s latest Audit. The score is small on purpose: the words say more.`}
+          help={`You and your rivals${nearby ? '' : ` in ${institution.city}`}, from each one’s latest Audit. Visibility, Trust and Chosen out of 100; the overall score small, after them.`}
         />
         <Ranking rows={full.view.ranking} rivalHref={(id) => `/rivals/${id}`} />
       </section>
