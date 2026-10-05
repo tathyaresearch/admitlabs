@@ -52,7 +52,7 @@ This machine is **Windows**. The project folder is `D:\Drishti`. All scripts and
 - Demand is grouped only. No individual students stored or shown.
 - Plan limits enforced on the server, not just hidden in the UI.
 - Blurred content is placeholder content, never real data hidden with CSS.
-- No discounts on any plan.
+- No discount codes or offers. The 3-month price is a fixed plan price.
 
 ## First task
 
