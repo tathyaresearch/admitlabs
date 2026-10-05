@@ -1343,6 +1343,28 @@
   margin-top: var(--space-1);
 }
 
+/* The billing toggle (components/plan/PeriodToggle.tsx) with the website's soft light on its track
+   and thumb. Doubled classes outrank the toggle's own flat rules whatever order the files load in. */
+.periodToggle.periodToggle {
+  background: linear-gradient(180deg, #141418 0%, var(--black) 100%);
+  box-shadow: inset 0 1px 0 rgba(242, 232, 214, 0.06);
+}
+
+.periodToggle.periodToggle [data-thumb],
+.periodToggle.periodToggle:not([data-ready]) [role='radio'][aria-checked='true'] {
+  background: linear-gradient(180deg, #f8f1e4 0%, var(--ivory) 55%, #e8dcc6 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 6px 14px -8px rgba(0, 0, 0, 0.8);
+}
+
+/* On a phone the term always takes its own line, so switching never moves the card below. */
+@media (max-width: 30rem) {
+  .paidPrice .priceTerm {
+    flex-basis: 100%;
+  }
+}
+
 .planLine {
   font-size: 1.25rem;
   font-weight: var(--weight-heading);

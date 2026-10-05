@@ -20,6 +20,13 @@
   text-wrap: pretty;
 }
 
+/* On a phone, room for two lines either way, so switching never moves the buttons. */
+@media (max-width: 30rem) {
+  .price {
+    min-height: 2lh;
+  }
+}
+
 .buttons {
   display: flex;
   flex-wrap: wrap;

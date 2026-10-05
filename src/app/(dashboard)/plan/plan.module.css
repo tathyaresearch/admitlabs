@@ -53,9 +53,13 @@
 }
 
 .offerFigure {
+  margin-top: var(--space-2);
+}
+
+/* The price for the period shown, which PriceSwap replaces when it changes. */
+.offerFigure > div {
   display: grid;
   gap: var(--space-1);
-  margin-top: var(--space-2);
 }
 
 .planPriceLine {

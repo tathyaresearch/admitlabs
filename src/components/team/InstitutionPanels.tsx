@@ -169,7 +169,7 @@ export function PaidStartForm({ action, now }: { action: Action; now: string }) 
   return (
     <form action={submit} className={styles.facts}>
       <input type="hidden" name="months" value={months} />
-      <PeriodToggle value={months} onChange={setMonths} size="sm" label="Period paid for" />
+      <PeriodToggle value={months} onChange={setMonths} label="Period paid for" />
       <div className={styles.inlineForm}>
         <TextField id="paid-start" name="startsOn" type="date" label="Day of payment" min={range.earliest} max={range.latest} value={day} onChange={(event) => setDay(event.target.value)} />
         <Button type="submit" size="md" loading={pending} disabled={!start}>

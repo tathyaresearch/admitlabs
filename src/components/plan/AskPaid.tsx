@@ -13,7 +13,7 @@ import { Icon } from '@/components/ui/Icon';
 import { formatDate } from '@/domain/format';
 import { PAID_BUTTONS, PAID_PRICE_BY_MONTHS, PAID_PRICE_LINE, PAID_SAVING, PAID_THANKS, paidPeriodText, type PaidMonths } from '@/domain/tiers';
 import type { PaidAskState } from '@/lib/plan/ask';
-import { PeriodToggle } from './PeriodToggle';
+import { PeriodToggle, PriceSwap, usePeriod } from './PeriodToggle';
 import styles from './AskPaid.module.css';
 
 export interface AskPaidResult {
@@ -50,7 +50,8 @@ export function AskPaid({
   const askedAt = sent?.at ?? state.askedAt;
   const askedMonths = sent?.months ?? state.askedMonths;
   const [choosing, setChoosing] = useState(false);
-  const [pick, setPick] = useState<PaidMonths>(state.pick);
+  const period = usePeriod(state.pick);
+  const pick = period.months;
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const kind = state.kind;
@@ -100,10 +101,12 @@ export function AskPaid({
     const price = PAID_PRICE_BY_MONTHS[pick];
     return (
       <div className={styles.choose} role="group" aria-label={PAID_BUTTONS[kind]}>
-        <PeriodToggle value={pick} onChange={setPick} size="sm" label="Pick how long" />
-        <p className={styles.price}>
-          {price.text} {price.term}.{pick === 3 ? ` ${PAID_SAVING}.` : ''} No auto-renew.
-        </p>
+        <PeriodToggle value={pick} onChange={period.choose} label="Pick how long" />
+        <PriceSwap months={pick} moved={period.moved} towards={period.towards}>
+          <p className={styles.price}>
+            {price.text} {price.term}.{pick === 3 ? ` ${PAID_SAVING}.` : ''} No auto-renew.
+          </p>
+        </PriceSwap>
         <div className={styles.buttons}>
           <Button variant="primary" size="sm" iconAfter="arrowRight" loading={pending} onClick={() => send(pick)}>
             {sendLabel(kind, pick)}
