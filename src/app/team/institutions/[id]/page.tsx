@@ -401,7 +401,7 @@ function LeadLinksTab({ institution, links, client }: { institution: TeamInstitu
     <div className={styles.tabStack}>
       <p className={styles.formNote}>
         {client
-          ? `Each link opens a short form for ${institution.name} and one of its programs, or any course for a general form. Their owner can make links too. Enquiries go to ${institution.name} only: the team sees counts, never a student’s details.`
+          ? `Each link opens a short form for ${institution.name} and one of its programs, or any course for a general form. Their owner and members can make and archive links too. Enquiries go to ${institution.name} only: the team sees counts, never a student’s details.`
           : 'Their AdmitLabs service has ended, so their forms are closed. Counts only.'}
       </p>
       {client ? (

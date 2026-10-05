@@ -1,8 +1,8 @@
 'use client';
 
-// The Client's own tracking links on Leads: the owner makes one (a name, where it is used, one
-// course or any course) and archives one; everyone copies a link. The AdmitLabs team still makes
-// them too, from the team area.
+// The Client's own tracking links on Leads: the owner or a member makes one (a name, where it is
+// used, one course or any course), copies it and archives it. The AdmitLabs team still makes them
+// too, from the team area.
 
 import { useActionState, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -50,7 +50,7 @@ export function NewLinkForm({ programs }: { programs: ReadonlyArray<{ id: string
   );
 }
 
-/** Copy a link, for everyone; archive it, for the owner, after one more click to be sure. */
+/** Copy a link; archive it, for the Client's own people, after one more click to be sure. */
 export function LinkActions({ url, linkId, canArchive }: { url: string; linkId: string; canArchive: boolean }) {
   const [copied, setCopied] = useState(false);
   const [asking, setAsking] = useState(false);

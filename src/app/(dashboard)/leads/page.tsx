@@ -36,9 +36,10 @@ function UsedOn({ usedOn }: { usedOn: LeadSource }) {
 
 // Leads answers "What did our content bring in?" for an AdmitLabs Client (spec section 23), as the
 // version 2 mock was approved: this month against last month, the link that brought the most,
-// every link with its counts, then every enquiry, newest first, with Download CSV. The owner makes
-// and archives links here too (one course, or any course for a general form); everyone copies
-// them. The team, in "view as" too, sees the counts only. Not a CRM: no calls, stages or notes.
+// every link with its counts, then every enquiry, newest first, with Download CSV. The owner and
+// the members make, copy and archive links here too (one course, or any course for a general
+// form); the settings and deleting a student's data stay with the owner. The team, in "view as"
+// too, sees the counts only. Not a CRM: no calls, stages or notes.
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const viewer = await requireInstitutionViewer();
   if (!(await loadHasLeads(viewer))) notFound();
@@ -46,8 +47,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const all = (await searchParams).all === '1';
   const data = await loadLeadsPage(viewer, { all });
   const owner = role === 'owner' && !viewer.viewingAs;
-  // The owner makes links while the forms are open (a Client).
-  const canMake = owner && data.open;
+  // The owner or a member makes and archives links while the forms are open (a Client).
+  const canMake = !viewer.viewingAs && data.open;
   const programs = canMake ? (await loadPrograms(institution.id)).filter((program) => !program.archived) : [];
   const makeLink = canMake ? (
     <div className={audit.card}>
@@ -110,7 +111,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     {
       key: 'form',
       header: 'Form',
-      render: (link) => (link.archivedAt ? <span className={audit.quiet}>Closed</span> : <LinkActions url={`${SITE_URL}/enquire/${link.code}`} linkId={link.id} canArchive={owner} />),
+      render: (link) => (link.archivedAt ? <span className={audit.quiet}>Closed</span> : <LinkActions url={`${SITE_URL}/enquire/${link.code}`} linkId={link.id} canArchive={canMake} />),
     },
   ];
 
@@ -140,7 +141,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
           <EmptyState icon="enquiry" title="No tracking links yet">
             {canMake
               ? `Make a link for each place your content goes, like your Instagram bio or a reel, or ask the AdmitLabs team. Each one opens a short form for ${institution.name}, and every enquiry shows here.`
-              : `Your account owner or the AdmitLabs team makes a link for each place your content goes, like your Instagram bio or a reel. Each one opens a short form for ${institution.name}, and every enquiry shows here.`}
+              : `The AdmitLabs team makes a link for each place your content goes, like your Instagram bio or a reel. Each one opens a short form for ${institution.name}, and every enquiry shows here.`}
           </EmptyState>
           {makeLink}
         </>

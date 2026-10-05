@@ -1,9 +1,9 @@
 'use server';
 
-// Leads tracking links, made by the Client's owner (spec section 23), beside the ones the
-// AdmitLabs team makes: a name, where it is used, and one program or any course (a general form,
-// where the student picks). The owner only: checked here and again in create_lead_link() and
-// archive_lead_link(). Members see the links and copy them.
+// Leads tracking links, made by the Client's own people, the owner or a member (spec section 23),
+// beside the ones the AdmitLabs team makes: a name, where it is used, and one program or any
+// course (a general form, where the student picks). Checked here and again in create_lead_link()
+// and archive_lead_link(). The team in "view as" makes them from the team area instead.
 
 import { revalidatePath } from 'next/cache';
 import { LEAD_RULES } from '@/config/leads';
@@ -19,17 +19,17 @@ export interface LinkFormState {
   attempt: number;
 }
 
-const NOT_OWNER = 'Only the owner of this account can make or archive links.';
+const NOT_ALLOWED = 'Only people in this account can make or archive its links.';
 
-async function owner() {
+async function ownInstitution() {
   const viewer = await getViewer();
-  return viewer?.membership && !viewer.viewingAs && viewer.membership.role === 'owner' ? viewer.membership.institution : null;
+  return viewer?.membership && !viewer.viewingAs ? viewer.membership.institution : null;
 }
 
 export async function createLinkAction(previous: LinkFormState, formData: FormData): Promise<LinkFormState> {
   const reply = (status: LinkFormState['status'], message: string) => ({ status, message, attempt: previous.attempt + 1 });
-  const institution = await owner();
-  if (!institution) return reply('error', NOT_OWNER);
+  const institution = await ownInstitution();
+  if (!institution) return reply('error', NOT_ALLOWED);
   const name = tidyText(String(formData.get('name') ?? '').replace(/\s+/g, ' ').trim());
   const usedOn = String(formData.get('used_on') ?? '');
   const program = String(formData.get('program') ?? '');
@@ -59,7 +59,7 @@ export async function createLinkAction(previous: LinkFormState, formData: FormDa
 
 /** Its form says it is closed from now on. The enquiries it brought stay. */
 export async function archiveLinkAction(linkId: string): Promise<{ ok: boolean; error: string | null }> {
-  if (!(await owner())) return { ok: false, error: NOT_OWNER };
+  if (!(await ownInstitution())) return { ok: false, error: NOT_ALLOWED };
   const supabase = await createClient();
   const { error } = await supabase.rpc('archive_lead_link', { p_link: linkId });
   if (error) return { ok: false, error: 'That did not archive. Try again.' };

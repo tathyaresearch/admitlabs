@@ -11,7 +11,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(50);
+select plan(56);
 
 insert into public.cities (name, state) values ('Leadsville', 'Lead State') on conflict do nothing;
 
@@ -132,8 +132,6 @@ select set_config('request.jwt.claims', '{"sub":"15000000-0000-4000-8000-0000000
 select isnt_empty($$select 1 from public.leads$$, 'A member reads them too');
 select throws_ok($$select public.save_lead_settings('25000000-0000-4000-8000-00000000000c', array['m@leads-c.example'], 12::smallint)$$, '42501', 'not_owner', 'but only the owner changes the settings');
 select throws_ok($$select public.delete_leads('25000000-0000-4000-8000-00000000000c', null, '+910000000008')$$, '42501', 'not_owner', 'and only the owner deletes');
-select throws_ok($$select * from public.create_lead_link('25000000-0000-4000-8000-00000000000c', 'Bio', 'instagram', '35000000-0000-4000-8000-0000000000c1')$$, '42501', 'not_allowed', 'A member sees the links, but only the owner makes one');
-select throws_ok($$select public.archive_lead_link('45000000-0000-4000-8000-000000000001')$$, '42501', 'not_allowed', 'or archives one');
 
 -- The AdmitLabs team -------------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"15000000-0000-4000-8000-000000000004","role":"authenticated"}', true);
@@ -201,6 +199,36 @@ select throws_ok($$select public.delete_leads('25000000-0000-4000-8000-000000000
 select is(public.delete_leads('25000000-0000-4000-8000-00000000000c', null, 'HEMA@mail.example'), 1, 'The owner deletes every enquiry from one email');
 select is(public.delete_leads('25000000-0000-4000-8000-00000000000c', '55000000-0000-4000-8000-000000000007', null), 1, 'or one enquiry');
 select throws_ok($$select public.purge_old_leads(now())$$, '42501', null, 'Only the server runs the daily deletion');
+
+-- A member makes and archives links too ------------------------------------------------------------
+select set_config('request.jwt.claims', '{"sub":"15000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+
+select matches(
+  (select code from public.create_lead_link('25000000-0000-4000-8000-00000000000c', 'Brochure QR', 'other', '35000000-0000-4000-8000-0000000000c1')),
+  '^[0-9a-f]{8}$',
+  'A member of a Client makes a link too'
+);
+select is(
+  (select created_by from public.lead_links where name = 'Brochure QR'),
+  '15000000-0000-4000-8000-000000000002'::uuid,
+  'and it is theirs'
+);
+select lives_ok(
+  format($$select public.archive_lead_link(%L)$$, (select id from public.lead_links where name = 'Brochure QR')),
+  'A member archives a link'
+);
+select results_eq(
+  $$select open from public.lead_form((select code from public.lead_links where name = 'Brochure QR'))$$,
+  $$values (false)$$,
+  'and its form closes'
+);
+select lives_ok(
+  format($$select public.archive_lead_link(%L)$$, (select id from public.lead_links where name = 'Website: enquiry form')),
+  'even one someone else made'
+);
+select throws_ok($$select * from public.create_lead_link('25000000-0000-4000-8000-00000000000d', 'Bio', 'instagram', null)$$, '42501', 'not_allowed', 'never a link for another college');
+select throws_ok($$select public.archive_lead_link('45000000-0000-4000-8000-000000000003')$$, '42501', 'not_allowed', 'nor archives one of its links');
+select throws_ok($$select public.save_lead_settings('25000000-0000-4000-8000-00000000000c', array['m@leads-c.example'], 12::smallint)$$, '42501', 'not_owner', 'The settings stay with the owner');
 
 -- The daily deletion, and a shorter keeping time -----------------------------------------------------
 reset role;
