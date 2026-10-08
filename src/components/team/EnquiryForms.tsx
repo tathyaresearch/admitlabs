@@ -5,8 +5,10 @@
 
 import { useActionState, useState } from 'react';
 import type { ActionState } from '@/app/team/institutions/[id]/actions';
+import { CityPicker } from '@/components/institution/CityPicker';
 import { Button } from '@/components/ui/Button';
 import { SelectField, TextAreaField, TextField } from '@/components/ui/Form';
+import { INSTITUTION_TYPE_LABELS, INSTITUTION_TYPES } from '@/domain/types';
 import { LOST_REASON_LABELS, LOST_REASONS, SOCIAL_SOURCES, TEAM_LEAD_SOURCE_LABELS, TEAM_LEAD_STATUS_LABELS, TEAM_LEAD_STATUSES, type LostReason, type TeamLeadStatus } from '@/enquiries/model';
 import styles from './team.module.css';
 
@@ -124,6 +126,32 @@ export function LeadDetailsForm({ action, values }: { action: Action; values: Le
       <div className={styles.inlineForm}>
         <Button type="submit" size="sm" variant="secondary" loading={pending}>
           Save the details
+        </Button>
+      </div>
+      <Reply state={state} />
+    </form>
+  );
+}
+
+/**
+ * Make Client for a college not in Drishti: the college and its owner's email. When the email or
+ * the website is a college in Drishti already, that one is linked instead (the server says so).
+ */
+export function AddCollegeForm({ action, name, email }: { action: Action; name: string | null; email: string | null }) {
+  const [state, submit, pending] = useActionState(action, IDLE);
+  if (state.status === 'done') return <Reply state={state} />;
+  return (
+    <form action={submit} className={styles.leadForm}>
+      <div className={styles.leadFields}>
+        <TextField id="college-name" name="name" label="College name" maxLength={120} defaultValue={name ?? ''} />
+        <SelectField id="college-type" name="type" label="Type" options={INSTITUTION_TYPES.map((value) => ({ value, label: INSTITUTION_TYPE_LABELS[value] }))} defaultValue="college" />
+        <CityPicker id="college-city" />
+        <TextField id="college-website" name="website" label="Website" inputMode="url" placeholder="college.edu.in" spellCheck={false} />
+        <TextField id="college-owner" name="owner_email" type="email" label="Owner’s email" inputMode="email" spellCheck={false} defaultValue={email ?? ''} hint="They sign in with it, as the owner." />
+      </div>
+      <div className={styles.inlineForm}>
+        <Button type="submit" size="md" loading={pending}>
+          Add the college and make them a Client
         </Button>
       </div>
       <Reply state={state} />

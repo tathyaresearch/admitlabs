@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CameIn } from '@/components/team/CameIn';
-import { LeadDetailsForm, OwnerForm, StatusForm } from '@/components/team/EnquiryForms';
+import { AddCollegeForm, LeadDetailsForm, OwnerForm, StatusForm } from '@/components/team/EnquiryForms';
 import { ActionButton, NoteForm } from '@/components/team/InstitutionPanels';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Notice } from '@/components/ui/Feedback';
@@ -17,7 +17,7 @@ import { getViewer } from '@/lib/auth/viewer';
 import { findInstitutions, loadLead } from '@/lib/team/enquiries';
 import { loadTeamPeople } from '@/lib/team/load';
 import { formatPhone } from '@/site/enquiry';
-import { addLeadNoteAction, linkInstitutionAction, makeClientAction, saveLeadAction, setOwnerAction, setStatusAction } from '../actions';
+import { addLeadNoteAction, linkInstitutionAction, makeClientAction, makeClientWithCollegeAction, saveLeadAction, setOwnerAction, setStatusAction } from '../actions';
 import audit from '@/components/audit/audit.module.css';
 import styles from '@/components/team/team.module.css';
 
@@ -175,11 +175,14 @@ export default async function LeadPage({ params, searchParams }: { params: Promi
               </div>
             </>
           ) : (
-            <p className={styles.itemBody}>
-              {institution
-                ? `${institution.name} has not signed up for Drishti yet. Once they sign up, Make Client sets their plan and starts onboarding.`
-                : 'Link them to their college in Drishti first (below). A college that has not signed up yet signs up first, then you make them a Client here.'}
-            </p>
+            <>
+              <p className={styles.itemBody}>
+                {institution
+                  ? `${institution.name} has not signed up for Drishti. Add its details and the owner’s email: it becomes a Client, onboarding starts, and the owner gets an email to sign in.`
+                  : 'Their college is not linked. Add it here with the owner’s email: it becomes a Client, onboarding starts, and the owner gets an email to sign in. If the email or the website is a college in Drishti already, that one is linked instead, never a second one.'}
+              </p>
+              <AddCollegeForm action={makeClientWithCollegeAction.bind(null, lead.id)} name={institution?.name ?? lead.institution} email={lead.email} />
+            </>
           )}
         </section>
       ) : null}

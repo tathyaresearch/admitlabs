@@ -11,7 +11,9 @@ import { redirect } from 'next/navigation';
 import { AuditRunError, runAudit } from '@/audit/run';
 import { foundItems } from '@/brain/jobs';
 import { isFullTeam } from '@/domain/types';
-import { tidyText } from '@/domain/onboarding';
+import { checkCity, checkName, checkType, checkWebsite, tidyText } from '@/domain/onboarding';
+import { clientInviteEmail } from '@/enquiries/invite-email';
+import { getEmailProvider } from '@/providers/registry';
 import { alertAfterEnquiry, sendTeamLeadAlerts } from '@/enquiries/jobs';
 import { LOST_REASONS, SOCIAL_SOURCES, TEAM_LEAD_STATUSES, type LostReason, type SocialSource, type TeamLeadStatus } from '@/enquiries/model';
 import { getViewer } from '@/lib/auth/viewer';
@@ -203,23 +205,7 @@ export async function makeClientAction(leadId: string, previous: ActionState): P
               : FAILED,
     );
   }
-  let problem: string | null = null;
-  try {
-    const admin = createAdminClient();
-    const now = new Date();
-    await runAudit(admin, { institutionId, asOf: now, trigger: 'scheduled', createdBy: viewer.userId });
-    await writeRivalActions(admin, institutionId, now);
-    const found = await foundItems(supabase, institutionId);
-    if (found.length) {
-      await supabase.rpc('add_found_brain_items', {
-        p_institution: institutionId,
-        p_items: found.map((item) => ({ kind: item.kind, fields: item.fields, source_url: item.sourceUrl, found_at: item.foundAt })) as unknown as Json,
-      });
-    }
-  } catch (runError) {
-    if (!(runError instanceof AuditRunError)) throw runError;
-    problem = runError.message;
-  }
+  const problem = await firstClientAudit(institutionId, viewer.userId);
   revalidatePath(leadPath(leadId));
   revalidatePath(LIST);
   revalidatePath('/team', 'layout');
@@ -228,6 +214,103 @@ export async function makeClientAction(leadId: string, previous: ActionState): P
     'done',
     problem ? `They are a Client now, and onboarding has started. The first Client Audit could not run: ${problem}` : 'They are a Client now. Onboarding has started: their Client Brain is open, with what Drishti found to confirm.',
   );
+}
+
+/**
+ * After a college becomes a Client: its first Client Audit, then what Drishti found waits in the
+ * Client Brain for the team to confirm. Says what stopped the Audit, if anything (a college with
+ * no programs yet has nothing to audit).
+ */
+async function firstClientAudit(institutionId: string, userId: string): Promise<string | null> {
+  try {
+    const supabase = await createClient();
+    const admin = createAdminClient();
+    const now = new Date();
+    await runAudit(admin, { institutionId, asOf: now, trigger: 'scheduled', createdBy: userId });
+    await writeRivalActions(admin, institutionId, now);
+    const found = await foundItems(supabase, institutionId);
+    if (found.length) {
+      await supabase.rpc('add_found_brain_items', {
+        p_institution: institutionId,
+        p_items: found.map((item) => ({ kind: item.kind, fields: item.fields, source_url: item.sourceUrl, found_at: item.foundAt })) as unknown as Json,
+      });
+    }
+    return null;
+  } catch (runError) {
+    if (!(runError instanceof AuditRunError)) throw runError;
+    return runError.message;
+  }
+}
+
+/**
+ * Make Client for a college not in Drishti (Admins and Team members): the college is added (or,
+ * when the owner's email or the website is already a college in Drishti, that one is linked), it
+ * becomes a Client, onboarding starts, and the owner gets an email to sign in.
+ */
+export async function makeClientWithCollegeAction(leadId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
+  const viewer = await teamUser();
+  if (!viewer || !isFullTeam(viewer.teamRole)) return reply(previous, 'error', 'Admins and Team members make a won enquiry a Client.');
+  const name = checkName(String(formData.get('name') ?? ''));
+  const type = checkType(String(formData.get('type') ?? ''));
+  const place = checkCity(String(formData.get('city') ?? ''), String(formData.get('state') ?? ''));
+  const website = checkWebsite(String(formData.get('website') ?? ''));
+  const email = field(formData, 'owner_email').toLowerCase();
+  if (!name.ok) return reply(previous, 'error', 'Enter the college’s name.');
+  if (!type.ok) return reply(previous, 'error', type.error);
+  if (!place.ok) return reply(previous, 'error', 'Choose their city from the list.');
+  if (!website.ok) return reply(previous, 'error', 'Enter their website, like college.edu.in.');
+  if (!EMAIL.test(email)) return reply(previous, 'error', 'Enter the owner’s email, like principal@college.edu.in.');
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('make_client_with_college', {
+    p_lead: leadId,
+    p_name: name.value,
+    p_type: type.value,
+    p_city: place.value.city,
+    p_state: place.value.state,
+    p_website: website.value,
+    p_owner_email: email,
+  });
+  const made = data?.[0];
+  if (error || !made) {
+    const message = error?.message ?? '';
+    return reply(
+      previous,
+      'error',
+      message.includes('team_email')
+        ? 'That email is on the AdmitLabs team. Enter the college owner’s own email.'
+        : message.includes('not_won')
+          ? 'Mark it Won first.'
+          : message.includes('linked')
+            ? 'It is linked to a college already: use Make Client above.'
+            : message.includes('made_client')
+              ? 'They are a Client already.'
+              : FAILED,
+    );
+  }
+  const { data: college } = await supabase.from('institutions').select('name').eq('id', made.institution_id).maybeSingle();
+  const collegeName = college?.name ?? name.value;
+  if (made.invited) await alertAfterEnquiry(() => sendClientInvite(made.institution_id, collegeName, email, viewer.userId));
+  const problem = await firstClientAudit(made.institution_id, viewer.userId);
+  revalidatePath(leadPath(leadId));
+  revalidatePath(LIST);
+  revalidatePath('/team', 'layout');
+  const what =
+    made.outcome === 'linked'
+      ? `${collegeName} is in Drishti already, so it is linked: no second one. It is a Client now, and onboarding has started.`
+      : `${collegeName} is in Drishti and a Client now. Onboarding has started.`;
+  const invited = made.invited ? ` ${email} has an email to sign in as its owner.` : '';
+  const audit = problem ? ' Their first Client Audit runs once they add their programs.' : ' Their first Client Audit is ready.';
+  return reply(previous, 'done', `${what}${invited}${audit}`);
+}
+
+/** The owner's invitation email, logged like every email (never the message). */
+async function sendClientInvite(institutionId: string, college: string, to: string, by: string): Promise<void> {
+  const admin = createAdminClient();
+  const { data: name } = await admin.from('person_names').select('name').eq('user_id', by).maybeSingle();
+  const email = getEmailProvider();
+  const results = await email.send(clientInviteEmail({ college, from: name?.name ?? null, loginUrl: `${APP_URL}/login` }, to));
+  await admin.from('email_log').insert(results.map((result) => ({ kind: 'client_invite' as const, institution_id: institutionId, recipient: result.recipient, sender: email.sender, ok: result.ok, error: result.error })));
 }
 
 // Tracking links -------------------------------------------------------------------------------------

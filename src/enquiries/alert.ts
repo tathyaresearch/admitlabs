@@ -6,10 +6,13 @@ import { emailHtml, emailText, type EmailParts } from '../email/layout.ts';
 import { formatDateTime } from '../domain/format.ts';
 import type { EmailMessage } from '../providers/email.ts';
 import { formatPhone } from '../site/enquiry.ts';
-import { leadTitle, sourceLine, type TeamLeadSource } from './model.ts';
+import { leadTitle, LOST_REASON_LABELS, sourceLine, type LostReason, type TeamLeadSource } from './model.ts';
 
 export interface TeamLeadAlertInput {
-  kind: 'new' | 'returning';
+  /** reopened: it had been Lost, and is New again. */
+  kind: 'new' | 'returning' | 'reopened';
+  /** What a reopened lead had been lost for. */
+  wasLost?: LostReason | null;
   name: string | null;
   institution: string | null;
   city: string | null;
@@ -28,10 +31,15 @@ export interface TeamLeadAlertInput {
 export function teamLeadAlertParts(input: TeamLeadAlertInput): EmailParts {
   const who = leadTitle(input);
   const at = input.institution && input.name ? `${input.name}, ${input.institution}` : who;
-  const line = input.kind === 'new' ? `${at} came in through ${sourceLine(input.source, input.sourceDetail)}.` : `${at} came back.`;
+  const line =
+    input.kind === 'new'
+      ? `${at} came in through ${sourceLine(input.source, input.sourceDetail)}.`
+      : input.kind === 'reopened'
+        ? `${at} came back. It was Lost${input.wasLost ? ` (${LOST_REASON_LABELS[input.wasLost]})` : ''}, so it is New again.`
+        : `${at} came back.`;
   return {
     preview: line,
-    title: input.kind === 'new' ? 'A new enquiry for AdmitLabs' : 'An enquiry came back',
+    title: input.kind === 'new' ? 'A new enquiry for AdmitLabs' : input.kind === 'reopened' ? 'A Lost enquiry came back' : 'An enquiry came back',
     lines: [line, ...(input.wants ? [`What they want: ${input.wants}`] : [])],
     facts: [
       ...(input.phone ? [{ label: 'Phone', value: formatPhone(input.phone) }] : []),
@@ -52,7 +60,7 @@ export function teamLeadAlertEmail(input: TeamLeadAlertInput, to: readonly strin
   return {
     kind: 'team_lead_alert',
     to,
-    subject: input.kind === 'new' ? `New enquiry: ${who}${input.institution && input.name ? `, ${input.institution}` : ''}` : `Came back: ${who}`,
+    subject: input.kind === 'new' ? `New enquiry: ${who}${input.institution && input.name ? `, ${input.institution}` : ''}` : input.kind === 'reopened' ? `Came back after Lost: ${who}` : `Came back: ${who}`,
     text: emailText(parts),
     html: emailHtml(parts),
   };

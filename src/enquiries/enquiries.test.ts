@@ -141,3 +141,27 @@ describe('the Enquiries screens', async () => {
     assert.equal(line, "2026-10-02 19:00,'=Rahul,Pinewood College,Guwahati,91 98765 00011,rahul@pinewood-college.example,\"More admissions, soon\",\"Instagram, Instagram bio\",Lost,Price,Kabir Sen,,2026-10-06 17:00,Second note | First note");
   });
 });
+
+describe('the Enquiries fixes', async () => {
+  const { clientInviteEmail } = await import('./invite-email.ts');
+  const { activityLine } = await import('./view.ts');
+
+  test('the owner of a college the team made a Client gets an email to sign in', () => {
+    const email = clientInviteEmail({ college: 'Hillview Skills Institute', from: 'Nisha Rao', loginUrl: 'http://localhost:3000/login' }, 'ankit@hillview-skills.example');
+    assert.equal(email.kind, 'client_invite');
+    assert.deepEqual(email.to, ['ankit@hillview-skills.example']);
+    assert.equal(email.subject, 'Your Drishti for Hillview Skills Institute is ready');
+    assert.match(email.text, /Nisha Rao at AdmitLabs has set up Drishti for Hillview Skills Institute/);
+    assert.match(email.text, /you will be its owner/);
+    assert.match(email.html, /localhost:3000\/login/);
+  });
+
+  test('a Lost lead that comes back: the email and History say what it was lost for', () => {
+    const base = { name: 'Kavya Iyer', institution: 'Lakeshore Business School', city: null, phone: null, email: 'kavya@lakeshore-business.example', wants: null, source: 'website' as const, sourceDetail: null, owner: 'Nisha Rao', at: '2026-10-08T06:30:00Z', url: 'x' };
+    const email = teamLeadAlertEmail({ ...base, kind: 'reopened', wasLost: 'price' }, ['admin@admitlabs.example']);
+    assert.equal(email.subject, 'Came back after Lost: Kavya Iyer');
+    assert.match(email.text, /came back\. It was Lost \(Price\), so it is New again\./);
+    const line = activityLine({ id: 'a', at: '2026-10-08T06:30:00Z', by: null, kind: 'status', body: null, data: { from: 'lost', to: 'new', was_reason: 'price' } }, () => 'Drishti', () => null);
+    assert.equal(line, 'Status: New again. It had been Lost: Price');
+  });
+});

@@ -1443,6 +1443,7 @@ export type Database = {
           id: string
           institution_id: string
           invited_by: string | null
+          role: Database["public"]["Enums"]["membership_role"]
         }
         Insert: {
           accepted_at?: string | null
@@ -1452,6 +1453,7 @@ export type Database = {
           id?: string
           institution_id: string
           invited_by?: string | null
+          role?: Database["public"]["Enums"]["membership_role"]
         }
         Update: {
           accepted_at?: string | null
@@ -1461,6 +1463,7 @@ export type Database = {
           id?: string
           institution_id?: string
           invited_by?: string | null
+          role?: Database["public"]["Enums"]["membership_role"]
         }
         Relationships: [
           {
@@ -2572,6 +2575,7 @@ export type Database = {
           lead_id: string
           sent_at: string | null
           skip_user: string | null
+          was_lost: Database["public"]["Enums"]["team_lead_lost_reason"] | null
         }
         Insert: {
           created_at?: string
@@ -2580,6 +2584,7 @@ export type Database = {
           lead_id: string
           sent_at?: string | null
           skip_user?: string | null
+          was_lost?: Database["public"]["Enums"]["team_lead_lost_reason"] | null
         }
         Update: {
           created_at?: string
@@ -2588,6 +2593,7 @@ export type Database = {
           lead_id?: string
           sent_at?: string | null
           skip_user?: string | null
+          was_lost?: Database["public"]["Enums"]["team_lead_lost_reason"] | null
         }
         Relationships: [
           {
@@ -2963,6 +2969,7 @@ export type Database = {
           lead_id: string
           sent_at: string | null
           skip_user: string | null
+          was_lost: Database["public"]["Enums"]["team_lead_lost_reason"] | null
         }[]
         SetofOptions: {
           from: "*"
@@ -3085,6 +3092,22 @@ export type Database = {
         Returns: undefined
       }
       make_client_from_lead: { Args: { p_lead: string }; Returns: string }
+      make_client_with_college: {
+        Args: {
+          p_city: string
+          p_lead: string
+          p_name: string
+          p_owner_email: string
+          p_state: string
+          p_type: Database["public"]["Enums"]["institution_type"]
+          p_website: string
+        }
+        Returns: {
+          institution_id: string
+          invited: boolean
+          outcome: string
+        }[]
+      }
       mark_brain_ready: { Args: { p_institution: string }; Returns: undefined }
       mark_done: {
         Args: {
@@ -3437,6 +3460,7 @@ export type Database = {
         | "monthly_summary"
         | "audit_ready"
         | "team_lead_alert"
+        | "client_invite"
       enquiry_kind:
         | "work_with_us"
         | "ask_paid"
@@ -3728,6 +3752,7 @@ export const Constants = {
         "monthly_summary",
         "audit_ready",
         "team_lead_alert",
+        "client_invite",
       ],
       enquiry_kind: [
         "work_with_us",

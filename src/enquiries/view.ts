@@ -125,7 +125,11 @@ export function activityLine(row: ActivityRow, name: (userId: string | null) => 
       const reason = str('reason') as LostReason | null;
       const note = str('note');
       if (!to) return 'Status changed';
-      return to === 'lost' ? `Lost: ${reason ? LOST_REASON_LABELS[reason] : 'no reason'}${note ? `. ${note}` : ''}` : `Status: ${TEAM_LEAD_STATUS_LABELS[to]}`;
+      const was = str('was_reason') as LostReason | null;
+      if (to === 'lost') return `Lost: ${reason ? LOST_REASON_LABELS[reason] : 'no reason'}${note ? `. ${note}` : ''}`;
+      // A Lost lead that came back: New again, and what it had been lost for.
+      if (str('from') === 'lost' && was) return `Status: ${TEAM_LEAD_STATUS_LABELS[to]} again. It had been Lost: ${LOST_REASON_LABELS[was]}`;
+      return `Status: ${TEAM_LEAD_STATUS_LABELS[to]}`;
     }
     case 'owner': {
       const to = str('to');

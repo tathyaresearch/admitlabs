@@ -39,7 +39,8 @@ export async function sendTeamLeadAlerts(db: Db, options: { appUrl: string; env?
     const results = await email.send(
       teamLeadAlertEmail(
         {
-          kind: alert.kind === 'returning' ? 'returning' : 'new',
+          kind: alert.kind === 'returning' || alert.kind === 'reopened' ? alert.kind : 'new',
+          wasLost: alert.was_lost,
           name: lead.name,
           institution: lead.institution,
           city: lead.city,
