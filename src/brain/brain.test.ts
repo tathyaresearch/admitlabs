@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { BRAIN_RULES } from '../config/brain.ts';
-import { EMPTY_INSTITUTION_DETAILS, EMPTY_PROGRAM_DETAILS, programDetailsToRow, type ProgramDetails } from '../domain/details.ts';
+import { EMPTY_INSTITUTION_DETAILS, EMPTY_PROGRAM_DETAILS, institutionDetailsToRow, programDetailsToRow, type ProgramDetails } from '../domain/details.ts';
 import { askFacts, matchQuestion, questionTags } from './ask.ts';
 import { describeItem } from './facts.ts';
+import { fileProblem, isUploadPath, uploadPath } from './files.ts';
 import { factInputs, institutionDetailsForm, programDetailsForm, withCurrent } from './form-spec.ts';
 import { factSize, readFact } from './forms.ts';
 import { CONTACT_MESSAGE, LOGIN_MESSAGE, hasContactDetails, looksLikeLogin } from './guard.ts';
@@ -506,12 +507,78 @@ describe('where the rest of Drishti reads the Brain', () => {
 });
 
 describe('History of what Drishti found', () => {
-  test('says the outcome and what Drishti had said', () => {
-    const context = { people: new Map([['u-kabir', { name: 'Kabir Sen', email: null, team: true }]]), programs: [], institutionType: 'college' as const };
-    const fields = { target: 'program:p:fees', label: 'B.Com fees', value: '₹1,80,000 a year', feesAmount: 180000, feesPeriod: 'year', pageUrl: null, approvals: null };
-    const row = (what: ChangeRow['what']): ChangeRow => ({ id: 'c', at: '2026-10-08T06:00:00.000Z', by: 'u-kabir', what, target: 'item:x', kind: 'found', field: null, before: fields, after: null, teamOnly: false });
-    assert.equal(changeLines(row('corrected'), context)[0]?.text, 'Corrected what Drishti found: B.Com fees (it said ₹1,80,000 a year)');
-    assert.equal(changeLines(row('confirmed'), context)[0]?.text, 'Confirmed what Drishti found: B.Com fees, ₹1,80,000 a year');
-    assert.equal(changeLines(row('not_right'), context)[0]?.text, 'Took out what Drishti found: B.Com fees, ₹1,80,000 a year');
+  const context = { people: new Map([['u-kabir', { name: 'Kabir Sen', email: null, team: true }]]), programs: [{ id: 'p', name: 'B.Com' }], institutionType: 'college' as const };
+  const fields = { target: 'program:p:fees', label: 'B.Com fees', value: '₹1,80,000 a year', feesAmount: 180000, feesPeriod: 'year', pageUrl: null, approvals: null };
+  // As close_found_item keeps it: the found fact before, the details as they are now after.
+  const details = (extra: Partial<ProgramDetails>) => programDetailsToRow({ ...EMPTY_PROGRAM_DETAILS, ...extra });
+  const row = (what: ChangeRow['what'], after: unknown): ChangeRow => ({ id: 'c', at: '2026-10-08T06:00:00.000Z', by: 'u-kabir', what, target: 'program:p', kind: 'found', field: null, before: fields, after, teamOnly: false });
+
+  test('a correction says the new value first, then what Drishti had found', () => {
+    const [line] = changeLines(row('corrected', details({ feesAmount: 150000, feesPeriod: 'year', seats: 90 })), context);
+    assert.equal(line?.text, 'Corrected B.Com fees to ₹1,50,000 a year (Drishti found ₹1,80,000 a year)');
+    assert.equal(line?.after, '₹1,50,000 a year');
+    assert.equal(line?.before, '₹1,80,000 a year');
+    assert.equal(line?.section, 'programs');
+  });
+
+  test('a correction to the same amount for another period still shows the new value', () => {
+    const [line] = changeLines(row('corrected', details({ feesAmount: 180000, feesPeriod: 'total' })), context);
+    assert.equal(line?.text, 'Corrected B.Com fees to ₹1,80,000 in total (Drishti found ₹1,80,000 a year)');
+  });
+
+  test('a correction never shows only the old value', () => {
+    const [line] = changeLines(row('corrected', null), context);
+    assert.equal(line?.text, 'Corrected what Drishti found: B.Com fees');
+    assert.ok(!line?.text.includes('₹1,80,000'));
+  });
+
+  test('a corrected page and corrected approvals say their new value too', () => {
+    const page = { ...fields, target: 'program:p:page', label: 'B.Com page', value: 'silverline.example/bcom', feesAmount: null, feesPeriod: null, pageUrl: 'https://silverline.example/bcom' };
+    const pageRow: ChangeRow = { ...row('corrected', details({ pageUrl: 'https://silverline.example/programs/b-com' })), before: page };
+    assert.equal(changeLines(pageRow, context)[0]?.text, 'Corrected B.Com page to silverline.example/programs/b-com (Drishti found silverline.example/bcom)');
+    const approvals = { ...fields, target: 'about:approvals', label: 'Approvals held', value: 'UGC', feesAmount: null, feesPeriod: null, approvals: { ugc: true, aicte: false, naac: false, other: [] } };
+    const after = institutionDetailsToRow({ ...EMPTY_INSTITUTION_DETAILS, naacGrade: 'A', ugcRecognised: true, aicteApproved: true });
+    const [line] = changeLines({ ...row('corrected', after), target: 'about', before: approvals }, context);
+    assert.match(line?.text ?? '', /^Corrected approvals held to .*NAAC A.* \(Drishti found UGC\)$/);
+    assert.equal(line?.section, 'basics');
+  });
+
+  test('confirmed, found and taken out', () => {
+    assert.equal(changeLines(row('confirmed', details({ feesAmount: 180000, feesPeriod: 'year' })), context)[0]?.text, 'Confirmed what Drishti found: B.Com fees, ₹1,80,000 a year');
+    assert.equal(changeLines(row('not_right', details({})), context)[0]?.text, 'Took out what Drishti found: B.Com fees, ₹1,80,000 a year');
+    assert.equal(changeLines({ ...row('found', fields), before: null, by: null }, context)[0]?.text, 'Drishti found B.Com fees, ₹1,80,000 a year');
+  });
+});
+
+describe('Brain files go straight to storage', () => {
+  const MB = 1024 * 1024;
+  const college = '2b000000-0000-4000-8000-00000000000c';
+
+  test('the kind’s types and sizes, to the byte', () => {
+    assert.equal(fileProblem('logo', 'image/png', 2 * MB), null);
+    assert.equal(fileProblem('logo', 'image/png', 2 * MB + 1), 'Keep it under 2 MB.');
+    assert.equal(fileProblem('logo', 'application/pdf', MB), 'Upload a PNG, JPG or WebP image.');
+    assert.equal(fileProblem('guidelines', 'application/pdf', 9 * MB), null);
+    assert.equal(fileProblem('guidelines', 'application/pdf', 10 * MB), null);
+    assert.equal(fileProblem('guidelines', 'application/pdf', 10 * MB + 1), 'Keep it under 10 MB.');
+    assert.equal(fileProblem('guidelines', 'image/png', MB), 'Upload a PDF.');
+    assert.equal(fileProblem('logo', 'image/png', 0), 'That file is empty.');
+  });
+
+  test('a file goes in its college’s folder, and only a path like that is taken back', () => {
+    const path = uploadPath(college, 'application/pdf', '6f1c2b8e-3a4d-4e5f-8a9b-0c1d2e3f4a5b');
+    assert.equal(path, `${college}/6f1c2b8e-3a4d-4e5f-8a9b-0c1d2e3f4a5b.pdf`);
+    assert.ok(isUploadPath(college, path));
+    assert.ok(!isUploadPath('2b000000-0000-4000-8000-00000000000a', path), 'not another college’s');
+    assert.ok(!isUploadPath(college, `${college}/../2b000000-0000-4000-8000-00000000000a/x.pdf`));
+    assert.ok(!isUploadPath(college, `${college}/6f1c2b8e-3a4d-4e5f-8a9b-0c1d2e3f4a5b.exe`));
+    assert.ok(!isUploadPath(college, `${college}/a/6f1c2b8e-3a4d-4e5f-8a9b-0c1d2e3f4a5b.pdf`));
+  });
+
+  test('the bucket allows no more than the biggest file, and app requests stay at the default size', () => {
+    const sql = readFileSync(new URL('../../supabase/migrations/20261021120100_client_brain.sql', import.meta.url), 'utf8');
+    assert.match(sql, new RegExp(`'brain-files', 'brain-files', false, ${BRAIN_RULES.files.guidelines.maxMb * MB},`));
+    const config = readFileSync(new URL('../../next.config.ts', import.meta.url), 'utf8');
+    assert.ok(!config.includes('bodySizeLimit'), 'no raised server action limit: files never pass through the server');
   });
 });

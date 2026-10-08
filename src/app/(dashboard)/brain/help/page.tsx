@@ -74,6 +74,7 @@ function fact(page: BrainPage, kind: Exclude<BrainKind, 'found' | 'skip'>, ctx: 
         plain
         action={saveFactAction.bind(null, { ...ctx, returnTo: `${BASE}#${id}`, kind, itemId: item?.id ?? null })}
         inputs={factInputs(kind, (item?.fields ?? null) as never, preset)}
+        institutionId={ctx.institutionId}
         submit="Save"
         cancelHref={item ? `${BASE}#${id}` : null}
       />

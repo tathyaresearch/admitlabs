@@ -1020,6 +1020,6 @@ The AdmitLabs team can look over a new Audit and a monthly summary before the co
 
 **Ask the brain.** A box at the top: "What's the BBA fee?", "Who approves reels?". The answer, the section it came from and when it was checked, or where to add it when the Brain does not know. Answers come only from the Brain: never the internet, never Leads, and Team only notes only for the team. The AI writer answers it (section 17): a mock now, the Claude API later.
 
-**Files.** Links first. A logo (PNG, JPG or WebP, up to 2 MB) and brand guidelines (a PDF, up to 10 MB) can be uploaded to a private bucket; nothing bigger. A proper Google Drive connection comes with the backend.
+**Files.** Links first. A logo (PNG, JPG or WebP, up to 2 MB) and brand guidelines (a PDF, up to 10 MB) can be uploaded to a private bucket; nothing bigger. A file goes straight from the browser to the bucket through a signed upload link: the server makes the link only after checking the person, the college, the type and the size, and checks the stored file again before it is kept. Files never pass through the app's server, whose requests stay at the default size (a hosted server takes about 4.5 MB at most). A proper Google Drive connection comes with the backend.
 
 **Rules.** No passwords or login details anywhere in the Brain: every text is checked in the form and again in the database, and every page says "Use a password manager". No student data: that stays in Leads. The dashboard's design rules hold, monochrome but for a brand's own swatches.

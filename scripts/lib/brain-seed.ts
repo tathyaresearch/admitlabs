@@ -103,8 +103,17 @@ export async function seedBrain(db: Db, sample: SampleBrain, user: (email: strin
       must(await db.from('brain_items').update({ to_confirm: false, updated_at: when, updated_by: user(outcome.by), checked_at: when, checked_by: user(outcome.by) }).eq('id', row.id), 'confirm');
       continue;
     }
+    // What Drishti found for the details is the details' fact in History (private.found_target).
+    const target = row.kind === 'found' ? ((row.fields as { target: string }).target.replace(/:(fees|page|approvals)$/, '')) : `item:${row.id}`;
+    if (outcome.details && row.kind === 'found') {
+      // As close_found_item does it: the details get the value, and the closing line says it, alone.
+      const programKey = target.startsWith('program:') ? (sample.details.find((change) => change.programKey && programId(sample.slug, change.programKey) === target.slice(8))?.programKey ?? null) : null;
+      await changeDetails(db, sample.slug, { programKey, details: outcome.details, by: outcome.by, on: outcome.on, hour: 11 }, user);
+      const own = must(await db.from('brain_changes').select('id').eq('institution_id', institution).eq('target', target).eq('kind', 'details').order('at', { ascending: false }).limit(1), 'History');
+      if (own[0]) must(await db.from('brain_changes').delete().eq('id', own[0].id), 'History');
+    }
     must(await db.from('brain_items').delete().eq('id', row.id), 'close');
-    await signLast(db, sample.slug, `item:${row.id}`, user(outcome.by), when, outcome.outcome);
+    await signLast(db, sample.slug, target, user(outcome.by), when, outcome.outcome);
   }
 
   for (const [index, entry] of sample.facts.entries()) {

@@ -10,7 +10,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(49);
+select plan(55);
 
 insert into public.cities (name, state) values ('Guwahati', 'Assam') on conflict do nothing;
 
@@ -141,7 +141,7 @@ select ok(
   'Changing the fees says when they were last checked'
 );
 select is(
-  (select what from public.brain_changes where institution_id = '2b000000-0000-4000-8000-00000000000c' and target = 'program:3b000000-0000-4000-8000-00000000000c'),
+  (select what from public.brain_changes where institution_id = '2b000000-0000-4000-8000-00000000000c' and target = 'program:3b000000-0000-4000-8000-00000000000c' and kind = 'details'),
   'added',
   'and History keeps the change'
 );
@@ -154,6 +154,15 @@ select throws_ok(
   '22023', 'bad_program', 'Only for the college''s own programs'
 );
 select throws_ok($$select public.set_brain_step('2b000000-0000-4000-8000-00000000000c', 'brand_kit', true)$$, '42501', null, 'The college does not tick the team''s checklist');
+-- Files: the same policy is checked when the server makes a signed upload link.
+select lives_ok(
+  $$insert into storage.objects (bucket_id, name) values ('brain-files', '2b000000-0000-4000-8000-00000000000c/6f1c2b8e-3a4d-4e5f-8a9b-0c1d2e3f4a5b.pdf')$$,
+  'A Client''s member puts a file in their own college''s folder'
+);
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name) values ('brain-files', '2b000000-0000-4000-8000-00000000000a/6f1c2b8e-3a4d-4e5f-8a9b-0c1d2e3f4a5b.pdf')$$,
+  '42501', null, 'never in another college''s'
+);
 reset role;
 
 -- Paid has no Brain, even for its own details ---------------------------------------------
@@ -177,13 +186,32 @@ select ok(
   exists (select 1 from public.brain_changes where kind = 'link' and what = 'confirmed' and institution_id = '2b000000-0000-4000-8000-00000000000c'),
   'History says it was confirmed'
 );
-select lives_ok(
+select throws_ok(
   $$select public.close_found_item((select id from public.brain_items where kind = 'found' and institution_id = '2b000000-0000-4000-8000-00000000000c'), 'corrected')$$,
-  'The team closes a found fee once it is corrected in the details'
+  '22023', 'bad_values', 'A correction says the value'
 );
-select ok(
-  exists (select 1 from public.brain_changes where kind = 'found' and what = 'corrected' and institution_id = '2b000000-0000-4000-8000-00000000000c'),
-  'History says how it was closed'
+select throws_ok(
+  $$select public.close_found_item((select id from public.brain_items where kind = 'found' and institution_id = '2b000000-0000-4000-8000-00000000000c'), 'corrected', '{"fees_amount": 95000, "fees_period": "year", "seats": 10}')$$,
+  '22023', 'bad_values', 'and only the fact Drishti suggested'
+);
+select lives_ok(
+  $$select public.close_found_item((select id from public.brain_items where kind = 'found' and institution_id = '2b000000-0000-4000-8000-00000000000c'), 'corrected', '{"fees_amount": 95000, "fees_period": "year"}')$$,
+  'The team corrects a found fee: the details get the value in the same step'
+);
+select is(
+  (select fees_amount from public.program_details where program_id = '3b000000-0000-4000-8000-00000000000c'),
+  95000,
+  'The details have the corrected fee'
+);
+select is(
+  (select after ->> 'fees_amount' from public.brain_changes where kind = 'found' and what = 'corrected' and institution_id = '2b000000-0000-4000-8000-00000000000c'),
+  '95000',
+  'History keeps the value it was corrected to, not only what Drishti found'
+);
+select is(
+  (select count(*)::int from public.brain_changes where institution_id = '2b000000-0000-4000-8000-00000000000c' and target = 'program:3b000000-0000-4000-8000-00000000000c' and what <> 'found' and what <> 'checked'),
+  2,
+  'One line for the correction: the fees added earlier, then corrected'
 );
 select throws_ok($$select public.set_brain_step('2b000000-0000-4000-8000-00000000000c', 'drive_shared', true)$$, 'P0001', 'step_needs_fact', 'Drive folder shared needs a Drive folder in the Brain');
 select lives_ok(

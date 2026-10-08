@@ -3,12 +3,14 @@
 // Changing a Client's Brain (spec section 26): the college's people and the AdmitLabs team, from
 // the Brain, Help us know you and the kickoff call. Everything is written as the signed-in person,
 // so the database checks the plan, the person and the password guard again (the client_brain
-// migration); a file goes to the private bucket the same way. The team's own actions (start
+// migration); a file goes from the browser to the private bucket through a link made here for the
+// same person (src/brain/files.ts). The team's own actions (start
 // onboarding, the checklist, Mark as Ready, what Drishti found) check the team role here too.
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { BRAIN_RULES, type BrainFileKind } from '@/config/brain';
+import { FILE_EXTENSIONS, UPLOAD_FAILED, fileProblem, isUploadPath, uploadPath } from '@/brain/files';
 import { CONTACT_MESSAGE, LOGIN_MESSAGE } from '@/brain/guard';
 import { readFact, type FieldErrors } from '@/brain/forms';
 import { institutionDetailsForm, programDetailsForm, withCurrent } from '@/brain/form-spec';
@@ -16,7 +18,7 @@ import { foundItems } from '@/brain/jobs';
 import { loadBrain } from '@/brain/load';
 import { readiness } from '@/brain/progress';
 import { SINGLE_KINDS, STEPS, type BrainFields, type BrainFile, type BrainKind, type BrainStep } from '@/brain/model';
-import { institutionDetailsToRow, programDetailsToRow, readInstitutionDetails, readProgramDetails, type FormRead } from '@/domain/details';
+import { institutionDetailsToRow, programDetailsToRow, readInstitutionDetails, readProgramDetails, type FormRead, type InstitutionDetails } from '@/domain/details';
 import { getViewer } from '@/lib/auth/viewer';
 import { createClient } from '@/lib/supabase/server';
 import type { Json } from '@/lib/supabase/database.types';
@@ -88,18 +90,37 @@ function done(ctx: FormContext): never {
 
 // Files -------------------------------------------------------------------------------------------
 
-const EXTENSIONS: Readonly<Record<string, string>> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'application/pdf': 'pdf' };
-
-/** Puts a logo or guidelines file in the private bucket, under the college's id. */
-async function upload(institutionId: string, kind: BrainFileKind, file: File): Promise<{ file: BrainFile } | { error: string }> {
-  const rule = BRAIN_RULES.files[kind];
-  if (!(rule.types as readonly string[]).includes(file.type)) return { error: kind === 'logo' ? 'Upload a PNG, JPG or WebP image.' : 'Upload a PDF.' };
-  if (file.size > rule.maxMb * 1024 * 1024) return { error: `Keep it under ${rule.maxMb} MB.` };
-  const path = `${institutionId}/${crypto.randomUUID()}.${EXTENSIONS[file.type] ?? 'bin'}`;
+/**
+ * A signed link the browser uploads one file to, straight to the private bucket. Made only for
+ * someone who may change this college's Brain, for a type and size the kind takes; the bucket's
+ * own policy checks the person and the college again as the link is made.
+ */
+export async function prepareUploadAction(institutionId: string, kind: BrainFileKind, file: { type: string; size: number }): Promise<{ url: string; path: string } | { error: string }> {
+  if (!(await editor(institutionId))) return { error: MESSAGES.not_allowed ?? UPLOAD_FAILED };
+  if (kind !== 'logo' && kind !== 'guidelines') return { error: UPLOAD_FAILED };
+  const problem = fileProblem(kind, file.type, file.size);
+  if (problem) return { error: problem };
+  const path = uploadPath(institutionId, file.type, crypto.randomUUID());
   const supabase = await createClient();
-  const { error } = await supabase.storage.from(BRAIN_RULES.files.bucket).upload(path, file, { contentType: file.type, upsert: false });
-  if (error) return { error: 'The file could not be uploaded. Try again, or paste a Drive link instead.' };
-  return { file: { path, name: file.name.slice(0, 120), type: file.type, size: file.size } };
+  const { data, error } = await supabase.storage.from(BRAIN_RULES.files.bucket).createSignedUploadUrl(path, { upsert: false });
+  if (error || !data) return { error: UPLOAD_FAILED };
+  return { url: data.signedUrl, path };
+}
+
+/** The file the browser uploaded, checked where it is: this college's folder, and the kind's type and size. One that fails is taken out. */
+async function uploaded(institutionId: string, kind: BrainFileKind, path: string, name: string): Promise<{ file: BrainFile } | { error: string }> {
+  if (!isUploadPath(institutionId, path)) return { error: UPLOAD_FAILED };
+  const bucket = (await createClient()).storage.from(BRAIN_RULES.files.bucket);
+  const { data, error } = await bucket.info(path);
+  if (error || !data) return { error: UPLOAD_FAILED };
+  const type = data.contentType ?? '';
+  const size = Number(data.size ?? 0);
+  const problem = fileProblem(kind, type, size);
+  if (problem) {
+    await bucket.remove([path]);
+    return { error: problem };
+  }
+  return { file: { path, name: (name.trim() || `${kind}.${FILE_EXTENSIONS[type] ?? 'file'}`).slice(0, 120), type, size } };
 }
 
 // One fact ----------------------------------------------------------------------------------------
@@ -112,16 +133,19 @@ export async function saveFactAction(ctx: FormContext & { kind: Exclude<BrainKin
   if (!read.fields) return reply(previous, { status: 'error', message: read.errors.form ?? CHECK, errors: read.errors });
   let fields = read.fields as BrainFields[typeof ctx.kind];
 
+  // A file is in the bucket already (the browser sent it through prepareUploadAction): the form
+  // says only where it went.
+  const sentPath = formData.get('file_path');
+  const newFile = typeof sentPath === 'string' && sentPath ? sentPath : null;
   if (ctx.kind === 'logo' || ctx.kind === 'guidelines') {
-    const sent = formData.get('file');
     const supabase = await createClient();
     const existing = ctx.itemId || SINGLE_KINDS.has(ctx.kind) ? await supabase.from('brain_items').select('fields').eq('institution_id', ctx.institutionId).eq('kind', ctx.kind).maybeSingle() : null;
     const kept = (existing?.data?.fields as { file?: BrainFile | null } | undefined)?.file ?? null;
     let file: BrainFile | null = kept;
-    if (sent instanceof File && sent.size > 0) {
-      const uploaded = await upload(ctx.institutionId, ctx.kind, sent);
-      if ('error' in uploaded) return reply(previous, { status: 'error', message: uploaded.error, errors: { file: uploaded.error } });
-      file = uploaded.file;
+    if (newFile) {
+      const checked = await uploaded(ctx.institutionId, ctx.kind, newFile, String(formData.get('file_name') ?? ''));
+      if ('error' in checked) return reply(previous, { status: 'error', message: checked.error, errors: { file: checked.error } });
+      file = checked.file;
     }
     const link = (fields as BrainFields['logo']).link;
     if (!file && !link) return reply(previous, { status: 'error', message: 'Upload a file, or paste a Drive link.', errors: { file: 'Upload a file, or paste a Drive link.' } });
@@ -137,7 +161,11 @@ export async function saveFactAction(ctx: FormContext & { kind: Exclude<BrainKin
     p_fields: fields as unknown as Json,
     p_via_help: Boolean(ctx.viaHelp),
   });
-  if (error) return reply(previous, { status: 'error', message: friendly(error.message) });
+  if (error) {
+    // Not kept: the file the browser just sent goes too, so nothing sits in the bucket unused.
+    if (newFile && isUploadPath(ctx.institutionId, newFile)) await supabase.storage.from(BRAIN_RULES.files.bucket).remove([newFile]);
+    return reply(previous, { status: 'error', message: friendly(error.message) });
+  }
   return done(ctx);
 }
 
@@ -217,7 +245,7 @@ export async function startOnboardingAction(institutionId: string): Promise<void
   redirect(`/team/institutions/${institutionId}/brain`);
 }
 
-/** Confirms what Drishti found. One for the details is written into them first. */
+/** Confirms what Drishti found. One for the details is written into them as it was found, in the same step. */
 export async function confirmFoundAction(ctx: FormContext & { itemId: string }): Promise<void> {
   const team = await teamEditor();
   if (!team) return;
@@ -228,12 +256,13 @@ export async function confirmFoundAction(ctx: FormContext & { itemId: string }):
     await supabase.rpc('confirm_brain_item', { p_item: ctx.itemId });
     return done(ctx);
   }
-  await applyFound(ctx.institutionId, item.fields as unknown as BrainFields['found'], team.userId);
-  await supabase.rpc('close_found_item', { p_item: ctx.itemId, p_outcome: 'confirmed' });
+  const brain = await loadBrain(supabase, ctx.institutionId);
+  const values = brain ? foundValues(item.fields as unknown as BrainFields['found'], brain.details) : null;
+  if (values) await supabase.rpc('close_found_item', { p_item: ctx.itemId, p_outcome: 'confirmed', p_values: values as unknown as Json });
   done(ctx);
 }
 
-/** Corrects what Drishti found for the details: the team's value goes into them. */
+/** Corrects what Drishti found for the details: the team's value goes into them, and History says it. */
 export async function correctFoundAction(ctx: FormContext & { itemId: string }, previous: BrainFormState, formData: FormData): Promise<BrainFormState> {
   const team = await teamEditor();
   if (!team) return reply(previous, { status: 'error', message: MESSAGES.not_allowed ?? SAVE_FAILED });
@@ -244,21 +273,24 @@ export async function correctFoundAction(ctx: FormContext & { itemId: string }, 
   const brain = await loadBrain(supabase, ctx.institutionId);
   if (!brain) return reply(previous, { status: 'error', message: SAVE_FAILED });
   const form = reader(formData);
+  let values: Record<string, unknown>;
   if (fields.target.startsWith('program:')) {
     const programId = fields.target.split(':')[1] ?? '';
     const program = brain.programs.find((entry) => entry.id === programId);
     if (!program) return reply(previous, { status: 'error', message: SAVE_FAILED });
-    const { values, errors } = readProgramDetails(withCurrent(form, programDetailsForm(program.details)), brain.institution.website);
-    if (Object.keys(errors).length) return reply(previous, { status: 'error', message: CHECK, errors: errors as Record<string, string> });
-    const { error } = await supabase.from('program_details').upsert({ program_id: programId, institution_id: ctx.institutionId, ...programDetailsToRow(values), push: program.push, updated_at: new Date().toISOString(), updated_by: team.userId });
-    if (error) return reply(previous, { status: 'error', message: friendly(error.message) });
+    const read = readProgramDetails(withCurrent(form, programDetailsForm(program.details)), brain.institution.website);
+    const errors: Record<string, string> = { ...read.errors };
+    if (fields.target.endsWith(':fees') && read.values.feesAmount === null) errors.fees_amount ??= 'Add the fee, in rupees.';
+    if (fields.target.endsWith(':page') && !read.values.pageUrl) errors.page_url ??= 'Add the program page’s link.';
+    if (Object.keys(errors).length) return reply(previous, { status: 'error', message: CHECK, errors });
+    values = pick(programDetailsToRow(read.values), FOUND_COLUMNS[fields.target.endsWith(':fees') ? 'fees' : 'page']);
   } else {
-    const { values, errors } = readInstitutionDetails(withCurrent(form, institutionDetailsForm(brain.details)), new Date());
-    if (Object.keys(errors).length) return reply(previous, { status: 'error', message: CHECK, errors: errors as Record<string, string> });
-    const { error } = await supabase.from('institution_details').upsert({ institution_id: ctx.institutionId, ...institutionDetailsToRow(values), updated_at: new Date().toISOString(), updated_by: team.userId });
-    if (error) return reply(previous, { status: 'error', message: friendly(error.message) });
+    const read = readInstitutionDetails(withCurrent(form, institutionDetailsForm(brain.details)), new Date());
+    if (Object.keys(read.errors).length) return reply(previous, { status: 'error', message: CHECK, errors: read.errors as Record<string, string> });
+    values = pick(institutionDetailsToRow(read.values), FOUND_COLUMNS.approvals);
   }
-  await supabase.rpc('close_found_item', { p_item: ctx.itemId, p_outcome: 'corrected' });
+  const { error } = await supabase.rpc('close_found_item', { p_item: ctx.itemId, p_outcome: 'corrected', p_values: values as unknown as Json });
+  if (error) return reply(previous, { status: 'error', message: friendly(error.message) });
   return done(ctx);
 }
 
@@ -272,29 +304,27 @@ export async function notRightAction(ctx: FormContext & { itemId: string }): Pro
   done(ctx);
 }
 
-/** Writes a found fact into the details added by you, keeping everything else. */
-async function applyFound(institutionId: string, found: BrainFields['found'], userId: string): Promise<void> {
-  const supabase = await createClient();
-  const brain = await loadBrain(supabase, institutionId);
-  if (!brain) return;
-  const now = new Date().toISOString();
-  if (found.target.startsWith('program:')) {
-    const programId = found.target.split(':')[1] ?? '';
-    const program = brain.programs.find((entry) => entry.id === programId);
-    if (!program) return;
-    const details = { ...program.details };
-    if (found.feesAmount !== null && found.feesPeriod) Object.assign(details, { feesAmount: found.feesAmount, feesPeriod: found.feesPeriod });
-    if (found.pageUrl) details.pageUrl = found.pageUrl;
-    await supabase.from('program_details').upsert({ program_id: programId, institution_id: institutionId, ...programDetailsToRow(details), push: program.push, updated_at: now, updated_by: userId });
-    return;
-  }
-  if (found.approvals) {
-    const details = { ...brain.details };
-    if (found.approvals.ugc) details.ugcRecognised = true;
-    if (found.approvals.aicte) details.aicteApproved = true;
-    if (found.approvals.other.length && !details.otherApprovals) details.otherApprovals = found.approvals.other.join(', ');
-    await supabase.from('institution_details').upsert({ institution_id: institutionId, ...institutionDetailsToRow(details), updated_at: now, updated_by: userId });
-  }
+/** The columns of the details each kind of suggestion sets (close_found_item takes only these). */
+const FOUND_COLUMNS = {
+  fees: ['fees_amount', 'fees_period'],
+  page: ['page_url'],
+  approvals: ['naac_grade', 'ugc_recognised', 'aicte_approved', 'other_approvals', 'skilling_recognition'],
+} as const;
+
+function pick<Row extends object>(row: Row, columns: ReadonlyArray<keyof Row & string>): Record<string, unknown> {
+  return Object.fromEntries(columns.map((column) => [column, row[column] ?? null]));
+}
+
+/** A suggestion as it was found, as the details' columns: approvals add to the ones the college has. */
+function foundValues(found: BrainFields['found'], details: InstitutionDetails): Record<string, unknown> | null {
+  if (found.target.endsWith(':fees')) return found.feesAmount !== null && found.feesPeriod ? { fees_amount: found.feesAmount, fees_period: found.feesPeriod } : null;
+  if (found.target.endsWith(':page')) return found.pageUrl ? { page_url: found.pageUrl } : null;
+  if (!found.approvals) return null;
+  return {
+    ugc_recognised: found.approvals.ugc ? true : details.ugcRecognised,
+    aicte_approved: found.approvals.aicte ? true : details.aicteApproved,
+    other_approvals: details.otherApprovals ?? (found.approvals.other.length ? found.approvals.other.join(', ').slice(0, 100) : null),
+  };
 }
 
 export async function setStepAction(ctx: FormContext & { step: BrainStep; done: boolean }): Promise<void> {

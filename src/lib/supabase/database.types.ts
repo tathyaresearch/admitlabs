@@ -2658,7 +2658,7 @@ export type Database = {
         Returns: undefined
       }
       close_found_item: {
-        Args: { p_item: string; p_outcome: string }
+        Args: { p_item: string; p_outcome: string; p_values?: Json }
         Returns: undefined
       }
       close_start_guide: { Args: { p_institution: string }; Returns: undefined }

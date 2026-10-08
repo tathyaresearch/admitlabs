@@ -2,7 +2,7 @@
 // fact serves the college (the Brain and Help us know you) and the team (the Brain and the
 // kickoff call), so both edit the same data. src/brain/forms.ts reads what comes back. Pure.
 
-import { BRAIN_RULES } from '../config/brain.ts';
+import { BRAIN_RULES, type BrainFileKind } from '../config/brain.ts';
 import {
   NAAC_GRADES,
   NAAC_LABELS,
@@ -44,8 +44,9 @@ export interface InputSpec {
   placeholder?: string;
   /** Laid out beside the next input on a wide screen. */
   half?: boolean;
-  /** For a file: what it takes. */
+  /** For a file: what it takes, and which of the Brain's files it is (the browser uploads it straight to storage). */
   accept?: string;
+  upload?: BrainFileKind;
 }
 
 const opts = <T extends string>(values: readonly T[], labels: Readonly<Record<T, string>>) => values.map((value) => ({ value, label: labels[value] }));
@@ -89,7 +90,7 @@ export function factInputs<K extends Exclude<BrainKind, 'found'>>(kind: K, field
       const logo = kind === 'logo';
       const rule = BRAIN_RULES.files[logo ? 'logo' : 'guidelines'];
       return [
-        { name: 'file', label: logo ? 'Upload the logo' : 'Upload the guidelines', type: 'file', accept: rule.types.join(','), hint: logo ? `PNG, JPG or WebP, up to ${rule.maxMb} MB.` : `A PDF, up to ${rule.maxMb} MB.` },
+        { name: 'file', label: logo ? 'Upload the logo' : 'Upload the guidelines', type: 'file', accept: rule.types.join(','), upload: kind, hint: logo ? `PNG, JPG or WebP, up to ${rule.maxMb} MB.` : `A PDF, up to ${rule.maxMb} MB.` },
         { name: 'link', label: 'Or a Drive link', type: 'url', value: v('link'), hint: `Share it with ${BRAIN_RULES.driveShareEmail}.` },
       ];
     }

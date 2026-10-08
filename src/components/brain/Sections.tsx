@@ -159,6 +159,7 @@ function ItemRow({ item, props, extra }: { item: AnyBrainItem; props: SectionPro
         <FactForm
           action={saveFactAction.bind(null, { ...c.form, kind: item.kind, itemId: item.id })}
           inputs={factInputs(item.kind, item.fields as never)}
+          institutionId={c.form.institutionId}
           title={`${KIND_LABELS[item.kind]}: change it`}
           cancelHref={c.href({})}
           remove={removeFactAction.bind(null, { ...c.form, itemId: item.id })}
@@ -248,6 +249,7 @@ function NewFact({ kind, preset = {}, label, props, edit }: { kind: Exclude<Brai
       <FactForm
         action={saveFactAction.bind(null, { ...c.form, kind, itemId: null })}
         inputs={factInputs(kind, null, preset)}
+        institutionId={c.form.institutionId}
         title={label}
         cancelHref={c.href({})}
       />
@@ -262,7 +264,7 @@ function NewFact({ kind, preset = {}, label, props, edit }: { kind: Exclude<Brai
 
 function newForm(kind: Exclude<BrainKind, 'found' | 'skip'>, preset: Record<string, string>, label: string, props: SectionProps) {
   const c = Ctx(props);
-  return <FactForm action={saveFactAction.bind(null, { ...c.form, kind, itemId: null })} inputs={factInputs(kind, null, preset)} title={label} cancelHref={props.kickoff ? null : c.href({})} />;
+  return <FactForm action={saveFactAction.bind(null, { ...c.form, kind, itemId: null })} inputs={factInputs(kind, null, preset)} institutionId={c.form.institutionId} title={label} cancelHref={props.kickoff ? null : c.href({})} />;
 }
 
 function Group({ id, title, note, action, children }: { id: string; title: string; note?: ReactNode; action?: ReactNode; children: ReactNode }) {

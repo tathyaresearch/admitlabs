@@ -23,6 +23,7 @@ import {
   STEP_INFO,
   sectionOf,
   type AnyBrainItem,
+  type BrainFields,
   type BrainKind,
   type BrainSection,
   type BrainStep,
@@ -134,6 +135,7 @@ export function changeLines(
     const body = String((row.after ?? row.before) as string);
     return [{ ...base, section: 'notes', text: `${row.what === 'removed' ? 'Removed a team note' : 'Added a team note'}: ${body}`, before: null, after: null }];
   }
+  if (row.kind === 'found') return foundLines(row, base, context.institutionType);
   if (row.target === 'about' || row.target.startsWith('program:')) {
     if (row.what === 'checked') {
       const program = context.programs.find((entry) => row.target === `program:${entry.id}`);
@@ -165,19 +167,46 @@ export function changeLines(
   const afterValue = afterItem ? factSummary(afterItem, context.programs) : null;
   const noun = factNoun(item);
   let text: string;
-  if (item.kind === 'found') {
-    // What Drishti found for the details: the outcome, and what Drishti had said.
-    const found = item.fields as { label: string; value: string };
-    const said = `${found.label}, ${found.value}`;
-    text = row.what === 'found' ? `Drishti found ${said}` : row.what === 'confirmed' ? `Confirmed what Drishti found: ${said}` : row.what === 'corrected' ? `Corrected what Drishti found: ${found.label} (it said ${found.value})` : `Took out what Drishti found: ${said}`;
-    return [{ ...base, section: sectionOf(item), text, before: null, after: null }];
-  }
   if (row.what === 'changed' && beforeValue && afterValue && beforeValue !== afterValue) text = `Changed ${noun}: ${beforeValue} to ${afterValue}`;
   else if (item.kind === 'skip') text = `Doesn’t apply: ${(item.fields as { reason: string }).reason}`;
   else if (row.what === 'not_right') text = `Took out ${noun} as not right: ${beforeValue ?? ''}`;
   else if (row.what === 'checked') text = `Still right: ${noun}, ${afterValue ?? ''}`;
   else text = `${VERB[row.what]} ${noun}: ${afterValue ?? beforeValue ?? ''}`;
   return [{ ...base, section: sectionOf(item), text, before: beforeValue, after: afterValue }];
+}
+
+/**
+ * What Drishti found for the details, and what the team did with it. Closed as confirmed or
+ * corrected, the row keeps the details as they were then, so the line leads with that value:
+ * "Corrected B.Com fees to ₹1,50,000 a year (Drishti found ₹1,80,000 a year)".
+ */
+function foundLines(row: ChangeRow, base: Pick<ChangeLine, 'id' | 'at' | 'who' | 'teamOnly'>, type: InstitutionType): ChangeLine[] {
+  const found = (row.what === 'found' ? row.after : row.before) as BrainFields['found'] | null;
+  if (!found || typeof found !== 'object' || typeof found.target !== 'string') return [];
+  const section: BrainSection = found.target.startsWith('program:') ? 'programs' : 'basics';
+  const label = found.target.startsWith('program:') ? found.label : lower(found.label);
+  const now = row.what === 'confirmed' || row.what === 'corrected' ? foundValueNow(found, row.after, type) : null;
+  const text =
+    row.what === 'found'
+      ? `Drishti found ${found.label}, ${found.value}`
+      : row.what === 'confirmed'
+        ? `Confirmed what Drishti found: ${found.label}, ${now ?? found.value}`
+        : row.what === 'corrected'
+          ? now
+            ? `Corrected ${label} to ${now} (Drishti found ${found.value})`
+            : `Corrected what Drishti found: ${found.label}`
+          : `Took out what Drishti found: ${found.label}, ${found.value}`;
+  const corrected = row.what === 'corrected' && now !== null;
+  return [{ ...base, section, text, before: corrected ? found.value : null, after: corrected ? now : null }];
+}
+
+/** The value a suggested fact has in the details kept with its History row: the fee, the page or the approvals. */
+function foundValueNow(found: BrainFields['found'], after: unknown, type: InstitutionType): string | null {
+  if (!after || typeof after !== 'object') return null;
+  if (found.target.endsWith(':approvals')) return aboutRows(institutionDetailsFromRow(after as InstitutionDetailsRow), type).find((row) => row.key === 'approvals')?.value ?? null;
+  const details = programDetailsFromRow(after as ProgramDetailsRow);
+  if (found.target.endsWith(':page')) return details.pageUrl ? hostAndPath(details.pageUrl) : null;
+  return programRows(details).find((row) => row.key === 'fees')?.value ?? null;
 }
 
 /** What a fact is, in History's words: "meeting notes", "the tagline", "a script". */

@@ -60,8 +60,8 @@ export interface SampleBrain {
   ready: { on: string; by: string } | null;
   /** Run Start onboarding's pre-fill from the latest Audit (after the Audits are made). */
   prefill: boolean;
-  /** What the team did with what Drishti found, by target or link. */
-  outcomes: ReadonlyArray<{ match: string; outcome: 'confirmed' | 'corrected' | 'not_right'; by: string; on: string }>;
+  /** What the team did with what Drishti found, by target or link. A correction to the details says what it set. */
+  outcomes: ReadonlyArray<{ match: string; outcome: 'confirmed' | 'corrected' | 'not_right'; by: string; on: string; details?: Record<string, unknown> }>;
   details: readonly SampleDetailChange[];
   facts: readonly AnyFact[];
   steps: ReadonlyArray<{ step: BrainStep; by: string; on: string }>;
@@ -169,13 +169,13 @@ export const SAMPLE_BRAINS: readonly SampleBrain[] = [
     ready: null,
     prefill: true,
     outcomes: [
-      { match: 'about:approvals', outcome: 'corrected', by: KABIR, on: '2026-10-06' },
+      { match: 'about:approvals', outcome: 'corrected', details: { naacGrade: 'A', ugcRecognised: true, aicteApproved: true }, by: KABIR, on: '2026-10-06' },
       { match: 'collegeguide.example', outcome: 'confirmed', by: KABIR, on: '2026-10-06' },
       { match: 'citydirectory.example', outcome: 'not_right', by: KABIR, on: '2026-10-06' },
       { match: 'Hotel Management fees', outcome: 'not_right', by: KABIR, on: '2026-10-07' },
     ],
     details: [
-      { programKey: null, details: { foundedYear: 2009, naacGrade: 'A', ugcRecognised: true, aicteApproved: true, campusAddress: 'GS Road, Christian Basti, Guwahati 781005' }, by: KABIR, on: '2026-10-06' },
+      { programKey: null, details: { foundedYear: 2009, campusAddress: 'GS Road, Christian Basti, Guwahati 781005' }, by: KABIR, on: '2026-10-06' },
       {
         programKey: 'bba',
         details: { level: 'ug', durationValue: 3, durationUnit: 'years', seats: 120, eligibility: '12th pass with 45% marks', applicationsOpen: '2027-01-05', applicationsClose: '2027-05-31', placementYear: 2026, placedPercent: 82, averagePackage: 3.6, highestPackage: 7.2, topRecruiters: ['Axis Bank', 'Teleperformance', 'Reliance Retail'] },

@@ -312,6 +312,28 @@ $$;
 
 -- History --------------------------------------------------------------------------------------
 
+-- What Drishti found for the details ('program:<id>:fees', 'about:approvals') is about the fact it
+-- suggests, so its History is that fact's: 'program:<id>' or 'about'.
+create function private.found_target(p_target text) returns text
+language sql immutable
+set search_path = ''
+as $$
+  select regexp_replace(p_target, ':(fees|page|approvals)$', '');
+$$;
+
+-- The details added by you as they are now, the way History keeps them ('about' or 'program:<id>').
+create function private.brain_details_now(p_institution uuid, p_target text) returns jsonb
+language sql stable security definer
+set search_path = ''
+as $$
+  select case
+    when p_target = 'about' then
+      (select to_jsonb(d) - array['institution_id', 'program_id', 'updated_at', 'updated_by'] from public.institution_details d where d.institution_id = p_institution)
+    when p_target ~ '^program:[0-9a-f-]{36}$' then
+      (select to_jsonb(d) - array['institution_id', 'program_id', 'updated_at', 'updated_by'] from public.program_details d where d.program_id = substring(p_target from 9)::uuid and d.institution_id = p_institution)
+  end;
+$$;
+
 -- Who made a change: the signed-in person, else the person the row records (only the server's
 -- jobs and the seed write rows directly). What Drishti pre-filled has nobody.
 create function private.brain_item_changed() returns trigger
@@ -321,13 +343,17 @@ as $$
 declare
   v_what text;
   v_by uuid := (select auth.uid());
+  v_target text;
 begin
   if tg_op <> 'DELETE' then
     v_by := coalesce(v_by, new.updated_by);
+    v_target := case when new.kind = 'found' then private.found_target(new.fields ->> 'target') else 'item:' || new.id end;
+  else
+    v_target := case when old.kind = 'found' then private.found_target(old.fields ->> 'target') else 'item:' || old.id end;
   end if;
   if tg_op = 'INSERT' then
     insert into public.brain_changes (institution_id, at, by, what, target, kind, before, after)
-    values (new.institution_id, new.created_at, case when new.source = 'drishti' then null else v_by end, case when new.to_confirm then 'found' else 'added' end, 'item:' || new.id, new.kind::text, null, new.fields);
+    values (new.institution_id, new.created_at, case when new.source = 'drishti' then null else v_by end, case when new.to_confirm then 'found' else 'added' end, v_target, new.kind::text, null, new.fields);
   elsif tg_op = 'UPDATE' then
     if old.to_confirm and not new.to_confirm then
       v_what := case when old.fields = new.fields then 'confirmed' else 'corrected' end;
@@ -339,12 +365,14 @@ begin
       return null;
     end if;
     insert into public.brain_changes (institution_id, at, by, what, target, kind, before, after)
-    values (new.institution_id, case when v_what = 'checked' then new.checked_at else coalesce(new.updated_at, now()) end, case when v_what = 'checked' then coalesce((select auth.uid()), new.checked_by) else v_by end, v_what, 'item:' || new.id, new.kind::text, old.fields, new.fields);
+    values (new.institution_id, case when v_what = 'checked' then new.checked_at else coalesce(new.updated_at, now()) end, case when v_what = 'checked' then coalesce((select auth.uid()), new.checked_by) else v_by end, v_what, v_target, new.kind::text, old.fields, new.fields);
   else
     -- A suggestion closed by the team says how (close_found_item); otherwise taken out or removed.
+    -- One for the details keeps the fact as it is now, so History says the value it was confirmed
+    -- or corrected to, not only what Drishti had found.
     v_what := coalesce(nullif(current_setting('drishti.brain_outcome', true), ''), case when old.to_confirm then 'not_right' else 'removed' end);
     insert into public.brain_changes (institution_id, by, what, target, kind, before, after)
-    values (old.institution_id, v_by, v_what, 'item:' || old.id, old.kind::text, old.fields, null);
+    values (old.institution_id, v_by, v_what, v_target, old.kind::text, old.fields, case when old.kind = 'found' then private.brain_details_now(old.institution_id, v_target) end);
   end if;
   return null;
 end;
@@ -410,7 +438,10 @@ begin
       on conflict (institution_id, fact) do update set checked_at = excluded.checked_at, checked_by = excluded.checked_by;
     end loop;
   end if;
-  if exists (select 1 from public.brains b where b.institution_id = v_institution) then
+  -- A suggestion confirmed or corrected writes the details and says so in one History line of its
+  -- own (close_found_item), with the value: the change to the details adds none.
+  if exists (select 1 from public.brains b where b.institution_id = v_institution)
+     and coalesce(current_setting('drishti.brain_closing', true), '') = '' then
     insert into public.brain_changes (institution_id, at, by, what, target, kind, before, after)
     values (v_institution, v_at, v_by, case when v_before is null then 'added' when v_after is null then 'removed' else 'changed' end, v_target, 'details', v_before, v_after);
   end if;
@@ -620,21 +651,74 @@ begin
 end;
 $$;
 
--- Closes a suggestion for the details added by you: confirmed or corrected (the server wrote it
--- into the details first), or not right.
-create function public.close_found_item(p_item uuid, p_outcome text) returns void
+-- The team closes a suggestion for the details added by you, in one step: confirmed or corrected
+-- (p_values: the fact's columns as the server read them, written into the details here), or not
+-- right. History gets one line, with the value the fact has now.
+create function public.close_found_item(p_item uuid, p_outcome text, p_values jsonb default null) returns void
 language plpgsql security definer
 set search_path = ''
 as $$
 declare
   v_institution uuid;
+  v_target text;
+  v_fact text;
+  v_program uuid;
+  v_keys text[];
 begin
   if p_outcome not in ('confirmed', 'corrected', 'not_right') then
     raise exception 'bad_outcome' using errcode = '22023';
   end if;
-  select i.institution_id into v_institution from public.brain_items i where i.id = p_item and i.kind = 'found';
-  if v_institution is null or not private.can_edit_brain(v_institution) then
+  select i.institution_id, i.fields ->> 'target' into v_institution, v_target from public.brain_items i where i.id = p_item and i.kind = 'found';
+  if v_institution is null or not (private.is_team() and private.can_edit_brain(v_institution)) then
     raise exception 'not_allowed' using errcode = '42501';
+  end if;
+  if p_outcome <> 'not_right' then
+    -- Only the columns of the fact Drishti suggested, and a fee or a page always has its value.
+    v_fact := substring(v_target from ':(fees|page|approvals)$');
+    v_keys := case v_fact
+      when 'fees' then array['fees_amount', 'fees_period']
+      when 'page' then array['page_url']
+      when 'approvals' then array['naac_grade', 'ugc_recognised', 'aicte_approved', 'other_approvals', 'skilling_recognition']
+    end;
+    if v_keys is null or p_values is null or jsonb_typeof(p_values) <> 'object'
+       or exists (select 1 from jsonb_object_keys(p_values) k where k <> all (v_keys))
+       or (v_fact = 'fees' and (jsonb_typeof(p_values -> 'fees_amount') is distinct from 'number' or jsonb_typeof(p_values -> 'fees_period') is distinct from 'string'))
+       or (v_fact = 'page' and jsonb_typeof(p_values -> 'page_url') is distinct from 'string') then
+      raise exception 'bad_values' using errcode = '22023';
+    end if;
+    perform set_config('drishti.brain_closing', 'on', true);
+    if v_fact = 'approvals' then
+      insert into public.institution_details as d (institution_id, naac_grade, ugc_recognised, aicte_approved, other_approvals, skilling_recognition, updated_at, updated_by)
+      values (
+        v_institution,
+        p_values ->> 'naac_grade',
+        (p_values ->> 'ugc_recognised')::boolean,
+        (p_values ->> 'aicte_approved')::boolean,
+        p_values ->> 'other_approvals',
+        array(select jsonb_array_elements_text(coalesce(p_values -> 'skilling_recognition', '[]'))),
+        now(),
+        (select auth.uid())
+      )
+      on conflict (institution_id) do update set
+        naac_grade = case when p_values ? 'naac_grade' then excluded.naac_grade else d.naac_grade end,
+        ugc_recognised = case when p_values ? 'ugc_recognised' then excluded.ugc_recognised else d.ugc_recognised end,
+        aicte_approved = case when p_values ? 'aicte_approved' then excluded.aicte_approved else d.aicte_approved end,
+        other_approvals = case when p_values ? 'other_approvals' then excluded.other_approvals else d.other_approvals end,
+        skilling_recognition = case when p_values ? 'skilling_recognition' then excluded.skilling_recognition else d.skilling_recognition end,
+        updated_at = excluded.updated_at,
+        updated_by = excluded.updated_by;
+    else
+      v_program := split_part(v_target, ':', 2)::uuid;
+      insert into public.program_details as d (program_id, institution_id, fees_amount, fees_period, page_url, updated_at, updated_by)
+      values (v_program, v_institution, (p_values ->> 'fees_amount')::integer, p_values ->> 'fees_period', p_values ->> 'page_url', now(), (select auth.uid()))
+      on conflict (program_id) do update set
+        fees_amount = case when p_values ? 'fees_amount' then excluded.fees_amount else d.fees_amount end,
+        fees_period = case when p_values ? 'fees_period' then excluded.fees_period else d.fees_period end,
+        page_url = case when p_values ? 'page_url' then excluded.page_url else d.page_url end,
+        updated_at = excluded.updated_at,
+        updated_by = excluded.updated_by;
+    end if;
+    perform set_config('drishti.brain_closing', '', true);
   end if;
   perform set_config('drishti.brain_outcome', p_outcome, true);
   delete from public.brain_items where id = p_item;
@@ -757,7 +841,7 @@ revoke all on function
   public.save_brain_item(uuid, uuid, public.brain_kind, jsonb, boolean),
   public.remove_brain_item(uuid),
   public.confirm_brain_item(uuid),
-  public.close_found_item(uuid, text),
+  public.close_found_item(uuid, text, jsonb),
   public.check_brain_fact(uuid, text),
   public.set_brain_step(uuid, public.brain_step, boolean),
   public.mark_brain_ready(uuid),
@@ -769,7 +853,7 @@ grant execute on function
   public.save_brain_item(uuid, uuid, public.brain_kind, jsonb, boolean),
   public.remove_brain_item(uuid),
   public.confirm_brain_item(uuid),
-  public.close_found_item(uuid, text),
+  public.close_found_item(uuid, text, jsonb),
   public.check_brain_fact(uuid, text),
   public.set_brain_step(uuid, public.brain_step, boolean),
   public.mark_brain_ready(uuid),
