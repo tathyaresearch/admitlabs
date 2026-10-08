@@ -18,7 +18,7 @@ export function TeamUserForm({ action }: { action: (previous: ActionState, formD
   return (
     <form key={state.status === 'done' ? state.attempt : 'add'} action={submit} className={styles.facts}>
       <TextField id="team-email" name="email" type="email" label="Email" autoComplete="off" spellCheck={false} required placeholder="name@admitlabs.in" />
-      <SelectField id="team-role" name="role" label="Role" options={ROLE_OPTIONS} defaultValue="team" />
+      <SelectField id="team-role" name="role" label="Level" options={ROLE_OPTIONS} defaultValue="team" />
       <div className={styles.inlineForm}>
         <Button type="submit" size="sm" icon="plus" loading={pending}>
           Add to the team

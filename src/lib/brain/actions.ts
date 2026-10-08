@@ -19,6 +19,7 @@ import { loadBrain } from '@/brain/load';
 import { readiness } from '@/brain/progress';
 import { SINGLE_KINDS, STEPS, type BrainFields, type BrainFile, type BrainKind, type BrainStep } from '@/brain/model';
 import { institutionDetailsToRow, programDetailsToRow, readInstitutionDetails, readProgramDetails, type FormRead, type InstitutionDetails } from '@/domain/details';
+import { canManage } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
 import { createClient } from '@/lib/supabase/server';
 import type { Json } from '@/lib/supabase/database.types';
@@ -73,14 +74,15 @@ function reader(formData: FormData): FormRead & { has(name: string): boolean } {
 async function editor(institutionId: string) {
   const viewer = await getViewer();
   if (!viewer || viewer.viewingAs) return null;
-  if (viewer.teamRole) return { userId: viewer.userId, team: true };
+  // The team: Admins and Team members for any Client, a Client manager for theirs (spec section 27).
+  if (viewer.teamRole) return (await canManage(viewer, institutionId)) ? { userId: viewer.userId, team: true } : null;
   if (viewer.membership?.institution.id === institutionId && viewer.tier === 'client') return { userId: viewer.userId, team: false };
   return null;
 }
 
-async function teamEditor() {
+async function teamEditor(institutionId: string) {
   const viewer = await getViewer();
-  return viewer?.teamRole && !viewer.viewingAs ? { userId: viewer.userId } : null;
+  return viewer?.teamRole && !viewer.viewingAs && (await canManage(viewer, institutionId)) ? { userId: viewer.userId } : null;
 }
 
 function done(ctx: FormContext): never {
@@ -228,7 +230,7 @@ export async function saveProgramAction(ctx: FormContext & { programId: string }
 
 /** Start onboarding: the Brain opens, and what the latest Audit found waits for the team to confirm. */
 export async function startOnboardingAction(institutionId: string): Promise<void> {
-  if (!(await teamEditor())) return;
+  if (!(await teamEditor(institutionId))) return;
   const supabase = await createClient();
   const started = await supabase.rpc('start_brain', { p_institution: institutionId });
   if (started.error) throw new Error(friendly(started.error.message));
@@ -247,7 +249,7 @@ export async function startOnboardingAction(institutionId: string): Promise<void
 
 /** Confirms what Drishti found. One for the details is written into them as it was found, in the same step. */
 export async function confirmFoundAction(ctx: FormContext & { itemId: string }): Promise<void> {
-  const team = await teamEditor();
+  const team = await teamEditor(ctx.institutionId);
   if (!team) return;
   const supabase = await createClient();
   const { data: item } = await supabase.from('brain_items').select('kind, fields').eq('id', ctx.itemId).maybeSingle();
@@ -264,7 +266,7 @@ export async function confirmFoundAction(ctx: FormContext & { itemId: string }):
 
 /** Corrects what Drishti found for the details: the team's value goes into them, and History says it. */
 export async function correctFoundAction(ctx: FormContext & { itemId: string }, previous: BrainFormState, formData: FormData): Promise<BrainFormState> {
-  const team = await teamEditor();
+  const team = await teamEditor(ctx.institutionId);
   if (!team) return reply(previous, { status: 'error', message: MESSAGES.not_allowed ?? SAVE_FAILED });
   const supabase = await createClient();
   const { data: item } = await supabase.from('brain_items').select('fields').eq('id', ctx.itemId).eq('kind', 'found').maybeSingle();
@@ -296,7 +298,7 @@ export async function correctFoundAction(ctx: FormContext & { itemId: string }, 
 
 /** What Drishti found is not right: taken out, and History says so. */
 export async function notRightAction(ctx: FormContext & { itemId: string }): Promise<void> {
-  if (!(await teamEditor())) return;
+  if (!(await teamEditor(ctx.institutionId))) return;
   const supabase = await createClient();
   const { data: item } = await supabase.from('brain_items').select('kind').eq('id', ctx.itemId).maybeSingle();
   if (item?.kind === 'found') await supabase.rpc('close_found_item', { p_item: ctx.itemId, p_outcome: 'not_right' });
@@ -328,7 +330,7 @@ function foundValues(found: BrainFields['found'], details: InstitutionDetails): 
 }
 
 export async function setStepAction(ctx: FormContext & { step: BrainStep; done: boolean }): Promise<void> {
-  if (!(await teamEditor()) || !STEPS.includes(ctx.step)) return;
+  if (!(await teamEditor(ctx.institutionId)) || !STEPS.includes(ctx.step)) return;
   const supabase = await createClient();
   await supabase.rpc('set_brain_step', { p_institution: ctx.institutionId, p_step: ctx.step, p_done: ctx.done });
   done(ctx);
@@ -336,7 +338,7 @@ export async function setStepAction(ctx: FormContext & { step: BrainStep; done: 
 
 /** Mark as Ready: only once every must-have fact is in and the checklist is done. */
 export async function markReadyAction(ctx: FormContext): Promise<void> {
-  if (!(await teamEditor())) return;
+  if (!(await teamEditor(ctx.institutionId))) return;
   const supabase = await createClient();
   const brain = await loadBrain(supabase, ctx.institutionId);
   if (!brain || !readiness(brain).ready) return done(ctx);
@@ -346,7 +348,7 @@ export async function markReadyAction(ctx: FormContext): Promise<void> {
 
 /** An approved script, once posted, goes into the work log the Client reads. */
 export async function logScriptAction(ctx: FormContext & { itemId: string }): Promise<void> {
-  if (!(await teamEditor())) return;
+  if (!(await teamEditor(ctx.institutionId))) return;
   const supabase = await createClient();
   const { data: item } = await supabase.from('brain_items').select('fields').eq('id', ctx.itemId).eq('kind', 'script').maybeSingle();
   const script = item?.fields as unknown as BrainFields['script'] | undefined;
@@ -359,7 +361,7 @@ export async function logScriptAction(ctx: FormContext & { itemId: string }): Pr
 
 /** The team's private notes, from the Brain's Team only notes. */
 export async function addTeamNoteAction(ctx: FormContext, previous: BrainFormState, formData: FormData): Promise<BrainFormState> {
-  if (!(await teamEditor())) return reply(previous, { status: 'error', message: MESSAGES.not_allowed ?? SAVE_FAILED });
+  if (!(await teamEditor(ctx.institutionId))) return reply(previous, { status: 'error', message: MESSAGES.not_allowed ?? SAVE_FAILED });
   const body = String(formData.get('body') ?? '')
     .replace(/\r\n/g, '\n')
     .replace(/[ \t]+/g, ' ')
@@ -374,7 +376,7 @@ export async function addTeamNoteAction(ctx: FormContext, previous: BrainFormSta
 }
 
 export async function removeTeamNoteAction(ctx: FormContext & { noteId: string }): Promise<void> {
-  if (!(await teamEditor())) return;
+  if (!(await teamEditor(ctx.institutionId))) return;
   const supabase = await createClient();
   await supabase.from('notes').delete().eq('id', ctx.noteId);
   done(ctx);

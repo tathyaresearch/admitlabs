@@ -14,8 +14,6 @@ import { attentionReasons } from '@/team/attention';
 import {
   filtersQuery,
   hasFilters,
-  PLAN_FILTER_LABELS,
-  PLAN_FILTERS,
   SCORE_BAND_LABELS,
   SCORE_BANDS,
   TEAM_SORT_LABELS,
@@ -35,7 +33,8 @@ export function InstitutionFilters({ filters, cities, states }: { filters: TeamF
       <div className={styles.filters}>
         <TextField id="team-q" name="q" type="search" label="Search" placeholder="Name or website" defaultValue={filters.q} />
         <SelectField id="team-status" name="status" label="Status" defaultValue={filters.status ?? ''} options={[any('Any status'), ...TEAM_STATUSES.map((value) => ({ value, label: TEAM_STATUS_LABELS[value] }))]} />
-        <SelectField id="team-tier" name="tier" label="Plan" defaultValue={filters.tier ?? ''} options={[any('Any plan'), ...PLAN_FILTERS.map((value) => ({ value, label: PLAN_FILTER_LABELS[value] }))]} />
+        {/* The plan is the tabs above the list: kept while searching. */}
+        {filters.tier ? <input type="hidden" name="tier" value={filters.tier} /> : null}
         <SelectField id="team-score" name="score" label="Score" defaultValue={filters.score ?? ''} options={[any('Any score'), ...SCORE_BANDS.map((value) => ({ value, label: SCORE_BAND_LABELS[value] }))]} />
         <div className={styles.filterActions}>
           <Button type="submit" size="md" icon="search">

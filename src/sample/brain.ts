@@ -8,7 +8,7 @@
 
 import type { BrainFields, BrainKind, BrainStep } from '../brain/model.ts';
 import type { ProgramDetails } from '../domain/details.ts';
-import { ADMIN_EMAIL, TEAM_EMAIL } from './institutions.ts';
+import { ADMIN_EMAIL, MANAGER_EMAIL, TEAM_EMAIL } from './institutions.ts';
 
 /** Each sample person's name, as they set it once. Everyone else shows by email. */
 export const SAMPLE_NAMES: Readonly<Record<string, string>> = {
@@ -17,6 +17,7 @@ export const SAMPLE_NAMES: Readonly<Record<string, string>> = {
   'owner@silverline-college.example': 'Meera Kalita',
   [TEAM_EMAIL]: 'Kabir Sen',
   [ADMIN_EMAIL]: 'Nisha Rao',
+  [MANAGER_EMAIL]: 'Farhan Ali',
 };
 
 const RITU = 'owner@brightpath-skills.example';

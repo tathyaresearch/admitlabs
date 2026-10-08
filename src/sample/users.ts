@@ -1,9 +1,9 @@
 // Sample users: one owner per signed-up institution, one member (so the Member role gets
-// tested), one team user and one admin. Sign in with any of these emails; locally the
+// tested), one team member, one admin and one Client manager. Sign in with any of these emails; locally the
 // 6-digit code lands in Mailpit.
 
 import type { MembershipRole, TeamRole } from '../domain/types.ts';
-import { ADMIN_EMAIL, SAMPLE_INSTITUTIONS, TEAM_EMAIL } from './institutions.ts';
+import { ADMIN_EMAIL, MANAGER_EMAIL, SAMPLE_INSTITUTIONS, TEAM_EMAIL } from './institutions.ts';
 
 export interface SampleUser {
   email: string;
@@ -28,4 +28,5 @@ export const SAMPLE_USERS: readonly SampleUser[] = [
   ]),
   { email: TEAM_EMAIL, kind: 'team', institutionSlug: null, membershipRole: null, teamRole: 'team' },
   { email: ADMIN_EMAIL, kind: 'team', institutionSlug: null, membershipRole: null, teamRole: 'admin' },
+  { email: MANAGER_EMAIL, kind: 'team', institutionSlug: null, membershipRole: null, teamRole: 'client_manager' },
 ];

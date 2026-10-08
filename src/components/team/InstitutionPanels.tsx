@@ -45,6 +45,22 @@ export function NoteForm({ action }: { action: Action }) {
   );
 }
 
+/** Gives this Client to a Client manager (Admins and Team members). */
+export function AssignManagerForm({ action, options }: { action: Action; options: ReadonlyArray<{ value: string; label: string }> }) {
+  const [state, submit, pending] = useActionState(action, IDLE);
+  return (
+    <form key={state.status === 'done' ? state.attempt : 'assign'} action={submit} className={styles.facts}>
+      <div className={styles.inlineForm}>
+        <SelectField id="assign-manager" name="user" label="Assign a Client manager" defaultValue="" options={[{ value: '', label: 'Pick one' }, ...options]} />
+        <Button type="submit" size="md" loading={pending}>
+          Assign
+        </Button>
+      </div>
+      <Reply state={state} />
+    </form>
+  );
+}
+
 /** Adds to a Client's work log: Done or Next, what, the day, and a link to the work when there is one. */
 export function WorkForm({ action, today }: { action: Action; today: string }) {
   const [state, submit, pending] = useActionState(action, IDLE);

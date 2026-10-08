@@ -13,6 +13,7 @@ import { formatDate } from '@/domain/format';
 import { readyFixText } from '@/domain/ready-fix';
 import { scoreLabel } from '@/domain/scores';
 import { FINDING_PLACES, PLACE_LABELS, PILLAR_LABELS, PILLARS, RESULT_LABELS, RESULTS, type CheckResult, type FindingKind, type Place } from '@/domain/types';
+import { isFullTeam } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
 import { waitedFor } from '@/team/review';
@@ -145,17 +146,19 @@ function findingRows(state: ReviewState, place: Place): ReviewRowData[] {
 }
 
 export default async function ReviewPage({ params }: { params: Promise<{ auditId: string }> }) {
-  await requireTeamViewer();
+  const viewer = await requireTeamViewer();
   const { auditId } = await params;
   if (!UUID.test(auditId)) notFound();
   const state = await loadReview(await createClient(), auditId);
   if (!state) notFound();
 
   const { audit: waiting, institution, changes, before } = state;
+  // A Client manager reviews only their Clients' Audits (the database shows them no other); their way back is the Client's page.
+  const back = isFullTeam(viewer.teamRole) ? { href: '/team/review', label: 'To review' } : { href: `/team/institutions/${institution.id}`, label: institution.name };
   if (waiting.review !== 'waiting') {
     return (
       <div className={audit.page}>
-        <PageHead back={{ href: '/team/review', label: 'To review' }} title={institution.name} question="Is this right before it goes out?" />
+        <PageHead back={back} title={institution.name} question="Is this right before it goes out?" />
         <EmptyState icon="checkCircle" title="This Audit has been approved" action={<ButtonLink href={`/team/institutions/${institution.id}`}>Open their page</ButtonLink>}>
           The college sees it now. Every change made in its review is kept.
         </EmptyState>
@@ -171,7 +174,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ auditId
     <div className={[audit.page, styles.withBar].join(' ')}>
       <div className={audit.top}>
         <PageHead
-          back={{ href: '/team/review', label: 'To review' }}
+          back={back}
           title={institution.name}
           question="Is this right before it goes out?"
           caption={[

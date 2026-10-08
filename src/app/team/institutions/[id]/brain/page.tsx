@@ -6,7 +6,7 @@ import { BrainTab, OnboardingCard, TeamOnlyNotes, ToConfirm } from '@/components
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { PageHead } from '@/components/ui/Layout';
 import { formatDate } from '@/domain/format';
-import { requireTeamViewer } from '@/lib/auth/guards';
+import { canManage, requireInstitutionAccess } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
 import { askBrain, historyTitle, loadBrainPage, loadFactHistory } from '@/lib/brain/page';
 import { createClient } from '@/lib/supabase/server';
@@ -24,9 +24,9 @@ async function institutionOf(id: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const viewer = await getViewer();
-  if (!viewer?.teamRole) return { title: 'Page not found' };
   const { id } = await params;
-  const institution = UUID.test(id) ? await institutionOf(id) : null;
+  if (!viewer?.teamRole || !UUID.test(id) || !(await canManage(viewer, id))) return { title: 'Page not found' };
+  const institution = await institutionOf(id);
   return { title: institution ? `Client Brain: ${institution.name}` : 'Client Brain' };
 }
 
@@ -34,9 +34,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 // while it lasts (what's missing, the checklist, Mark as Ready, what Drishti found to confirm) and
 // the team's own notes in Notes.
 export default async function TeamBrainPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  await requireTeamViewer();
   const { id } = await params;
   if (!UUID.test(id)) notFound();
+  await requireInstitutionAccess(id);
   const institution = await institutionOf(id);
   if (!institution) notFound();
   const query = await searchParams;

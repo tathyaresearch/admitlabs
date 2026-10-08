@@ -65,6 +65,11 @@ export const SAMPLE_PROGRAM_KEYS = [
 
 export const TEAM_EMAIL = 'team@admitlabs.example';
 export const ADMIN_EMAIL = 'admin@admitlabs.example';
+/** A Client manager (spec section 27): looks after Brightpath only. */
+export const MANAGER_EMAIL = 'manager@admitlabs.example';
+export const SAMPLE_CLIENT_MANAGERS: ReadonlyArray<{ email: string; slug: string; on: string; by: string }> = [
+  { email: MANAGER_EMAIL, slug: 'brightpath-skills', on: '2026-09-01', by: ADMIN_EMAIL },
+];
 
 export const SAMPLE_INSTITUTIONS: readonly SampleInstitution[] = [
   {

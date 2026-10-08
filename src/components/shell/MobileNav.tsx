@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { isActive, MOBILE_BAR_MAX, MOBILE_PRIMARY, type NavSection } from './nav';
+import { itemActive, MOBILE_BAR_MAX, MOBILE_PRIMARY, type NavSection } from './nav';
 import styles from './AppShell.module.css';
 
 /**
@@ -17,7 +17,7 @@ export function MobileNav({ sections, extra, primary: primaryHrefs = MOBILE_PRIM
   const fits = items.length <= MOBILE_BAR_MAX;
   const primary = fits ? items : items.filter((item) => primaryHrefs.includes(item.href));
   const rest = fits ? [] : items.filter((item) => !primaryHrefs.includes(item.href));
-  const moreActive = rest.some((item) => isActive(pathname, item.href));
+  const moreActive = rest.some((item) => itemActive(pathname, item));
 
   if (primary.length === 0) return null;
 
@@ -25,7 +25,7 @@ export function MobileNav({ sections, extra, primary: primaryHrefs = MOBILE_PRIM
     <>
       <nav aria-label={sections[0]?.label ?? 'Pages'} className={styles.bottombar}>
         {primary.map((item) => {
-          const active = isActive(pathname, item.href);
+          const active = itemActive(pathname, item);
           return (
             <Link key={item.href} href={item.href} className={styles.bottomLink} aria-current={active ? 'page' : undefined} data-active={active ? 'true' : undefined}>
               <Icon name={item.icon} size={22} />
@@ -47,7 +47,7 @@ export function MobileNav({ sections, extra, primary: primaryHrefs = MOBILE_PRIM
           <ul className={styles.sheetList}>
             {rest.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className={styles.sheetLink} aria-current={isActive(pathname, item.href) ? 'page' : undefined}>
+                <Link href={item.href} className={styles.sheetLink} aria-current={itemActive(pathname, item) ? 'page' : undefined}>
                   <Icon name={item.icon} size={20} />
                   {item.label}
                 </Link>

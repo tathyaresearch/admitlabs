@@ -8,7 +8,7 @@ import { TeamOnlyNotes } from '@/components/brain/Team';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
-import { requireTeamViewer } from '@/lib/auth/guards';
+import { requireInstitutionAccess } from '@/lib/auth/guards';
 import { loadBrainPage } from '@/lib/brain/page';
 import { createClient } from '@/lib/supabase/server';
 import styles from '@/components/brain/brain.module.css';
@@ -22,9 +22,9 @@ const one = (value: string | string[] | undefined) => (Array.isArray(value) ? va
 // missing fact's form open, so the team asks, types and moves on. Anything the college does not
 // know yet stays on its Help us know you form.
 export default async function KickoffPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  await requireTeamViewer();
   const { id } = await params;
   if (!UUID.test(id)) notFound();
+  await requireInstitutionAccess(id);
   const page = await loadBrainPage(id, true);
   if (!page) notFound();
   const { data: tier } = await (await createClient()).from('team_institutions').select('tier').eq('id', id).maybeSingle();

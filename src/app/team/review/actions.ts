@@ -11,7 +11,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { applyReviewChange, approveAudit, ReviewError } from '@/audit/review-jobs';
 import type { ReviewChange } from '@/audit/review';
-import { RESULTS } from '@/domain/types';
+import { isFullTeam, RESULTS } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -89,7 +89,8 @@ export async function approveAuditAction(auditId: string): Promise<ReviewActionR
   }
   revalidatePath('/team', 'layout');
   revalidatePath('/', 'layout');
-  redirect('/team/review?approved=1');
+  // A Client manager has no To review list: back to the Client's page.
+  redirect(isFullTeam(viewer.teamRole) || !approved ? '/team/review?approved=1' : `/team/institutions/${approved.institution_id}`);
 }
 
 export async function fixSummaryLineAction(reportId: string, target: SummaryTarget, value: string, reason: string): Promise<ReviewActionResult> {
@@ -115,7 +116,7 @@ export async function approveSummaryAction(reportId: string): Promise<ReviewActi
   if (!viewer?.teamRole) return { ok: false, error: 'Only the AdmitLabs team approves summaries.' };
   if (!UUID.test(reportId)) return { ok: false, error: 'That summary is not there.' };
   // Checked as the team first; the PDF and the emails need the server's key.
-  const { data: visible } = await (await createClient()).from('reports').select('id').eq('id', reportId).maybeSingle();
+  const { data: visible } = await (await createClient()).from('reports').select('id, institution_id').eq('id', reportId).maybeSingle();
   if (!visible) return { ok: false, error: 'That summary is not there.' };
   try {
     await approveReport(createAdminClient(), reportId, { by: viewer.userId });
@@ -125,5 +126,5 @@ export async function approveSummaryAction(reportId: string): Promise<ReviewActi
   }
   revalidatePath('/team', 'layout');
   revalidatePath('/', 'layout');
-  redirect('/team/review?approved=summary');
+  redirect(isFullTeam(viewer.teamRole) ? '/team/review?approved=summary' : `/team/institutions/${visible.institution_id}`);
 }

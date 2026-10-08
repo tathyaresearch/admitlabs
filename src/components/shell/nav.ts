@@ -1,9 +1,12 @@
 import type { IconName } from '@/components/ui/Icon';
+import type { TeamRole } from '@/domain/types';
 
 export interface NavItem {
   href: string;
   label: string;
   icon: IconName;
+  /** Other pages that light this item up (Audit's tabs, a Client manager's Client pages). */
+  also?: readonly string[];
 }
 
 export interface NavSection {
@@ -48,19 +51,32 @@ export function institutionNav(leads: boolean, brain = false): readonly NavSecti
   );
 }
 
-export const TEAM_NAV: readonly NavSection[] = [
-  {
-    label: 'AdmitLabs team',
-    items: [
-      { href: '/team', label: 'Institutions', icon: 'institution' },
-      { href: '/team/review', label: 'To review', icon: 'stopwatch' },
-      { href: '/team/bulk', label: 'Bulk Audit', icon: 'grid' },
-      { href: '/team/ads', label: 'Rival ads', icon: 'rivals' },
-      { href: '/team/enquiries', label: 'Enquiries', icon: 'enquiry' },
-      { href: '/team/users', label: 'Team users', icon: 'team' },
-    ],
-  },
-];
+/** Audit is one item: To review, Bulk Audit and Rival ads are its tabs (spec section 27). */
+const AUDIT_ITEM: NavItem = { href: '/team/review', label: 'Audit', icon: 'audit', also: ['/team/bulk', '/team/ads'] };
+const ENQUIRIES_ITEM: NavItem = { href: '/team/enquiries', label: 'Enquiries', icon: 'enquiry' };
+const INSTITUTIONS_ITEM: NavItem = { href: '/team', label: 'Institutions', icon: 'institution' };
+const CLIENTS_ITEM: NavItem = { href: '/team/clients', label: 'Clients', icon: 'briefcase' };
+const TEAM_ITEM: NavItem = { href: '/team/users', label: 'Team', icon: 'team' };
+
+/** The team's menu by access level: an Admin has Team too; a Client manager has their Enquiries and Clients only. */
+export function teamNav(role: TeamRole): readonly NavSection[] {
+  const items =
+    role === 'client_manager'
+      ? // Every institution page they open is one of their Clients.
+        [ENQUIRIES_ITEM, { ...CLIENTS_ITEM, also: ['/team/institutions'] }]
+      : [AUDIT_ITEM, ENQUIRIES_ITEM, INSTITUTIONS_ITEM, CLIENTS_ITEM, ...(role === 'admin' ? [TEAM_ITEM] : [])];
+  return [{ label: 'AdmitLabs team', items }];
+}
+
+/** The team's first page: Institutions, or a Client manager's Clients. */
+export function teamHome(role: TeamRole): string {
+  return role === 'client_manager' ? '/team/clients' : '/team';
+}
+
+/** The team's four on the phone bottom bar (a Client manager has two, so no More). */
+export function teamMobilePrimary(role: TeamRole): readonly string[] {
+  return role === 'client_manager' ? ['/team/enquiries', '/team/clients'] : ['/team/enquiries', '/team/clients', '/team', '/team/review'];
+}
 
 /** The most pages the phone bottom bar holds on its own. With more, it shows MOBILE_PRIMARY and More. */
 export const MOBILE_BAR_MAX = 5;
@@ -71,11 +87,13 @@ export const MOBILE_PRIMARY: readonly string[] = ['/', '/audit', '/rivals', '/de
 /** A Client's four: Leads in place of Demand, which moves under More. */
 export const LEADS_MOBILE_PRIMARY: readonly string[] = ['/', '/audit', '/rivals', '/leads'];
 
-/** The team's four on the phone bottom bar. */
-export const TEAM_MOBILE_PRIMARY: readonly string[] = ['/team', '/team/review', '/team/enquiries', '/team/bulk'];
-
 export function isActive(pathname: string, href: string): boolean {
   // Home pages match exactly, so a page under them (like /team/ads) lights up its own item only.
   if (href === '/' || href === '/team') return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** An item is lit on its own page, under it, or on the pages it also covers (Audit's tabs). */
+export function itemActive(pathname: string, item: NavItem): boolean {
+  return [item.href, ...(item.also ?? [])].some((href) => isActive(pathname, href));
 }

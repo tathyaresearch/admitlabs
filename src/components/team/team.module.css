@@ -107,7 +107,7 @@ a.count:hover {
 
 @media (min-width: 48rem) {
   .filters {
-    grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)) auto;
+    grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)) auto;
   }
 
   .filters > :first-child {
@@ -888,4 +888,51 @@ a.count:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2) var(--space-3);
+}
+
+/* Clients (spec section 27): the Brain and who looks after each, on wide screens in columns; on a
+   phone both stay under the name. Two classes, to win over the list's own columns in any order. */
+.clientFilter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.clientFilter > :first-child {
+  flex: 1 1 16rem;
+  max-width: 22rem;
+}
+
+.clientPhoneOnly {
+  display: inline;
+}
+
+@media (min-width: 60rem) {
+  .listHead.clientHead,
+  .listRow.clientRow {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.7fr) 1rem;
+  }
+
+  .clientPhoneOnly {
+    display: none;
+  }
+}
+
+/* Who looks after a Client, on its page. */
+.managerList {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.managerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 2.25rem;
+  font: var(--type-strong);
 }

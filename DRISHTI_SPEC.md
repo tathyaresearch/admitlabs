@@ -117,8 +117,9 @@ The addresses are settings in `.env` (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_U
 |---|---|---|
 | Owner | Institution user who signed up | Everything for their institution, invite members |
 | Member | Invited institution user | View everything their plan allows |
-| Team | AdmitLabs staff | Everything in the team area, all institutions |
-| Admin | AdmitLabs leads | Team + manage plans and team users |
+| Admin | AdmitLabs leads | Everything in the team area, plans, and the Team page (adds and removes people, sets levels) |
+| Team member | AdmitLabs staff | Everything in the team area except plans and the Team page |
+| Client manager | AdmitLabs staff who look after some Clients | Only the Clients assigned to them, and the Enquiries they own (section 27) |
 
 **Plans (tiers)**
 
@@ -141,7 +142,7 @@ Paid rules:
 
 In this build, Admin sets an institution's tier manually. Payment comes later.
 
-**Names.** Each person adds their name once: a college's people in Settings, Team, and AdmitLabs staff in Team users. The Brain's History shows it, or the email when there is none.
+**Names.** Each person adds their name once: a college's people in Settings, Team, and AdmitLabs staff on the Team page. The Brain's History shows it, or the email when there is none.
 
 ---
 
@@ -559,12 +560,15 @@ Keep it short enough to read in 5 minutes: about 7 pages, never more than 8.
 
 **Team screens (`/team`)**
 
+The menu (section 27): Audit (To review, Bulk Audit and Rival ads as tabs), Enquiries, Institutions, Clients, and Team for an Admin. A Client manager has Enquiries and Clients only.
+
 | Screen | Contents |
 |---|---|
-| Team home | All institutions, sorted by the reason each needs attention, most urgent first, each row saying why: a Paid plan ending within 30 days, a Client with no team Audit this month, a score down 3 or more, signed up with no rivals, a prospect not signed up a week after their Audit was shared. Search, filter by type, city, state, score, tier, prospect or client; sort by name, score or last checked too. The team keeps the score as a number |
+| Institutions (team home) | Tabs All, Free, Paid and Client (those not signed up show under All). Then All institutions, sorted by the reason each needs attention, most urgent first, each row saying why: a Paid plan ending within 30 days, a Client with no team Audit this month, a score down 3 or more, signed up with no rivals, a prospect not signed up a week after their Audit was shared. Search, filter by type, city, state, score, tier, prospect or client; sort by name, score or last checked too. The team keeps the score as a number |
 | To review | Every new Audit and monthly summary waiting for the team's review, oldest first, each with the college, what it is, its plan, how long it has waited and what changed in one line; a count beside it in the team's menu. One opens the review: what changed since the last approved Audit, then the Audit place by place (or the summary line by line) to fix a result or a line, then "Approve and send" (section 25) |
 | Bulk Audit | Add many institutions at once (paste list or CSV), run Audits, see results in a table |
-| Institution detail | Everything the institution sees, plus private notes, tier control (Admin: Start Paid asks for the period paid for, Monthly or 3 months, and the day of payment, and shows the end date), manual refresh, and how its new Audits and summaries go out: "Review first" (on to start) or "Send automatically". For a Client, the Work log tab first, then the Client Brain tab (or Start onboarding, section 26): add what the team did or does next (Done or Next, one plain sentence, the day, a link when there is one), mark Next as done, remove an entry. It is what the Client sees. Then a Leads links tab: make a tracking link (a name such as "Reel: BBA placements", where it will be used, the program), copy it, see how many enquiries each brought this month and before, and archive one. Counts only |
+| Clients | Every Client with its Client Brain (onboarding and how far, or Ready and the facts to check), who looks after it, when it became a Client, and anything waiting for review. The full team can show one Client manager's Clients, or those with none; a Client manager sees their own. Each opens the institution page, where the Client Brain is a tab |
+| Institution detail | Everything the institution sees, plus private notes, who looks after a Client ("Looked after by": Admins and Team members assign or remove a Client manager), tier control (Admin: Start Paid asks for the period paid for, Monthly or 3 months, and the day of payment, and shows the end date), manual refresh, and how its new Audits and summaries go out: "Review first" (on to start) or "Send automatically". For a Client, the Work log tab first, then the Client Brain tab (or Start onboarding, section 26): add what the team did or does next (Done or Next, one plain sentence, the day, a link when there is one), mark Next as done, remove an entry. It is what the Client sees. Then a Leads links tab: make a tracking link (a name such as "Reel: BBA placements", where it will be used, the program), copy it, see how many enquiries each brought this month and before, and archive one. Counts only |
 | Share | Create a share link or PDF of a prospect's Audit, place by place with the three words |
 | Rival ads | Enter what rivals promise in their ads, by hand until Drishti can collect it. Each entry is also a "started ads" alert for the institutions that track that rival |
 | Enquiries | Everyone who wrote in through the website's Work with us form (name, role, institution, email, phone, program and message); owners who asked for Paid, or to continue it, from their dashboard (the institution, linked, the period picked, Monthly or 3 months, with its price, and the owner's email); and owners who asked AdmitLabs to fix something (the institution, linked, the fix by name and place, and the owner's email). Newest first. New or All. Mark as handled, or back to new. Every team user sees them. No emails are sent |
@@ -732,10 +736,11 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 | `leads` | id, institution_id, link_id, program_id, name, phone, email, city, consent (the exact line shown), created_at |
 | `lead_settings` | institution_id, alert_emails, keep_months (6, 12 or 24), updated_at, updated_by |
 | `email_log` | id, kind (lead_alert, monthly_summary), institution_id, recipient, sent_at, sender (local test inbox), ok, error. Never the message itself |
+| `client_managers` | institution_id, user_id (a team user whose level is Client manager), assigned_by, assigned_at (section 27) |
 
 **Row Level Security:**
 - Institution users only see their own institution's data, filtered by plan.
-- Team and Admin see everything, except a student's details in Leads.
+- Admins and Team members see everything, except a student's details in Leads. A Client manager sees only the Clients assigned to them, as the team sees them, and the rivals those Clients track (section 27).
 - Notes are team only.
 - A Client's work log: the team reads every log, adds to a Client's in its own name, marks Next as done and removes entries; the Client's own people read theirs while the service is active. No other plan sees one.
 - Marks done: people at the institution and the team read them; only the owner adds or takes one back, through `mark_done` and `undo_done`, and only for a check or finding the latest own Audit has something to fix in. Each person closes their own Start here.
@@ -1023,3 +1028,31 @@ The AdmitLabs team can look over a new Audit and a monthly summary before the co
 **Files.** Links first. A logo (PNG, JPG or WebP, up to 2 MB) and brand guidelines (a PDF, up to 10 MB) can be uploaded to a private bucket; nothing bigger. A file goes straight from the browser to the bucket through a signed upload link: the server makes the link only after checking the person, the college, the type and the size, and checks the stored file again before it is kept. Files never pass through the app's server, whose requests stay at the default size (a hosted server takes about 4.5 MB at most). A proper Google Drive connection comes with the backend.
 
 **Rules.** No passwords or login details anywhere in the Brain: every text is checked in the form and again in the database, and every page says "Use a password manager". No student data: that stays in Leads. The dashboard's design rules hold, monochrome but for a brand's own swatches.
+
+---
+
+## 27. The AdmitLabs team area
+
+The team area (`/team`) for AdmitLabs: the menu, who can open what, and Enquiries (our own leads, not student data). Billing and renewals are not part of it yet.
+
+**The menu.**
+
+1. **Audit**: one item with three tabs, To review, Bulk Audit and Rival ads (each as in section 13). The count of what waits for review sits beside it.
+2. **Enquiries**: AdmitLabs' own leads (below).
+3. **Institutions**: everyone in Drishti, with tabs All, Free, Paid and Client.
+4. **Clients**: every Client; each Client's page keeps its Client Brain as a tab. No separate Client Brain item.
+5. **Team**: everyone on the AdmitLabs team, with their level. Admins only.
+
+**Access levels**, enforced in the database (row level security and the database functions), not only in the menu:
+
+| Level | Opens |
+|---|---|
+| Admin | Everything, including the Team page: adds and removes people and sets their level. Changes plans |
+| Team member | Everything except the Team page and plan changes. Assigns Client managers; makes a won enquiry a Client |
+| Client manager | Only the Clients assigned to them: each one's page, its Client Brain (onboarding, the checklist and Mark as Ready included), its dashboard read only ("view as"), its work log, team notes and Leads links, and its Audits and summaries to review. The rivals those Clients track, as the team sees them. Only the Enquiries they own. Nothing else: no other institution, no To review list, no Bulk Audit, no Rival ads, no Team page |
+
+- How the database does it: `private.is_team()` means Admin or Team member, so every rule written for the team leaves a Client manager out. They come back in only through `private.manages()` (a Client assigned to them) and `private.manages_rival()` (a rival one of those Clients tracks), in read rules of their own beside the team's, and in the team's functions for a Client, which take `private.can_manage()`.
+- Admins and Team members assign a Client manager on the Client's page; a Client may have more than one. Only a Client can have one, and only to someone whose level is Client manager. Someone who stops being a Client manager stops looking after any Client.
+- A Client manager starts at Clients. Any page they may not open is "not found", as the team area is for everyone outside it.
+
+**Sample.** `manager@admitlabs.example` (Farhan Ali) is a Client manager who looks after Brightpath.

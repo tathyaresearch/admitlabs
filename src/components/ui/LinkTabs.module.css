@@ -1,0 +1,46 @@
+/* Link tabs: clean underline tabs, sideways scroll on a phone (as the Audit's program tabs). */
+
+.tabs {
+  display: flex;
+  gap: var(--space-6);
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--line);
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  color: var(--text-muted);
+  font: var(--type-label);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tab:hover,
+.tab[aria-current='page'] {
+  color: var(--text);
+}
+
+.tab[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--text);
+}
+
+.count {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}

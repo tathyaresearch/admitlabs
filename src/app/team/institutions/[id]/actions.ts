@@ -1,7 +1,8 @@
 'use server';
 
-// The team's actions on one institution. Each checks the team role (and Admin for plans) here,
-// and the database checks again: notes, links and plans are written as the signed-in team user,
+// The team's actions on one institution. Each checks here that this team user works on it (the
+// full team on any, a Client manager on their Clients; Admin for plans), and the database checks
+// again: notes, links and plans are written as the signed-in team user,
 // so row level security and the database functions apply. Audits run with the service key, the
 // one path every Audit takes, only after those checks.
 
@@ -9,11 +10,12 @@ import { revalidatePath } from 'next/cache';
 import { AuditRunError, runAudit } from '@/audit/run';
 import { LEAD_RULES } from '@/config/leads';
 import { TEAM_RULES } from '@/config/team';
-import { LEAD_SOURCES, type LeadSource } from '@/domain/types';
+import { isFullTeam, LEAD_SOURCES, type LeadSource } from '@/domain/types';
 import { istParts } from '@/domain/dates';
 import { effectiveTier, parsePaidMonths, type PlanRecord } from '@/domain/tiers';
 import { tidyText } from '@/domain/onboarding';
 import { ANY_COURSE_VALUE } from '@/leads/text';
+import { canManage } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -30,9 +32,10 @@ export interface ActionState {
 
 const reply = (previous: ActionState, status: ActionState['status'], message: string | null): ActionState => ({ status, message, attempt: previous.attempt + 1 });
 
-async function teamUser() {
+/** The signed-in team user, when they work on this institution (spec section 27). */
+async function teamFor(institutionId: string) {
   const viewer = await getViewer();
-  return viewer?.teamRole ? viewer : null;
+  return viewer?.teamRole && (await canManage(viewer, institutionId)) ? viewer : null;
 }
 
 const NOT_TEAM = 'Only the AdmitLabs team can do this.';
@@ -43,7 +46,7 @@ const pagePath = (institutionId: string) => `/team/institutions/${institutionId}
 // Notes -------------------------------------------------------------------------------------------
 
 export async function addNoteAction(institutionId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
-  if (!(await teamUser())) return reply(previous, 'error', NOT_TEAM);
+  if (!(await teamFor(institutionId))) return reply(previous, 'error', NOT_TEAM);
   const body = String(formData.get('body') ?? '').replace(/\r\n/g, '\n').trim();
   if (!body) return reply(previous, 'error', 'Write the note first.');
   if (body.length > 2000) return reply(previous, 'error', 'Keep a note under 2,000 characters.');
@@ -63,7 +66,7 @@ function tidyNote(body: string): string {
 }
 
 export async function removeNoteAction(institutionId: string, noteId: string): Promise<void> {
-  if (!(await teamUser())) return;
+  if (!(await teamFor(institutionId))) return;
   const supabase = await createClient();
   await supabase.from('notes').delete().eq('id', noteId);
   revalidatePath(pagePath(institutionId));
@@ -73,7 +76,7 @@ export async function removeNoteAction(institutionId: string, noteId: string): P
 
 /** What the team did, or does next, for a Client. The Client sees it on Home and in their work list. */
 export async function addWorkAction(institutionId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
-  if (!(await teamUser())) return reply(previous, 'error', NOT_TEAM);
+  if (!(await teamFor(institutionId))) return reply(previous, 'error', NOT_TEAM);
   const field = (name: string) => String(formData.get(name) ?? '');
   const work = checkWork({ kind: field('kind'), text: field('text'), on: field('on'), link: field('link') }, new Date());
   if (!work.ok) return reply(previous, 'error', work.error);
@@ -89,14 +92,14 @@ export async function addWorkAction(institutionId: string, previous: ActionState
 
 /** Next is done: it moves to what was done, dated today (India time). */
 export async function markWorkDoneAction(institutionId: string, workId: string): Promise<void> {
-  if (!(await teamUser())) return;
+  if (!(await teamFor(institutionId))) return;
   const supabase = await createClient();
   await supabase.from('team_work').update({ kind: 'done', work_on: todayInIndia() }).eq('id', workId).eq('kind', 'next');
   revalidatePath(pagePath(institutionId));
 }
 
 export async function removeWorkAction(institutionId: string, workId: string): Promise<void> {
-  if (!(await teamUser())) return;
+  if (!(await teamFor(institutionId))) return;
   const supabase = await createClient();
   await supabase.from('team_work').delete().eq('id', workId);
   revalidatePath(pagePath(institutionId));
@@ -111,7 +114,7 @@ function todayInIndia(): string {
 
 /** A tracking link for a Client's content: a name, where it is used, one program or any course. Counts only come back. */
 export async function createLeadLinkAction(institutionId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
-  if (!(await teamUser())) return reply(previous, 'error', NOT_TEAM);
+  if (!(await teamFor(institutionId))) return reply(previous, 'error', NOT_TEAM);
   const name = tidyText(String(formData.get('name') ?? '').replace(/\s+/g, ' ').trim());
   const usedOn = String(formData.get('used_on') ?? '');
   const program = String(formData.get('program') ?? '');
@@ -135,7 +138,7 @@ export async function createLeadLinkAction(institutionId: string, previous: Acti
 
 /** Its form says it is closed from now on. The enquiries it brought stay with the college. */
 export async function archiveLeadLinkAction(institutionId: string, linkId: string): Promise<void> {
-  if (!(await teamUser())) return;
+  if (!(await teamFor(institutionId))) return;
   const supabase = await createClient();
   await supabase.rpc('archive_lead_link', { p_link: linkId });
   revalidatePath(pagePath(institutionId));
@@ -144,7 +147,7 @@ export async function archiveLeadLinkAction(institutionId: string, linkId: strin
 // Share links ------------------------------------------------------------------------------------
 
 export async function shareAuditAction(institutionId: string, auditId: string, previous: ActionState): Promise<ActionState> {
-  if (!(await teamUser())) return reply(previous, 'error', NOT_TEAM);
+  if (!(await teamFor(institutionId))) return reply(previous, 'error', NOT_TEAM);
   const supabase = await createClient();
   const { error } = await supabase.rpc('create_share_link', { p_audit: auditId, p_days: TEAM_RULES.shareLinkDays });
   if (error) {
@@ -160,7 +163,7 @@ export async function shareAuditAction(institutionId: string, auditId: string, p
 }
 
 export async function stopLinkAction(institutionId: string, token: string): Promise<void> {
-  const viewer = await teamUser();
+  const viewer = await teamFor(institutionId);
   if (!viewer) return;
   const supabase = await createClient();
   await supabase.from('share_links').update({ stopped_at: new Date().toISOString(), stopped_by: viewer.userId }).eq('token', token).is('stopped_at', null);
@@ -178,7 +181,7 @@ function planRecord(row: { tier: PlanRecord['tier']; starts_at: string; ends_at:
  * For anyone else a private team Audit: a Paid owner's once-a-month refresh stays theirs.
  */
 export async function auditNowAction(institutionId: string, previous: ActionState): Promise<ActionState> {
-  const viewer = await teamUser();
+  const viewer = await teamFor(institutionId);
   if (!viewer) return reply(previous, 'error', NOT_TEAM);
   const supabase = await createClient();
   const [status, plan] = await Promise.all([
@@ -218,14 +221,14 @@ export async function auditNowAction(institutionId: string, previous: ActionStat
 
 /**
  * How a college's new Audits and monthly summaries go out (spec section 25): Review first, where
- * each waits in To review until the team approves it, or Send automatically. Team only: row level
- * security lets only the team write institution_status. An Audit already waiting still waits.
+ * each waits in To review until the team approves it, or Send automatically. The team, or the
+ * Client's manager, through set_review_first(). An Audit already waiting still waits.
  */
 export async function setReviewFirstAction(institutionId: string, on: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (!(await teamUser())) return { ok: false, error: NOT_TEAM };
+  if (!(await teamFor(institutionId))) return { ok: false, error: NOT_TEAM };
   const supabase = await createClient();
-  const { data, error } = await supabase.from('institution_status').update({ review_first: on === true }).eq('institution_id', institutionId).eq('claimed', true).select('institution_id');
-  if (error || !data?.length) return { ok: false, error: 'The setting did not save. Try again.' };
+  const { error } = await supabase.rpc('set_review_first', { p_institution: institutionId, p_on: on === true });
+  if (error) return { ok: false, error: 'The setting did not save. Try again.' };
   revalidatePath(pagePath(institutionId));
   revalidatePath('/team/review');
   return { ok: true };
@@ -259,7 +262,7 @@ async function firstAudit(institutionId: string, userId: string): Promise<{ prob
 }
 
 export async function startPaidAction(institutionId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
-  const viewer = await teamUser();
+  const viewer = await teamFor(institutionId);
   if (viewer?.teamRole !== 'admin') return reply(previous, 'error', NOT_ADMIN);
   const now = new Date();
   const months = parsePaidMonths(formData.get('months'));
@@ -284,7 +287,7 @@ export async function startPaidAction(institutionId: string, previous: ActionSta
 }
 
 export async function makeClientAction(institutionId: string, previous: ActionState): Promise<ActionState> {
-  const viewer = await teamUser();
+  const viewer = await teamFor(institutionId);
   if (viewer?.teamRole !== 'admin') return reply(previous, 'error', NOT_ADMIN);
   const supabase = await createClient();
   const { error } = await supabase.rpc('set_plan', { p_institution: institutionId, p_tier: 'client', p_starts_at: new Date().toISOString() });
@@ -304,7 +307,7 @@ export async function makeClientAction(institutionId: string, previous: ActionSt
 }
 
 export async function endPlanAction(institutionId: string, previous: ActionState): Promise<ActionState> {
-  const viewer = await teamUser();
+  const viewer = await teamFor(institutionId);
   if (viewer?.teamRole !== 'admin') return reply(previous, 'error', NOT_ADMIN);
   const supabase = await createClient();
   const { error } = await supabase.rpc('end_plan', { p_institution: institutionId });
@@ -312,4 +315,38 @@ export async function endPlanAction(institutionId: string, previous: ActionState
   revalidatePath(pagePath(institutionId));
   revalidatePath('/team');
   return reply(previous, 'done', 'The plan has ended. They are on Free now, and keep their last Audit score and past reports.');
+}
+
+// Client managers (spec section 27) ----------------------------------------------------------------
+
+const ASSIGN_ERRORS: Readonly<Record<string, string>> = {
+  not_client_manager: 'Pick someone whose level is Client manager.',
+  not_client: 'Only a Client has a Client manager.',
+  not_team: 'Only Admins and Team members assign Client managers.',
+};
+
+/** Admins and Team members give a Client to a Client manager: they then see it, and only their Clients. */
+export async function assignManagerAction(institutionId: string, previous: ActionState, formData: FormData): Promise<ActionState> {
+  const viewer = await getViewer();
+  if (!isFullTeam(viewer?.teamRole)) return reply(previous, 'error', ASSIGN_ERRORS.not_team ?? NOT_TEAM);
+  const userId = String(formData.get('user') ?? '');
+  if (!userId) return reply(previous, 'error', 'Pick a Client manager.');
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('assign_client_manager', { p_institution: institutionId, p_user: userId });
+  if (error) {
+    const code = Object.keys(ASSIGN_ERRORS).find((key) => error.message.includes(key));
+    return reply(previous, 'error', code ? (ASSIGN_ERRORS[code] as string) : 'That could not be saved. Try again.');
+  }
+  revalidatePath(pagePath(institutionId));
+  revalidatePath('/team/clients');
+  return reply(previous, 'done', 'Assigned. They see this Client now.');
+}
+
+export async function unassignManagerAction(institutionId: string, userId: string): Promise<void> {
+  const viewer = await getViewer();
+  if (!isFullTeam(viewer?.teamRole)) return;
+  const supabase = await createClient();
+  await supabase.rpc('unassign_client_manager', { p_institution: institutionId, p_user: userId });
+  revalidatePath(pagePath(institutionId));
+  revalidatePath('/team/clients');
 }

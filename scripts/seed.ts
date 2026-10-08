@@ -24,6 +24,7 @@ import { checkRival, recordRivalAd, writeRivalActions } from '../src/rivals/jobs
 import { consentLine } from '../src/leads/text.ts';
 import {
   ADMIN_EMAIL,
+  SAMPLE_CLIENT_MANAGERS,
   DEMAND_MONTHS,
   PICK_MONTHS,
   SAMPLE_ADS,
@@ -221,6 +222,11 @@ async function main(): Promise<void> {
         },
       ];
     }),
+  );
+  // Who looks after which Client, for the Client managers (spec section 27).
+  await insert(
+    'client_managers',
+    SAMPLE_CLIENT_MANAGERS.map((entry) => ({ institution_id: institutionId(entry.slug), user_id: requireUser(entry.email), assigned_by: requireUser(entry.by), assigned_at: at(entry.on, 10) })),
   );
   await insert(
     'rivals',
@@ -588,7 +594,9 @@ async function main(): Promise<void> {
       ? `${user.membershipRole === 'owner' ? 'Owner' : 'Member'}, ${sample.name} (${SAMPLE_NEW_CLIENTS.some((client) => client.slug === sample.slug) ? TIER_LABELS.client : sample.plan ? TIER_LABELS[sample.plan.tier] : 'Free'})`
       : user.teamRole === 'admin'
         ? 'AdmitLabs admin'
-        : 'AdmitLabs team';
+        : user.teamRole === 'client_manager'
+          ? 'AdmitLabs Client manager (Brightpath)'
+          : 'AdmitLabs team member';
     console.log(`  ${user.email.padEnd(38)} ${label}`);
   }
   console.log('\nShared Audits open without signing in:');

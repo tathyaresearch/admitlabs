@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon } from '@/components/ui/Icon';
-import { isActive, type NavSection } from './nav';
+import { itemActive, type NavSection } from './nav';
 import styles from './AppShell.module.css';
 
 /** The sidebar's pages, in groups with space between them. `badges` puts a count beside a page. */
@@ -15,7 +15,7 @@ export function SideNav({ sections, badges }: { sections: readonly NavSection[];
         <nav key={section.label} aria-label={section.label} className={styles.navSection}>
           <ul className={styles.navList}>
             {section.items.map((item) => {
-              const active = isActive(pathname, item.href);
+              const active = itemActive(pathname, item);
               const count = badges?.[item.href] ?? 0;
               return (
                 <li key={item.href}>

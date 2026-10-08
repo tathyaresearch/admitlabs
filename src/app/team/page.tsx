@@ -5,7 +5,10 @@ import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
 import { TEAM_RULES } from '@/config/team';
+import { LinkTabs } from '@/components/ui/LinkTabs';
 import { requireTeamViewer } from '@/lib/auth/guards';
+import { redirect } from 'next/navigation';
+import { isFullTeam } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
 import { loadInstitutionList, loadListCounts, loadPlaces } from '@/lib/team/load';
 import { filtersQuery, hasFilters, NO_FILTERS, parseFilters } from '@/team/filters';
@@ -15,13 +18,24 @@ import styles from '@/components/team/team.module.css';
 // The title only names the page for the team, so the team area stays invisible to everyone else.
 export async function generateMetadata(): Promise<Metadata> {
   const viewer = await getViewer();
-  return { title: viewer?.teamRole ? 'Institutions' : 'Page not found' };
+  return { title: isFullTeam(viewer?.teamRole) ? 'Institutions' : 'Page not found' };
 }
+
+// Institutions by plan (spec section 27): All, then Free, Paid and Client. Those not signed up
+// (prospects and rival records) show under All.
+const PLAN_TABS: ReadonlyArray<{ tier: 'free' | 'paid' | 'client' | null; label: string }> = [
+  { tier: null, label: 'All' },
+  { tier: 'free', label: 'Free' },
+  { tier: 'paid', label: 'Paid' },
+  { tier: 'client', label: 'Client' },
+];
 
 // The team's home answers "Who needs attention?": four counts that also filter the list, then the
 // list itself with search and filters.
 export default async function TeamHomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  await requireTeamViewer();
+  const viewer = await requireTeamViewer();
+  // A Client manager's team area starts at their Clients.
+  if (!isFullTeam(viewer.teamRole)) redirect('/team/clients');
   const filters = parseFilters(await searchParams);
   const now = new Date();
   const [{ rows, total }, counts, places] = await Promise.all([loadInstitutionList(filters), loadListCounts(), loadPlaces()]);
@@ -62,6 +76,14 @@ export default async function TeamHomePage({ searchParams }: { searchParams: Pro
       </nav>
 
       <section className={audit.section} aria-label="Institutions">
+        <LinkTabs
+          label="Plan"
+          tabs={PLAN_TABS.map((tab) => ({
+            href: `/team${filtersQuery({ ...filters, tier: tab.tier, page: 1 })}`,
+            label: tab.label,
+            current: tab.tier === null ? filters.tier === null : tab.tier === 'paid' ? filters.tier === 'paid' || filters.tier === 'paid_ending' : filters.tier === tab.tier,
+          }))}
+        />
         <InstitutionFilters filters={filters} cities={places.cities} states={places.states} />
         <ResultLine filters={filters} total={total} />
         {rows.length ? (

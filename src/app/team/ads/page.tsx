@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/Button';
 import { Card, PageHead, Section } from '@/components/ui/Layout';
 import { istParts } from '@/domain/dates';
 import { formatDate, hostAndPath } from '@/domain/format';
-import { requireTeamViewer } from '@/lib/auth/guards';
+import { AuditTabs } from '@/components/team/AuditTabs';
+import { requireFullTeam } from '@/lib/auth/guards';
+import { isFullTeam } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
 import { createClient } from '@/lib/supabase/server';
 import { deleteRivalAdAction } from './actions';
@@ -13,12 +15,12 @@ import styles from './ads.module.css';
 // The title only names the page for the team, so the team area stays invisible to everyone else.
 export async function generateMetadata(): Promise<Metadata> {
   const viewer = await getViewer();
-  return { title: viewer?.teamRole ? 'Rival ads' : 'Page not found' };
+  return { title: isFullTeam(viewer?.teamRole) ? 'Rival ads' : 'Page not found' };
 }
 
 // Rival ads: what rivals promise in their ads, added by hand, then the latest entries.
 export default async function RivalAdsPage() {
-  await requireTeamViewer();
+  await requireFullTeam();
   const supabase = await createClient();
   const [links, ads] = await Promise.all([
     supabase.from('rivals').select('rival_institution_id, institutions!rivals_rival_institution_id_fkey(name)'),
@@ -36,10 +38,11 @@ export default async function RivalAdsPage() {
   return (
     <div className={styles.page}>
       <PageHead
-        title="Rival ads"
+        title="Audit"
         question="What your rivals promise in their ads, entered by hand until Drishti can collect it."
         caption={['For now, what rivals promise in their ads', 'Paid and Client institutions tracking the rival see each one with its link and date']}
       />
+      <AuditTabs current="ads" />
 
       <Section id="add" title="Add a rival ad" description="Only rivals someone tracks are listed.">
         <Card>

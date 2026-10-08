@@ -10,8 +10,14 @@ export type Tier = (typeof TIERS)[number];
 export const MEMBERSHIP_ROLES = ['owner', 'member'] as const;
 export type MembershipRole = (typeof MEMBERSHIP_ROLES)[number];
 
-export const TEAM_ROLES = ['team', 'admin'] as const;
+/** The team's access levels (spec section 27): Admin, Team member, and a Client manager who looks after some Clients only. */
+export const TEAM_ROLES = ['admin', 'team', 'client_manager'] as const;
 export type TeamRole = (typeof TEAM_ROLES)[number];
+
+/** Admin or Team member: the whole team area. A Client manager sees their Clients only. */
+export function isFullTeam(role: TeamRole | null | undefined): role is 'admin' | 'team' {
+  return role === 'admin' || role === 'team';
+}
 
 export const PILLARS = ['discovered', 'trusted', 'chosen'] as const;
 export type Pillar = (typeof PILLARS)[number];
@@ -235,8 +241,16 @@ export const DEMAND_SCOPE_LABELS: Readonly<Record<DemandScope, string>> = {
 };
 
 export const TEAM_ROLE_LABELS: Readonly<Record<TeamRole, string>> = {
-  team: 'Team',
   admin: 'Admin',
+  team: 'Team member',
+  client_manager: 'Client manager',
+};
+
+/** What each level opens, in a line (the Team page). */
+export const TEAM_ROLE_LINES: Readonly<Record<TeamRole, string>> = {
+  admin: 'Everything: every institution, Audits, Enquiries and Clients, plans, and the team on this page.',
+  team: 'Everything except plans and this page. They also make a won enquiry a Client.',
+  client_manager: 'Only the Clients assigned to them (each page, Client Brain and dashboard), and the Enquiries they own.',
 };
 
 export const MEMBERSHIP_ROLE_LABELS: Readonly<Record<MembershipRole, string>> = {

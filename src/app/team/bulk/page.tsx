@@ -6,7 +6,9 @@ import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
 import { TEAM_RULES } from '@/config/team';
 import { formatDateTime, plural } from '@/domain/format';
-import { requireTeamViewer } from '@/lib/auth/guards';
+import { AuditTabs } from '@/components/team/AuditTabs';
+import { requireFullTeam } from '@/lib/auth/guards';
+import { isFullTeam } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
 import { loadBulkRuns } from '@/lib/team/load';
 import audit from '@/components/audit/audit.module.css';
@@ -14,20 +16,20 @@ import styles from '@/components/team/team.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   const viewer = await getViewer();
-  return { title: viewer?.teamRole ? 'Bulk Audit' : 'Page not found' };
+  return { title: isFullTeam(viewer?.teamRole) ? 'Bulk Audit' : 'Page not found' };
 }
 
 export default async function BulkAuditPage() {
-  await requireTeamViewer();
+  await requireFullTeam();
   const runs = await loadBulkRuns();
   return (
     <div className={audit.page}>
       <PageHead
-        back={{ href: '/team', label: 'Institutions' }}
-        title="Bulk Audit"
+        title="Audit"
         question={`Audit up to ${TEAM_RULES.bulkMaxRows} institutions at once.`}
         caption={['Each is added as a prospect', 'Team Audits stay private until shared']}
       />
+      <AuditTabs current="bulk" />
       <BulkAudit maxRows={TEAM_RULES.bulkMaxRows} />
       <section className={audit.section} aria-labelledby="runs-title">
         <SectionHead id="runs-title" title="Earlier runs" help="The last 10, newest first." />

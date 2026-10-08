@@ -6,14 +6,21 @@ import { EmptyState, Notice } from '@/components/ui/Feedback';
 import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
 import { plural } from '@/domain/format';
-import { requireTeamViewer } from '@/lib/auth/guards';
+import { AuditTabs } from '@/components/team/AuditTabs';
+import { isFullTeam } from '@/domain/types';
+import { requireFullTeam } from '@/lib/auth/guards';
+import { getViewer } from '@/lib/auth/viewer';
 import { createClient } from '@/lib/supabase/server';
 import { waitingSummaries } from '@/report/jobs';
 import { waitedFor } from '@/team/review';
 import audit from '@/components/audit/places.module.css';
 import styles from '@/components/team/review.module.css';
 
-export const metadata: Metadata = { title: 'To review' };
+// The title only names the page for the full team, so it stays invisible to everyone else.
+export async function generateMetadata(): Promise<Metadata> {
+  const viewer = await getViewer();
+  return { title: isFullTeam(viewer?.teamRole) ? 'To review' : 'Page not found' };
+}
 
 interface Waiting {
   key: string;
@@ -30,7 +37,7 @@ interface Waiting {
 // first, each with the college, what it is, its plan, how long it has waited and what changed in
 // one line.
 export default async function ReviewListPage({ searchParams }: { searchParams: Promise<{ approved?: string }> }) {
-  await requireTeamViewer();
+  await requireFullTeam();
   const db = await createClient();
   const now = new Date();
   const [audits, summaries, { approved }, automatic] = await Promise.all([
@@ -48,7 +55,7 @@ export default async function ReviewListPage({ searchParams }: { searchParams: P
     <div className={audit.page}>
       <div className={audit.top}>
         <PageHead
-          title="To review"
+          title="Audit"
           question="What needs a look before it goes out?"
           caption={[
             plural(rows.length, 'waiting', 'waiting'),
@@ -56,6 +63,7 @@ export default async function ReviewListPage({ searchParams }: { searchParams: P
             ...(sendsAutomatically.length ? [`${sendsAutomatically.join(', ')} ${sendsAutomatically.length === 1 ? 'sends' : 'send'} automatically`] : []),
           ]}
         />
+        <AuditTabs current="review" />
         {approved ? (
           <Notice icon="checkCircle" title="Approved and sent.">
             {approved === 'summary'

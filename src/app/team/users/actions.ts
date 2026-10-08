@@ -1,6 +1,7 @@
 'use server';
 
-// Team users (spec section 5): an Admin adds people by email, changes their role and removes them.
+// The Team page (spec sections 5 and 27): an Admin adds people by email, sets their level (Admin,
+// Team member, Client manager) and removes them.
 // Each action checks the Admin role here, and the database functions check it again. The last
 // Admin can never be removed or made Team, so the team area always has someone to run it.
 
@@ -12,7 +13,7 @@ import type { ActionState } from '@/app/team/institutions/[id]/actions';
 
 const reply = (previous: ActionState, status: ActionState['status'], message: string | null): ActionState => ({ status, message, attempt: previous.attempt + 1 });
 
-const NOT_ADMIN = 'Only an Admin changes team users.';
+const NOT_ADMIN = 'Only an Admin changes the team.';
 const LAST_ADMIN = 'The team always keeps one Admin. Make someone else an Admin first.';
 const PAGE = '/team/users';
 
@@ -31,7 +32,7 @@ export async function addTeamUserAction(previous: ActionState, formData: FormDat
     .trim()
     .toLowerCase();
   const role = readRole(formData.get('role'));
-  if (!role) return reply(previous, 'error', 'Choose Team or Admin.');
+  if (!role) return reply(previous, 'error', 'Choose a level: Admin, Team member or Client manager.');
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('add_team_user', { p_email: email, p_role: role });
   if (error) {
@@ -56,7 +57,7 @@ export async function setTeamRoleAction(userId: string, role: TeamRole, previous
   if (!(await isAdmin())) return reply(previous, 'error', NOT_ADMIN);
   const supabase = await createClient();
   const { error } = await supabase.rpc('set_team_role', { p_user: userId, p_role: role });
-  if (error) return reply(previous, 'error', error.message.includes('last_admin') ? LAST_ADMIN : 'The role could not be changed. Try again.');
+  if (error) return reply(previous, 'error', error.message.includes('last_admin') ? LAST_ADMIN : 'The level could not be changed. Try again.');
   revalidatePath(PAGE);
   return reply(previous, 'done', `Now ${TEAM_ROLE_LABELS[role]}.`);
 }

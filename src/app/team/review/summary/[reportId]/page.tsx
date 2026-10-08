@@ -7,6 +7,7 @@ import { AnchorButton, ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/Feedback';
 import { PageHead } from '@/components/ui/Layout';
 import { formatDate, formatMonth, formatMonthName } from '@/domain/format';
+import { isFullTeam } from '@/domain/types';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
 import { loadSummaryReview } from '@/report/jobs';
@@ -23,17 +24,19 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // A monthly summary waiting for the team (spec section 25): the summary line by line, each to fix
 // where a provider got it wrong, the PDF as it would go out, and Approve and send.
 export default async function SummaryReviewPage({ params }: { params: Promise<{ reportId: string }> }) {
-  await requireTeamViewer();
+  const viewer = await requireTeamViewer();
   const { reportId } = await params;
   if (!UUID.test(reportId)) notFound();
   const state = await loadSummaryReview(await createClient(), reportId);
   if (!state) notFound();
   const month = formatMonthName(state.month);
+  // A Client manager reviews only their Clients' summaries; their way back is the Client's page.
+  const back = isFullTeam(viewer.teamRole) ? { href: '/team/review', label: 'To review' } : { href: `/team/institutions/${state.institutionId}`, label: state.name };
 
   if (state.review !== 'waiting') {
     return (
       <div className={audit.page}>
-        <PageHead back={{ href: '/team/review', label: 'To review' }} title={state.name} question="Is this right before it goes out?" />
+        <PageHead back={back} title={state.name} question="Is this right before it goes out?" />
         <EmptyState icon="checkCircle" title={`The ${month} summary has been approved`} action={<ButtonLink href={`/team/institutions/${state.institutionId}`}>Open their page</ButtonLink>}>
           It shows on their Reports page with its PDF, and the email went. Every change made in its review is kept.
         </EmptyState>
@@ -59,7 +62,7 @@ export default async function SummaryReviewPage({ params }: { params: Promise<{ 
     <div className={[audit.page, styles.withBar].join(' ')}>
       <div className={audit.top}>
         <PageHead
-          back={{ href: '/team/review', label: 'To review' }}
+          back={back}
           title={state.name}
           question="Is this right before it goes out?"
           caption={[`${month} summary, made ${formatDate(state.madeAt)}`, `Waiting ${waitedFor(state.madeAt, new Date())}`, 'Review first']}

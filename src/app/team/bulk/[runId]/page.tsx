@@ -4,7 +4,8 @@ import { ButtonLink } from '@/components/ui/Button';
 import { PageHead } from '@/components/ui/Layout';
 import { formatDate, formatTime, plural } from '@/domain/format';
 import { scoreLabel } from '@/domain/scores';
-import { requireTeamViewer } from '@/lib/auth/guards';
+import { requireFullTeam } from '@/lib/auth/guards';
+import { isFullTeam } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
 import { loadBulkRun } from '@/lib/team/load';
 import audit from '@/components/audit/audit.module.css';
@@ -14,11 +15,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function generateMetadata(): Promise<Metadata> {
   const viewer = await getViewer();
-  return { title: viewer?.teamRole ? 'Bulk Audit results' : 'Page not found' };
+  return { title: isFullTeam(viewer?.teamRole) ? 'Bulk Audit results' : 'Page not found' };
 }
 
 export default async function BulkRunPage({ params }: { params: Promise<{ runId: string }> }) {
-  await requireTeamViewer();
+  await requireFullTeam();
   const { runId } = await params;
   if (!UUID.test(runId)) notFound();
   const loaded = await loadBulkRun(runId);

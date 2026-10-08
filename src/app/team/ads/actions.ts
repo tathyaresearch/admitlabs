@@ -5,6 +5,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { istDate, istParts } from '@/domain/dates';
+import { isFullTeam } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
 import { createClient } from '@/lib/supabase/server';
 import { checkAdEntry, type AdErrors, type AdFields } from '@/rivals/ads';
@@ -31,7 +32,7 @@ async function trackedRivalIds(): Promise<string[]> {
 export async function addRivalAdAction(previous: AdFormState, formData: FormData): Promise<AdFormState> {
   const viewer = await getViewer();
   const next = (patch: Partial<AdFormState>): AdFormState => ({ ...previous, attempt: previous.attempt + 1, message: null, errors: {}, ...patch });
-  if (!viewer?.teamRole) return next({ status: 'error', message: 'Only the AdmitLabs team can enter ads.' });
+  if (!isFullTeam(viewer?.teamRole)) return next({ status: 'error', message: 'Only the AdmitLabs team can enter ads.' });
 
   const values: AdFields = {
     rival: String(formData.get('rival') ?? ''),
@@ -58,7 +59,7 @@ export async function addRivalAdAction(previous: AdFormState, formData: FormData
 
 export async function deleteRivalAdAction(formData: FormData): Promise<void> {
   const viewer = await getViewer();
-  if (!viewer?.teamRole) return;
+  if (!isFullTeam(viewer?.teamRole)) return;
   const supabase = await createClient();
   await supabase.from('rival_ads').delete().eq('id', String(formData.get('ad') ?? ''));
   revalidatePath('/team/ads');

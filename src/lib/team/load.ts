@@ -4,10 +4,13 @@
 
 import { cache } from 'react';
 import { latestStoredAudit, ownHistory } from '@/audit/read';
+import { loadBrain } from '@/brain/load';
+import { brainState, type BrainState } from '@/brain/line';
 import type { StoredAudit } from '@/audit/view';
 import { checkName } from '@/domain/checks';
 import { parsePaidMonths, type PaidMonths } from '@/domain/tiers';
 import { INSTITUTION_TYPES, type CheckKey, type InstitutionType, type MembershipRole, type TeamRole, type Tier } from '@/domain/types';
+import type { Database } from '@/lib/supabase/database.types';
 import { createClient } from '@/lib/supabase/server';
 import { pageRange, scoreRange, searchPattern, type TeamFilters, type TeamStatus } from '@/team/filters';
 import type { WorkEntry } from '@/team/work';
@@ -38,6 +41,33 @@ export interface TeamListRow {
 
 const LIST_COLUMNS = 'id, name, type, city, state, website, status, tier, plan_ends_at, plan_months, programs, score, audit_kind, checked_at, claimed, score_change, rivals, shared_at, team_refreshed_at, brain_status';
 
+type ListColumns = Pick<Database['public']['Views']['team_institutions']['Row'], 'id' | 'name' | 'type' | 'city' | 'state' | 'website' | 'status' | 'tier' | 'plan_ends_at' | 'plan_months' | 'programs' | 'score' | 'audit_kind' | 'checked_at' | 'claimed' | 'score_change' | 'rivals' | 'shared_at' | 'team_refreshed_at' | 'brain_status'>;
+
+function listRow(row: ListColumns): TeamListRow {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    type: row.type as InstitutionType,
+    city: row.city as string,
+    state: row.state as string,
+    website: row.website as string,
+    status: row.status as TeamStatus,
+    tier: row.tier as Tier | null,
+    planEndsAt: row.plan_ends_at,
+    planMonths: parsePaidMonths(row.plan_months),
+    programs: row.programs ?? 0,
+    score: row.score,
+    auditKind: row.audit_kind,
+    checkedAt: row.checked_at,
+    claimed: Boolean(row.claimed),
+    scoreChange: row.score_change,
+    rivals: row.rivals ?? 0,
+    sharedAt: row.shared_at,
+    teamRefreshedAt: row.team_refreshed_at,
+    brainStatus: row.brain_status,
+  };
+}
+
 export async function loadInstitutionList(filters: TeamFilters): Promise<{ rows: TeamListRow[]; total: number }> {
   const supabase = await createClient();
   let query = supabase.from('team_institutions').select(LIST_COLUMNS, { count: 'exact' });
@@ -65,29 +95,74 @@ export async function loadInstitutionList(filters: TeamFilters): Promise<{ rows:
   if (error) throw new Error(`Could not load institutions: ${error.message}`);
   return {
     total: count ?? 0,
-    rows: (data ?? []).map((row) => ({
-      id: row.id as string,
-      name: row.name as string,
-      type: row.type as InstitutionType,
-      city: row.city as string,
-      state: row.state as string,
-      website: row.website as string,
-      status: row.status as TeamStatus,
-      tier: row.tier as Tier | null,
-      planEndsAt: row.plan_ends_at,
-      planMonths: parsePaidMonths(row.plan_months),
-      programs: row.programs ?? 0,
-      score: row.score,
-      auditKind: row.audit_kind,
-      checkedAt: row.checked_at,
-      claimed: Boolean(row.claimed),
-      scoreChange: row.score_change,
-      rivals: row.rivals ?? 0,
-      sharedAt: row.shared_at,
-      teamRefreshedAt: row.team_refreshed_at,
-      brainStatus: row.brain_status,
-    })),
+    rows: (data ?? []).map(listRow),
   };
+}
+
+// Clients ---------------------------------------------------------------------------------------------
+
+export interface ClientRow extends TeamListRow {
+  clientSince: string | null;
+  /** The Brain's state now, or null before onboarding starts. */
+  brain: BrainState | null;
+  managers: Array<{ userId: string; name: string }>;
+  /** An Audit or a monthly summary waiting in To review. */
+  waiting: number;
+}
+
+/**
+ * Every Client, for the Clients page, as the signed-in team user: a Client manager gets only the
+ * Clients assigned to them (row level security, through the team list view).
+ */
+export async function loadClients(now: Date): Promise<ClientRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('team_institutions').select(`${LIST_COLUMNS}, plan_starts_at`).eq('tier', 'client').order('name').order('id');
+  if (error) throw new Error(`Could not load Clients: ${error.message}`);
+  const ids = (data ?? []).map((row) => row.id as string);
+  if (!ids.length) return [];
+  const [managers, people, audits, reports, brains] = await Promise.all([
+    supabase.from('client_managers').select('institution_id, user_id, assigned_at').in('institution_id', ids).order('assigned_at'),
+    loadTeamPeople(),
+    supabase.from('audits').select('institution_id').in('institution_id', ids).eq('review', 'waiting').in('kind', ['free', 'paid', 'client']),
+    supabase.from('reports').select('institution_id').in('institution_id', ids).eq('review', 'waiting'),
+    Promise.all((data ?? []).map(async (row) => (row.brain_status ? loadBrain(supabase, row.id as string) : null))),
+  ]);
+  for (const result of [managers, audits, reports]) if (result.error) throw new Error(`Could not load Clients: ${result.error.message}`);
+  const nameOf = new Map(people.flatMap((person) => (person.userId ? [[person.userId, person.name ?? person.email] as const] : [])));
+  const count = (rows: Array<{ institution_id: string }> | null, id: string) => (rows ?? []).filter((row) => row.institution_id === id).length;
+  return (data ?? []).map((row, index) => {
+    const brain = brains[index];
+    return {
+      ...listRow(row),
+      clientSince: row.plan_starts_at,
+      brain: brain ? brainState(brain, now) : null,
+      managers: (managers.data ?? []).filter((entry) => entry.institution_id === row.id).map((entry) => ({ userId: entry.user_id, name: nameOf.get(entry.user_id) ?? 'A Client manager' })),
+      waiting: count(audits.data, row.id as string) + count(reports.data, row.id as string),
+    };
+  });
+}
+
+/** Who looks after one Client, and (for the full team) the Client managers who could. */
+export async function loadClientManagers(institutionId: string): Promise<{ assigned: Array<{ userId: string; name: string }>; others: Array<{ userId: string; name: string }> }> {
+  const supabase = await createClient();
+  const [rows, people] = await Promise.all([supabase.from('client_managers').select('user_id, assigned_at').eq('institution_id', institutionId).order('assigned_at'), loadTeamPeople()]);
+  if (rows.error) throw new Error(`Could not load Client managers: ${rows.error.message}`);
+  const managers = people.flatMap((person) => (person.role === 'client_manager' && person.userId ? [{ userId: person.userId, name: person.name ?? person.email }] : []));
+  const ids = (rows.data ?? []).map((row) => row.user_id);
+  return {
+    assigned: ids.map((userId) => managers.find((manager) => manager.userId === userId) ?? { userId, name: 'A Client manager' }),
+    others: managers.filter((manager) => !ids.includes(manager.userId)),
+  };
+}
+
+/** Each Client manager's Clients, by person (the Team page). */
+export async function loadManagedClients(): Promise<Map<string, Array<{ id: string; name: string }>>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('client_managers').select('user_id, institution_id, institutions(name)').order('assigned_at');
+  if (error) throw new Error(`Could not load Client managers: ${error.message}`);
+  const byPerson = new Map<string, Array<{ id: string; name: string }>>();
+  for (const row of data ?? []) byPerson.set(row.user_id, [...(byPerson.get(row.user_id) ?? []), { id: row.institution_id, name: row.institutions?.name ?? 'A Client' }]);
+  return byPerson;
 }
 
 export interface ListCounts {

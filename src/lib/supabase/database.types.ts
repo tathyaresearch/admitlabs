@@ -861,6 +861,49 @@ export type Database = {
         }
         Relationships: []
       }
+      client_managers: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          institution_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          institution_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          institution_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_managers_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_managers_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_managers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "team_users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       content_picks: {
         Row: {
           idea: Json
@@ -2636,6 +2679,10 @@ export type Database = {
         Args: { p_institution: string; p_months: number }
         Returns: string
       }
+      assign_client_manager: {
+        Args: { p_institution: string; p_user: string }
+        Returns: undefined
+      }
       audit_waiting: {
         Args: { p_institution: string }
         Returns: {
@@ -2919,6 +2966,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_review_first: {
+        Args: { p_institution: string; p_on: boolean }
+        Returns: undefined
+      }
       set_summary_email: {
         Args: { p_institution: string; p_on: boolean; p_user: string }
         Returns: undefined
@@ -2966,6 +3017,10 @@ export type Database = {
           since: string
           user_id: string
         }[]
+      }
+      unassign_client_manager: {
+        Args: { p_institution: string; p_user: string }
+        Returns: undefined
       }
       undo_done: {
         Args: {
@@ -3115,7 +3170,7 @@ export type Database = {
         | "started_ads"
         | "reviews_jump"
       sentiment: "positive" | "negative"
-      team_role: "team" | "admin"
+      team_role: "team" | "admin" | "client_manager"
       team_work_kind: "done" | "next"
       tier: "free" | "paid" | "client"
     }
@@ -3378,7 +3433,7 @@ export const Constants = {
         "reviews_jump",
       ],
       sentiment: ["positive", "negative"],
-      team_role: ["team", "admin"],
+      team_role: ["team", "admin", "client_manager"],
       team_work_kind: ["done", "next"],
       tier: ["free", "paid", "client"],
     },

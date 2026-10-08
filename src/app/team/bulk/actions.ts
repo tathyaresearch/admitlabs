@@ -10,6 +10,7 @@ import { checkName as checkNameLabel } from '@/domain/checks';
 import { websiteHost } from '@/domain/onboarding';
 import { scoreLabel } from '@/domain/scores';
 import type { CheckKey, InstitutionType } from '@/domain/types';
+import { isFullTeam } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -46,7 +47,7 @@ const NOT_TEAM = 'Only the AdmitLabs team can run a bulk Audit.';
 
 async function teamUser() {
   const viewer = await getViewer();
-  return viewer?.teamRole ? viewer : null;
+  return isFullTeam(viewer?.teamRole) ? viewer : null;
 }
 
 type Checked = { position: number; label: string; status: BulkCheckRow['status']; problems: string[]; note: string | null; details: ProspectDetails | null };

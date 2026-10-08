@@ -8,7 +8,7 @@ import { AddedTag } from '@/components/details/Added';
 import { HomeSummary } from '@/components/home/HomeSummary';
 import { NextSteps, type NextStep } from '@/components/home/NextSteps';
 import { Tag } from '@/components/audit/PlaceBits';
-import { ActionButton, CopyLink, LeadLinkForm, NoteForm, PaidStartForm, ReviewFirstSetting, WorkForm } from '@/components/team/InstitutionPanels';
+import { ActionButton, AssignManagerForm, CopyLink, LeadLinkForm, NoteForm, PaidStartForm, ReviewFirstSetting, WorkForm } from '@/components/team/InstitutionPanels';
 import { AnchorButton, Button, ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/Feedback';
 import { KpiCard, KpiNote, KpiNumber, KpiWord } from '@/components/ui/Kpi';
@@ -22,14 +22,14 @@ import { EMPTY_PROGRAM_DETAILS as EMPTY_PROGRAM, institutionDetailLines, program
 import { formatDate, formatDateTime, formatMonth, hostAndPath, plural } from '@/domain/format';
 import { scoreLabel } from '@/domain/scores';
 import { effectiveTier, type PlanRecord } from '@/domain/tiers';
-import { EFFORT_LABELS, INSTITUTION_TYPE_LABELS, LEAD_SOURCE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS, type InstitutionType } from '@/domain/types';
+import { EFFORT_LABELS, INSTITUTION_TYPE_LABELS, isFullTeam, LEAD_SOURCE_LABELS, MEMBERSHIP_ROLE_LABELS, TIER_LABELS, type InstitutionType } from '@/domain/types';
 import { byLink, type LinkCount } from '@/leads/summary';
-import { requireTeamViewer } from '@/lib/auth/guards';
+import { canManage, requireInstitutionAccess } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
 import { loadBrainPage } from '@/lib/brain/page';
 import { loadAddedDetails, type AddedDetails } from '@/lib/details/load';
 import { loadLinkCounts } from '@/lib/leads/load';
-import { loadTeamInstitution, type LinkRow, type TeamInstitution, type WorkRow } from '@/lib/team/load';
+import { loadClientManagers, loadTeamInstitution, type LinkRow, type TeamInstitution, type WorkRow } from '@/lib/team/load';
 import { APP_URL, SITE_URL } from '@/lib/urls';
 import { checkFixTitle } from '@/report/things';
 import { TEAM_STATUS_LABELS, type TeamStatus } from '@/team/filters';
@@ -41,6 +41,7 @@ import {
   archiveLeadLinkAction,
   createLeadLinkAction,
   addNoteAction,
+  assignManagerAction,
   auditNowAction,
   endPlanAction,
   makeClientAction,
@@ -52,6 +53,7 @@ import {
   shareAuditAction,
   startPaidAction,
   stopLinkAction,
+  unassignManagerAction,
 } from './actions';
 import audit from '@/components/audit/audit.module.css';
 import { ANY_COURSE } from '@/leads/text';
@@ -63,18 +65,20 @@ const OWN_AUDITS_SHOWN = 6;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const viewer = await getViewer();
-  if (!viewer?.teamRole) return { title: 'Page not found' };
   const { id } = await params;
-  const institution = UUID.test(id) ? await loadTeamInstitution(id) : null;
+  if (!viewer?.teamRole || !UUID.test(id) || !(await canManage(viewer, id))) return { title: 'Page not found' };
+  const institution = await loadTeamInstitution(id);
   return { title: institution?.name ?? 'Institution' };
 }
 
 // One institution answers "Where do they stand, and what's their plan?": the score and pillars,
 // the plan (or, before they sign up, sharing the Audit), what to fix first, then the rest in tabs.
 export default async function TeamInstitutionPage({ params }: { params: Promise<{ id: string }> }) {
-  const viewer = await requireTeamViewer();
   const { id } = await params;
   if (!UUID.test(id)) notFound();
+  // The full team opens any institution; a Client manager, only the Clients assigned to them.
+  const viewer = await requireInstitutionAccess(id);
+  const full = isFullTeam(viewer.teamRole);
   const institution = await loadTeamInstitution(id);
   if (!institution) notFound();
   const [added, leadLinks] = institution.claimed ? await Promise.all([loadAddedDetails(institution.id), loadLinkCounts(institution.id)]) : [null, [] as LinkCount[]];
@@ -105,6 +109,7 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
   // Client Brain (spec section 26), or Start onboarding.
   const client = tier === 'client';
   const brain = institution.claimed ? await loadBrainPage(institution.id, true) : null;
+  const managers = client ? await loadClientManagers(institution.id) : null;
   const tabs: TabItem[] = [
     ...(client || institution.work.length
       ? [{ id: 'work', label: 'Work log', count: institution.work.length, content: <WorkTab institution={institution} client={client} now={now} /> }]
@@ -182,7 +187,7 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
   return (
     <div className={audit.page}>
       <PageHead
-        back={{ href: '/team', label: 'Institutions' }}
+        back={full ? { href: '/team', label: 'Institutions' } : { href: '/team/clients', label: 'Clients' }}
         title={institution.name}
         question="Where do they stand, and what's their plan?"
         caption={[
@@ -302,6 +307,39 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
           }
         >
           <ReviewFirstSetting name={institution.name} on={institution.reviewFirst} action={setReviewFirstAction.bind(null, institution.id)} />
+        </KpiCard>
+      ) : null}
+
+      {managers ? (
+        <KpiCard label="Looked after by">
+          {managers.assigned.length ? (
+            <ul className={styles.managerList}>
+              {managers.assigned.map((manager) => (
+                <li key={manager.userId} className={styles.managerRow}>
+                  <span>
+                    {manager.name}
+                    {manager.userId === viewer.userId ? <span className={styles.rowSub}> (you)</span> : null}
+                  </span>
+                  {full ? (
+                    <form action={unassignManagerAction.bind(null, institution.id, manager.userId)}>
+                      <Button type="submit" size="sm" variant="quiet">
+                        Remove
+                      </Button>
+                    </form>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <KpiNote>No Client manager yet. Admins and Team members look after them.</KpiNote>
+          )}
+          {full ? (
+            managers.others.length ? (
+              <AssignManagerForm action={assignManagerAction.bind(null, institution.id)} options={managers.others.map((manager) => ({ value: manager.userId, label: manager.name }))} />
+            ) : (
+              <p className={styles.formNote}>{managers.assigned.length ? 'Every Client manager looks after them already.' : 'An Admin adds Client managers on the Team page.'}</p>
+            )
+          ) : null}
         </KpiCard>
       ) : null}
 
