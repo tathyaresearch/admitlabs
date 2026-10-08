@@ -88,6 +88,7 @@ One Next.js app, two addresses. Which pages answer depends on the address a requ
 | `/work-with-us` (website) | Work with us: the enquiry form |
 | `/drishti` (website) | Product page |
 | `/enquire/[code]` (website) | The enquiry form a Client's tracking link opens (section 23). Not indexed |
+| `/talk/[code]` (website) | The Talk to us form (Work with us) a team tracking link opens; what it sends is tagged with the link's source (section 27). Not indexed |
 | `/signup` | Sign up: email, then a 6-digit code. A new email gets an account; one that has an account is simply signed in |
 | `/login` | Log in: the same email code, for an account that exists or someone invited. It never says whether an email has an account, and never creates one for anyone else |
 | `/onboarding` | Institution setup |
@@ -731,11 +732,15 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 | `institution_details` | institution_id, the details added by the institution (section 6), updated_at, updated_by. Never read by scoring |
 | `program_details` | program_id, institution_id, the details added for each program (section 6), updated_at, updated_by. Never read by scoring |
 | `scoring_config` | version, weights (jsonb), result_shares (jsonb), thresholds (jsonb), labels (jsonb), impact (jsonb), active (bool) |
-| `enquiries` | id, created_at, kind (work_with_us, ask_paid, continue_paid, fix_request), name, institution, role (founder_director, principal_dean, admissions, marketing, other), email, phone, program, message, institution_id, asked_by, fix_key, fix_title, handled_at, handled_by (website, section 22; dashboard requests, section 13) |
+| `enquiries` | id, created_at, kind (work_with_us, ask_paid, continue_paid, fix_request, ask_services, free_signup), name, institution, role (founder_director, principal_dean, admissions, marketing, other), email, phone, program, message, institution_id, asked_by, fix_key, fix_title, paid_months, handled_at, handled_by, lead_id, team_link_id (what came in: the website, section 22; dashboard requests, section 13; a new Free college; each joins its lead, section 27) |
+| `team_leads` | id, created_at, last_in_at, name, institution, institution_id, city, phone, email, wants, source, source_detail, link_id, status (new, contacted, call_booked, proposal_sent, won, lost), lost_reason (price, timing, chose_someone_else, no_reply, not_a_fit, other), lost_note, owner_id, next_follow_up, made_client_at, created_by, updated_at, updated_by (section 27) |
+| `team_lead_activity` | id, lead_id, at, by, kind (created, came_back, note, status, owner, follow_up, edited, made_client), body (a note), data |
+| `team_lead_links` | id, code, name, source (a social source), created_by, created_at, archived_at |
+| `team_lead_alerts` | id, lead_id, kind (new, returning), skip_user, created_at, sent_at. Server only |
 | `lead_links` | id, institution_id, program_id, code, name, used_on (instagram, youtube, facebook, website, whatsapp, other), created_by, created_at, archived_at |
 | `leads` | id, institution_id, link_id, program_id, name, phone, email, city, consent (the exact line shown), created_at |
 | `lead_settings` | institution_id, alert_emails, keep_months (6, 12 or 24), updated_at, updated_by |
-| `email_log` | id, kind (lead_alert, monthly_summary), institution_id, recipient, sent_at, sender (local test inbox), ok, error. Never the message itself |
+| `email_log` | id, kind (lead_alert, monthly_summary, audit_ready, team_lead_alert), institution_id, recipient, sent_at, sender (local test inbox), ok, error. Never the message itself |
 | `client_managers` | institution_id, user_id (a team user whose level is Client manager), assigned_by, assigned_at (section 27) |
 
 **Row Level Security:**
@@ -776,7 +781,8 @@ Each data source is a **provider** with one shared interface: it takes an instit
 | `keywords` | Keyword tool | Searches a month for programs and courses in the city, and the questions people search | A keyword data provider |
 | `ai_answers` | AI answers | AI answers | Asking ChatGPT, Gemini and Perplexity the student's question, each result kept |
 | `ai` | AI reader and writer | Reads pages for the website reader; writes each finding's short line, why it matters, the steps, the ready fix, effort and a finding's impact, "why it worked", the rivals' one line and lessons, the ideas with their hooks and key points, and the monthly summary; answers Ask the brain from a Client's Brain and fits Make these 3 to its brand (section 26) | Claude API |
-| `email` | Email sender | The alert for each new enquiry, the monthly summary | The local test inbox that local Supabase runs, for now; an email service later. WhatsApp later, as a second channel |
+| `email` | Email sender | The alert for each new enquiry, the monthly summary, the alert for each new or returning lead in the team's Enquiries | The local test inbox that local Supabase runs, for now; an email service later. WhatsApp later, as a second channel |
+| `lead_import` | Lead ads import | Leads into Enquiries from ads (section 27), tagged Facebook or Instagram, joining a lead with the same email or phone | Meta lead ads (lead forms on Facebook and Instagram ads). Shows "Not connected" in this build |
 | `manual` | Team entry | Rival ads | Team entry screen |
 
 **Rule: official access only.** No scraping tools that break a platform's terms.
@@ -920,7 +926,7 @@ The main AdmitLabs website, built in this app (section 4), in the **Spotlight** 
 - Motion is CSS only, with no animation library: the light and frame come in on load, sections fade and rise in, the moments and pictures play their details as they scroll into view, a dot travels the loop, and buttons, cards and links answer the pointer calmly. With reduced motion nothing moves and everything shows settled. Lighthouse near 90 on a phone.
 - Works on a phone, with no stretched cards.
 
-**Work with us:** the same style (light from above, the frame), the words on the left and the form on an ivory card. Name, institution, role (Founder or director, Principal or dean, Admissions, Marketing, Other), email and phone are required; the program to grow and a message are optional. Then "Thanks. We'll reply within one working day." Each enquiry is saved to `enquiries` (section 16) and shows in the team's Enquiries list (section 13). No emails are sent. A hidden field turns bots away, and one email can send at most 3 a day.
+**Work with us:** the same style (light from above, the frame), the words on the left and the form on an ivory card. Name, institution, role (Founder or director, Principal or dean, Admissions, Marketing, Other), email and phone are required; the program to grow and a message are optional. Then "Thanks. We'll reply within one working day." Each enquiry is saved to `enquiries` (section 16) and joins its lead in the team's Enquiries (section 27), which emails the team. The same form opens at `admitlabs.in/talk/<code>` from a team tracking link, tagged with its source. A hidden field turns bots away, and one email can send at most 3 a day.
 
 **Search and sharing:** every page has its own title, description and link preview image (1200 by 630: the headline in the hero's light and frame, with the proof line).
 
@@ -1055,4 +1061,15 @@ The team area (`/team`) for AdmitLabs: the menu, who can open what, and Enquirie
 - Admins and Team members assign a Client manager on the Client's page; a Client may have more than one. Only a Client can have one, and only to someone whose level is Client manager. Someone who stops being a Client manager stops looking after any Client.
 - A Client manager starts at Clients. Any page they may not open is "not found", as the team area is for everyone outside it.
 
-**Sample.** `manager@admitlabs.example` (Farhan Ali) is a Client manager who looks after Brightpath.
+**Enquiries: our own leads.** One list of every lead for AdmitLabs: people at colleges who may work with AdmitLabs, never students (students stay in a Client's Leads, section 23).
+
+- **A lead**: name, institution (and the college in Drishti, when there is one), city, phone, email, what they want, source, status, owner (someone on the team), next follow-up date, and notes. Every change is kept with who and when: it came in, it came back, notes, status, owner and follow-up changes, edits, made a Client.
+- **Status**: New, Contacted, Call booked, Proposal sent, Won, Lost. Lost needs a reason (Price, Timing, Chose someone else, No reply, Not a fit, Other) and may have a short note. Moving a lead on from New handles what came in from a dashboard, so the college can ask again later.
+- **Sources that come in on their own**: the website's Talk to us form (Work with us), a new Free college (its owner, the day it signs up), Let AdmitLabs fix this (with the fix asked for), the services card, Asked for Paid and Asked to renew (from the dashboard, with the period).
+- **Social sources**: Instagram, Facebook, LinkedIn, YouTube, WhatsApp, Referral, Event, Other. The team adds a lead by hand and picks one; a Client manager's are their own. The team's own tracking links per source: `admitlabs.in/talk/<code>` opens the Talk to us form, and what it sends is tagged with the link's source and name (an archived or unknown link still sends, untagged). Each link counts what came through it.
+- **Meta lead ads**: a provider slot (`lead_import`, section 17) for importing them later, shown as "Not connected". Nothing connects in this build.
+- **Never a duplicate**: the same email, or the same phone (the last 10 digits, so +91 98765 43210 and 9876543210 match), joins the lead there is: what it brought shows there, and History says it came back. Nothing the team wrote is replaced; only what was missing is filled in.
+- **Alerts**: each new lead emails its owner, or every Admin when it has none; a lead that comes back emails the owner (every Admin when it has none). Never the person who added it by hand. The database queues them and the server sends them straight away (`src/enquiries/jobs.ts`); a problem sending never loses the enquiry.
+- Who sees what: Admins and Team members every lead and every link; a Client manager the leads they own, and what came in for them. Only Admins and Team members give a lead an owner and make links. Every change goes through database functions that check the same.
+
+**Sample.** `manager@admitlabs.example` (Farhan Ali) is a Client manager who looks after Brightpath. Enquiries has 11 leads: Northbank, Silverline and Loomcraft from their Free sign ups (Northbank came back to ask about a fix and for Paid, Loomcraft through the services card, Silverline was won and made a Client), five from the Talk to us form (Rahul Mehta through the Instagram bio link; Sunita Borah came back through the EduConnect fair link), Eastgate's fix request, and two added by hand (a referral, and Fatima Khan from LinkedIn, Farhan's). Statuses from New to Won, one Lost for Price. The sample emails nobody.

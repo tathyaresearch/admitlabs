@@ -2,9 +2,10 @@
 // src/proxy.ts applies the answer.
 //
 //   Website address (admitlabs.in):  the website, its pages served from /site inside the app
-//                                    (the Leads enquiry forms at /enquire too); /drishti as it is;
+//                                    (the Leads enquiry forms at /enquire, the team's tracking links
+//                                    at /talk); /drishti as it is;
 //                                    dashboard paths move to the dashboard.
-//   Dashboard address (app.admitlabs.in): the dashboard as it is; /drishti, /enquire and /site
+//   Dashboard address (app.admitlabs.in): the dashboard as it is; /drishti, /enquire, /talk and /site
 //                                    move to the website.
 //   www on the website address:      the same page without www.
 //   Any other address (a preview):   everything as it is, so /site and /drishti can be looked at.
@@ -90,7 +91,7 @@ export function routeFor(request: Request, origins: { site: string; app: string 
   }
 
   if (host === app.host) {
-    if (under(pathname, '/drishti') || under(pathname, '/enquire')) return { kind: 'redirect', url: `${site.origin}${pathname}${search}`, permanent: false };
+    if (under(pathname, '/drishti') || under(pathname, '/enquire') || under(pathname, '/talk')) return { kind: 'redirect', url: `${site.origin}${pathname}${search}`, permanent: false };
     if (under(pathname, SITE_PREFIX)) return { kind: 'redirect', url: `${site.origin}${pathname.slice(SITE_PREFIX.length) || '/'}${search}`, permanent: false };
   }
 

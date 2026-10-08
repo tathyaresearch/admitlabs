@@ -11,6 +11,9 @@ import { parsePaidMonths, type PaidMonths } from '@/domain/tiers';
 import { CHECK_KEYS, type CheckKey } from '@/domain/types';
 import { getViewer } from '@/lib/auth/viewer';
 import { createClient } from '@/lib/supabase/server';
+import { alertAfterEnquiry, sendTeamLeadAlerts } from '@/enquiries/jobs';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { APP_URL } from '@/lib/urls';
 
 export interface MarkInput {
   /** A check, which the next Audit checks. */
@@ -70,8 +73,9 @@ export interface AskResult {
 
 /**
  * Subscribe now, or Renew now (C2), for the period picked (Monthly or 3 months): the owner's
- * request lands in the team's Enquiries, and the team writes back to complete payment. ask_for_paid() checks the owner and the plan again and
- * never sends a second open request. No online payment yet, and no email.
+ * request lands in the team's Enquiries as a lead, and the team writes back to complete payment.
+ * ask_for_paid() checks the owner and the plan again and never sends a second open request. No
+ * online payment yet; the team gets an email.
  */
 export async function askForPaidAction(months: PaidMonths): Promise<AskResult> {
   const viewer = await getViewer();
@@ -86,6 +90,8 @@ export async function askForPaidAction(months: PaidMonths): Promise<AskResult> {
     if (error.message.includes('nothing_to_ask')) return { ok: false, askedAt: null, error: 'There is nothing to subscribe to or renew on your plan right now.' };
     return { ok: false, askedAt: null, error: 'That did not send. Try again.' };
   }
+  // The team hears of it: a new lead, or one that came back (spec section 27).
+  await alertAfterEnquiry(() => sendTeamLeadAlerts(createAdminClient(), { appUrl: APP_URL }));
   revalidatePath('/', 'layout');
   return { ok: true, askedAt: data, error: null };
 }
@@ -93,7 +99,7 @@ export async function askForPaidAction(months: PaidMonths): Promise<AskResult> {
 /**
  * Talk to AdmitLabs, from the sidebar's services card (Free and Paid): the owner or a member asks
  * the team about its services. ask_admitlabs_services() checks the plan again and keeps one open
- * request per institution. No email.
+ * request per institution. The team gets an email.
  */
 export async function askServicesAction(): Promise<AskResult> {
   const viewer = await getViewer();
@@ -104,6 +110,8 @@ export async function askServicesAction(): Promise<AskResult> {
     if (error.message.includes('already_client')) return { ok: false, askedAt: null, error: 'You already work with AdmitLabs: write to your team any time.' };
     return { ok: false, askedAt: null, error: 'That did not send. Try again.' };
   }
+  // The team hears of it: a new lead, or one that came back (spec section 27).
+  await alertAfterEnquiry(() => sendTeamLeadAlerts(createAdminClient(), { appUrl: APP_URL }));
   revalidatePath('/', 'layout');
   return { ok: true, askedAt: data, error: null };
 }
@@ -118,7 +126,8 @@ export async function markFixAction(input: { fixId: string; done: boolean }): Pr
 /**
  * The owner asks AdmitLabs to fix one thing (spec 7.7). It lands in the team's Enquiries with the
  * institution and the fix; ask_admitlabs_fix() checks the owner, the plan and the latest approved
- * Audit again, and never sends a second open request for the same fix. No price, no email.
+ * Audit again, and never sends a second open request for the same fix. No price; the team gets an
+ * email.
  */
 export async function askFixAction(input: { fixId: string; title: string }): Promise<AskResult> {
   const viewer = await getViewer();
@@ -135,6 +144,8 @@ export async function askFixAction(input: { fixId: string; title: string }): Pro
     if (error.message.includes('team_works_on_it')) return { ok: false, askedAt: null, error: 'Your AdmitLabs team already works on this.' };
     return { ok: false, askedAt: null, error: 'That did not send. Try again.' };
   }
+  // The team hears of it: a new lead, or one that came back (spec section 27).
+  await alertAfterEnquiry(() => sendTeamLeadAlerts(createAdminClient(), { appUrl: APP_URL }));
   revalidatePath('/', 'layout');
   return { ok: true, askedAt: data, error: null };
 }

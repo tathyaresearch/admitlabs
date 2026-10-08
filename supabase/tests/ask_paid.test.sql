@@ -114,12 +114,13 @@ select is((select count(*)::int from public.enquiries), 0, 'An institution never
 reset role;
 
 select is(
-  (select count(*)::int from public.enquiries where institution_id = '28000000-0000-4000-8000-00000000000f'),
+  -- (A new Free college also comes in as an enquiry of its own, its sign up: section 27.)
+  (select count(*)::int from public.enquiries where institution_id = '28000000-0000-4000-8000-00000000000f' and kind in ('ask_paid', 'continue_paid')),
   1,
   'One open request, however many clicks'
 );
 select is(
-  (select email from public.enquiries where institution_id = '28000000-0000-4000-8000-00000000000f'),
+  (select email from public.enquiries where institution_id = '28000000-0000-4000-8000-00000000000f' and kind = 'ask_paid'),
   'owner-f@ask.test',
   'It carries the owner''s email, for the team to write back'
 );

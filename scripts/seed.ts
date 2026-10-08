@@ -55,6 +55,7 @@ import {
 } from '../src/sample/index.ts';
 import { SAMPLE_BRAIN_NOTES, SAMPLE_BRAINS, SAMPLE_NAMES, SAMPLE_NEW_CLIENT_WORK, SAMPLE_NEW_CLIENTS } from '../src/sample/brain.ts';
 import { seedBrain } from './lib/brain-seed.ts';
+import { seedEnquiries } from './lib/enquiries-seed.ts';
 import { serviceClient } from './lib/db.ts';
 import { fail } from './lib/local.ts';
 
@@ -549,6 +550,9 @@ async function main(): Promise<void> {
     })),
   );
 
+  // Enquiries, AdmitLabs' own leads (spec section 27): links, what came in, what the team did.
+  const enquiries = await seedEnquiries(db, requireUser);
+
   // Older notifications have been read. New: the latest "Audit ready", and the last 10 days of
   // rival moves and demand spikes.
   const { data: notices, error: noticeError } = await db.from('notifications').select('id, institution_id, kind, created_at').order('created_at', { ascending: false });
@@ -583,6 +587,7 @@ async function main(): Promise<void> {
   console.log(`  Rival moves ${moveCount}, best posts ${contentCount ?? 0}, ads ${SAMPLE_ADS.length}, Rivals 3 things to do ${actionCount} (April to September)`);
   console.log(`  Demand pulls ${needed.length * DEMAND_MONTHS.length} with ${demandItems} grouped items, ${spikeCount} spike alerts sent`);
   console.log(`  Client Brains: ${brainCounts.join('; ')}`);
+  console.log(`  Enquiries, the team's own leads: ${enquiries.leads}, from ${enquiries.links} tracking links too`);
   console.log(`  Make these 3 picked ${pickCount} times (${PICK_MONTHS.join(' and ')}), ${SAMPLE_MADE.length} marked as made`);
   const live = reportPages.filter((report) => report.month === LIVE_REPORT_MONTH);
   console.log(`  Monthly summaries and reports ${reportPages.length}, ${REPORT_MONTHS[0]} to ${LIVE_REPORT_MONTH} (${reportPages.map((report) => `${report.month} ${report.pages} pages`).join(', ')})`);

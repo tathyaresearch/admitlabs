@@ -47,6 +47,9 @@ describe('routing by address', () => {
     // A Client's enquiry form lives on the website's address.
     assert.deepEqual(at('app.admitlabs.in', '/enquire/bp9d3r8w'), { kind: 'redirect', url: 'https://admitlabs.in/enquire/bp9d3r8w', permanent: false });
     assert.deepEqual(at('admitlabs.in', '/enquire/bp9d3r8w'), { kind: 'site', path: '/site/enquire/bp9d3r8w' });
+    // The team's own tracking links open the Talk to us form on the website (spec section 27).
+    assert.deepEqual(at('app.admitlabs.in', '/talk/a1b2c3d4'), { kind: 'redirect', url: 'https://admitlabs.in/talk/a1b2c3d4', permanent: false });
+    assert.deepEqual(at('admitlabs.in', '/talk/a1b2c3d4'), { kind: 'site', path: '/site/talk/a1b2c3d4' });
     assert.deepEqual(at('admitlabs.in', '/leads'), { kind: 'redirect', url: 'https://app.admitlabs.in/leads', permanent: false });
     assert.deepEqual(at('app.admitlabs.in', '/site'), { kind: 'redirect', url: 'https://admitlabs.in/', permanent: false });
     assert.deepEqual(at('app.admitlabs.in', '/site/work-with-us?a=1'), { kind: 'redirect', url: 'https://admitlabs.in/work-with-us?a=1', permanent: false });
@@ -134,6 +137,7 @@ describe('routing while the dashboard is closed', () => {
     assert.deepEqual(closed('admitlabs.in', '/site/to-dashboard/login'), { kind: 'site', path: '/site/site/to-dashboard/login' });
     // The enquiry forms too: the page says not found while Drishti is closed.
     assert.deepEqual(closed('admitlabs.in', '/enquire/bp9d3r8w'), { kind: 'site', path: '/site/enquire/bp9d3r8w' });
+    assert.deepEqual(closed('admitlabs.in', '/talk/a1b2c3d4'), { kind: 'site', path: '/site/talk/a1b2c3d4' });
     assert.deepEqual(closed('admitlabs-abc123.vercel.app', '/team'), { kind: 'site', path: '/site/team' });
   });
 

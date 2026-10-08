@@ -1185,12 +1185,14 @@ export type Database = {
           institution: string
           institution_id: string | null
           kind: Database["public"]["Enums"]["enquiry_kind"]
+          lead_id: string | null
           message: string | null
           name: string | null
           paid_months: number | null
           phone: string | null
           program: string | null
           role: Database["public"]["Enums"]["enquiry_role"] | null
+          team_link_id: string | null
         }
         Insert: {
           asked_by?: string | null
@@ -1204,12 +1206,14 @@ export type Database = {
           institution: string
           institution_id?: string | null
           kind?: Database["public"]["Enums"]["enquiry_kind"]
+          lead_id?: string | null
           message?: string | null
           name?: string | null
           paid_months?: number | null
           phone?: string | null
           program?: string | null
           role?: Database["public"]["Enums"]["enquiry_role"] | null
+          team_link_id?: string | null
         }
         Update: {
           asked_by?: string | null
@@ -1223,12 +1227,14 @@ export type Database = {
           institution?: string
           institution_id?: string | null
           kind?: Database["public"]["Enums"]["enquiry_kind"]
+          lead_id?: string | null
           message?: string | null
           name?: string | null
           paid_months?: number | null
           phone?: string | null
           program?: string | null
           role?: Database["public"]["Enums"]["enquiry_role"] | null
+          team_link_id?: string | null
         }
         Relationships: [
           {
@@ -1243,6 +1249,20 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enquiries_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "team_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enquiries_team_link_id_fkey"
+            columns: ["team_link_id"]
+            isOneToOne: false
+            referencedRelation: "team_lead_links"
             referencedColumns: ["id"]
           },
         ]
@@ -2506,6 +2526,219 @@ export type Database = {
         }
         Relationships: []
       }
+      team_lead_activity: {
+        Row: {
+          at: string
+          body: string | null
+          by: string | null
+          data: Json
+          id: string
+          kind: string
+          lead_id: string
+        }
+        Insert: {
+          at?: string
+          body?: string | null
+          by?: string | null
+          data?: Json
+          id?: string
+          kind: string
+          lead_id: string
+        }
+        Update: {
+          at?: string
+          body?: string | null
+          by?: string | null
+          data?: Json
+          id?: string
+          kind?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_lead_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "team_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_lead_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          lead_id: string
+          sent_at: string | null
+          skip_user: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          lead_id: string
+          sent_at?: string | null
+          skip_user?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string
+          sent_at?: string | null
+          skip_user?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_lead_alerts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "team_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_lead_links: {
+        Row: {
+          archived_at: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          source: Database["public"]["Enums"]["team_lead_source"]
+        }
+        Insert: {
+          archived_at?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          source: Database["public"]["Enums"]["team_lead_source"]
+        }
+        Update: {
+          archived_at?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          source?: Database["public"]["Enums"]["team_lead_source"]
+        }
+        Relationships: []
+      }
+      team_leads: {
+        Row: {
+          city: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          institution: string | null
+          institution_id: string | null
+          last_in_at: string
+          link_id: string | null
+          lost_note: string | null
+          lost_reason:
+            | Database["public"]["Enums"]["team_lead_lost_reason"]
+            | null
+          made_client_at: string | null
+          name: string | null
+          next_follow_up: string | null
+          owner_id: string | null
+          phone: string | null
+          source: Database["public"]["Enums"]["team_lead_source"]
+          source_detail: string | null
+          status: Database["public"]["Enums"]["team_lead_status"]
+          updated_at: string
+          updated_by: string | null
+          wants: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          institution?: string | null
+          institution_id?: string | null
+          last_in_at?: string
+          link_id?: string | null
+          lost_note?: string | null
+          lost_reason?:
+            | Database["public"]["Enums"]["team_lead_lost_reason"]
+            | null
+          made_client_at?: string | null
+          name?: string | null
+          next_follow_up?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          source: Database["public"]["Enums"]["team_lead_source"]
+          source_detail?: string | null
+          status?: Database["public"]["Enums"]["team_lead_status"]
+          updated_at?: string
+          updated_by?: string | null
+          wants?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          institution?: string | null
+          institution_id?: string | null
+          last_in_at?: string
+          link_id?: string | null
+          lost_note?: string | null
+          lost_reason?:
+            | Database["public"]["Enums"]["team_lead_lost_reason"]
+            | null
+          made_client_at?: string | null
+          name?: string | null
+          next_follow_up?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          source?: Database["public"]["Enums"]["team_lead_source"]
+          source_detail?: string | null
+          status?: Database["public"]["Enums"]["team_lead_status"]
+          updated_at?: string
+          updated_by?: string | null
+          wants?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_leads_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_leads_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_leads_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "team_lead_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_leads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "team_users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       team_users: {
         Row: {
           created_at: string
@@ -2637,6 +2870,22 @@ export type Database = {
           reused: boolean
         }[]
       }
+      add_team_lead: {
+        Args: {
+          p_fields: Json
+          p_note?: string
+          p_owner?: string
+          p_source: Database["public"]["Enums"]["team_lead_source"]
+        }
+        Returns: {
+          joined: boolean
+          lead_id: string
+        }[]
+      }
+      add_team_lead_note: {
+        Args: { p_body: string; p_lead: string }
+        Returns: undefined
+      }
       add_team_user: {
         Args: {
           p_email: string
@@ -2667,6 +2916,7 @@ export type Database = {
       }
       archive_lead_link: { Args: { p_link: string }; Returns: undefined }
       archive_program: { Args: { p_program: string }; Returns: undefined }
+      archive_team_lead_link: { Args: { p_link: string }; Returns: undefined }
       ask_admitlabs_fix: {
         Args: { p_fix_key: string; p_fix_title: string; p_institution: string }
         Returns: string
@@ -2704,6 +2954,23 @@ export type Database = {
         Args: { p_fact: string; p_institution: string }
         Returns: undefined
       }
+      claim_team_lead_alerts: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          kind: string
+          lead_id: string
+          sent_at: string | null
+          skip_user: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "team_lead_alerts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       close_found_item: {
         Args: { p_item: string; p_outcome: string; p_values?: Json }
         Returns: undefined
@@ -2725,6 +2992,16 @@ export type Database = {
       create_share_link: {
         Args: { p_audit: string; p_days: number }
         Returns: string
+      }
+      create_team_lead_link: {
+        Args: {
+          p_name: string
+          p_source: Database["public"]["Enums"]["team_lead_source"]
+        }
+        Returns: {
+          code: string
+          id: string
+        }[]
       }
       delete_leads: {
         Args: { p_contact?: string; p_institution: string; p_lead?: string }
@@ -2943,6 +3220,10 @@ export type Database = {
         Args: { p_added: Json; p_picked: string[] }
         Returns: string[]
       }
+      save_team_lead: {
+        Args: { p_fields: Json; p_lead: string }
+        Returns: undefined
+      }
       set_brain_step: {
         Args: {
           p_done: boolean
@@ -2974,6 +3255,19 @@ export type Database = {
         Args: { p_institution: string; p_on: boolean; p_user: string }
         Returns: undefined
       }
+      set_team_lead_owner: {
+        Args: { p_lead: string; p_owner: string }
+        Returns: undefined
+      }
+      set_team_lead_status: {
+        Args: {
+          p_lead: string
+          p_note?: string
+          p_reason?: Database["public"]["Enums"]["team_lead_lost_reason"]
+          p_status: Database["public"]["Enums"]["team_lead_status"]
+        }
+        Returns: undefined
+      }
       set_team_role: {
         Args: {
           p_role: Database["public"]["Enums"]["team_role"]
@@ -2987,6 +3281,7 @@ export type Database = {
         Args: {
           p_email: string
           p_institution: string
+          p_link?: string
           p_message: string
           p_name: string
           p_phone: string
@@ -3007,6 +3302,19 @@ export type Database = {
         Returns: string
       }
       summary_recipients: { Args: { p_institution: string }; Returns: string[] }
+      team_lead_alert_recipients: {
+        Args: { p_lead: string; p_skip?: string }
+        Returns: string[]
+      }
+      team_lead_link_counts: {
+        Args: { p_now?: string }
+        Returns: {
+          link_id: string
+          this_month: number
+          total: number
+        }[]
+      }
+      team_link_live: { Args: { p_code: string }; Returns: boolean }
       team_people: {
         Args: never
         Returns: {
@@ -3119,13 +3427,18 @@ export type Database = {
       demand_scope: "city" | "state" | "india"
       difficulty: "easy" | "medium" | "hard"
       edit_what: "result" | "line" | "finding_removed" | "summary_line"
-      email_kind: "lead_alert" | "monthly_summary" | "audit_ready"
+      email_kind:
+        | "lead_alert"
+        | "monthly_summary"
+        | "audit_ready"
+        | "team_lead_alert"
       enquiry_kind:
         | "work_with_us"
         | "ask_paid"
         | "continue_paid"
         | "fix_request"
         | "ask_services"
+        | "free_signup"
       enquiry_role:
         | "founder_director"
         | "principal_dean"
@@ -3170,6 +3483,35 @@ export type Database = {
         | "started_ads"
         | "reviews_jump"
       sentiment: "positive" | "negative"
+      team_lead_lost_reason:
+        | "price"
+        | "timing"
+        | "chose_someone_else"
+        | "no_reply"
+        | "not_a_fit"
+        | "other"
+      team_lead_source:
+        | "website"
+        | "free_signup"
+        | "fix_request"
+        | "services"
+        | "ask_paid"
+        | "continue_paid"
+        | "instagram"
+        | "facebook"
+        | "linkedin"
+        | "youtube"
+        | "whatsapp"
+        | "referral"
+        | "event"
+        | "other"
+      team_lead_status:
+        | "new"
+        | "contacted"
+        | "call_booked"
+        | "proposal_sent"
+        | "won"
+        | "lost"
       team_role: "team" | "admin" | "client_manager"
       team_work_kind: "done" | "next"
       tier: "free" | "paid" | "client"
@@ -3376,13 +3718,19 @@ export const Constants = {
       demand_scope: ["city", "state", "india"],
       difficulty: ["easy", "medium", "hard"],
       edit_what: ["result", "line", "finding_removed", "summary_line"],
-      email_kind: ["lead_alert", "monthly_summary", "audit_ready"],
+      email_kind: [
+        "lead_alert",
+        "monthly_summary",
+        "audit_ready",
+        "team_lead_alert",
+      ],
       enquiry_kind: [
         "work_with_us",
         "ask_paid",
         "continue_paid",
         "fix_request",
         "ask_services",
+        "free_signup",
       ],
       enquiry_role: [
         "founder_director",
@@ -3433,6 +3781,38 @@ export const Constants = {
         "reviews_jump",
       ],
       sentiment: ["positive", "negative"],
+      team_lead_lost_reason: [
+        "price",
+        "timing",
+        "chose_someone_else",
+        "no_reply",
+        "not_a_fit",
+        "other",
+      ],
+      team_lead_source: [
+        "website",
+        "free_signup",
+        "fix_request",
+        "services",
+        "ask_paid",
+        "continue_paid",
+        "instagram",
+        "facebook",
+        "linkedin",
+        "youtube",
+        "whatsapp",
+        "referral",
+        "event",
+        "other",
+      ],
+      team_lead_status: [
+        "new",
+        "contacted",
+        "call_booked",
+        "proposal_sent",
+        "won",
+        "lost",
+      ],
       team_role: ["team", "admin", "client_manager"],
       team_work_kind: ["done", "next"],
       tier: ["free", "paid", "client"],

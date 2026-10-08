@@ -14,6 +14,8 @@ import { pullDemandFirst } from '@/lib/demand/first';
 import { friendlyError } from '@/lib/institution/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { alertAfterEnquiry, sendTeamLeadAlerts } from '@/enquiries/jobs';
+import { APP_URL } from '@/lib/urls';
 
 const FIELDS = ['name', 'type', 'city', 'state', 'website', 'instagram', 'youtube', 'facebook', 'linkedin'] as const;
 
@@ -68,6 +70,8 @@ export async function onboardAction(previous: OnboardingState, formData: FormDat
   }
 
   await pullDemandFirst(institutionId);
+  // A new Free college is a lead for the team (spec section 27): the alert goes now.
+  await alertAfterEnquiry(() => sendTeamLeadAlerts(createAdminClient(), { appUrl: APP_URL }));
 
   // A claimed record may already have a Paid or Client plan (set by the team). Then there is no
   // Free program to pick, and the first Audit runs straight away.

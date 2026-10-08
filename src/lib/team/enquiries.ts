@@ -73,6 +73,7 @@ export async function loadEnquiries(): Promise<EnquiryRow[]> {
       return [{ ...base, kind: 'fix_request', institutionId: row.institution_id, fixKey: row.fix_key, fixTitle: row.fix_title, place }];
     }
     if (row.kind === 'ask_services') return row.institution_id ? [{ ...base, kind: 'ask_services', institutionId: row.institution_id }] : [];
+    if (row.kind === 'free_signup') return [];
     if (row.kind !== 'work_with_us') return row.institution_id ? [{ ...base, kind: row.kind, institutionId: row.institution_id, paidMonths: parsePaidMonths(row.paid_months) }] : [];
     // The database requires these for the form (the enquiries_form constraint).
     if (!row.name || !row.role || !row.phone) return [];

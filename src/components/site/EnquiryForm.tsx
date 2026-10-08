@@ -21,7 +21,8 @@ const IDLE: EnquiryState = { status: 'idle', errors: {}, message: null, values: 
 const ROLE_OPTIONS = ENQUIRY_ROLES.map((role) => ({ value: role, label: ENQUIRY_ROLE_LABELS[role] }));
 const F = ENQUIRY.fields;
 
-export function EnquiryForm() {
+/** `link`: a team tracking link's code (admitlabs.in/talk/<code>), sent with the form so the enquiry is tagged with its source. */
+export function EnquiryForm({ link }: { link?: string } = {}) {
   const [state, submit, pending] = useActionState(submitEnquiryAction, IDLE);
   const form = useRef<HTMLFormElement>(null);
 
@@ -57,6 +58,7 @@ export function EnquiryForm() {
   return (
     // Keyed by the reply, so the fields show what came back after React resets the form.
     <form key={state.attempt} ref={form} action={submit} className={styles.form} noValidate>
+      {link ? <input type="hidden" name="link" value={link} /> : null}
       {state.message ? (
         <div role="alert" tabIndex={-1}>
           <Notice icon="info" title={state.message} />

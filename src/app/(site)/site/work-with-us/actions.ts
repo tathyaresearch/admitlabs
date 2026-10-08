@@ -1,11 +1,14 @@
 'use server';
 
-// The "Work with us" form, sent: checked here (src/site/enquiry.ts), then added through the one
-// database function visitors may call, which checks again and turns away a fourth enquiry from
-// one email in a day. Nothing is emailed; the team reads enquiries in the team area.
+// The "Work with us" form (the Talk to us form, at /talk/<code> too), sent: checked here
+// (src/site/enquiry.ts), then added through the one database function visitors may call, which
+// checks again and turns away a fourth enquiry from one email in a day. It joins its lead in the
+// team's Enquiries, tagged with the tracking link it came through, and the team gets an email.
 
+import { alertAfterEnquiry, sendTeamLeadAlerts } from '@/enquiries/jobs';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-import { APP_OPEN } from '@/lib/urls';
+import { APP_OPEN, APP_URL } from '@/lib/urls';
 import { ENQUIRY } from '@/site/content';
 import { parseEnquiry, TRAP_FIELD, type EnquiryErrors, type EnquiryField } from '@/site/enquiry';
 
@@ -42,7 +45,14 @@ export async function submitEnquiryAction(previous: EnquiryState, formData: Form
     p_phone: enquiry.phone,
     p_program: enquiry.program ?? '',
     p_message: enquiry.message ?? '',
+    // A team tracking link (admitlabs.in/talk/<code>): the database tags it only while the link is live.
+    p_link: linkCode(formData.get('link')),
   });
   if (error) return { status: 'error', errors: {}, message: error.message.includes('enquiry_limit') ? ENQUIRY.limit : ENQUIRY.failed, values, attempt };
+  await alertAfterEnquiry(() => sendTeamLeadAlerts(createAdminClient(), { appUrl: APP_URL }));
   return { status: 'sent', errors: {}, message: null, values: {}, attempt };
+}
+
+function linkCode(value: FormDataEntryValue | null): string | undefined {
+  return typeof value === 'string' && /^[a-z0-9]{6,16}$/.test(value) ? value : undefined;
 }

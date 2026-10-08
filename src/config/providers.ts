@@ -19,12 +19,13 @@ export const PROVIDER_KEYS = [
   'ai_answers',
   'ai',
   'email',
+  'lead_import',
   'manual',
 ] as const;
 export type ProviderKey = (typeof PROVIDER_KEYS)[number];
 
-/** Providers that return signals. The AI reader and writer, and the email sender, have their own small interfaces. */
-export type SignalProviderKey = Exclude<ProviderKey, 'ai' | 'email'>;
+/** Providers that return signals. The AI reader and writer, the email sender and the lead ads importer have their own small interfaces. */
+export type SignalProviderKey = Exclude<ProviderKey, 'ai' | 'email' | 'lead_import'>;
 
 export type ProviderMode = 'mock' | 'real';
 
@@ -43,6 +44,7 @@ export const PROVIDER_MODES: Readonly<Record<ProviderKey, ProviderMode>> = {
   ai_answers: 'mock',
   ai: 'mock',
   email: 'mock',
+  lead_import: 'mock',
   manual: 'mock',
 };
 
@@ -63,7 +65,8 @@ export type ProviderFeed =
   | 'things_to_do'
   | 'monthly_summary'
   | 'audit_ready_email'
-  | 'lead_alert';
+  | 'lead_alert'
+  | 'team_lead';
 
 /** The slot each provider fills, what it feeds, and what it will connect to later (spec section 17). */
 export const PROVIDER_FEEDS: Readonly<Record<ProviderKey, { slot: string; feeds: readonly ProviderFeed[]; realSource: string }>> = {
@@ -92,6 +95,7 @@ export const PROVIDER_FEEDS: Readonly<Record<ProviderKey, { slot: string; feeds:
     realSource: 'Claude API',
   },
   email: { slot: 'Email sender', feeds: ['lead_alert', 'monthly_summary', 'audit_ready_email'], realSource: 'An email service (WhatsApp later, as a second channel)' },
+  lead_import: { slot: 'Lead ads import', feeds: ['team_lead'], realSource: 'Meta lead ads (lead forms on Facebook and Instagram ads), into Enquiries' },
   manual: { slot: 'Team entry', feeds: ['rival_ad', 'rival_move'], realSource: 'Team entry screen' },
 };
 

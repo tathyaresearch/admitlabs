@@ -240,11 +240,12 @@ npm run report -- --institution eastgate-university --month 2026-08 --preview --
 
 ## Emails
 
-Drishti sends three emails, each to the local test inbox in this build (Mailpit, `http://127.0.0.1:55324`), one message per person, each logged in `email_log` (who, when and whether it went, never the message):
+Drishti sends four emails, each to the local test inbox in this build (Mailpit, `http://127.0.0.1:55324`), one message per person, each logged in `email_log` (who, when and whether it went, never the message):
 
 - **The monthly summary** (Paid and Client): the summary above, with Open Drishti and the month's PDF, to the owner and the members who keep it on (`src/report/summary-email.ts`).
 - **The Audit ready email** (Free): when a free Audit is approved (by the team, or as it is made when it is sent automatically): the three words, the top 3 fixes each with Let AdmitLabs fix this, See your Audit (or See what changed) and Subscribe now with both prices (₹9,999 + GST per month, or ₹24,999 + GST for 3 months), to the owner and the members who keep it on (`src/audit/ready-email.ts`, `ready-jobs.ts`). Each button opens the dashboard, where the owner asks with one click.
 - **A new enquiry** (Clients, see Leads): never waits for a review.
+- **A new or returning lead** (the team's Enquiries, spec section 27): to the lead's owner, or every Admin when it has none; never to the person who added it by hand (`src/enquiries/alert.ts`, `jobs.ts`). Sending the Talk to us form at `http://admitlabs.localhost:3000/talk/admitig1` (the sample Instagram bio link) makes one: a new lead tagged Instagram, and its email to `admin@admitlabs.example`.
 
 Both the summary and the Audit ready email end with how to turn them off: Settings, Notifications. In the sample, Brightpath's September summary and Northbank's September Audit ready email are in the inbox after `npm run db:reset`; approving Eastgate's summary or Loomcraft's first Audit in To review sends theirs.
 
