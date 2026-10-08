@@ -936,3 +936,265 @@ a.count:hover {
   min-height: 2.25rem;
   font: var(--type-strong);
 }
+
+/* Enquiries (spec section 27) --------------------------------------------------------------------- */
+
+/* Add a lead by hand: a quiet line that opens the form. */
+.addLead {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+/* Closed, only the line shows: no gap under it for the hidden form. */
+.addLead:not([open]) {
+  gap: 0;
+}
+
+.addLeadSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  min-height: var(--control-height);
+  font: var(--type-label);
+  cursor: pointer;
+  list-style: none;
+}
+
+.addLeadSummary::-webkit-details-marker {
+  display: none;
+}
+
+.leadForm {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.leadFields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+@media (min-width: 40rem) {
+  .leadFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 72rem) {
+  .leadFields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* The list's filters: search across, then source, owner, due and Find. */
+.leadFilters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.leadFilters > :first-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 60rem) {
+  .leadFilters {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) auto auto;
+  }
+
+  .leadFilters > :first-child {
+    grid-column: auto;
+  }
+}
+
+.dueToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  font: var(--type-small);
+  white-space: nowrap;
+}
+
+.dueToggle input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--text);
+}
+
+.leadWants {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font: var(--type-small);
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+
+.leadPhoneOnly {
+  font: var(--type-caption);
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+
+@media (min-width: 60rem) {
+  .listHead.leadHead,
+  .listRow.leadRow {
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 0.8fr) 1rem;
+  }
+
+  .leadPhoneOnly {
+    display: none;
+  }
+}
+
+.sectionTitle {
+  font: var(--type-card);
+  letter-spacing: var(--tracking-section);
+}
+
+.linkList {
+  display: grid;
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  list-style: none;
+  background: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+
+.linkRow {
+  display: grid;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) 0;
+}
+
+.linkRow + .linkRow {
+  border-top: 1px solid var(--line-raised);
+}
+
+@media (min-width: 48rem) {
+  .linkRow {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+  }
+}
+
+.linkCounts {
+  font: var(--type-small);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Meta lead ads: a slot for later, not connected. */
+.importCard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px dashed var(--line-medium);
+  border-radius: var(--card-radius);
+}
+
+.importCard > :first-child {
+  flex: 1 1 18rem;
+}
+
+.importState {
+  padding: 0.25em 0.6em;
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-xs);
+  font: var(--type-caption-strong);
+  white-space: nowrap;
+}
+
+/* One lead: where it stands and how to reach them, then what came in, notes and History. */
+.leadContact {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  font: var(--type-small);
+}
+
+.leadContact div {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.leadContact dt {
+  color: var(--text-muted);
+}
+
+.leadContact dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.cameIn,
+.history {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cameInItem,
+.historyItem {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+}
+
+.cameInItem + .cameInItem,
+.historyItem + .historyItem {
+  border-top: 1px solid var(--line-raised);
+}
+
+.cameInWhat {
+  font: var(--type-strong);
+}
+
+.historyText {
+  font: var(--type-small);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.historyNote {
+  font: var(--type-small);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--text);
+}
+
+.linkResults {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linkResult {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.linkResult + .linkResult {
+  border-top: 1px solid var(--line-raised);
+}

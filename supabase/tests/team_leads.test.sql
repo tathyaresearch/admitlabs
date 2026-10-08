@@ -8,7 +8,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(36);
+select plan(46);
 
 insert into public.cities (name, state) values ('Leadton', 'Lead State') on conflict do nothing;
 insert into auth.users (id, email, aud, role) values
@@ -157,6 +157,40 @@ select is(
   'one with an owner emails the owner'
 );
 select is((select count(*)::int from public.claim_team_lead_alerts()) > 0 and (select count(*) from public.claim_team_lead_alerts()) = 0, true, 'Each waiting alert is taken once');
+
+-- Make Client (20261024120000_make_client.sql) -------------------------------------------------------
+select set_config('request.jwt.claims', '{"sub":"17000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+set local role authenticated;
+select throws_ok(
+  $$select public.make_client_from_lead((select id from public.team_leads where email = 'owner-o@leads.test'))$$,
+  'P0001', 'not_won', 'Only a Won lead becomes a Client'
+);
+select lives_ok($$select public.set_team_lead_status((select id from public.team_leads where email = 'owner-o@leads.test'), 'won')$$, 'The college is won');
+select lives_ok($$select public.set_team_lead_owner((select id from public.team_leads where email = 'owner-o@leads.test'), '17000000-0000-4000-8000-000000000003')$$, 'and its lead given to the Client manager');
+reset role;
+select set_config('request.jwt.claims', '{"sub":"17000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+set local role authenticated;
+select throws_ok(
+  $$select public.make_client_from_lead((select id from public.team_leads where email = 'owner-o@leads.test'))$$,
+  '42501', null, 'A Client manager never makes a Client, not even of their own lead'
+);
+select lives_ok($$select public.link_team_lead((select id from public.team_leads where email = 'owner-o@leads.test'), '27000000-0000-4000-8000-0000000000f1')$$, 'but links their lead to its college');
+reset role;
+select set_config('request.jwt.claims', '{"sub":"17000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+set local role authenticated;
+select is(
+  public.make_client_from_lead((select id from public.team_leads where email = 'owner-o@leads.test')),
+  '27000000-0000-4000-8000-0000000000f1'::uuid,
+  'A Team member makes the won lead a Client'
+);
+reset role;
+select is((select tier::text from public.plans where institution_id = '27000000-0000-4000-8000-0000000000f1'), 'client', 'Its plan is Client');
+select is((select status::text from public.brains where institution_id = '27000000-0000-4000-8000-0000000000f1'), 'onboarding', 'and onboarding has started');
+select ok((select made_client_at is not null from public.team_leads where email = 'owner-o@leads.test'), 'The lead says it was made a Client');
+select throws_ok(
+  $$select public.link_team_lead((select id from public.team_leads where email = 'owner-o@leads.test'), null)$$,
+  'P0001', 'made_client', 'and its link stays'
+);
 
 select * from finish();
 rollback;

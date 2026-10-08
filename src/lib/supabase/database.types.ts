@@ -3080,6 +3080,11 @@ export type Database = {
           used_on: Database["public"]["Enums"]["lead_source"]
         }[]
       }
+      link_team_lead: {
+        Args: { p_institution: string; p_lead: string }
+        Returns: undefined
+      }
+      make_client_from_lead: { Args: { p_lead: string }; Returns: string }
       mark_brain_ready: { Args: { p_institution: string }; Returns: undefined }
       mark_done: {
         Args: {

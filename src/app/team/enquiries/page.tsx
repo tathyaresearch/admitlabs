@@ -1,19 +1,26 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ActionButton } from '@/components/team/InstitutionPanels';
+import { AddLeadForm, TeamLinkForm } from '@/components/team/EnquiryForms';
+import { CopyLink } from '@/components/team/InstitutionPanels';
+import { Button, AnchorButton } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/Feedback';
+import { SelectField, TextField } from '@/components/ui/Form';
+import { Icon } from '@/components/ui/Icon';
 import { PageHead } from '@/components/ui/Layout';
-import { formatDateTime, plural } from '@/domain/format';
-import { PAID_PRICE_BY_MONTHS, PAID_PRICE_LINE } from '@/domain/tiers';
-import { PLACE_LABELS } from '@/domain/types';
+import { LinkTabs } from '@/components/ui/LinkTabs';
+import { formatDate, plural } from '@/domain/format';
+import { isFullTeam } from '@/domain/types';
+import { leadTitle, sourceLine, TEAM_LEAD_SOURCE_LABELS, TEAM_LEAD_SOURCES, TEAM_LEAD_STATUS_LABELS } from '@/enquiries/model';
+import { followUpState, followUpWords, hasLeadFilters, indiaToday, LEAD_VIEW_LABELS, LEAD_VIEWS, leadFiltersQuery, parseLeadFilters } from '@/enquiries/view';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
-import { loadEnquiries, type EnquiryRow, type FixAsk, type FormEnquiry, type PaidAsk, type ServicesAsk } from '@/lib/team/enquiries';
-import { ENQUIRY_ROLE_LABELS, formatPhone } from '@/site/enquiry';
-import { setEnquiryHandledAction } from './actions';
+import { loadLeadCounts, loadLeadList, loadTeamLinks } from '@/lib/team/enquiries';
+import { loadTeamPeople } from '@/lib/team/load';
+import { SITE_URL } from '@/lib/urls';
+import { getLeadImportProvider } from '@/providers/registry';
+import { addLeadAction, archiveLinkAction, createLinkAction } from './actions';
 import audit from '@/components/audit/audit.module.css';
-import styles from '@/components/team/enquiries.module.css';
-import team from '@/components/team/team.module.css';
+import styles from '@/components/team/team.module.css';
 
 // The title only names the page for the team, so the team area stays invisible to everyone else.
 export async function generateMetadata(): Promise<Metadata> {
@@ -21,182 +28,185 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: viewer?.teamRole ? 'Enquiries' : 'Page not found' };
 }
 
-function Handled({ enquiry }: { enquiry: EnquiryRow }) {
-  return (
-    <div className={team.itemActions}>
-      {enquiry.handledAt ? (
-        <>
-          <span className={styles.handled}>Handled {formatDateTime(enquiry.handledAt)}</span>
-          <ActionButton action={setEnquiryHandledAction.bind(null, enquiry.id, false)} label="Mark as new" variant="quiet" />
-        </>
-      ) : (
-        <ActionButton action={setEnquiryHandledAction.bind(null, enquiry.id, true)} label="Mark as handled" variant="secondary" />
-      )}
-    </div>
-  );
-}
-
-/** An owner's request from the dashboard: what they asked for, for which period, who, and where to switch it on. */
-function Ask({ enquiry }: { enquiry: PaidAsk }) {
-  const price = enquiry.paidMonths ? PAID_PRICE_BY_MONTHS[enquiry.paidMonths] : null;
-  return (
-    <article className={team.item} aria-labelledby={`enquiry-${enquiry.id}`}>
-      <div className={team.itemHead}>
-        <h2 id={`enquiry-${enquiry.id}`} className={team.itemTitle}>
-          {enquiry.kind === 'ask_paid' ? 'Wants to subscribe to Paid' : 'Wants to renew Paid'}
-          {price ? `, ${price.label}` : ''}
-        </h2>
-        <Link href={`/team/institutions/${enquiry.institutionId}`} className={team.link}>
-          {enquiry.institution}
-        </Link>
-      </div>
-      <p className={team.itemMeta}>
-        <span>Sent {formatDateTime(enquiry.createdAt)}, from their dashboard</span>
-      </p>
-      <p className={styles.contact}>
-        <span>The owner:</span>
-        <a className={team.link} href={`mailto:${enquiry.email}`}>
-          {enquiry.email}
-        </a>
-      </p>
-      <p className={team.itemBody}>
-        {price ? `They picked ${price.label}: ${price.text} ${price.term}` : `Paid is ${PAID_PRICE_LINE}`}, with no auto-renew. They clicked {enquiry.kind === 'ask_paid' ? 'Subscribe now' : 'Renew now'}: write back to complete payment, then an Admin switches it on from their page{price ? `, for ${price.months === 1 ? 'one month' : `${price.months} months`}` : ''}.
-      </p>
-      <Handled enquiry={enquiry} />
-    </article>
-  );
-}
-
-/** Someone at a Free or Paid institution clicked Talk to AdmitLabs on the sidebar's services card. */
-function ServicesRequest({ enquiry }: { enquiry: ServicesAsk }) {
-  return (
-    <article className={team.item} aria-labelledby={`enquiry-${enquiry.id}`}>
-      <div className={team.itemHead}>
-        <h2 id={`enquiry-${enquiry.id}`} className={team.itemTitle}>
-          Wants to talk about our services
-        </h2>
-        <Link href={`/team/institutions/${enquiry.institutionId}`} className={team.link}>
-          {enquiry.institution}
-        </Link>
-      </div>
-      <p className={team.itemMeta}>
-        <span>Sent {formatDateTime(enquiry.createdAt)}, from their dashboard</span>
-      </p>
-      <p className={styles.contact}>
-        <span>From:</span>
-        <a className={team.link} href={`mailto:${enquiry.email}`}>
-          {enquiry.email}
-        </a>
-      </p>
-      <p className={team.itemBody}>They saw Program Growth, Institution Branding and Admit Campaign. Write back to talk about what they need.</p>
-      <Handled enquiry={enquiry} />
-    </article>
-  );
-}
-
-/** An owner asks AdmitLabs to fix one thing from their Audit. */
-function FixRequest({ enquiry }: { enquiry: FixAsk }) {
-  return (
-    <article className={team.item} aria-labelledby={`enquiry-${enquiry.id}`}>
-      <div className={team.itemHead}>
-        <h2 id={`enquiry-${enquiry.id}`} className={team.itemTitle}>
-          Asks AdmitLabs to fix this
-        </h2>
-        <Link href={`/team/institutions/${enquiry.institutionId}`} className={team.link}>
-          {enquiry.institution}
-        </Link>
-      </div>
-      <p className={team.itemMeta}>
-        <span>Sent {formatDateTime(enquiry.createdAt)}, from their Audit</span>
-        {enquiry.place ? <span>{PLACE_LABELS[enquiry.place]}</span> : null}
-      </p>
-      <p className={team.itemBody}>{enquiry.fixTitle}</p>
-      <p className={styles.contact}>
-        <span>The owner:</span>
-        <a className={team.link} href={`mailto:${enquiry.email}`}>
-          {enquiry.email}
-        </a>
-      </p>
-      <Handled enquiry={enquiry} />
-    </article>
-  );
-}
-
-function Enquiry({ enquiry }: { enquiry: EnquiryRow }) {
-  if (enquiry.kind === 'work_with_us') return <FormRow enquiry={enquiry} />;
-  if (enquiry.kind === 'ask_services') return <ServicesRequest enquiry={enquiry} />;
-  return enquiry.kind === 'fix_request' ? <FixRequest enquiry={enquiry} /> : <Ask enquiry={enquiry} />;
-}
-
-function FormRow({ enquiry }: { enquiry: FormEnquiry }) {
-  return (
-    <article className={team.item} aria-labelledby={`enquiry-${enquiry.id}`}>
-      <div className={team.itemHead}>
-        <h2 id={`enquiry-${enquiry.id}`} className={team.itemTitle}>
-          {enquiry.name}
-          <span className={team.itemQuiet}>, {ENQUIRY_ROLE_LABELS[enquiry.role]}</span>
-        </h2>
-        <span className={team.itemRole}>{enquiry.institution}</span>
-      </div>
-      <p className={team.itemMeta}>
-        <span>Sent {formatDateTime(enquiry.createdAt)}</span>
-        {enquiry.program ? <span>Program: {enquiry.program}</span> : null}
-      </p>
-      <p className={styles.contact}>
-        <a className={team.link} href={`mailto:${enquiry.email}`}>
-          {enquiry.email}
-        </a>
-        <a className={team.link} href={`tel:${enquiry.phone}`}>
-          {formatPhone(enquiry.phone)}
-        </a>
-      </p>
-      {enquiry.message ? <p className={team.itemBody}>{enquiry.message}</p> : null}
-      <Handled enquiry={enquiry} />
-    </article>
-  );
-}
-
-// Enquiries: who wrote in through the website's "Work with us" form, and requests from dashboards
-// (to subscribe or renew, to talk about the services, to fix something), newest first. New ones
-// until someone on the team marks them handled. No emails are sent.
-export default async function EnquiriesPage({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
-  await requireTeamViewer();
-  const showAll = (await searchParams).show === 'all';
-  const all = await loadEnquiries();
-  const fresh = all.filter((enquiry) => !enquiry.handledAt);
-  const shown = showAll ? all : fresh;
+// Enquiries (spec section 27): AdmitLabs' own leads, never students. The open ones first, by the
+// next follow-up; filters by status, source and owner; add one by hand; the CSV. The full team
+// sees every lead and the tracking links; a Client manager sees the leads they own.
+export default async function EnquiriesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const viewer = await requireTeamViewer();
+  const full = isFullTeam(viewer.teamRole);
+  const filters = parseLeadFilters(await searchParams);
+  const today = indiaToday(new Date());
+  const [{ rows, total, capped }, counts, people, links, importer] = await Promise.all([
+    loadLeadList(filters, viewer.userId, today),
+    loadLeadCounts(today),
+    full ? loadTeamPeople() : Promise.resolve([]),
+    full ? loadTeamLinks() : Promise.resolve([]),
+    full ? getLeadImportProvider().status() : Promise.resolve(null),
+  ]);
+  const owners = people.filter((person) => person.userId && !person.pending).map((person) => ({ value: person.userId as string, label: person.userId === viewer.userId ? `${person.name ?? person.email} (you)` : (person.name ?? person.email) }));
+  const csv = `/team/enquiries/csv${leadFiltersQuery(filters)}`;
 
   return (
     <div className={audit.page}>
       <PageHead
         title="Enquiries"
-        question="Who wants to work with us?"
-        caption={[`${fresh.length} new`, `${plural(all.length, 'enquiry', 'enquiries')} in all`, 'From the website’s Work with us form, and requests from dashboards: to subscribe or renew, to talk about our services, or to fix something']}
+        question={full ? 'Who wants to work with AdmitLabs?' : 'Who are you following up?'}
+        caption={[
+          `${counts.open} open`,
+          `${counts.fresh} new`,
+          counts.due ? `${plural(counts.due, 'follow-up', 'follow-ups')} due` : 'No follow-ups due',
+          full ? 'Our own leads, never students' : 'The enquiries you own',
+        ]}
+        actions={
+          <AnchorButton href={csv} variant="secondary" icon="download">
+            Download CSV
+          </AnchorButton>
+        }
       />
-      <nav className={styles.filter} aria-label="Show">
-        <Link href="/team/enquiries" className={styles.filterLink} aria-current={showAll ? undefined : 'page'}>
-          New
-        </Link>
-        <Link href="/team/enquiries?show=all" className={styles.filterLink} aria-current={showAll ? 'page' : undefined}>
-          All
-        </Link>
-      </nav>
-      {shown.length ? (
-        <div className={team.rows}>
-          {shown.map((enquiry) => (
-            <Enquiry key={enquiry.id} enquiry={enquiry} />
-          ))}
-        </div>
-      ) : (
-        // None at all reads as none yet under either filter; only handled ones read as nothing new.
-        <EmptyState icon="enquiry" title={all.length === 0 ? 'No enquiries yet' : 'Nothing new'}>
-          <p>
-            {all.length === 0
-              ? 'They arrive here when someone sends the Work with us form on the website, or clicks Subscribe now, Renew now or Talk to AdmitLabs in their dashboard. Each one shows who it is, how to reach them and what they need.'
-              : 'Every enquiry has been handled. See them all under All.'}
-          </p>
-        </EmptyState>
-      )}
+
+      <details className={styles.addLead}>
+        <summary className={styles.addLeadSummary}>
+          <Icon name="plus" size={16} />
+          Add a lead by hand
+        </summary>
+        <p className={styles.formNote}>
+          From a call, an event or a message. The same phone or email joins the lead there is.{full ? '' : ' It is yours.'}
+        </p>
+        <AddLeadForm action={addLeadAction} owners={full ? owners : null} today={today} />
+      </details>
+
+      <section className={audit.section} aria-label="Enquiries">
+        <LinkTabs
+          label="Status"
+          tabs={LEAD_VIEWS.map((view) => ({ href: `/team/enquiries${leadFiltersQuery(filters, { view })}`, label: LEAD_VIEW_LABELS[view], current: filters.view === view }))}
+        />
+        <form method="get" action="/team/enquiries" className={styles.leadFilters} role="search" aria-label="Find enquiries">
+          {filters.view !== 'open' ? <input type="hidden" name="view" value={filters.view} /> : null}
+          <TextField id="lead-q" name="q" type="search" label="Search" placeholder="Name, institution, email or phone" defaultValue={filters.q} />
+          <SelectField id="lead-source-filter" name="source" label="Source" defaultValue={filters.source ?? ''} options={[{ value: '', label: 'Any source' }, ...TEAM_LEAD_SOURCES.map((value) => ({ value, label: TEAM_LEAD_SOURCE_LABELS[value] }))]} />
+          {full ? (
+            <SelectField
+              id="lead-owner-filter"
+              name="owner"
+              label="Owner"
+              defaultValue={filters.owner ?? ''}
+              options={[{ value: '', label: 'Anyone' }, { value: 'me', label: 'Mine' }, { value: 'none', label: 'Nobody yet' }, ...owners]}
+            />
+          ) : null}
+          <label className={styles.dueToggle}>
+            <input type="checkbox" name="due" value="1" defaultChecked={filters.due} />
+            Follow-up due
+          </label>
+          <Button type="submit" variant="secondary" icon="search">
+            Find
+          </Button>
+        </form>
+        <p className={styles.resultLine}>
+          {capped ? `The first 500 of ${total}` : plural(total, 'lead', 'leads')}
+          {hasLeadFilters(filters) ? (
+            <Link href={`/team/enquiries${leadFiltersQuery({ ...filters, source: null, owner: null, due: false, q: '' })}`} className={styles.link}>
+              Clear filters
+            </Link>
+          ) : null}
+        </p>
+
+        {rows.length ? (
+          <div className={styles.list}>
+            <div className={`${styles.listHead} ${styles.leadHead}`} aria-hidden="true">
+              <span>Lead</span>
+              <span>Status</span>
+              <span>Source</span>
+              <span>Owner</span>
+              <span>Next follow-up</span>
+              <span />
+            </div>
+            {rows.map((lead) => {
+              const due = followUpState(lead.nextFollowUp, lead.status, today);
+              return (
+                <Link key={lead.id} href={`/team/enquiries/${lead.id}`} className={`${styles.listRow} ${styles.leadRow}`}>
+                  <span className={styles.rowName}>
+                    {leadTitle(lead)}
+                    <span className={styles.rowSub}>{[lead.name ? lead.institution : null, lead.city].filter(Boolean).join(', ') || 'No institution yet'}</span>
+                    {lead.wants ? <span className={styles.leadWants}>{lead.wants}</span> : null}
+                    <span className={styles.leadPhoneOnly}>
+                      {TEAM_LEAD_STATUS_LABELS[lead.status]}. {sourceLine(lead.source, lead.sourceDetail)}. {lead.owner ?? 'Nobody owns it yet'}
+                    </span>
+                    {lead.cameBack || due === 'overdue' || due === 'today' ? (
+                      <span className={styles.rowReasons}>
+                        {due === 'overdue' || due === 'today' ? <span className={styles.rowReason}>{due === 'overdue' ? 'Follow-up overdue' : 'Follow up today'}</span> : null}
+                        {lead.cameBack ? <span className={styles.rowReason}>Came back {formatDate(lead.lastInAt)}</span> : null}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className={styles.rowCell}>
+                    <span className={styles.rowStatus}>{TEAM_LEAD_STATUS_LABELS[lead.status]}</span>
+                    <span className={styles.rowSub}>Came in {formatDate(lead.createdAt)}</span>
+                  </span>
+                  <span className={styles.rowCell}>{sourceLine(lead.source, lead.sourceDetail)}</span>
+                  <span className={styles.rowCell}>{lead.ownerId === viewer.userId ? 'You' : (lead.owner ?? 'Nobody yet')}</span>
+                  <span className={styles.rowCell}>{followUpWords(lead.nextFollowUp, lead.status, today)}</span>
+                  <Icon name="chevronRight" size={16} className={styles.chevron} />
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState icon="enquiry" title={hasLeadFilters(filters) || filters.view !== 'open' ? 'No leads match' : full ? 'No open leads' : 'No enquiries of yours yet'} headingLevel={2}>
+            {full
+              ? 'Leads come in from the website’s Talk to us form, new Free colleges, Let AdmitLabs fix this, the services card and Paid requests. Add one by hand from a call or an event.'
+              : 'When the team gives you an enquiry, or you add one by hand, it shows here.'}
+          </EmptyState>
+        )}
+      </section>
+
+      {full ? (
+        <section className={audit.section} aria-labelledby="links-title">
+          <h2 id="links-title" className={styles.sectionTitle}>
+            Tracking links
+          </h2>
+          <p className={styles.formNote}>Put one in a bio, a post or an event’s QR code. It opens the Talk to us form, and what comes in through it is tagged with its source.</p>
+          <TeamLinkForm action={createLinkAction} />
+          {links.length ? (
+            <ul className={styles.linkList}>
+              {links.map((link) => {
+                const url = `${SITE_URL}/talk/${link.code}`;
+                return (
+                  <li key={link.id} className={styles.linkRow}>
+                    <span className={styles.rowName}>
+                      {link.name}
+                      <span className={styles.rowSub}>
+                        {TEAM_LEAD_SOURCE_LABELS[link.source]}. {url.replace(/^https?:\/\//, '')}
+                        {link.archivedAt ? `. Archived ${formatDate(link.archivedAt)}` : ''}
+                      </span>
+                    </span>
+                    <span className={styles.linkCounts}>
+                      <span className="num">{link.thisMonth}</span> this month, <span className="num">{link.total}</span> in all
+                    </span>
+                    {link.archivedAt ? null : (
+                      <span className={styles.itemActions}>
+                        <CopyLink url={url} />
+                        <form action={archiveLinkAction.bind(null, link.id)}>
+                          <Button type="submit" size="sm" variant="quiet">
+                            Archive
+                          </Button>
+                        </form>
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+          <div className={styles.importCard}>
+            <span className={styles.rowName}>
+              Meta lead ads
+              <span className={styles.rowSub}>Leads from the forms on our Facebook and Instagram ads would come in here, tagged with their source, joining a lead with the same email or phone.</span>
+            </span>
+            <span className={styles.importState}>{importer?.connected ? 'Connected' : 'Not connected'}</span>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
+
