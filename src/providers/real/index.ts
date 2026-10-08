@@ -44,6 +44,9 @@ export const realAnalysis: AnalysisProvider = {
   async fitIdea() {
     return notConnected();
   },
+  async readPdf() {
+    return notConnected();
+  },
   async rivalActions() {
     return notConnected();
   },

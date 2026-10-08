@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { BRAIN_SECTIONS, SECTION_INFO, type BrainSection } from '@/brain/model';
+import { FACT_SECTIONS, SECTION_INFO } from '@/brain/model';
 import { PasswordNote, SectionHead } from '@/components/brain/Bits';
 import { SectionBody } from '@/components/brain/Sections';
 import { TeamOnlyNotes } from '@/components/brain/Team';
@@ -31,23 +31,23 @@ export default async function KickoffPage({ params, searchParams }: { params: Pr
   if (tier?.tier !== 'client') notFound();
   const query = await searchParams;
   const asked = one(query.step);
-  const step: BrainSection = BRAIN_SECTIONS.includes(asked as BrainSection) ? (asked as BrainSection) : 'basics';
-  const index = BRAIN_SECTIONS.indexOf(step);
+  const step = FACT_SECTIONS.find((section) => section === asked) ?? 'basics';
+  const index = FACT_SECTIONS.indexOf(step);
   const base = `/team/institutions/${id}/brain`;
   const here = `${base}/kickoff?step=${step}`;
   const missing = new Set(page.progress.missing.map((slot) => slot.section));
-  const previous = BRAIN_SECTIONS[index - 1];
-  const next = BRAIN_SECTIONS[index + 1];
+  const previous = FACT_SECTIONS[index - 1];
+  const next = FACT_SECTIONS[index + 1];
   return (
     <div className={styles.page}>
       <PageHead
         back={{ href: base, label: 'Client Brain' }}
         title="Kickoff call"
         question={`${page.brain.institution.name}’s Brain, one section at a time.`}
-        caption={[`Step ${index + 1} of ${BRAIN_SECTIONS.length}: ${SECTION_INFO[step].name}`, `${page.progress.percent}% complete`]}
+        caption={[`Step ${index + 1} of ${FACT_SECTIONS.length}: ${SECTION_INFO[step].name}`, `${page.progress.percent}% complete`]}
       />
       <ol className={styles.stepper} aria-label="Sections">
-        {BRAIN_SECTIONS.map((section, position) => {
+        {FACT_SECTIONS.map((section, position) => {
           const state = section === step ? 'now' : missing.has(section) ? 'next' : 'done';
           return (
             <li key={section}>

@@ -58,6 +58,10 @@ export function StatusBand({ page, team }: { page: BrainPage; team: boolean }) {
 function Answer({ asked, page, base }: { asked: NonNullable<ScreenProps['asked']>; page: BrainPage; base: string }) {
   const { answer } = asked;
   const stampOf = (fact: AskFact): string | null => {
+    if (fact.stamp.startsWith('blueprint:')) {
+      const version = page.blueprints.find((entry) => fact.stamp === `blueprint:${entry.id}`);
+      return version ? `${version.status === 'approved' ? 'Approved' : 'Shared'} ${formatDate(version.approvedAt ?? version.sharedAt ?? version.uploadedAt)}` : null;
+    }
     if (fact.stamp.startsWith('item:')) {
       const item = page.brain.items.find((entry) => `item:${entry.id}` === fact.stamp);
       return item ? `Checked ${formatDate(item.checkedAt)}` : null;
@@ -106,7 +110,7 @@ function Answer({ asked, page, base }: { asked: NonNullable<ScreenProps['asked']
   );
 }
 
-function Overview({ page, base, canEdit }: { page: BrainPage; base: string; canEdit: boolean }) {
+function Overview({ page, base, canEdit, team }: { page: BrainPage; base: string; canEdit: boolean; team: boolean }) {
   const ctx = { institutionId: page.brain.institution.id, returnTo: base };
   return (
     <>
@@ -126,7 +130,9 @@ function Overview({ page, base, canEdit }: { page: BrainPage; base: string; canE
                 {checkTitle(page)}
               </h3>
             </div>
-            <p className={styles.groupNote}>Fees and dates are checked every {BRAIN_RULES.checkMonths.fees} months, the rest every {BRAIN_RULES.checkMonths.other}. If nothing changed, say so with Still right.</p>
+            <p className={styles.groupNote}>
+              Fees and dates are checked every {BRAIN_RULES.checkMonths.fees} months, the rest every {BRAIN_RULES.checkMonths.other}, and the Blueprint wants a fresh version every {BRAIN_RULES.blueprint.checkDays} days. If nothing changed, say so with Still right.
+            </p>
             <ul className={styles.rows}>
               {page.stale.map((fact) => (
                 <li key={fact.key} className={styles.row}>
@@ -139,7 +145,15 @@ function Overview({ page, base, canEdit }: { page: BrainPage; base: string; canE
                     <p className={styles.rowValue}>{fact.value}</p>
                     <p className={styles.checkLine}>Last checked {formatDate(fact.checkedAt)}.</p>
                   </div>
-                  {canEdit ? (
+                  {canEdit && fact.key === 'blueprint' ? (
+                    team ? (
+                      <div className={styles.rowActions}>
+                        <ButtonLink href={brainHref(base, { section: 'blueprint' })} size="sm" variant="secondary" icon="plus" scroll={false}>
+                          Upload a new version
+                        </ButtonLink>
+                      </div>
+                    ) : null
+                  ) : canEdit ? (
                     <div className={styles.rowActions}>
                       <form action={stillRightAction.bind(null, { ...ctx, fact: fact.key })} className={styles.inlineForm}>
                         <Button type="submit" size="sm" variant="secondary" icon="check">
@@ -232,10 +246,10 @@ export function BrainScreen(props: ScreenProps) {
       </div>
       <StatusBand page={page} team={props.team} />
       <div className={styles.layout}>
-        <SectionNav base={base} current={section} flags={sectionFlags(page)} />
+        <SectionNav base={base} current={section} flags={sectionFlags(page, props.team)} />
         <div className={styles.layoutBody}>
           {section === 'overview' ? (
-            <Overview page={page} base={base} canEdit={props.canEdit} />
+            <Overview page={page} base={base} canEdit={props.canEdit} team={props.team} />
           ) : (
             <>
               <SectionHead section={section} />

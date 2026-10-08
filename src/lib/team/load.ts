@@ -4,6 +4,7 @@
 
 import { cache } from 'react';
 import { latestStoredAudit, ownHistory } from '@/audit/read';
+import { blueprintWord } from '@/brain/blueprint';
 import { loadBrain } from '@/brain/load';
 import { brainState, type BrainState } from '@/brain/line';
 import type { StoredAudit } from '@/audit/view';
@@ -108,6 +109,8 @@ export interface ClientRow extends TeamListRow {
   managers: Array<{ userId: string; name: string }>;
   /** An Audit or a monthly summary waiting in To review. */
   waiting: number;
+  /** The latest Blueprint version's status: None, Draft, Shared or Approved. */
+  blueprint: string;
 }
 
 /**
@@ -120,14 +123,15 @@ export async function loadClients(now: Date): Promise<ClientRow[]> {
   if (error) throw new Error(`Could not load Clients: ${error.message}`);
   const ids = (data ?? []).map((row) => row.id as string);
   if (!ids.length) return [];
-  const [managers, people, audits, reports, brains] = await Promise.all([
+  const [managers, people, audits, reports, blueprints, brains] = await Promise.all([
     supabase.from('client_managers').select('institution_id, user_id, assigned_at').in('institution_id', ids).order('assigned_at'),
     loadTeamPeople(),
     supabase.from('audits').select('institution_id').in('institution_id', ids).eq('review', 'waiting').in('kind', ['free', 'paid', 'client']),
     supabase.from('reports').select('institution_id').in('institution_id', ids).eq('review', 'waiting'),
+    supabase.from('brain_blueprints').select('institution_id, version, status').in('institution_id', ids).order('version', { ascending: false }),
     Promise.all((data ?? []).map(async (row) => (row.brain_status ? loadBrain(supabase, row.id as string) : null))),
   ]);
-  for (const result of [managers, audits, reports]) if (result.error) throw new Error(`Could not load Clients: ${result.error.message}`);
+  for (const result of [managers, audits, reports, blueprints]) if (result.error) throw new Error(`Could not load Clients: ${result.error.message}`);
   const nameOf = new Map(people.flatMap((person) => (person.userId ? [[person.userId, person.name ?? person.email] as const] : [])));
   const count = (rows: Array<{ institution_id: string }> | null, id: string) => (rows ?? []).filter((row) => row.institution_id === id).length;
   return (data ?? []).map((row, index) => {
@@ -138,6 +142,8 @@ export async function loadClients(now: Date): Promise<ClientRow[]> {
       brain: brain ? brainState(brain, now) : null,
       managers: (managers.data ?? []).filter((entry) => entry.institution_id === row.id).map((entry) => ({ userId: entry.user_id, name: nameOf.get(entry.user_id) ?? 'A Client manager' })),
       waiting: count(audits.data, row.id as string) + count(reports.data, row.id as string),
+      // Newest first, so the first one found is the latest version.
+      blueprint: blueprintWord((blueprints.data ?? []).find((entry) => entry.institution_id === row.id) ?? null),
     };
   });
 }

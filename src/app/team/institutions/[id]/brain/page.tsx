@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BRAIN_SECTIONS, type BrainSection } from '@/brain/model';
 import { BrainScreen } from '@/components/brain/BrainScreen';
-import { BrainTab, OnboardingCard, TeamOnlyNotes, ToConfirm } from '@/components/brain/Team';
+import { AfterReadyCard, BrainTab, OnboardingCard, TeamOnlyNotes, ToConfirm } from '@/components/brain/Team';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { PageHead } from '@/components/ui/Layout';
 import { formatDate } from '@/domain/format';
@@ -102,7 +102,10 @@ export default async function TeamBrainPage({ params, searchParams }: { params: 
             <ToConfirm page={page} base={base} edit={edit} />
           </>
         ) : canEdit && section === 'overview' ? (
-          <ToConfirm page={page} base={base} edit={edit} />
+          <>
+            <AfterReadyCard page={page} base={base} />
+            <ToConfirm page={page} base={base} edit={edit} />
+          </>
         ) : null
       }
       teamOnly={<TeamOnlyNotes page={page} base={base} />}

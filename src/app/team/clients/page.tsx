@@ -65,6 +65,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
           <div className={`${styles.listHead} ${styles.clientHead}`} aria-hidden="true">
             <span>Client</span>
             <span>Client Brain</span>
+            <span>Blueprint</span>
             <span>Looked after by</span>
             <span>Client since</span>
             <span />
@@ -80,7 +81,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                   {client.name}
                   <span className={styles.rowSub}>
                     {client.city}
-                    <span className={styles.clientPhoneOnly}>. {clientBrainLine(client.brain)}. {managersLine(client.managers.map((manager) => manager.name))}</span>
+                    <span className={styles.clientPhoneOnly}>. {clientBrainLine(client.brain)}. Blueprint: {client.blueprint}. {managersLine(client.managers.map((manager) => manager.name))}</span>
                   </span>
                   {reasons.length ? (
                     <>
@@ -98,6 +99,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                 <span className={styles.rowCell}>
                   <span className={styles.rowStatus}>{clientBrainLine(client.brain)}</span>
                 </span>
+                <span className={styles.rowCell}>{client.blueprint}</span>
                 <span className={styles.rowCell}>{managersLine(client.managers.map((manager) => (manager.userId === viewer.userId ? 'You' : manager.name)))}</span>
                 <span className={styles.rowCell}>{client.clientSince ? formatDate(client.clientSince) : 'Not known'}</span>
                 <Icon name="chevronRight" size={16} className={styles.chevron} />

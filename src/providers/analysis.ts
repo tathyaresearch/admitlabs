@@ -172,4 +172,6 @@ export interface AnalysisProvider {
   answerBrain(input: { question: string; facts: readonly AskFact[] }): Promise<BrainAnswer>;
   /** One of Make these 3, fitted to a Client's brand: the hook in its tone, a Brain fact, nothing it avoids. */
   fitIdea(input: { idea: IdeaToFit; brain: BrainWriting }): Promise<FittedIdea>;
+  /** The words of a PDF (a Client's Blueprint), for Ask the brain; null when it cannot read them. */
+  readPdf(input: { bytes: Uint8Array }): Promise<string | null>;
 }

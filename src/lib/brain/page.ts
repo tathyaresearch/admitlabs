@@ -5,6 +5,7 @@
 
 import { cache } from 'react';
 import { askFacts, type AskFact, type BrainAnswer } from '@/brain/ask';
+import { blueprintStale, latestBlueprint, readableBlueprint, type BlueprintVersion } from '@/brain/blueprint';
 import { describeItem } from '@/brain/facts';
 import { changeLines, type ChangeLine, type Person } from '@/brain/history';
 import { loadBrain, loadBrainPeople, loadBrainStatus, loadChanges } from '@/brain/load';
@@ -33,6 +34,8 @@ export interface BrainPage {
   people: ReadonlyMap<string, Person>;
   work: WorkEntry[];
   teamNotes: TeamNote[];
+  /** The Blueprint's versions this person sees, newest first (the college: Shared and Approved only). */
+  blueprints: BlueprintVersion[];
 }
 
 export const loadBrainStatusFor = cache(async (institutionId: string) => loadBrainStatus(await createClient(), institutionId));
@@ -42,12 +45,40 @@ export const loadBrainPage = cache(async (institutionId: string, team: boolean):
   const brain = await loadBrain(supabase, institutionId);
   if (!brain) return null;
   const now = new Date();
-  const [people, changes, work, notes] = await Promise.all([
+  const [people, changes, work, notes, blueprints] = await Promise.all([
     loadBrainPeople(supabase, institutionId),
     loadChanges(supabase, institutionId, { limit: 40 }),
     supabase.from('team_work').select('id, kind, body, work_on, link').eq('institution_id', institutionId).order('work_on', { ascending: false }).limit(20),
     team ? supabase.from('notes').select('id, body, created_at, author_id').eq('institution_id', institutionId).order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from('brain_blueprints')
+      .select('id, version, file_name, size_bytes, status, uploaded_at, uploaded_by, shared_at, shared_by, approved_at, approved_by, changes_note, changes_at, changes_by, text')
+      .eq('institution_id', institutionId)
+      .order('version', { ascending: false }),
   ]);
+  const versions: BlueprintVersion[] = (blueprints.data ?? []).map((row) => ({
+    id: row.id,
+    version: row.version,
+    fileName: row.file_name,
+    sizeBytes: row.size_bytes,
+    status: row.status,
+    uploadedAt: row.uploaded_at,
+    uploadedBy: row.uploaded_by,
+    sharedAt: row.shared_at,
+    sharedBy: row.shared_by,
+    approvedAt: row.approved_at,
+    approvedBy: row.approved_by,
+    changesNote: row.changes_note,
+    changesAt: row.changes_at,
+    changesBy: row.changes_by,
+    text: row.text,
+  }));
+  // The Blueprint needs a fresh version once its latest is older than its check time (90 days).
+  const latest = latestBlueprint(versions);
+  const stale = needsChecking(brain, now);
+  if (latest && blueprintStale(latest, now)) {
+    stale.push({ key: 'blueprint', section: 'blueprint', label: `Blueprint, version ${latest.version}`, value: latest.fileName, checkedAt: latest.uploadedAt, kind: 'other' });
+  }
   const context = { people, programs: brain.programs, institutionType: brain.institution.type };
   const recent = changes
     .filter((row) => team || !row.teamOnly)
@@ -59,12 +90,13 @@ export const loadBrainPage = cache(async (institutionId: string, team: boolean):
     brain,
     progress: brainProgress(brain),
     ready: readiness(brain),
-    stale: needsChecking(brain, now),
+    stale,
     season: seasonAhead(brain, now),
     recent,
     people,
     work: (work.data ?? []).map((row) => ({ id: row.id, kind: row.kind, text: row.body, on: row.work_on, link: row.link })),
     teamNotes: (notes.data ?? []).map((note) => ({ id: note.id, body: note.body, at: note.created_at, who: (note.author_id ? names.get(note.author_id) : null) ?? 'AdmitLabs team' })),
+    blueprints: versions,
   };
 });
 
@@ -78,7 +110,8 @@ export async function loadFactHistory(page: BrainPage, target: string, team: boo
 
 /** Ask the brain: the facts that answer, through the AI provider (the mock in this build). */
 export async function askBrain(page: BrainPage, question: string, team: boolean): Promise<{ question: string; answer: BrainAnswer; facts: readonly AskFact[] }> {
-  const facts = askFacts(page.brain, team ? page.teamNotes.map((note) => ({ id: note.id, body: note.body })) : []);
+  // The Blueprint's words: the latest Shared or Approved version, the one the college sees too.
+  const facts = askFacts(page.brain, team ? page.teamNotes.map((note) => ({ id: note.id, body: note.body })) : [], readableBlueprint(page.blueprints));
   const answer = await getAnalysisProvider().answerBrain({ question, facts: facts.filter((fact) => team || !fact.teamOnly) });
   return { question, answer, facts };
 }

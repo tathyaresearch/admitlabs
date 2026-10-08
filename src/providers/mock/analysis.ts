@@ -1,6 +1,7 @@
 // Mock AI writer: text from a written bank that follows the copy rules. No Claude calls.
 
 import { matchQuestion } from '../../brain/ask.ts';
+import { extractPdfText } from '../../brain/pdf-text.ts';
 import { fitIdea } from '../../brain/writing.ts';
 import { SAMPLE_CONTENT } from '../../sample/rivals.ts';
 import type { AnalysisProvider, ContentIdea } from '../analysis.ts';
@@ -91,5 +92,10 @@ export const mockAnalysis: AnalysisProvider = {
 
   async fitIdea({ idea, brain }) {
     return fitIdea(idea, brain);
+  },
+
+  // The text a simple PDF holds as it is (src/brain/pdf-text.ts); a design tool's PDF reads as null.
+  async readPdf({ bytes }) {
+    return extractPdfText(bytes);
   },
 };

@@ -4,7 +4,7 @@ Version 2.0 | 4 October 2026 | Owner: Manprit, AdmitLabs
 
 This is the single source of truth for building Drishti. If something is not in this spec, ask before deciding. Values marked **[ADJUSTABLE]** are starting values and must live in config, not be hard-coded.
 
-**Version 2 (October 2026)** builds the product around one line: what the internet says about you. The Audit is organised by place, three scores out of 100 with their words replace the big score, rivals come from your city, Demand picks 3 things to make each month, AdmitLabs clients get Leads, a short email arrives with each new Audit or month, the AdmitLabs team can review an Audit before the college sees it, and Paid is ₹9,999 + GST per month, or ₹24,999 + GST for 3 months (from 5 October 2026; it was ₹24,999 + GST for 6 months). Version 1 (30 September 2026) is in the git history. **The Client Brain** (8 October 2026, section 26) gives each AdmitLabs Client one living knowledge base, built at onboarding and kept with the team.
+**Version 2 (October 2026)** builds the product around one line: what the internet says about you. The Audit is organised by place, three scores out of 100 with their words replace the big score, rivals come from your city, Demand picks 3 things to make each month, AdmitLabs clients get Leads, a short email arrives with each new Audit or month, the AdmitLabs team can review an Audit before the college sees it, and Paid is ₹9,999 + GST per month, or ₹24,999 + GST for 3 months (from 5 October 2026; it was ₹24,999 + GST for 6 months). Version 1 (30 September 2026) is in the git history. **The Client Brain** (8 October 2026, section 26) gives each AdmitLabs Client one living knowledge base, built at onboarding and kept with the team. **The Blueprint** (8 October 2026) puts the plan AdmitLabs makes for each Client first in its Brain, as PDF versions the college approves.
 
 ---
 
@@ -568,7 +568,7 @@ The menu (section 27): Audit (To review, Bulk Audit and Rival ads as tabs), Enqu
 | Institutions (team home) | Tabs All, Free, Paid and Client (those not signed up show under All). Then All institutions, sorted by the reason each needs attention, most urgent first, each row saying why: a Paid plan ending within 30 days, a Client with no team Audit this month, a score down 3 or more, signed up with no rivals, a prospect not signed up a week after their Audit was shared. Search, filter by type, city, state, score, tier, prospect or client; sort by name, score or last checked too. The team keeps the score as a number |
 | To review | Every new Audit and monthly summary waiting for the team's review, oldest first, each with the college, what it is, its plan, how long it has waited and what changed in one line; a count beside it in the team's menu. One opens the review: what changed since the last approved Audit, then the Audit place by place (or the summary line by line) to fix a result or a line, then "Approve and send" (section 25) |
 | Bulk Audit | Add many institutions at once (paste list or CSV), run Audits, see results in a table |
-| Clients | Every Client with its Client Brain (onboarding and how far, or Ready and the facts to check), who looks after it, when it became a Client, and anything waiting for review. The full team can show one Client manager's Clients, or those with none; a Client manager sees their own. Each opens the institution page, where the Client Brain is a tab |
+| Clients | Every Client with its Client Brain (onboarding and how far, or Ready and the facts to check), its Blueprint (None, Draft, Shared or Approved), who looks after it, when it became a Client, and anything waiting for review. The full team can show one Client manager's Clients, or those with none; a Client manager sees their own. Each opens the institution page, where the Client Brain is a tab |
 | Institution detail | Everything the institution sees, plus private notes, who looks after a Client ("Looked after by": Admins and Team members assign or remove a Client manager), tier control (Admin: Start Paid asks for the period paid for, Monthly or 3 months, and the day of payment, and shows the end date), manual refresh, and how its new Audits and summaries go out: "Review first" (on to start) or "Send automatically". For a Client, the Work log tab first, then the Client Brain tab (or Start onboarding, section 26): add what the team did or does next (Done or Next, one plain sentence, the day, a link when there is one), mark Next as done, remove an entry. It is what the Client sees. Then a Leads links tab: make a tracking link (a name such as "Reel: BBA placements", where it will be used, the program), copy it, see how many enquiries each brought this month and before, and archive one. Counts only |
 | Share | Create a share link or PDF of a prospect's Audit, place by place with the three words |
 | Rival ads | Enter what rivals promise in their ads, by hand until Drishti can collect it. Each entry is also a "started ads" alert for the institutions that track that rival |
@@ -726,7 +726,8 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 | `brain_items` | id, institution_id, kind (contact, talk, goals, target, rivals, regions, logo, colours, fonts, tagline, tone, avoid, dos, guidelines, award, placement_list, alumnus, review, link, date, plan, script, worked, note, skip for "Doesn't apply", found for what Drishti found for the details), fields (jsonb), to_confirm, source (drishti, college, team), via_help, source_url, found_at, checked_at, checked_by, created and updated (when, who) |
 | `brain_steps` | institution_id, step (drive_shared, brand_kit, social_access, media_received, approver_confirmed, plan_agreed), done_at, done_by |
 | `brain_checks` | institution_id, fact (about, or a program's fees, dates or details), checked_at, checked_by: when each fact of the details added by you was last changed or said to be still right |
-| `brain_changes` | id, institution_id, at, by, what (added, found, changed, confirmed, corrected, not right, removed, checked, started, ready, a step), target, kind, before, after, team_only: the Brain's History, written by triggers |
+| `brain_changes` | id, institution_id, at, by, what (added, found, changed, confirmed, corrected, not right, removed, checked, started, ready, a step, shared, approved, changes asked), target, kind, before, after, team_only: the Brain's History, written by triggers |
+| `brain_blueprints` | id, institution_id, version, file_path (in the private bucket brain-blueprints), file_name, size_bytes (up to 20 MB), status (draft, shared, approved), uploaded_at, uploaded_by, shared_at, shared_by, approved_at, approved_by, changes_note, changes_at, changes_by, text (what the reader found in the PDF, for Ask the brain): one row per version of a Client's Blueprint (section 26) |
 | `team_work` | id, institution_id, kind (done, next), body, work_on (the day it was done, or Next is due), link, added_by, created_at (a Client's work log) |
 | `share_links` | token, institution_id, audit_id, created_by, created_at |
 | `institution_details` | institution_id, the details added by the institution (section 6), updated_at, updated_by. Never read by scoring |
@@ -740,7 +741,7 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 | `lead_links` | id, institution_id, program_id, code, name, used_on (instagram, youtube, facebook, website, whatsapp, other), created_by, created_at, archived_at |
 | `leads` | id, institution_id, link_id, program_id, name, phone, email, city, consent (the exact line shown), created_at |
 | `lead_settings` | institution_id, alert_emails, keep_months (6, 12 or 24), updated_at, updated_by |
-| `email_log` | id, kind (lead_alert, monthly_summary, audit_ready, team_lead_alert), institution_id, recipient, sent_at, sender (local test inbox), ok, error. Never the message itself |
+| `email_log` | id, kind (lead_alert, monthly_summary, audit_ready, team_lead_alert, client_invite, blueprint_reply), institution_id, recipient, sent_at, sender (local test inbox), ok, error. Never the message itself |
 | `client_managers` | institution_id, user_id (a team user whose level is Client manager), assigned_by, assigned_at (section 27) |
 
 **Row Level Security:**
@@ -755,6 +756,7 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 - Review: a college reads its own Audits, their findings, its reports and summaries only once approved. The team sees what waits, changes results and lines (each change kept in `audit_edits`) and approves through `approve_audit` and `approve_report`; the team sets each college's `review_first`.
 - Rival data is only reachable through the `rivals` link of the viewing institution.
 - The Brain (section 26): the team and the college's own people read it while the college is a Client (the team after that too); they change it only through the Brain's database functions, which check the plan, the person and that no text holds a password or login. What Drishti found waits for the team; Team only notes and their History are the team's alone.
+- The Blueprint (section 26): Admins, Team members and the Client's managers read every version and its file, and change them only through `add_blueprint_version` and `set_blueprint_status`. The college's own people read only the Shared and Approved versions of their own Blueprint, and only those files, while the college is a Client; they answer only through `approve_blueprint` and `ask_blueprint_changes`, on the latest Shared version. Who hears of an answer comes from `blueprint_reply_recipients`, for the server only.
 - Plan gating must be enforced on the server, not only hidden in the UI.
 
 **Every signal keeps its source and the date it was checked.** This is how any result can be explained.
@@ -780,7 +782,7 @@ Each data source is a **provider** with one shared interface: it takes an instit
 | `trends` | Google Trends | Programs rising and falling, the best months to post | Google Trends, through a data provider |
 | `keywords` | Keyword tool | Searches a month for programs and courses in the city, and the questions people search | A keyword data provider |
 | `ai_answers` | AI answers | AI answers | Asking ChatGPT, Gemini and Perplexity the student's question, each result kept |
-| `ai` | AI reader and writer | Reads pages for the website reader; writes each finding's short line, why it matters, the steps, the ready fix, effort and a finding's impact, "why it worked", the rivals' one line and lessons, the ideas with their hooks and key points, and the monthly summary; answers Ask the brain from a Client's Brain and fits Make these 3 to its brand (section 26) | Claude API |
+| `ai` | AI reader and writer | Reads pages for the website reader; writes each finding's short line, why it matters, the steps, the ready fix, effort and a finding's impact, "why it worked", the rivals' one line and lessons, the ideas with their hooks and key points, and the monthly summary; answers Ask the brain from a Client's Brain, reads the words of its Blueprint PDF (`blueprint_text`), and fits Make these 3 to its brand (section 26) | Claude API |
 | `email` | Email sender | The alert for each new enquiry, the monthly summary, the alert for each new or returning lead in the team's Enquiries | The local test inbox that local Supabase runs, for now; an email service later. WhatsApp later, as a second channel |
 | `lead_import` | Lead ads import | Leads into Enquiries from ads (section 27), tagged Facebook or Instagram, joining a lead with the same email or phone | Meta lead ads (lead forms on Facebook and Instagram ads). Shows "Not connected" in this build |
 | `manual` | Team entry | Rival ads | Team entry screen |
@@ -846,6 +848,8 @@ Stop at the end of each phase for review. Do not start the next phase without ap
 
 **The Client Brain (8 October 2026)**, in three steps: the plan; a development only mock with both layouts of the Brain, the onboarding, Help us know you and Ask the brain, on desktop and phone (layout 1 picked: a list of sections, one open at a time); then the build, with every check and test, and a local commit. The mock page went with the build.
 
+**The Blueprint (8 October 2026)**, in the Client Brain: the plan and build together (no mock), with every check and test, and a local commit.
+
 **Later (not now):** connect real providers one by one, Claude API for analysis, Razorpay, reminders by email, a real email sender, WhatsApp, deployment of the dashboard to app.admitlabs.in.
 
 ---
@@ -873,6 +877,7 @@ Fictional only. No real institution names.
 - Rivals set up between them, with moves, best content and ads.
 - Demand pulls for Guwahati and Tezpur, with Assam filling in, across the sample programs, in English, Hindi and Assamese: programs rising and falling, topics, questions, content signals, best months and ideas with hooks and key points. Make these 3 for August and September: Eastgate made 2 of August's 3.
 - The Client Brain: Brightpath's, Ready since 16 March, lived in since, with 2 facts to check before admissions open on 1 December; Silverline College became a Client on 1 October (Free before), and its Brain is 80% complete, onboarding, with what Drishti found waiting to be confirmed. Brightpath has a member, Anjali Das. Names: Ritu Bora and Anjali Das (Brightpath), Meera Kalita (Silverline), Kabir Sen (the team user).
+- Brightpath's Blueprint: version 1, approved by Ritu in March; version 2, shared by its Client manager on 6 October and waiting for the college. Each is a small sample PDF. Silverline has none yet.
 - Leads for Brightpath (Client): 4 tracking links from July, and enquiries from July to September with made up names, `.example` emails and made up phone numbers.
 - One institution on each tier: Free, Paid, Client (and a second Free, Loomcraft). Plus 2 prospects visible only to the team.
 - Sample users: one owner per institution, one team user, one admin.
@@ -1003,16 +1008,17 @@ The AdmitLabs team can look over a new Audit and a monthly summary before the co
 
 **Who.** Client only, never Free or Paid. The college's owner and members and the AdmitLabs team read and change it, while the college is a Client. **Team only notes**, the team's private notes, sit in it for the team alone. A Client that ends: the college no longer sees it, the team still reads it, nobody changes it, and it comes back if the college returns.
 
-**Eight sections**, a list on the left (a row of chips on a phone), one open at a time, each at its own address, with an Overview first (what needs checking, what's missing, recent changes):
+**Nine sections**, a list on the left (a row of chips on a phone), one open at a time, each at its own address, with an Overview first (what needs checking, what's missing, recent changes):
 
-1. **Basics**: about the college (name, type and city from Settings; the year it started, approvals such as UGC, AICTE and the NAAC grade, the address); contacts (the main contact and who approves our content, each with name, role, phone and email, and more contacts); how they like to talk; goals (the top 3 this year, the admission target, main rivals, the cities and states they want students from).
-2. **Programs**: for each program its level, duration, fees, seats, eligibility, admission dates, highlights and whether to push it most. The same details as Settings (section 6): one source, never two.
-3. **Brand**: the logo (an upload or a Drive link), colours (each a small swatch with its name and hex: the client's data, the one colour in the dashboard), fonts, tagline, tone (friendly or formal, with a line), words or topics to avoid, what to do, and brand guidelines (a PDF or a link, optional).
-4. **Proof**: approvals and rankings, awards, placements (each program's, from its details, and placement lists as links), known alumni and student reviews we may use. Alumni and reviews are a line and a link, never a phone number or an email; a review only with the student's agreement.
-5. **Links**: the public pages Drishti checks (website, Instagram, YouTube, Facebook, LinkedIn, the Google Business profile; the owner changes them in Settings) and folders, listings and files (the shared Drive folder, Shiksha, CollegeDunia, the admission portal, brochures, photos and videos).
-6. **Calendar**: the admission season, exams, fests, events, convocation, open days and days not to post, with each program's admission dates beside them.
-7. **Content**: the content plan by month (draft or agreed), scripts (waiting or approved, and who approves), what worked, and the work log (an approved script goes into it in one click).
-8. **Notes and decisions**: meeting notes, decisions, feedback and anything else, each with who and when; for the team, Team only notes first.
+1. **Blueprint**: the plan AdmitLabs makes for the college, as PDF versions (below).
+2. **Basics**: about the college (name, type and city from Settings; the year it started, approvals such as UGC, AICTE and the NAAC grade, the address); contacts (the main contact and who approves our content, each with name, role, phone and email, and more contacts); how they like to talk; goals (the top 3 this year, the admission target, main rivals, the cities and states they want students from).
+3. **Programs**: for each program its level, duration, fees, seats, eligibility, admission dates, highlights and whether to push it most. The same details as Settings (section 6): one source, never two.
+4. **Brand**: the logo (an upload or a Drive link), colours (each a small swatch with its name and hex: the client's data, the one colour in the dashboard), fonts, tagline, tone (friendly or formal, with a line), words or topics to avoid, what to do, and brand guidelines (a PDF or a link, optional).
+5. **Proof**: approvals and rankings, awards, placements (each program's, from its details, and placement lists as links), known alumni and student reviews we may use. Alumni and reviews are a line and a link, never a phone number or an email; a review only with the student's agreement.
+6. **Links**: the public pages Drishti checks (website, Instagram, YouTube, Facebook, LinkedIn, the Google Business profile; the owner changes them in Settings) and folders, listings and files (the shared Drive folder, Shiksha, CollegeDunia, the admission portal, brochures, photos and videos).
+7. **Calendar**: the admission season, exams, fests, events, convocation, open days and days not to post, with each program's admission dates beside them.
+8. **Content**: the content plan by month (draft or agreed), scripts (waiting or approved, and who approves), what worked, and the work log (an approved script goes into it in one click).
+9. **Notes and decisions**: meeting notes, decisions, feedback and anything else, each with who and when; for the team, Team only notes first.
 
 **Every fact** shows its value, where it came from and when (found by Drishti, added by a person, from Help us know you), Edit, and History: every change with who made it (their name, or their email), when, and what it was before. A missing must-have says what to add, or can be marked "Doesn't apply" with a reason where it may.
 
@@ -1032,6 +1038,18 @@ The AdmitLabs team can look over a new Audit and a monthly summary before the co
 **Ask the brain.** A box at the top: "What's the BBA fee?", "Who approves reels?". The answer, the section it came from and when it was checked, or where to add it when the Brain does not know. Answers come only from the Brain: never the internet, never Leads, and Team only notes only for the team. The AI writer answers it (section 17): a mock now, the Claude API later.
 
 **Files.** Links first. A logo (PNG, JPG or WebP, up to 2 MB) and brand guidelines (a PDF, up to 10 MB) can be uploaded to a private bucket; nothing bigger. A file goes straight from the browser to the bucket through a signed upload link: the server makes the link only after checking the person, the college, the type and the size, and checks the stored file again before it is kept. Files never pass through the app's server, whose requests stay at the default size (a hosted server takes about 4.5 MB at most). A proper Google Drive connection comes with the backend.
+
+**The Blueprint.** The plan AdmitLabs makes for a Client, as PDF versions, first in the Brain.
+
+- **Upload blueprint** (Admins, Team members and the Client's managers): a PDF, up to 20 MB, straight from the browser to its own private bucket through a signed upload link, as the logo and guidelines go. Each upload is the next version, a Draft.
+- **The latest version** leads: its number and status, the file name, when and by whom it was uploaded, shared and approved, and **View** and **Download**. **Past versions** below, each still viewable.
+- **Status**: **Draft** (the team only), **Shared** (the college sees it) or **Approved**. The team moves a version between them.
+- **The college** (the owner and members) sees only the Shared and Approved versions of its own Blueprint. On the latest Shared version it clicks **Approve**, or **Ask for changes** with a short note (up to 500 characters). Who and when are kept. Either way the Client's managers get an email (every Admin when it has none).
+- **Ask the brain** reads the words of the latest Shared or Approved version, never a Draft. The AI reader reads the PDF when it is uploaded (section 17): a mock now that reads a PDF's plain text, so a PDF whose text is compressed, as a design tool makes it, reads as nothing until the real reader.
+- **Needs checking** when the latest version is older than 90 days **[ADJUSTABLE]**: the team uploads a new version.
+- **After Ready**: once the team clicks Mark as Ready, two steps follow, **Blueprint shared** and **Blueprint approved**, for the team on the Overview and in the Blueprint. They never hold Ready back.
+- **The Clients list** shows each Client's Blueprint: None, Draft, Shared or Approved.
+- **History** keeps every upload and status change and what the college said. A Draft's upload is the team's alone.
 
 **Rules.** No passwords or login details anywhere in the Brain: every text is checked in the form and again in the database, and every page says "Use a password manager". No student data: that stays in Leads. The dashboard's design rules hold, monochrome but for a brand's own swatches.
 

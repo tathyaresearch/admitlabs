@@ -66,7 +66,8 @@ export type ProviderFeed =
   | 'monthly_summary'
   | 'audit_ready_email'
   | 'lead_alert'
-  | 'team_lead';
+  | 'team_lead'
+  | 'blueprint_text';
 
 /** The slot each provider fills, what it feeds, and what it will connect to later (spec section 17). */
 export const PROVIDER_FEEDS: Readonly<Record<ProviderKey, { slot: string; feeds: readonly ProviderFeed[]; realSource: string }>> = {
@@ -91,7 +92,7 @@ export const PROVIDER_FEEDS: Readonly<Record<ProviderKey, { slot: string; feeds:
   ai_answers: { slot: 'AI answers', feeds: ['ai_answers'], realSource: "Asking ChatGPT, Gemini and Perplexity the student's question" },
   ai: {
     slot: 'AI reader and writer',
-    feeds: ['why_it_worked', 'how_to_fix', 'ready_fix', 'finding_fix', 'content_ideas', 'rival_line', 'things_to_do', 'monthly_summary'],
+    feeds: ['why_it_worked', 'how_to_fix', 'ready_fix', 'finding_fix', 'content_ideas', 'rival_line', 'things_to_do', 'monthly_summary', 'blueprint_text'],
     realSource: 'Claude API',
   },
   email: { slot: 'Email sender', feeds: ['lead_alert', 'monthly_summary', 'audit_ready_email'], realSource: 'An email service (WhatsApp later, as a second channel)' },

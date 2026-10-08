@@ -524,6 +524,81 @@ export type Database = {
           },
         ]
       }
+      brain_blueprints: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          changes_at: string | null
+          changes_by: string | null
+          changes_note: string | null
+          file_name: string
+          file_path: string
+          id: string
+          institution_id: string
+          shared_at: string | null
+          shared_by: string | null
+          size_bytes: number
+          status: Database["public"]["Enums"]["blueprint_status"]
+          text: string | null
+          uploaded_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          changes_at?: string | null
+          changes_by?: string | null
+          changes_note?: string | null
+          file_name: string
+          file_path: string
+          id?: string
+          institution_id: string
+          shared_at?: string | null
+          shared_by?: string | null
+          size_bytes: number
+          status?: Database["public"]["Enums"]["blueprint_status"]
+          text?: string | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          changes_at?: string | null
+          changes_by?: string | null
+          changes_note?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          institution_id?: string
+          shared_at?: string | null
+          shared_by?: string | null
+          size_bytes?: number
+          status?: Database["public"]["Enums"]["blueprint_status"]
+          text?: string | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brain_blueprints_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brain_blueprints_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brain_changes: {
         Row: {
           after: Json | null
@@ -2861,6 +2936,18 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["team_role"]
       }
+      add_blueprint_version: {
+        Args: {
+          p_institution: string
+          p_name: string
+          p_path: string
+          p_text?: string
+        }
+        Returns: {
+          id: string
+          version: number
+        }[]
+      }
       add_found_brain_items: {
         Args: { p_institution: string; p_items: Json }
         Returns: number
@@ -2909,6 +2996,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      approve_blueprint: { Args: { p_blueprint: string }; Returns: string }
       approve_report: {
         Args: {
           p_at?: string
@@ -2931,6 +3019,10 @@ export type Database = {
         Args: { p_institution: string }
         Returns: string
       }
+      ask_blueprint_changes: {
+        Args: { p_blueprint: string; p_note: string }
+        Returns: string
+      }
       ask_for_paid: {
         Args: { p_institution: string; p_months: number }
         Returns: string
@@ -2946,6 +3038,10 @@ export type Database = {
           run_at: string
           trigger: Database["public"]["Enums"]["audit_trigger"]
         }[]
+      }
+      blueprint_reply_recipients: {
+        Args: { p_institution: string }
+        Returns: string[]
       }
       brain_people: {
         Args: { p_institution: string }
@@ -3252,6 +3348,13 @@ export type Database = {
         Args: { p_fields: Json; p_lead: string }
         Returns: undefined
       }
+      set_blueprint_status: {
+        Args: {
+          p_blueprint: string
+          p_status: Database["public"]["Enums"]["blueprint_status"]
+        }
+        Returns: undefined
+      }
       set_brain_step: {
         Args: {
           p_done: boolean
@@ -3385,6 +3488,7 @@ export type Database = {
     Enums: {
       audit_kind: "free" | "paid" | "client" | "team" | "rival"
       audit_trigger: "signup" | "scheduled" | "manual"
+      blueprint_status: "draft" | "shared" | "approved"
       brain_kind:
         | "contact"
         | "talk"
@@ -3461,6 +3565,7 @@ export type Database = {
         | "audit_ready"
         | "team_lead_alert"
         | "client_invite"
+        | "blueprint_reply"
       enquiry_kind:
         | "work_with_us"
         | "ask_paid"
@@ -3673,6 +3778,7 @@ export const Constants = {
     Enums: {
       audit_kind: ["free", "paid", "client", "team", "rival"],
       audit_trigger: ["signup", "scheduled", "manual"],
+      blueprint_status: ["draft", "shared", "approved"],
       brain_kind: [
         "contact",
         "talk",
@@ -3753,6 +3859,7 @@ export const Constants = {
         "audit_ready",
         "team_lead_alert",
         "client_invite",
+        "blueprint_reply",
       ],
       enquiry_kind: [
         "work_with_us",

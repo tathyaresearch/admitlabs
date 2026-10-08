@@ -9,10 +9,14 @@ import type { LineIconName as IconName } from '../graphics/icons.ts';
 import type { InstitutionDetails, ProgramDetails } from '../domain/details.ts';
 import type { InstitutionType } from '../domain/types.ts';
 
-export const BRAIN_SECTIONS = ['basics', 'programs', 'brand', 'proof', 'links', 'calendar', 'content', 'notes'] as const;
+export const BRAIN_SECTIONS = ['blueprint', 'basics', 'programs', 'brand', 'proof', 'links', 'calendar', 'content', 'notes'] as const;
 export type BrainSection = (typeof BRAIN_SECTIONS)[number];
 
+/** The sections of facts: every one but the Blueprint, which is PDF versions (the kickoff call goes through these). */
+export const FACT_SECTIONS = BRAIN_SECTIONS.filter((section): section is Exclude<BrainSection, 'blueprint'> => section !== 'blueprint');
+
 export const SECTION_INFO: Readonly<Record<BrainSection, { name: string; hint: string; icon: IconName; intro: string }>> = {
+  blueprint: { name: 'Blueprint', hint: 'The plan, as PDF versions', icon: 'compass', intro: 'The plan AdmitLabs makes with the college, as a PDF. Each upload is the next version; the college sees a version once it is shared, and approves it or asks for changes.' },
   basics: { name: 'Basics', hint: 'Contacts, approvals, goals', icon: 'team', intro: 'Who to talk to, what the college is, and what it wants this year.' },
   programs: { name: 'Programs', hint: 'Fees, seats, dates', icon: 'briefcase', intro: 'The same programs and details as Settings, Programs: one list, so a change here shows there too.' },
   brand: { name: 'Brand', hint: 'Logo, colours, voice', icon: 'palette', intro: 'How the college looks and sounds. Every post, fix and idea follows it.' },

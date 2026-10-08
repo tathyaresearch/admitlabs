@@ -53,8 +53,9 @@ import {
   sampleInstitution,
   sampleToken,
 } from '../src/sample/index.ts';
+import { SAMPLE_BLUEPRINTS } from '../src/sample/blueprints.ts';
 import { SAMPLE_BRAIN_NOTES, SAMPLE_BRAINS, SAMPLE_NAMES, SAMPLE_NEW_CLIENT_WORK, SAMPLE_NEW_CLIENTS } from '../src/sample/brain.ts';
-import { seedBrain } from './lib/brain-seed.ts';
+import { seedBlueprints, seedBrain } from './lib/brain-seed.ts';
 import { seedEnquiries } from './lib/enquiries-seed.ts';
 import { serviceClient } from './lib/db.ts';
 import { fail } from './lib/local.ts';
@@ -273,6 +274,8 @@ async function main(): Promise<void> {
     const seeded = await seedBrain(db, brain, requireUser);
     brainCounts.push(`${sampleInstitution(brain.slug).name} ${brain.ready ? 'Ready' : 'onboarding'} with ${seeded.facts} facts`);
   }
+  // Brightpath's Blueprint: version 1 approved in March, version 2 shared in October and waiting.
+  const blueprintCount = await seedBlueprints(db, SAMPLE_BLUEPRINTS, requireUser);
 
   // Audits: every sample run, own, rival and team, through the live path (collect, score, save).
   // With Review first on, the team approved each own Audit three hours after it ran, except the
@@ -586,7 +589,7 @@ async function main(): Promise<void> {
   console.log(`  Let AdmitLabs fix this ${SAMPLE_FIX_REQUESTS.length}, Leads ${SAMPLE_LEADS.length} from ${SAMPLE_LEAD_LINKS.length} tracking links`);
   console.log(`  Rival moves ${moveCount}, best posts ${contentCount ?? 0}, ads ${SAMPLE_ADS.length}, Rivals 3 things to do ${actionCount} (April to September)`);
   console.log(`  Demand pulls ${needed.length * DEMAND_MONTHS.length} with ${demandItems} grouped items, ${spikeCount} spike alerts sent`);
-  console.log(`  Client Brains: ${brainCounts.join('; ')}`);
+  console.log(`  Client Brains: ${brainCounts.join('; ')}; Blueprint versions ${blueprintCount}`);
   console.log(`  Enquiries, the team's own leads: ${enquiries.leads}, from ${enquiries.links} tracking links too`);
   console.log(`  Make these 3 picked ${pickCount} times (${PICK_MONTHS.join(' and ')}), ${SAMPLE_MADE.length} marked as made`);
   const live = reportPages.filter((report) => report.month === LIVE_REPORT_MONTH);

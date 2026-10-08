@@ -31,6 +31,7 @@ export interface BrainAnswer {
 
 // What words in a question are about. A phrase maps to one or more tags.
 const CONCEPTS: ReadonlyArray<[RegExp, string[]]> = [
+  [/\b(blueprint|strategy|roadmap)\b/, ['blueprint']],
   [/\b(fees?|cost|costs|price|tuition|how much)\b/, ['fees']],
   [/\b(seats?|intake)\b/, ['seats']],
   [/\b(eligib\w*|qualif\w*|marks)\b/, ['eligibility']],
@@ -87,6 +88,7 @@ const CONCEPTS: ReadonlyArray<[RegExp, string[]]> = [
 
 /** Where an unanswered question's fact would go, by what it is about. */
 const TAG_SECTION: Readonly<Record<string, BrainSection>> = {
+  blueprint: 'blueprint',
   fees: 'programs',
   seats: 'programs',
   eligibility: 'programs',
@@ -201,6 +203,7 @@ function itemFact(item: AnyBrainItem, brain: Pick<Brain, 'programs'>): AskFact |
 export function askFacts(
   brain: Pick<Brain, 'items' | 'details' | 'programs' | 'institution'>,
   teamNotes: ReadonlyArray<{ id: string; body: string }> = [],
+  blueprint: { id: string; version: number; text: string | null } | null = null,
 ): AskFact[] {
   const facts: AskFact[] = [];
   const i = brain.institution;
@@ -248,7 +251,31 @@ export function askFacts(
   for (const note of teamNotes) {
     facts.push({ key: `team-note:${note.id}`, section: 'notes', where: 'Team only notes', answer: sentence(note.body), tags: ['notes'], program: null, stamp: 'team-note', teamOnly: true });
   }
+  if (blueprint) facts.push(...blueprintFacts(blueprint));
   return facts;
+}
+
+/**
+ * The Blueprint's words, line by line, each a fact (the latest Shared or Approved version: the one
+ * the college sees too). Each is tagged with what it is about, as a question is.
+ */
+export function blueprintFacts(blueprint: { id: string; version: number; text: string | null }): AskFact[] {
+  if (!blueprint.text) return [];
+  return blueprint.text
+    .split(/\n+/)
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter((line) => line.length >= 12)
+    .slice(0, 80)
+    .map((line, index) => ({
+      key: `blueprint:${blueprint.id}:${index}`,
+      section: 'blueprint' as const,
+      where: where('blueprint', `version ${blueprint.version}`),
+      answer: sentence(line),
+      tags: ['blueprint', ...questionTags(line).filter((tag) => tag !== 'blueprint')],
+      program: null,
+      stamp: `blueprint:${blueprint.id}`,
+      teamOnly: false,
+    }));
 }
 
 const STOP = new Set(['what', 'whats', 'the', 'is', 'are', 'a', 'an', 'of', 'for', 'our', 'we', 'who', 'when', 'where', 'how', 'do', 'does', 'to', 'in', 'on', 'and', 'or', 'it', 'this', 'that', 'next', 'their', 'they', 'can', 'i', 'you', 'your', 'about', 'with', 'there', 'any', 'much']);
@@ -274,6 +301,8 @@ export function matchQuestion(question: string, facts: readonly AskFact[]): Brai
         else if (namesProgram) score -= 6;
       }
       score += words(fact.answer).filter((word) => asked.has(word) && word.length > 3).length;
+      // The Blueprint's lines answer when asked about the Blueprint; otherwise the Brain's own facts come first.
+      if (fact.section === 'blueprint' && !tags.includes('blueprint')) score -= 2;
       return { fact, score };
     })
     .filter((entry) => entry.score >= 4)

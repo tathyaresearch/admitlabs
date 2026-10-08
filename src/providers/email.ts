@@ -6,7 +6,7 @@
 
 import type { ProviderMode } from '../config/providers.ts';
 
-export type EmailKind = 'lead_alert' | 'monthly_summary' | 'audit_ready' | 'team_lead_alert' | 'client_invite';
+export type EmailKind = 'lead_alert' | 'monthly_summary' | 'audit_ready' | 'team_lead_alert' | 'client_invite' | 'blueprint_reply';
 
 export interface EmailMessage {
   kind: EmailKind;

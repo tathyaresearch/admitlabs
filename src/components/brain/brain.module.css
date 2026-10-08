@@ -1570,3 +1570,80 @@
 .row + .addRow {
   border-top: 1px solid var(--line);
 }
+
+/* The Blueprint (spec section 26): the latest version as a file, what the college said, the
+   two steps after Ready. */
+.blueprintFile {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.blueprintFile > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+
+.blueprintName {
+  display: block;
+  font: var(--type-strong);
+  overflow-wrap: anywhere;
+}
+
+.blueprintMeta {
+  display: block;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.blueprintFacts {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--type-small);
+  overflow-wrap: anywhere;
+}
+
+.blueprintAnswer {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-raised);
+}
+
+.blueprintSteps {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.blueprintStep {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.blueprintStepDone {
+  color: var(--text);
+  font-weight: var(--weight-medium);
+}
+
+.blueprintStepWhen {
+  font: var(--type-caption);
+  white-space: nowrap;
+}
+
+/* The Blueprint's buttons start bordered (View), so they keep to the card's edge on a phone. */
+@container (max-width: 38rem) {
+  .blueprintActions {
+    margin-left: 0;
+  }
+}

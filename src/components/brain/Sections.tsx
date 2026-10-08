@@ -30,6 +30,7 @@ import type { BrainPage } from '@/lib/brain/page';
 import { brainHref, LinkLine, NeedsChecking, StateTag } from './Bits';
 import { FactForm } from './FactForm';
 import styles from './brain.module.css';
+import { BlueprintSection } from './Blueprint';
 
 export interface SectionProps {
   page: BrainPage;
@@ -837,6 +838,8 @@ function Notes(props: SectionProps & { teamOnly?: ReactNode }) {
 
 export function SectionBody(props: SectionProps & { teamOnly?: ReactNode }) {
   switch (props.section) {
+    case 'blueprint':
+      return <BlueprintSection page={props.page} base={props.base} canEdit={props.canEdit} team={props.team} />;
     case 'basics':
       return <Basics {...props} />;
     case 'programs':
@@ -856,14 +859,18 @@ export function SectionBody(props: SectionProps & { teamOnly?: ReactNode }) {
   }
 }
 
-/** What each section's flag in the list says: something to check, or missing. */
-export function sectionFlags(page: BrainPage): Partial<Record<BrainSection, string>> {
+/** What each section's flag in the list says: something to check, or missing; for the Blueprint, what waits on whom. */
+export function sectionFlags(page: BrainPage, team = false): Partial<Record<BrainSection, string>> {
   const flags: Partial<Record<BrainSection, string>> = {};
+  const latest = page.blueprints[0];
+  if (latest && !team && latest.status === 'shared') flags.blueprint = 'To approve';
+  if (latest && team && latest.status === 'draft') flags.blueprint = 'Draft';
+  if (latest && team && latest.status === 'shared' && latest.changesAt) flags.blueprint = 'Changes asked';
   const check = new Map<BrainSection, number>();
   for (const fact of page.stale) check.set(fact.section, (check.get(fact.section) ?? 0) + 1);
   const missing = new Map<BrainSection, number>();
   for (const slot of page.progress.missing) missing.set(slot.section, (missing.get(slot.section) ?? 0) + 1);
-  for (const [section, count] of check) flags[section] = `${count} to check`;
+  for (const [section, count] of check) flags[section] = section === 'blueprint' ? 'Needs checking' : `${count} to check`;
   for (const [section, count] of missing) if (!flags[section]) flags[section] = `${count} missing`;
   return flags;
 }

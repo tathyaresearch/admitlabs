@@ -29,7 +29,7 @@ import {
   type BrainStep,
 } from './model.ts';
 
-export type ChangeWhat = 'added' | 'found' | 'changed' | 'confirmed' | 'corrected' | 'not_right' | 'removed' | 'checked' | 'started' | 'ready' | 'step_done' | 'step_undone';
+export type ChangeWhat = 'added' | 'found' | 'changed' | 'confirmed' | 'corrected' | 'not_right' | 'removed' | 'checked' | 'started' | 'ready' | 'step_done' | 'step_undone' | 'shared' | 'approved' | 'changes_asked';
 
 /** One row of brain_changes. */
 export interface ChangeRow {
@@ -86,6 +86,9 @@ const VERB: Readonly<Record<ChangeWhat, string>> = {
   ready: 'Marked Ready',
   step_done: 'Ticked',
   step_undone: 'Unticked',
+  shared: 'Shared',
+  approved: 'Approved',
+  changes_asked: 'Asked for changes to',
 };
 
 function itemOf(kind: string | null, fields: unknown): AnyBrainItem | null {
@@ -135,6 +138,7 @@ export function changeLines(
     const body = String((row.after ?? row.before) as string);
     return [{ ...base, section: 'notes', text: `${row.what === 'removed' ? 'Removed a team note' : 'Added a team note'}: ${body}`, before: null, after: null }];
   }
+  if (row.kind === 'blueprint') return blueprintLines(row, base);
   if (row.kind === 'found') return foundLines(row, base, context.institutionType);
   if (row.target === 'about' || row.target.startsWith('program:')) {
     if (row.what === 'checked') {
@@ -207,6 +211,25 @@ function foundValueNow(found: BrainFields['found'], after: unknown, type: Instit
   const details = programDetailsFromRow(after as ProgramDetailsRow);
   if (found.target.endsWith(':page')) return details.pageUrl ? hostAndPath(details.pageUrl) : null;
   return programRows(details).find((row) => row.key === 'fees')?.value ?? null;
+}
+
+/** The Blueprint's versions: uploaded, shared, approved, back to Draft, changes asked for. */
+function blueprintLines(row: ChangeRow, base: Pick<ChangeLine, 'id' | 'at' | 'who' | 'teamOnly'>): ChangeLine[] {
+  const after = (row.after ?? {}) as { version?: number; file_name?: string; status?: string; note?: string };
+  const version = after.version ? `the Blueprint, version ${after.version}` : 'the Blueprint';
+  // Mid sentence, the number closes with a comma: "Shared the Blueprint, version 3, with the college".
+  const inner = after.version ? `${version},` : version;
+  const text =
+    row.what === 'added'
+      ? `Uploaded ${version}${after.file_name ? ` (${after.file_name})` : ''}`
+      : row.what === 'shared'
+        ? `Shared ${inner} with the college`
+        : row.what === 'approved'
+          ? `Approved ${version}`
+          : row.what === 'changes_asked'
+            ? `Asked for changes to ${version}${after.note ? `: ${after.note}` : ''}`
+            : `Moved ${inner} back to Draft`;
+  return [{ ...base, section: 'blueprint', text, before: null, after: null }];
 }
 
 /** What a fact is, in History's words: "meeting notes", "the tagline", "a script". */

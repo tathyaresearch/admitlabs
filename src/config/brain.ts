@@ -26,6 +26,17 @@ export const BRAIN_RULES = {
     logo: { maxMb: 2, types: ['image/png', 'image/jpeg', 'image/webp'] },
     guidelines: { maxMb: 10, types: ['application/pdf'] },
   },
+  /** The Blueprint: PDF versions in their own private bucket. [ADJUSTABLE] When the latest version needs a fresh one, in days. */
+  blueprint: {
+    bucket: 'brain-blueprints',
+    maxMb: 20,
+    type: 'application/pdf',
+    checkDays: 90,
+    /** The most of a PDF's words Ask the brain keeps. */
+    textMax: 20000,
+    /** A note asking for changes. */
+    noteMax: 500,
+  },
   /** Changes the History panel shows for one fact, and Recent changes on the Overview. */
   historyShown: 20,
   recentShown: 6,

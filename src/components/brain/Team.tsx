@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import { describeItem, shortValue } from '@/brain/facts';
 import { aboutInputs, factInputs, type InputSpec } from '@/brain/form-spec';
+import { afterReadySteps } from '@/brain/blueprint';
 import { personName, sectionName } from '@/brain/history';
 import { STEPS, STEP_INFO, sectionOf, type AnyBrainItem, type BrainFields } from '@/brain/model';
 import { stepBlocked } from '@/brain/progress';
@@ -75,6 +76,41 @@ export function BrainTab({ institutionId, page, name }: { institutionId: string;
         )}
       </div>
     </div>
+  );
+}
+
+/** After Mark as Ready (spec section 26): the Blueprint shared, then approved. They never hold Ready back. */
+export function AfterReadyCard({ page, base }: { page: BrainPage; base: string }) {
+  const steps = afterReadySteps(page.blueprints);
+  const next = steps.find((step) => !step.done);
+  return (
+    <section className={styles.group} aria-labelledby="after-ready">
+      <div className={styles.groupHead}>
+        <h2 id="after-ready" className={styles.groupTitle}>
+          After Ready
+        </h2>
+        <span className={`${styles.count} num`}>
+          {steps.filter((step) => step.done).length}/{steps.length}
+        </span>
+      </div>
+      <ul className={styles.blueprintSteps}>
+        {steps.map((step) => (
+          <li key={step.key} className={styles.blueprintStep}>
+            <Icon name={step.done ? 'checkCircle' : 'stopwatch'} size={16} />
+            <span className={step.done ? styles.blueprintStepDone : undefined}>{step.name}</span>
+            <span className={styles.blueprintStepWhen}>{step.done && step.at ? formatDate(step.at) : 'Not yet'}</span>
+          </li>
+        ))}
+      </ul>
+      {next ? (
+        <p className={styles.groupNote}>
+          {next.key === 'shared' ? 'Upload the Blueprint and share it with the college.' : 'The college approves it in their Brain, or asks for changes.'}{' '}
+          <Link href={brainHref(base, { section: 'blueprint' })} className={styles.quietLink}>
+            Open the Blueprint
+          </Link>
+        </p>
+      ) : null}
+    </section>
   );
 }
 

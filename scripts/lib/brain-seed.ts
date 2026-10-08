@@ -3,9 +3,12 @@
 // History and Needs checking read as they would live. What Drishti pre-filled comes from the real
 // pre-fill (src/brain/jobs.ts), run on the college's latest Audit.
 
+import { randomUUID } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { foundItems } from '../../src/brain/jobs.ts';
 import type { BrainFields } from '../../src/brain/model.ts';
+import { extractPdfText } from '../../src/brain/pdf-text.ts';
+import { BRAIN_RULES } from '../../src/config/brain.ts';
 import {
   EMPTY_PROGRAM_DETAILS,
   institutionDetailsFromRow,
@@ -17,6 +20,8 @@ import {
 } from '../../src/domain/details.ts';
 import { istDate } from '../../src/domain/dates.ts';
 import type { Database, Json } from '../../src/lib/supabase/database.types.ts';
+import { samplePdf } from '../../src/sample/blueprint-pdf.ts';
+import type { SampleBlueprint } from '../../src/sample/blueprints.ts';
 import type { SampleBrain } from '../../src/sample/brain.ts';
 import { institutionId, programId } from '../../src/sample/ids.ts';
 import { fail } from './local.ts';
@@ -157,4 +162,42 @@ export async function seedBrain(db: Db, sample: SampleBrain, user: (email: strin
     must(await db.from('brains').update({ status: 'ready', ready_at: at(sample.ready.on, 17), ready_by: user(sample.ready.by) }).eq('institution_id', institution), 'Ready');
   }
   return { facts: sample.facts.length, found };
+}
+
+/**
+ * The sample Blueprints: each PDF into the private bucket, then its version, uploaded as a Draft
+ * and moved on as the team and the college did, so History reads as it would live.
+ */
+export async function seedBlueprints(db: Db, samples: readonly SampleBlueprint[], user: (email: string) => string): Promise<number> {
+  for (const sample of samples) {
+    const institution = institutionId(sample.slug);
+    const bytes = samplePdf(sample.pages);
+    const path = `${institution}/${randomUUID()}.pdf`;
+    const stored = await db.storage.from(BRAIN_RULES.blueprint.bucket).upload(path, new Blob([bytes], { type: BRAIN_RULES.blueprint.type }), { contentType: BRAIN_RULES.blueprint.type });
+    if (stored.error) fail(`Could not seed the Blueprint (the file): ${stored.error.message}`);
+    const row = must<{ id: string }>(
+      await db
+        .from('brain_blueprints')
+        .insert({
+          institution_id: institution,
+          version: sample.version,
+          file_path: path,
+          file_name: sample.fileName,
+          size_bytes: bytes.length,
+          uploaded_at: at(sample.uploaded.on, 11),
+          uploaded_by: user(sample.uploaded.by),
+          text: extractPdfText(bytes),
+        })
+        .select('id')
+        .single(),
+      'a Blueprint version',
+    );
+    if (sample.shared) {
+      must(await db.from('brain_blueprints').update({ status: 'shared', shared_at: at(sample.shared.on, 12), shared_by: user(sample.shared.by) }).eq('id', row.id), 'sharing a Blueprint');
+    }
+    if (sample.approved) {
+      must(await db.from('brain_blueprints').update({ status: 'approved', approved_at: at(sample.approved.on, 15), approved_by: user(sample.approved.by) }).eq('id', row.id), 'approving a Blueprint');
+    }
+  }
+  return samples.length;
 }
