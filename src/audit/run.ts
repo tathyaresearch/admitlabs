@@ -15,6 +15,7 @@ import { resultKey } from '../domain/scoring/score.ts';
 import { effectiveTier, type PlanRecord } from '../domain/tiers.ts';
 import { CHECK_KEYS, type AuditKind, type CheckKey, type CheckResult, type ReviewState } from '../domain/types.ts';
 import type { Database, Json } from '../lib/supabase/database.types.ts';
+import { loadBrainWriting } from '../brain/load.ts';
 import { collect } from '../providers/collect.ts';
 import { getAnalysisProvider } from '../providers/registry.ts';
 import type { InstitutionRef, ProgramRef } from '../providers/types.ts';
@@ -244,6 +245,8 @@ export async function runAudit(db: Db, options: RunAuditOptions): Promise<RunAud
     }),
   );
   const review: ReviewState = options.review ?? (own && (statusResult.data?.review_first ?? true) ? 'waiting' : 'approved');
+  // A Client's Brain fills more of the ready fixes' blanks.
+  const brain = own ? await loadBrainWriting(db, institutionId, asOf) : null;
   const { record, evaluation } = await prepareAudit(
     {
       institutionId,
@@ -264,6 +267,7 @@ export async function runAudit(db: Db, options: RunAuditOptions): Promise<RunAud
         programNames: active.map((program) => program.name),
         institutionDetails: detailsResult.data ? institutionDetailsFromRow(detailsResult.data) : null,
         programDetails,
+        brain,
       },
       review,
     },

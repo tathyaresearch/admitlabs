@@ -12,6 +12,14 @@ describe('the dashboard menu', () => {
     assert.ok(!INSTITUTION_NAV.flatMap((section) => section.items).some((item) => item.href === '/leads'));
   });
 
+  test('Brain sits after Leads for a Client', () => {
+    assert.deepEqual(
+      institutionNav(true, true)[0]?.items.map((item) => item.href),
+      ['/', '/audit', '/rivals', '/demand', '/leads', '/brain', '/reports'],
+    );
+    assert.ok(!institutionNav(true)[0]?.items.some((item) => item.href === '/brain'));
+  });
+
   test('a Client’s phone bar has Leads in place of Demand', () => {
     assert.deepEqual(LEADS_MOBILE_PRIMARY, ['/', '/audit', '/rivals', '/leads']);
     assert.deepEqual(MOBILE_PRIMARY, ['/', '/audit', '/rivals', '/demand']);

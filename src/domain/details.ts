@@ -16,6 +16,16 @@ export type SkillingRecognition = (typeof SKILLING_RECOGNITIONS)[number];
 export const HOSTEL_OPTIONS = ['none', 'boys', 'girls', 'both'] as const;
 export type HostelOption = (typeof HOSTEL_OPTIONS)[number];
 
+/** A program's level: what a student gets at the end. */
+export const PROGRAM_LEVELS = ['certificate', 'diploma', 'ug', 'pg', 'doctorate'] as const;
+export type ProgramLevel = (typeof PROGRAM_LEVELS)[number];
+export const PROGRAM_LEVEL_LABELS: Readonly<Record<ProgramLevel, string>> = {
+  certificate: 'Certificate',
+  diploma: 'Diploma',
+  ug: 'Undergraduate degree',
+  pg: 'Postgraduate degree',
+  doctorate: 'Doctorate',
+};
 export const NAAC_LABELS: Readonly<Record<NaacGrade, string>> = {
   'A++': 'A++',
   'A+': 'A+',
@@ -50,6 +60,7 @@ export const DETAIL_LIMITS = {
   scholarships: 200,
   difference: 280,
   eligibility: 120,
+  highlights: 280,
   listItems: 5,
   listItemLength: 60,
   pageUrl: 300,
@@ -73,6 +84,7 @@ export interface InstitutionDetails {
 }
 
 export interface ProgramDetails {
+  level: ProgramLevel | null;
   durationValue: number | null;
   durationUnit: 'months' | 'years' | null;
   feesAmount: number | null;
@@ -91,6 +103,8 @@ export interface ProgramDetails {
   applicationsOpen: string | null;
   applicationsClose: string | null;
   pageUrl: string | null;
+  /** What makes the program worth choosing, in a line or two. */
+  highlights: string | null;
 }
 
 export const EMPTY_INSTITUTION_DETAILS: InstitutionDetails = {
@@ -111,6 +125,7 @@ export const EMPTY_INSTITUTION_DETAILS: InstitutionDetails = {
 };
 
 export const EMPTY_PROGRAM_DETAILS: ProgramDetails = {
+  level: null,
   durationValue: null,
   durationUnit: null,
   feesAmount: null,
@@ -126,6 +141,7 @@ export const EMPTY_PROGRAM_DETAILS: ProgramDetails = {
   applicationsOpen: null,
   applicationsClose: null,
   pageUrl: null,
+  highlights: null,
 };
 
 // Reading a form ----------------------------------------------------------------------------
@@ -246,6 +262,7 @@ export function readProgramDetails(form: FormRead, website: string): { values: P
   const rawPage = clean(form.get('page_url'));
   const page = rawPage && !/^https?:\/\//i.test(rawPage) ? `https://${rawPage}` : rawPage;
   const values: ProgramDetails = {
+    level: choice(form, 'level', PROGRAM_LEVELS),
     durationValue: whole(form, 'duration_value', 1, 120, 'Enter a length between 1 and 120.', errors, 'durationValue'),
     durationUnit: unit,
     feesAmount: whole(form, 'fees_amount', 0, 100_000_000, 'Enter the fees in rupees, as a whole number.', errors, 'feesAmount'),
@@ -261,6 +278,7 @@ export function readProgramDetails(form: FormRead, website: string): { values: P
     applicationsOpen: day(form, 'applications_open', errors, 'applicationsOpen'),
     applicationsClose: day(form, 'applications_close', errors, 'applicationsClose'),
     pageUrl: page || null,
+    highlights: text(form, 'highlights', DETAIL_LIMITS.highlights, 'Highlights', errors, 'highlights'),
   };
   if (values.durationValue !== null && !unit) errors.durationValue = 'Pick months or years.';
   if (values.durationValue === null && unit) values.durationUnit = null;
@@ -301,6 +319,7 @@ export interface InstitutionDetailsRow {
 }
 
 export interface ProgramDetailsRow {
+  level: string | null;
   duration_value: number | null;
   duration_unit: string | null;
   fees_amount: number | null;
@@ -316,6 +335,7 @@ export interface ProgramDetailsRow {
   applications_open: string | null;
   applications_close: string | null;
   page_url: string | null;
+  highlights: string | null;
 }
 
 const pickOf = <T extends string>(value: string | null, allowed: readonly T[]): T | null => ((allowed as readonly string[]).includes(value ?? '') ? (value as T) : null);
@@ -364,6 +384,7 @@ export function institutionDetailsToRow(values: InstitutionDetails): Institution
 export function programDetailsFromRow(row: ProgramDetailsRow | null): ProgramDetails {
   if (!row) return EMPTY_PROGRAM_DETAILS;
   return {
+    level: pickOf(row.level, PROGRAM_LEVELS),
     durationValue: row.duration_value,
     durationUnit: pickOf(row.duration_unit, ['months', 'years'] as const),
     feesAmount: row.fees_amount,
@@ -379,11 +400,13 @@ export function programDetailsFromRow(row: ProgramDetailsRow | null): ProgramDet
     applicationsOpen: row.applications_open,
     applicationsClose: row.applications_close,
     pageUrl: row.page_url,
+    highlights: row.highlights,
   };
 }
 
 export function programDetailsToRow(values: ProgramDetails): ProgramDetailsRow {
   return {
+    level: values.level,
     duration_value: values.durationValue,
     duration_unit: values.durationUnit,
     fees_amount: values.feesAmount,
@@ -399,6 +422,7 @@ export function programDetailsToRow(values: ProgramDetails): ProgramDetailsRow {
     applications_open: values.applicationsOpen,
     applications_close: values.applicationsClose,
     page_url: values.pageUrl,
+    highlights: values.highlights,
   };
 }
 
@@ -424,7 +448,7 @@ export function durationText(details: ProgramDetails): string | null {
   return `${details.durationValue} ${unit}`;
 }
 
-function approvalNames(details: InstitutionDetails): string[] {
+export function approvalNames(details: InstitutionDetails): string[] {
   const names: string[] = [];
   if (details.naacGrade) names.push(details.naacGrade === 'not_accredited' ? 'Not NAAC accredited' : `NAAC ${NAAC_LABELS[details.naacGrade]}`);
   if (details.nirfRank !== null) names.push(`NIRF rank ${details.nirfRank}${details.nirfYear ? ` in ${details.nirfYear}` : ''}`);
@@ -435,7 +459,7 @@ function approvalNames(details: InstitutionDetails): string[] {
   return names;
 }
 
-function placementLines(details: ProgramDetails): string[] {
+export function placementLines(details: ProgramDetails): string[] {
   const lines: string[] = [];
   if (details.placedPercent !== null) lines.push(`${details.placementYear ? `${details.placementYear} batch: ` : ''}${details.placedPercent}% placed`);
   const packages = [
@@ -466,6 +490,7 @@ export function institutionDetailLines(details: InstitutionDetails, type: Instit
 /** Everything the institution added about one program, as label and value pairs. */
 export function programDetailLines(details: ProgramDetails): Array<{ label: string; value: string }> {
   const lines: Array<{ label: string; value: string }> = [];
+  if (details.level) lines.push({ label: 'Level', value: PROGRAM_LEVEL_LABELS[details.level] });
   const duration = durationText(details);
   if (duration) lines.push({ label: 'Duration', value: duration });
   const fees = feesText(details);
@@ -477,10 +502,11 @@ export function programDetailLines(details: ProgramDetails): Array<{ label: stri
   if (placements.length) lines.push({ label: 'Placements', value: placements.join('. ') });
   if (details.applicationsOpen || details.applicationsClose) lines.push({ label: 'Applications', value: applicationsText(details) as string });
   if (details.pageUrl) lines.push({ label: 'Page', value: hostAndPath(details.pageUrl) });
+  if (details.highlights) lines.push({ label: 'Highlights', value: details.highlights });
   return lines;
 }
 
-function applicationsText(details: ProgramDetails): string | null {
+export function applicationsText(details: ProgramDetails): string | null {
   if (details.applicationsOpen && details.applicationsClose) return `Open ${dateOf(details.applicationsOpen)}, close ${dateOf(details.applicationsClose)}`;
   if (details.applicationsOpen) return `Open ${dateOf(details.applicationsOpen)}`;
   if (details.applicationsClose) return `Close ${dateOf(details.applicationsClose)}`;

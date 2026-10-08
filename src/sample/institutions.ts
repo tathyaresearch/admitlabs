@@ -123,7 +123,7 @@ export const SAMPLE_INSTITUTIONS: readonly SampleInstitution[] = [
     claimedAt: '2026-03-02',
     isProspect: false,
     owner: 'owner@brightpath-skills.example',
-    members: [],
+    members: ['anjali@brightpath-skills.example'],
     plan: { tier: 'client', startsAt: '2026-03-02', endsAt: null, setBy: ADMIN_EMAIL, freeProgramKey: null },
     reviewFirst: false,
     role: 'Client tier, 6 months of history, rising as the AdmitLabs team acts on it. Sends automatically. Leads from 4 links.',

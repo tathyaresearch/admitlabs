@@ -6,6 +6,7 @@
 // service key, naming the team user. No Next.js here, so Node runs it in the seed and the tests.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { loadBrainWriting } from '../brain/load.ts';
 import { institutionDetailsFromRow, programDetailsFromRow, type ProgramDetails } from '../domain/details.ts';
 import type { CheckResult, InstitutionType, Tier } from '../domain/types.ts';
 import type { Database, Json } from '../lib/supabase/database.types.ts';
@@ -161,6 +162,7 @@ async function freshAdvice(db: Db, state: ReviewState, checkId: string, result: 
       programNames: [...state.names.values()],
       institutionDetails: details.data ? institutionDetailsFromRow(details.data) : null,
       programDetails: byName,
+      brain: await loadBrainWriting(db, state.audit.institutionId, new Date()),
     },
   });
   return { whyItMatters: advice.whyItMatters, steps: advice.steps, difficulty: advice.difficulty, readyFix: advice.readyFix };

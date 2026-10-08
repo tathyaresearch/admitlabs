@@ -36,6 +36,8 @@ export interface MonthlySummary {
   };
   /** Where each thing comes from, and its small label, beside lines.things. */
   things: Array<{ source: ThingSource; meta: string }>;
+  /** A Client's Brain in one line (src/brain/line.ts), as it stood when the summary was made. */
+  brain?: string | null;
 }
 
 /** The lines a review can fix: 'words', 'things.1' to 'things.3', 'move' and 'enquiries'. */
@@ -81,6 +83,8 @@ export interface SummaryInput {
   hasRivals: boolean;
   /** A Client's enquiries; null for Paid. */
   leads: SummaryLeads | null;
+  /** A Client's Brain in one line; null without one. */
+  brain?: string | null;
 }
 
 const lower = (text: string) => `${text.charAt(0).toLowerCase()}${text.slice(1)}`;
@@ -159,6 +163,7 @@ export function buildSummary(input: SummaryInput): MonthlySummary {
       enquiries: input.leads ? enquiriesLine(input.leads, input.month) : null,
     },
     things: things.map((thing) => ({ source: thing.source, meta: thingMeta(thing) })),
+    ...(input.brain ? { brain: input.brain } : {}),
   };
 }
 
@@ -213,5 +218,6 @@ export function parseSummary(value: unknown): MonthlySummary | null {
     words: parsedWords,
     lines: { words: lines.words, things: lines.things as string[], move: lines.move, enquiries: (lines.enquiries as string | null) ?? null },
     things: parsedThings,
+    ...(isText(value.brain) ? { brain: value.brain } : {}),
   };
 }

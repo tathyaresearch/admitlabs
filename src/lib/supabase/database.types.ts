@@ -524,6 +524,232 @@ export type Database = {
           },
         ]
       }
+      brain_changes: {
+        Row: {
+          after: Json | null
+          at: string
+          before: Json | null
+          by: string | null
+          field: string | null
+          id: string
+          institution_id: string
+          kind: string | null
+          target: string
+          team_only: boolean
+          what: string
+        }
+        Insert: {
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          by?: string | null
+          field?: string | null
+          id?: string
+          institution_id: string
+          kind?: string | null
+          target: string
+          team_only?: boolean
+          what: string
+        }
+        Update: {
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          by?: string | null
+          field?: string | null
+          id?: string
+          institution_id?: string
+          kind?: string | null
+          target?: string
+          team_only?: boolean
+          what?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brain_changes_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brain_changes_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brain_checks: {
+        Row: {
+          checked_at: string
+          checked_by: string | null
+          fact: string
+          institution_id: string
+        }
+        Insert: {
+          checked_at?: string
+          checked_by?: string | null
+          fact: string
+          institution_id: string
+        }
+        Update: {
+          checked_at?: string
+          checked_by?: string | null
+          fact?: string
+          institution_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brain_checks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brain_checks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brain_items: {
+        Row: {
+          checked_at: string
+          checked_by: string | null
+          created_at: string
+          created_by: string | null
+          fields: Json
+          found_at: string | null
+          id: string
+          institution_id: string
+          kind: Database["public"]["Enums"]["brain_kind"]
+          source: Database["public"]["Enums"]["brain_source"]
+          source_url: string | null
+          to_confirm: boolean
+          updated_at: string
+          updated_by: string | null
+          via_help: boolean
+        }
+        Insert: {
+          checked_at?: string
+          checked_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          fields: Json
+          found_at?: string | null
+          id?: string
+          institution_id: string
+          kind: Database["public"]["Enums"]["brain_kind"]
+          source: Database["public"]["Enums"]["brain_source"]
+          source_url?: string | null
+          to_confirm?: boolean
+          updated_at?: string
+          updated_by?: string | null
+          via_help?: boolean
+        }
+        Update: {
+          checked_at?: string
+          checked_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          fields?: Json
+          found_at?: string | null
+          id?: string
+          institution_id?: string
+          kind?: Database["public"]["Enums"]["brain_kind"]
+          source?: Database["public"]["Enums"]["brain_source"]
+          source_url?: string | null
+          to_confirm?: boolean
+          updated_at?: string
+          updated_by?: string | null
+          via_help?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brain_items_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "brains"
+            referencedColumns: ["institution_id"]
+          },
+        ]
+      }
+      brain_steps: {
+        Row: {
+          done_at: string
+          done_by: string | null
+          institution_id: string
+          step: Database["public"]["Enums"]["brain_step"]
+        }
+        Insert: {
+          done_at?: string
+          done_by?: string | null
+          institution_id: string
+          step: Database["public"]["Enums"]["brain_step"]
+        }
+        Update: {
+          done_at?: string
+          done_by?: string | null
+          institution_id?: string
+          step?: Database["public"]["Enums"]["brain_step"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brain_steps_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "brains"
+            referencedColumns: ["institution_id"]
+          },
+        ]
+      }
+      brains: {
+        Row: {
+          institution_id: string
+          ready_at: string | null
+          ready_by: string | null
+          started_at: string
+          started_by: string | null
+          status: Database["public"]["Enums"]["brain_status"]
+        }
+        Insert: {
+          institution_id: string
+          ready_at?: string | null
+          ready_by?: string | null
+          started_at?: string
+          started_by?: string | null
+          status?: Database["public"]["Enums"]["brain_status"]
+        }
+        Update: {
+          institution_id?: string
+          ready_at?: string | null
+          ready_by?: string | null
+          started_at?: string
+          started_by?: string | null
+          status?: Database["public"]["Enums"]["brain_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brains_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brains_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "team_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bulk_run_rows: {
         Row: {
           audit_id: string | null
@@ -1481,6 +1707,24 @@ export type Database = {
           },
         ]
       }
+      person_names: {
+        Row: {
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           ends_at: string | null
@@ -1547,11 +1791,14 @@ export type Database = {
           fees_amount: number | null
           fees_period: string | null
           highest_package: number | null
+          highlights: string | null
           institution_id: string
+          level: string | null
           page_url: string | null
           placed_percent: number | null
           placement_year: number | null
           program_id: string
+          push: boolean
           seats: number | null
           specialisations: string[] | null
           top_recruiters: string[] | null
@@ -1568,11 +1815,14 @@ export type Database = {
           fees_amount?: number | null
           fees_period?: string | null
           highest_package?: number | null
+          highlights?: string | null
           institution_id: string
+          level?: string | null
           page_url?: string | null
           placed_percent?: number | null
           placement_year?: number | null
           program_id: string
+          push?: boolean
           seats?: number | null
           specialisations?: string[] | null
           top_recruiters?: string[] | null
@@ -1589,11 +1839,14 @@ export type Database = {
           fees_amount?: number | null
           fees_period?: string | null
           highest_package?: number | null
+          highlights?: string | null
           institution_id?: string
+          level?: string | null
           page_url?: string | null
           placed_percent?: number | null
           placement_year?: number | null
           program_id?: string
+          push?: boolean
           seats?: number | null
           specialisations?: string[] | null
           top_recruiters?: string[] | null
@@ -2284,6 +2537,7 @@ export type Database = {
           attention_order: number | null
           audit_id: string | null
           audit_kind: Database["public"]["Enums"]["audit_kind"] | null
+          brain_status: Database["public"]["Enums"]["brain_status"] | null
           checked_at: string | null
           city: string | null
           claimed: boolean | null
@@ -2324,6 +2578,10 @@ export type Database = {
       accept_team_invite: {
         Args: never
         Returns: Database["public"]["Enums"]["team_role"]
+      }
+      add_found_brain_items: {
+        Args: { p_institution: string; p_items: Json }
+        Returns: number
       }
       add_program: {
         Args: { p_name: string; p_program_key: string }
@@ -2386,7 +2644,25 @@ export type Database = {
           trigger: Database["public"]["Enums"]["audit_trigger"]
         }[]
       }
+      brain_people: {
+        Args: { p_institution: string }
+        Returns: {
+          email: string
+          name: string
+          team: boolean
+          user_id: string
+        }[]
+      }
+      check_brain_fact: {
+        Args: { p_fact: string; p_institution: string }
+        Returns: undefined
+      }
+      close_found_item: {
+        Args: { p_item: string; p_outcome: string }
+        Returns: undefined
+      }
       close_start_guide: { Args: { p_institution: string }; Returns: undefined }
+      confirm_brain_item: { Args: { p_item: string }; Returns: undefined }
       create_lead_link: {
         Args: {
           p_institution: string
@@ -2439,6 +2715,7 @@ export type Database = {
         Returns: {
           email: string
           joined_at: string
+          name: string
           role: Database["public"]["Enums"]["membership_role"]
           summary_email: boolean
           user_id: string
@@ -2479,6 +2756,7 @@ export type Database = {
           used_on: Database["public"]["Enums"]["lead_source"]
         }[]
       }
+      mark_brain_ready: { Args: { p_institution: string }; Returns: undefined }
       mark_done: {
         Args: {
           p_check?: Database["public"]["Enums"]["check_key"]
@@ -2559,6 +2837,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      remove_brain_item: { Args: { p_item: string }; Returns: undefined }
       remove_member: { Args: { p_user: string }; Returns: undefined }
       remove_team_invite: { Args: { p_email: string }; Returns: undefined }
       remove_team_user: { Args: { p_user: string }; Returns: undefined }
@@ -2595,6 +2874,16 @@ export type Database = {
         Args: { p_institution: string }
         Returns: Record<string, unknown>
       }
+      save_brain_item: {
+        Args: {
+          p_fields: Json
+          p_institution: string
+          p_item: string
+          p_kind: Database["public"]["Enums"]["brain_kind"]
+          p_via_help?: boolean
+        }
+        Returns: string
+      }
       save_lead_settings: {
         Args: {
           p_alert_emails: string[]
@@ -2607,11 +2896,20 @@ export type Database = {
         Args: { p_added: Json; p_picked: string[] }
         Returns: string[]
       }
+      set_brain_step: {
+        Args: {
+          p_done: boolean
+          p_institution: string
+          p_step: Database["public"]["Enums"]["brain_step"]
+        }
+        Returns: undefined
+      }
       set_enquiry_handled: {
         Args: { p_enquiry: string; p_handled: boolean }
         Returns: undefined
       }
       set_free_program: { Args: { p_program: string }; Returns: undefined }
+      set_my_name: { Args: { p_name: string }; Returns: undefined }
       set_plan: {
         Args: {
           p_institution: string
@@ -2633,6 +2931,7 @@ export type Database = {
         Returns: undefined
       }
       shared_audit: { Args: { p_token: string }; Returns: Json }
+      start_brain: { Args: { p_institution: string }; Returns: boolean }
       submit_enquiry: {
         Args: {
           p_email: string
@@ -2661,6 +2960,7 @@ export type Database = {
         Args: never
         Returns: {
           email: string
+          name: string
           pending: boolean
           role: Database["public"]["Enums"]["team_role"]
           since: string
@@ -2694,6 +2994,42 @@ export type Database = {
     Enums: {
       audit_kind: "free" | "paid" | "client" | "team" | "rival"
       audit_trigger: "signup" | "scheduled" | "manual"
+      brain_kind:
+        | "contact"
+        | "talk"
+        | "goals"
+        | "target"
+        | "rivals"
+        | "regions"
+        | "logo"
+        | "colours"
+        | "fonts"
+        | "tagline"
+        | "tone"
+        | "avoid"
+        | "dos"
+        | "guidelines"
+        | "award"
+        | "placement_list"
+        | "alumnus"
+        | "review"
+        | "link"
+        | "date"
+        | "plan"
+        | "script"
+        | "worked"
+        | "note"
+        | "skip"
+        | "found"
+      brain_source: "drishti" | "college" | "team"
+      brain_status: "onboarding" | "ready"
+      brain_step:
+        | "drive_shared"
+        | "brand_kit"
+        | "social_access"
+        | "media_received"
+        | "approver_confirmed"
+        | "plan_agreed"
       check_key:
         | "google_search"
         | "instagram_activity"
@@ -2768,6 +3104,7 @@ export type Database = {
         | "plan_reminder"
         | "plan_ended"
         | "report_ready"
+        | "brain_ready"
       pillar: "discovered" | "trusted" | "chosen"
       review_state: "waiting" | "approved"
       rival_move_kind:
@@ -2910,6 +3247,44 @@ export const Constants = {
     Enums: {
       audit_kind: ["free", "paid", "client", "team", "rival"],
       audit_trigger: ["signup", "scheduled", "manual"],
+      brain_kind: [
+        "contact",
+        "talk",
+        "goals",
+        "target",
+        "rivals",
+        "regions",
+        "logo",
+        "colours",
+        "fonts",
+        "tagline",
+        "tone",
+        "avoid",
+        "dos",
+        "guidelines",
+        "award",
+        "placement_list",
+        "alumnus",
+        "review",
+        "link",
+        "date",
+        "plan",
+        "script",
+        "worked",
+        "note",
+        "skip",
+        "found",
+      ],
+      brain_source: ["drishti", "college", "team"],
+      brain_status: ["onboarding", "ready"],
+      brain_step: [
+        "drive_shared",
+        "brand_kit",
+        "social_access",
+        "media_received",
+        "approver_confirmed",
+        "plan_agreed",
+      ],
       check_key: [
         "google_search",
         "instagram_activity",
@@ -2990,6 +3365,7 @@ export const Constants = {
         "plan_reminder",
         "plan_ended",
         "report_ready",
+        "brain_ready",
       ],
       pillar: ["discovered", "trusted", "chosen"],
       review_state: ["waiting", "approved"],

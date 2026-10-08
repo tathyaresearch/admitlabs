@@ -113,6 +113,8 @@ export interface ReportInput {
   demand: { place: string; signals: DemandSignals | null };
   /** A Client's tracking links; null for Paid. */
   leads: readonly ReportLeadLink[] | null;
+  /** A Client's Brain in one line, for the summary; null without one. */
+  brain?: string | null;
   /** The summary as kept with the report, with any line the team fixed in a review. Built here when not given. */
   summary?: MonthlySummary | null;
   /** The product page's sample report, made from fictional sample data. */
@@ -408,6 +410,7 @@ export function buildReport(input: ReportInput): ReportData {
       move: latestMove ? { rival: rivalNames.get(latestMove.rivalId) ?? 'A rival', description: latestMove.description, detectedAt: latestMove.detectedAt } : null,
       hasRivals: input.rivals.length > 0,
       leads: input.leads ? leadsFacts(input.leads) : null,
+      brain: input.brain ?? null,
     });
 
   const since = previous ? sinceWhen(previous.runAt, month) : null;

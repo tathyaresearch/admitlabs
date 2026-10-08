@@ -60,6 +60,7 @@ const INSTITUTION: InstitutionDetails = {
 };
 
 const PROGRAM: ProgramDetails = {
+  level: 'pg',
   durationValue: 2,
   durationUnit: 'years',
   feesAmount: 240000,
@@ -75,6 +76,7 @@ const PROGRAM: ProgramDetails = {
   applicationsOpen: '2026-11-01',
   applicationsClose: '2027-03-15',
   pageUrl: 'https://eastgate-university.example/programs/mba',
+  highlights: 'Live projects with Guwahati companies',
 };
 
 describe('reading the institution form', () => {
@@ -129,6 +131,8 @@ describe('reading a program form', () => {
   test('reads every field; lists split on commas; the page link gets https', () => {
     const { values, errors } = readProgramDetails(
       form({
+        level: 'pg',
+        highlights: '  Live projects with   Guwahati companies ',
         duration_value: '2',
         duration_unit: 'years',
         fees_amount: '2,40,000',
@@ -195,7 +199,7 @@ describe('stored and shown', () => {
     assert.equal(packageText(18), '₹18 lakh a year');
     assert.equal(durationText(PROGRAM), '2 years');
     assert.equal(durationText({ ...PROGRAM, durationValue: 1, durationUnit: 'months' }), '1 month');
-    assert.deepEqual(programDetailLines(PROGRAM).map((line) => line.label), ['Duration', 'Fees', 'Seats', 'Eligibility', 'Specialisations', 'Placements', 'Applications', 'Page']);
+    assert.deepEqual(programDetailLines(PROGRAM).map((line) => line.label), ['Level', 'Duration', 'Fees', 'Seats', 'Eligibility', 'Specialisations', 'Placements', 'Applications', 'Page', 'Highlights']);
     assert.equal(
       programDetailLines(PROGRAM).find((line) => line.label === 'Placements')?.value,
       '2026 batch: 88% placed. Average ₹6.2 lakh a year, highest ₹18 lakh a year. Top recruiters: Tata Steel, HDFC Bank and Deloitte',

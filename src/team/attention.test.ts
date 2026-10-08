@@ -26,9 +26,16 @@ describe('why an institution needs attention', () => {
   });
 
   test('a Client with no Audit run by the team this month', () => {
-    assert.deepEqual(texts({ tier: 'client', teamRefreshedAt: null }), ['No team Audit in October yet']);
-    assert.deepEqual(texts({ tier: 'client', teamRefreshedAt: istDate('2026-09-20', 10).toISOString() }), ['No team Audit in October yet']);
-    assert.deepEqual(keys({ tier: 'client', teamRefreshedAt: istDate('2026-10-01', 10).toISOString() }), []);
+    assert.deepEqual(texts({ tier: 'client', teamRefreshedAt: null, brainStatus: 'ready' }), ['No team Audit in October yet']);
+    assert.deepEqual(texts({ tier: 'client', teamRefreshedAt: istDate('2026-09-20', 10).toISOString(), brainStatus: 'ready' }), ['No team Audit in October yet']);
+    assert.deepEqual(keys({ tier: 'client', teamRefreshedAt: istDate('2026-10-01', 10).toISOString(), brainStatus: 'ready' }), []);
+  });
+
+  test('a Client whose Brain is not Ready (spec section 26)', () => {
+    const refreshed = istDate('2026-10-01', 10).toISOString();
+    assert.deepEqual(texts({ tier: 'client', teamRefreshedAt: refreshed, brainStatus: null }), ['Client Brain not started']);
+    assert.deepEqual(texts({ tier: 'client', teamRefreshedAt: refreshed, brainStatus: 'onboarding' }), ['Onboarding not finished']);
+    assert.deepEqual(keys({ tier: 'paid', brainStatus: null }), [], 'only a Client has a Brain');
   });
 
   test('a score down by 3 or more', () => {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ActionButton } from '@/components/team/InstitutionPanels';
 import { TeamUserForm } from '@/components/team/TeamUserForm';
+import { NameForm } from '@/components/people/NameForm';
 import { PageHead } from '@/components/ui/Layout';
 import { formatDate, plural } from '@/domain/format';
 import { TEAM_ROLE_LABELS } from '@/domain/types';
@@ -45,13 +46,16 @@ export default async function TeamUsersPage() {
               return (
                 <div key={person.email} className={styles.item}>
                   <div className={styles.itemHead}>
-                    <span className={styles.itemTitle}>{person.email}</span>
+                    <span className={styles.itemTitle}>{person.name ?? person.email}</span>
                     <span className={styles.itemRole}>
                       {TEAM_ROLE_LABELS[person.role]}
                       {self ? <span className={styles.itemQuiet}>, you</span> : null}
                     </span>
                   </div>
-                  <p className={styles.itemMeta}>On the team since {formatDate(person.since)}</p>
+                  <p className={styles.itemMeta}>
+                    {person.name ? `${person.email}. ` : ''}On the team since {formatDate(person.since)}
+                  </p>
+                  {self ? <NameForm name={person.name} hint="Clients see it in their Brain’s History, beside what you changed." /> : null}
                   {isAdmin && person.userId && !self ? (
                     lastAdmin ? (
                       <p className={styles.formNote}>The only Admin. Make someone else an Admin to change this.</p>

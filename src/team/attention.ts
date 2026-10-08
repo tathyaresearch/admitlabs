@@ -1,7 +1,8 @@
 // Why an institution needs the team's attention (B8), most urgent first: a Paid plan ending soon
 // (from its first renewal reminder: 7 days before the end on Monthly, 30 days on 3 months),
 // a Client with no team Audit this month, a score that dropped, no rivals picked, a prospect who
-// has not signed up a week after their Audit was shared. The database orders the list by the
+// has not signed up a week after their Audit was shared, and a Client whose Brain is not Ready
+// yet (spec section 26). The database orders the list by the
 // first of these (the team_institutions view, with the same rules); this says each one in
 // words. Pure.
 
@@ -11,10 +12,10 @@ import { formatMonth } from '../domain/format.ts';
 import { DEFAULT_PAID_MONTHS, renewalReminderDays, type PaidMonths } from '../domain/tiers.ts';
 import type { Tier } from '../domain/types.ts';
 
-export type AttentionKey = 'paid_ending' | 'client_no_team_audit' | 'score_down' | 'no_rivals' | 'follow_up';
+export type AttentionKey = 'paid_ending' | 'client_no_team_audit' | 'score_down' | 'no_rivals' | 'follow_up' | 'client_onboarding';
 
 /** Most urgent first. */
-export const ATTENTION_KEYS: readonly AttentionKey[] = ['paid_ending', 'client_no_team_audit', 'score_down', 'no_rivals', 'follow_up'];
+export const ATTENTION_KEYS: readonly AttentionKey[] = ['paid_ending', 'client_no_team_audit', 'score_down', 'no_rivals', 'follow_up', 'client_onboarding'];
 
 export interface AttentionInput {
   claimed: boolean;
@@ -29,6 +30,8 @@ export interface AttentionInput {
   sharedAt: string | null;
   /** A Client's latest Audit run by the team. */
   teamRefreshedAt: string | null;
+  /** A Client's Brain: onboarding, ready, or null before it starts. */
+  brainStatus?: 'onboarding' | 'ready' | null;
 }
 
 export interface AttentionReason {
@@ -62,6 +65,9 @@ export function attentionReasons(row: AttentionInput, now: Date): AttentionReaso
   if (!row.claimed && row.sharedAt) {
     const since = daysBetween(new Date(row.sharedAt), now);
     if (since >= TEAM_RULES.followUpAfterDays) reasons.push({ key: 'follow_up', text: `Shared ${days(since, 'day', 'days')} ago, not signed up` });
+  }
+  if (row.tier === 'client' && row.brainStatus !== 'ready') {
+    reasons.push({ key: 'client_onboarding', text: row.brainStatus === 'onboarding' ? 'Onboarding not finished' : 'Client Brain not started' });
   }
   return reasons;
 }

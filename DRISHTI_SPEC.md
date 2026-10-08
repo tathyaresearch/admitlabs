@@ -4,7 +4,7 @@ Version 2.0 | 4 October 2026 | Owner: Manprit, AdmitLabs
 
 This is the single source of truth for building Drishti. If something is not in this spec, ask before deciding. Values marked **[ADJUSTABLE]** are starting values and must live in config, not be hard-coded.
 
-**Version 2 (October 2026)** builds the product around one line: what the internet says about you. The Audit is organised by place, three scores out of 100 with their words replace the big score, rivals come from your city, Demand picks 3 things to make each month, AdmitLabs clients get Leads, a short email arrives with each new Audit or month, the AdmitLabs team can review an Audit before the college sees it, and Paid is ₹9,999 + GST per month, or ₹24,999 + GST for 3 months (from 5 October 2026; it was ₹24,999 + GST for 6 months). Version 1 (30 September 2026) is in the git history.
+**Version 2 (October 2026)** builds the product around one line: what the internet says about you. The Audit is organised by place, three scores out of 100 with their words replace the big score, rivals come from your city, Demand picks 3 things to make each month, AdmitLabs clients get Leads, a short email arrives with each new Audit or month, the AdmitLabs team can review an Audit before the college sees it, and Paid is ₹9,999 + GST per month, or ₹24,999 + GST for 3 months (from 5 October 2026; it was ₹24,999 + GST for 6 months). Version 1 (30 September 2026) is in the git history. **The Client Brain** (8 October 2026, section 26) gives each AdmitLabs Client one living knowledge base, built at onboarding and kept with the team.
 
 ---
 
@@ -21,7 +21,7 @@ This is the single source of truth for building Drishti. If something is not in 
 3. **Demand** (section 9): "What do students want?" Which programs students in the city want, what they ask, what content gets their attention, and 3 things to make this month.
 4. **Leads** (section 23, AdmitLabs clients only): "What did our content bring in?" The enquiries their content brings, link by link.
 
-Every month Paid and Client also get a short **monthly summary** by email (section 24) and a PDF report (section 12); Free gets a short email when its free Audit is ready. The AdmitLabs team can check each new Audit and summary before it goes out (section 25).
+Every month Paid and Client also get a short **monthly summary** by email (section 24) and a PDF report (section 12); Free gets a short email when its free Audit is ready. The AdmitLabs team can check each new Audit and summary before it goes out (section 25). Each AdmitLabs Client also has a **Brain** (section 26): everything the team needs to work for it, in one place the college and the team keep together.
 
 **Two surfaces:**
 
@@ -96,6 +96,7 @@ One Next.js app, two addresses. Which pages answer depends on the address a requ
 | `/rivals`, `/rivals/[rivalId]` | Rivals |
 | `/demand` | Demand |
 | `/leads` | Leads (Client only), with its CSV download |
+| `/brain`, `/brain/help` | The Brain (Client only, section 26) and Help us know you |
 | `/reports` | Monthly summaries and PDF reports |
 | `/plan` | Plan and access |
 | `/settings` | Institution details, users |
@@ -140,6 +141,8 @@ Paid rules:
 
 In this build, Admin sets an institution's tier manually. Payment comes later.
 
+**Names.** Each person adds their name once: a college's people in Settings, Team, and AdmitLabs staff in Team users. The Brain's History shows it, or the email when there is none.
+
 ---
 
 ## 6. Onboarding (input)
@@ -162,9 +165,9 @@ After onboarding, Free users pick the **one program** their Free Audit covers. T
 **Details added by you (Settings, every plan).** All optional and short.
 
 - About the institution: year founded, NAAC grade, NIRF rank and its year, AICTE approval, UGC recognition (or skilling recognition), other approvals, campus address, admissions phone and email, hostel, scholarships, and what makes it different.
-- For each program: duration, fees, seats, eligibility, specialisations, placements (year, share placed, average and highest package, top recruiters), application dates and the program page.
+- For each program: its level (certificate, diploma, undergraduate, postgraduate or doctorate), duration, fees, seats, eligibility, specialisations, placements (year, share placed, average and highest package, top recruiters), application dates, the program page and its highlights in a line. For a Client, the Brain also marks the programs to push most.
 - Labelled "Added by you" wherever they show. Used for context, better how to fix advice, the ready fixes (section 7.7) and the monthly report. **Never part of the score.**
-- The owner edits them. Members and the AdmitLabs team can read them. Rivals never see them.
+- The owner edits them. Members and the AdmitLabs team can read them; for a Client they edit them too, from the Brain (section 26), where they are the same facts, marked "Also in Settings". Rivals never see them.
 
 ---
 
@@ -465,6 +468,7 @@ A number shows only when a source gives a real count: searches a month (keyword 
 | Programs rising and falling | 1 | All | All |
 | Everything else | A preview | Yes | Yes |
 | **Leads** | No | No | Yes |
+| **Brain** (section 26) | No | No | Yes |
 | **Other** | | | |
 | Alerts (rival moves, demand spikes) | No | Yes | Yes |
 | Email when a new free Audit is ready | Yes | No: the monthly summary covers it | No: the monthly summary covers it |
@@ -534,7 +538,7 @@ Keep it short enough to read in 5 minutes: about 7 pages, never more than 8.
 | Log in (`/login`) | The same email and code. "Welcome back", "Enter your email. We'll send you a code." Log in never says whether an email has an account, so nobody can check who uses Drishti: for any email it shows the same code step, "If this email has a Drishti account, we've sent a code. New here? Sign up." (Sign up carries the email over), and answers in about the same time. It sends a code only to an account that exists, or to someone invited by an owner or the AdmitLabs team, who comes in like any account and joins on first sign in. It never creates an account for anyone else. "New to Drishti? Sign up". Left side: the Drishti eye, big, in the middle, following the cursor, among four cards of the sample's dashboard that lean with the cursor and change in turn (the three words settle, the rivals change places, the questions come in, the searches grow); the eye watches each card as it changes and reads along the field while someone types |
 | Sign up and log in, both | The form first in reading order. On a wide screen the left side sits beside it; on a phone it is a small band above the form and plays on its own, as on any touch screen. With reduced motion the left side is still. The left side carries the logo and one line, "See where you stand. Every month." |
 | Onboarding | The input form from section 6, then program pick for Free with what happens next. No left side; the Drishti logo, with its eye, at the top. After the first Audit, Home |
-| Home | What to do first. The one-line answer, from the three words; Start here on a first visit (three steps: see what was found, your first fix, your rivals; ticks as each is done; closed for good with "Got it, hide this", per person); for a Client, "Your AdmitLabs team" (what the team did this month, or its latest work, and what it does next, each with the day and a link to see it; when the Audit last checked and the next one; how to write to the team; "See all work") and the month's enquiries (how many, the change from last month, the link that brought the most, "See all leads"); the three words, each as its score out of 100 with its word and a thin bar, its question and what to fix first in it; "Do these 3 things this month" (Paid and Client: one fix from the Audit, one lesson from rivals, one of Make these 3, ordered by impact) or "Fix these first" (Free: the top 3 fixes), each with where it comes from, its place and check as a small label, its programs, its impact (or how often students asked, for an idea, with its format), its effort, Mark as done, and Let AdmitLabs fix this on a Free or Paid fix; What changed since the last Audit (each word that moved, each check that moved with its result before and after, the fixes marked done that this Audit checked, and for Paid and Client the rival alerts and fast rises in what students search; Free sees what Paid adds); the rivals' one line with the latest alert; one demand highlight. No overall score and no gauge on Home. While a new Audit waits for review (section 25): "Your Audit is being checked by the AdmitLabs team" above the last approved Audit, or, on a first Audit, in place of the results, with when to expect it and that an email will say when it is ready |
+| Home | What to do first. The one-line answer, from the three words; Start here on a first visit (three steps: see what was found, your first fix, your rivals; ticks as each is done; closed for good with "Got it, hide this", per person); for a Client, "Your AdmitLabs team" (what the team did this month, or its latest work, and what it does next, each with the day and a link to see it; the Brain in one line; when the Audit last checked and the next one; how to write to the team; "See all work"), and while its Brain is set up, Help us know you above it (section 26) and the month's enquiries (how many, the change from last month, the link that brought the most, "See all leads"); the three words, each as its score out of 100 with its word and a thin bar, its question and what to fix first in it; "Do these 3 things this month" (Paid and Client: one fix from the Audit, one lesson from rivals, one of Make these 3, ordered by impact) or "Fix these first" (Free: the top 3 fixes), each with where it comes from, its place and check as a small label, its programs, its impact (or how often students asked, for an idea, with its format), its effort, Mark as done, and Let AdmitLabs fix this on a Free or Paid fix; What changed since the last Audit (each word that moved, each check that moved with its result before and after, the fixes marked done that this Audit checked, and for Paid and Client the rival alerts and fast rises in what students search; Free sees what Paid adds); the rivals' one line with the latest alert; one demand highlight. No overall score and no gauge on Home. While a new Audit waits for review (section 25): "Your Audit is being checked by the AdmitLabs team" above the last approved Audit, or, on a first Audit, in place of the results, with when to expect it and that an email will say when it is ready |
 | Audit | The three words with "What do these mean?" (the words and their questions, what makes each Strong, Okay or Weak, the four results of a check), Fix these first (the top 3 by impact), the five places (each with what we found and its proof, what's good and what to fix; What people say and Other places say so kindly when little is found), progress month by month (Paid and Client: a table of each month's small score, the three words, the change since the month before, your place among your rivals, and the checks that moved, with every Audit folded below), program switcher. While a new Audit waits for review, the same line as Home above the last approved Audit |
 | Program detail | Same as Audit, for one program |
 | Fix panel | Side panel, in one order: the fix (its name as on Home, the place and check, impact, effort, the programs); 1. what we found, program by program, with the link, the date and the short line; 2. why it matters to a student; 3. the steps; 4. the ready fix, with Copy; details added by you; in the footer, Mark as done (the owner; others see that it was marked) and Let AdmitLabs fix this (Free and Paid; once sent, when). A Strong check opens the same panel with what was found and why it matters |
@@ -542,10 +546,11 @@ Keep it short enough to read in 5 minutes: about 7 pages, never more than 8.
 | Rival detail | One rival: you and them place by place, every check side by side (a side whose programs differ shows its weakest program), their alerts, their best posts and what to learn from them, when their admissions open, their Google rating and its trend, and the score month by month as a table. Every set of tabs opens on one with something in it |
 | Demand | For the city: when it was updated and the next update, where it was found by name ("From Search trends, the keyword tool, Reddit and Quora, in English, Hindi and Assamese"); Make these 3 this month at the top, with last month's "You made 2 of 3" line once there is a last month; programs rising and falling, as bars with words, or counts when a source gives them; courses asked for that you do not offer; what students ask about each program (topics, then questions); what gets attention (topics and formats); the best months to post, for each program; more ideas |
 | Leads (`/leads`, Client only) | "What did our content bring in?": enquiries this month and the change from last month, the link that brought the most, every link with its count this month and before, then the list (name, course, link and date, with phone, email and city), newest first, with Download CSV, and deleting one student's data on request. Not a CRM: no calls, stages or follow ups |
+| Brain (`/brain`, Client only) | "What does our AdmitLabs team know about us?" Section 26: Ask the brain, the status (Onboarding or Ready, how complete, facts to check), then the eight sections in a list on the left (a row on a phone), one open at a time, the Overview first. Help us know you at `/brain/help` |
 | Your AdmitLabs team (`/work`, Client only) | Opened from the card on Home. "What has our AdmitLabs team done?": what the team does next, soonest first, then everything it did, by month, newest first, each with the day and a link to see the work. Write to your team at hello@admitlabs.in |
 | Reports | Each month's summary (section 24) with its PDF, download, the score by month with every point's value |
 | Plan | Current tier, dates, what Paid unlocks, renewal reminder state, a table comparing the plans (Paid's two prices, one to a line). On Free, Paid's offer with the "Monthly | 3 months" toggle and "Subscribe now" for the period shown; "Renew now" from the first renewal reminder (see Subscribe now and Renew now below) |
-| Settings | Plain groups, each at its own address (a list on the left, a row on a phone): Institution (details, public links, the Google Maps listing, and details added by you, section 6), Programs (with the Free Audit program and details for each program), Rivals (who, and when they can change), Leads (Client: who gets each new enquiry by email, how long enquiries are kept, deleting a student's data), Team, Plan (with asking for Paid) and Notifications (what arrives, and when, and for each person the monthly summary email, or on Free the Audit ready email). Only the owner changes them |
+| Settings | Plain groups, each at its own address (a list on the left, a row on a phone): Institution (details, public links, the Google Maps listing, and details added by you, section 6), Programs (with the Free Audit program and details for each program), Rivals (who, and when they can change), Leads (Client: who gets each new enquiry by email, how long enquiries are kept, deleting a student's data), Team (each person sets their name once), Plan (with asking for Paid) and Notifications (what arrives, and when, and for each person the monthly summary email, or on Free the Audit ready email). Only the owner changes them |
 | Notifications | Alerts list, with filters by what each is about (Audit, Rivals, Students, Reports, Plan, each with its count, only the ones that have alerts). Each link says where it goes ("See what changed", "See the move"). Empty, or still short: what arrives here and when, for the plan |
 
 **Subscribe now and Renew now.** Wherever Paid is offered (the cards that say what Paid adds, a locked preview, the fix panel, What changed on Free, the Plan page, Settings, a Paid plan that ended), the owner clicks "Subscribe now" on Free, "Renew now" from the first renewal reminder, then picks Monthly or 3 months (3 months first; on renewal, the plan's own period) and sends ("Subscribe for 3 months", "Renew monthly"). Where the page shows the toggle already (the Plan page's offer), one click sends the period shown. Online payment is not set up yet (it comes before launch, for example Razorpay, so the button goes straight to payment): after the click the page says "Thanks! The AdmitLabs team will contact you to complete payment.", and the request lands in the team's Enquiries with the institution, the owner's email and the period picked; clicking again while one is open sends nothing new (it keeps the period picked last), and the page says when it was sent and for which period. The prices (₹9,999 + GST per month, or ₹24,999 + GST for 3 months) and terms never change and no email is sent: the team writes back to complete payment and an Admin switches the plan on for that period. Members see who can; Client has nothing to subscribe to. Let AdmitLabs fix this (section 7.7) works the same way.
@@ -559,7 +564,7 @@ Keep it short enough to read in 5 minutes: about 7 pages, never more than 8.
 | Team home | All institutions, sorted by the reason each needs attention, most urgent first, each row saying why: a Paid plan ending within 30 days, a Client with no team Audit this month, a score down 3 or more, signed up with no rivals, a prospect not signed up a week after their Audit was shared. Search, filter by type, city, state, score, tier, prospect or client; sort by name, score or last checked too. The team keeps the score as a number |
 | To review | Every new Audit and monthly summary waiting for the team's review, oldest first, each with the college, what it is, its plan, how long it has waited and what changed in one line; a count beside it in the team's menu. One opens the review: what changed since the last approved Audit, then the Audit place by place (or the summary line by line) to fix a result or a line, then "Approve and send" (section 25) |
 | Bulk Audit | Add many institutions at once (paste list or CSV), run Audits, see results in a table |
-| Institution detail | Everything the institution sees, plus private notes, tier control (Admin: Start Paid asks for the period paid for, Monthly or 3 months, and the day of payment, and shows the end date), manual refresh, and how its new Audits and summaries go out: "Review first" (on to start) or "Send automatically". For a Client, the Work log tab first: add what the team did or does next (Done or Next, one plain sentence, the day, a link when there is one), mark Next as done, remove an entry. It is what the Client sees. Then a Leads links tab: make a tracking link (a name such as "Reel: BBA placements", where it will be used, the program), copy it, see how many enquiries each brought this month and before, and archive one. Counts only |
+| Institution detail | Everything the institution sees, plus private notes, tier control (Admin: Start Paid asks for the period paid for, Monthly or 3 months, and the day of payment, and shows the end date), manual refresh, and how its new Audits and summaries go out: "Review first" (on to start) or "Send automatically". For a Client, the Work log tab first, then the Client Brain tab (or Start onboarding, section 26): add what the team did or does next (Done or Next, one plain sentence, the day, a link when there is one), mark Next as done, remove an entry. It is what the Client sees. Then a Leads links tab: make a tracking link (a name such as "Reel: BBA placements", where it will be used, the program), copy it, see how many enquiries each brought this month and before, and archive one. Counts only |
 | Share | Create a share link or PDF of a prospect's Audit, place by place with the three words |
 | Rival ads | Enter what rivals promise in their ads, by hand until Drishti can collect it. Each entry is also a "started ads" alert for the institutions that track that rival |
 | Enquiries | Everyone who wrote in through the website's Work with us form (name, role, institution, email, phone, program and message); owners who asked for Paid, or to continue it, from their dashboard (the institution, linked, the period picked, Monthly or 3 months, with its price, and the owner's email); and owners who asked AdmitLabs to fix something (the institution, linked, the fix by name and place, and the owner's email). Newest first. New or All. Mark as handled, or back to new. Every team user sees them. No emails are sent |
@@ -711,6 +716,12 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 | `reports` | institution_id, month, storage_path, summary (the month's summary, section 24), review (waiting, approved), approved_at, approved_by, created_at |
 | `notifications` | id, institution_id, kind, text, read, created_at |
 | `notes` | id, institution_id, author_id, body, created_at (team only) |
+| `person_names` | user_id, name (each person's own, set once; History shows it, or the email) |
+| `brains` | institution_id, status (onboarding, ready), started_at, started_by, ready_at, ready_by (a Client's Brain, section 26) |
+| `brain_items` | id, institution_id, kind (contact, talk, goals, target, rivals, regions, logo, colours, fonts, tagline, tone, avoid, dos, guidelines, award, placement_list, alumnus, review, link, date, plan, script, worked, note, skip for "Doesn't apply", found for what Drishti found for the details), fields (jsonb), to_confirm, source (drishti, college, team), via_help, source_url, found_at, checked_at, checked_by, created and updated (when, who) |
+| `brain_steps` | institution_id, step (drive_shared, brand_kit, social_access, media_received, approver_confirmed, plan_agreed), done_at, done_by |
+| `brain_checks` | institution_id, fact (about, or a program's fees, dates or details), checked_at, checked_by: when each fact of the details added by you was last changed or said to be still right |
+| `brain_changes` | id, institution_id, at, by, what (added, found, changed, confirmed, corrected, not right, removed, checked, started, ready, a step), target, kind, before, after, team_only: the Brain's History, written by triggers |
 | `team_work` | id, institution_id, kind (done, next), body, work_on (the day it was done, or Next is due), link, added_by, created_at (a Client's work log) |
 | `share_links` | token, institution_id, audit_id, created_by, created_at |
 | `institution_details` | institution_id, the details added by the institution (section 6), updated_at, updated_by. Never read by scoring |
@@ -733,6 +744,7 @@ Starting shape. Claude Code may refine names and types, but must keep the ideas.
 - Email log: team only.
 - Review: a college reads its own Audits, their findings, its reports and summaries only once approved. The team sees what waits, changes results and lines (each change kept in `audit_edits`) and approves through `approve_audit` and `approve_report`; the team sets each college's `review_first`.
 - Rival data is only reachable through the `rivals` link of the viewing institution.
+- The Brain (section 26): the team and the college's own people read it while the college is a Client (the team after that too); they change it only through the Brain's database functions, which check the plan, the person and that no text holds a password or login. What Drishti found waits for the team; Team only notes and their History are the team's alone.
 - Plan gating must be enforced on the server, not only hidden in the UI.
 
 **Every signal keeps its source and the date it was checked.** This is how any result can be explained.
@@ -758,7 +770,7 @@ Each data source is a **provider** with one shared interface: it takes an instit
 | `trends` | Google Trends | Programs rising and falling, the best months to post | Google Trends, through a data provider |
 | `keywords` | Keyword tool | Searches a month for programs and courses in the city, and the questions people search | A keyword data provider |
 | `ai_answers` | AI answers | AI answers | Asking ChatGPT, Gemini and Perplexity the student's question, each result kept |
-| `ai` | AI reader and writer | Reads pages for the website reader; writes each finding's short line, why it matters, the steps, the ready fix, effort and a finding's impact, "why it worked", the rivals' one line and lessons, the ideas with their hooks and key points, and the monthly summary | Claude API |
+| `ai` | AI reader and writer | Reads pages for the website reader; writes each finding's short line, why it matters, the steps, the ready fix, effort and a finding's impact, "why it worked", the rivals' one line and lessons, the ideas with their hooks and key points, and the monthly summary; answers Ask the brain from a Client's Brain and fits Make these 3 to its brand (section 26) | Claude API |
 | `email` | Email sender | The alert for each new enquiry, the monthly summary | The local test inbox that local Supabase runs, for now; an email service later. WhatsApp later, as a second channel |
 | `manual` | Team entry | Rival ads | Team entry screen |
 
@@ -821,6 +833,8 @@ Stop at the end of each phase for review. Do not start the next phase without ap
 | 6. Home, summary, PDFs, pricing | The new Home, the monthly summary by email and on Reports, the Audit ready email for Free, both waiting in To review when Review first is on, both PDFs, Paid's price everywhere |
 | 7. Product page, website, sign up and log in | `/drishti`, the website's Drishti parts and the pictures on sign up and log in; the mock page removed |
 
+**The Client Brain (8 October 2026)**, in three steps: the plan; a development only mock with both layouts of the Brain, the onboarding, Help us know you and Ask the brain, on desktop and phone (layout 1 picked: a list of sections, one open at a time); then the build, with every check and test, and a local commit. The mock page went with the build.
+
 **Later (not now):** connect real providers one by one, Claude API for analysis, Razorpay, reminders by email, a real email sender, WhatsApp, deployment of the dashboard to app.admitlabs.in.
 
 ---
@@ -847,6 +861,7 @@ Fictional only. No real institution names.
 - Details added by some institutions, for themselves and their programs.
 - Rivals set up between them, with moves, best content and ads.
 - Demand pulls for Guwahati and Tezpur, with Assam filling in, across the sample programs, in English, Hindi and Assamese: programs rising and falling, topics, questions, content signals, best months and ideas with hooks and key points. Make these 3 for August and September: Eastgate made 2 of August's 3.
+- The Client Brain: Brightpath's, Ready since 16 March, lived in since, with 2 facts to check before admissions open on 1 December; Silverline College became a Client on 1 October (Free before), and its Brain is 80% complete, onboarding, with what Drishti found waiting to be confirmed. Brightpath has a member, Anjali Das. Names: Ritu Bora and Anjali Das (Brightpath), Meera Kalita (Silverline), Kabir Sen (the team user).
 - Leads for Brightpath (Client): 4 tracking links from July, and enquiries from July to September with made up names, `.example` emails and made up phone numbers.
 - One institution on each tier: Free, Paid, Client (and a second Free, Loomcraft). Plus 2 prospects visible only to the team.
 - Sample users: one owner per institution, one team user, one admin.
@@ -859,6 +874,7 @@ Fictional only. No real institution names.
 - A real email sender (later; the local test inbox for now)
 - Email reminders for plan end (later)
 - **Before Leads goes live: a lawyer checks its privacy** (the consent line, keeping and deleting, what changes under the DPDP rules)
+- A proper Google Drive connection for the Brain's folders and files, and the Claude API behind Ask the brain (with the backend). Links and two small files for now
 - What happens to a Client's Leads when the service ends. For now: the forms close, and the list stays with the college until its keeping time runs out
 - Scoring What people say and Other places, once there is enough data
 - Whether a review that waits too long goes out on its own. For now it waits, and To review shows how long each has waited
@@ -967,3 +983,43 @@ The AdmitLabs team can look over a new Audit and a monthly summary before the co
 - **Every change is kept**: who, when, what it was, what it became and why. A result the team changed keeps its link, shows the day the team checked it and the team's line, and reads "Checked by the AdmitLabs team".
 - **Until it is approved** the college keeps its last approved Audit and sees "Your Audit is being checked by the AdmitLabs team" on Home and the Audit. On a first Audit that line takes the place of the results, with when to expect it. Nothing about the waiting Audit shows anywhere else, no email goes, and marks done wait to be checked.
 - **On Approve and send** the Audit shows, marks done are checked, "Your new Audit is ready" arrives in Notifications and its email goes; a summary goes by email and shows on Reports with its PDF.
+
+---
+
+## 26. Client Brain (AdmitLabs Clients only)
+
+**Answers:** "What does our AdmitLabs team know about us?" One living knowledge base per Client college: everything the team needs to work for it. The college sees it as **Brain** in its menu (after Leads; under More on a phone); the team calls it **Client Brain**. Created at onboarding, kept up to date by both sides after it.
+
+**Who.** Client only, never Free or Paid. The college's owner and members and the AdmitLabs team read and change it, while the college is a Client. **Team only notes**, the team's private notes, sit in it for the team alone. A Client that ends: the college no longer sees it, the team still reads it, nobody changes it, and it comes back if the college returns.
+
+**Eight sections**, a list on the left (a row of chips on a phone), one open at a time, each at its own address, with an Overview first (what needs checking, what's missing, recent changes):
+
+1. **Basics**: about the college (name, type and city from Settings; the year it started, approvals such as UGC, AICTE and the NAAC grade, the address); contacts (the main contact and who approves our content, each with name, role, phone and email, and more contacts); how they like to talk; goals (the top 3 this year, the admission target, main rivals, the cities and states they want students from).
+2. **Programs**: for each program its level, duration, fees, seats, eligibility, admission dates, highlights and whether to push it most. The same details as Settings (section 6): one source, never two.
+3. **Brand**: the logo (an upload or a Drive link), colours (each a small swatch with its name and hex: the client's data, the one colour in the dashboard), fonts, tagline, tone (friendly or formal, with a line), words or topics to avoid, what to do, and brand guidelines (a PDF or a link, optional).
+4. **Proof**: approvals and rankings, awards, placements (each program's, from its details, and placement lists as links), known alumni and student reviews we may use. Alumni and reviews are a line and a link, never a phone number or an email; a review only with the student's agreement.
+5. **Links**: the public pages Drishti checks (website, Instagram, YouTube, Facebook, LinkedIn, the Google Business profile; the owner changes them in Settings) and folders, listings and files (the shared Drive folder, Shiksha, CollegeDunia, the admission portal, brochures, photos and videos).
+6. **Calendar**: the admission season, exams, fests, events, convocation, open days and days not to post, with each program's admission dates beside them.
+7. **Content**: the content plan by month (draft or agreed), scripts (waiting or approved, and who approves), what worked, and the work log (an approved script goes into it in one click).
+8. **Notes and decisions**: meeting notes, decisions, feedback and anything else, each with who and when; for the team, Team only notes first.
+
+**Every fact** shows its value, where it came from and when (found by Drishti, added by a person, from Help us know you), Edit, and History: every change with who made it (their name, or their email), when, and what it was before. A missing must-have says what to add, or can be marked "Doesn't apply" with a reason where it may.
+
+**Onboarding builds it.**
+
+- When a college becomes a Client, the team clicks **Start onboarding** (the Client Brain tab on its page). Drishti pre-fills what its latest Audit found: the fees and program pages the website shows, the approvals held officially, the placements page and the listing sites. The team **confirms, corrects or takes out** each one; one that belongs to the details added by you is written there.
+- **The kickoff call**: the team goes through the sections in order with every missing fact's form open.
+- **Help us know you**: a form in the college's dashboard for what only it knows (basics and goals, each program, its brand files, proof, links, the calendar and anything else), saved into each section as it goes. While onboarding, Home opens with it.
+- **Progress**: "Client Brain 80% complete" counts the must-have facts (the year started, approvals, address, the main contact, who approves content, how they like to talk, the goals, the admission target; each program's basics, fees and admission dates; the logo, colours, tone and words to avoid; rankings or awards and placements; a shared Drive folder; the admission season; the first month's content plan), with the list of what's missing. Optional facts never lower it.
+- **The checklist**: Drive folder shared (with admitlabs@gmail.com, in config), brand kit received, social media access given (through each platform's own team invite, never passwords), photos and videos received, approval contact confirmed, first month's content plan agreed. The first, fifth and sixth need their fact in the Brain first. Each tick keeps who and when.
+- **Ready**: the team clicks Mark as Ready once every must-have is in and the checklist is done. The college gets "Your Brain is ready" in Notifications. Until then the team's list says "Onboarding not finished".
+
+**Living.** Anyone allowed updates it at any time, and every change is kept. **Needs checking** marks a fact older than its time **[ADJUSTABLE]**: fees and admission dates after 6 months, everything else after 12; notes, decisions, scripts and what worked never go stale. "Still right" starts the clock again. In the 8 weeks before admissions open **[ADJUSTABLE]**, the facts to check lead the Overview and Home's team card ("Before admissions open on 1 Dec, check 2 facts").
+
+**It powers the rest of Drishti.** Ready fixes read its facts (a tagline, when admissions open, the admission portal, an email to write to, an alumnus to feature). Make these 3 is fitted to the brand when picked: the hook in its tone, one Brain fact in the key points, nothing it says to avoid. Leads forms use the college's own program list, the same one the Brain shows. The monthly summary, its email and the PDF carry the Brain in one line; the work log and the Brain link to each other.
+
+**Ask the brain.** A box at the top: "What's the BBA fee?", "Who approves reels?". The answer, the section it came from and when it was checked, or where to add it when the Brain does not know. Answers come only from the Brain: never the internet, never Leads, and Team only notes only for the team. The AI writer answers it (section 17): a mock now, the Claude API later.
+
+**Files.** Links first. A logo (PNG, JPG or WebP, up to 2 MB) and brand guidelines (a PDF, up to 10 MB) can be uploaded to a private bucket; nothing bigger. A proper Google Drive connection comes with the backend.
+
+**Rules.** No passwords or login details anywhere in the Brain: every text is checked in the form and again in the database, and every page says "Use a password manager". No student data: that stays in Leads. The dashboard's design rules hold, monochrome but for a brand's own swatches.

@@ -32,9 +32,11 @@ export interface TeamListRow {
   rivals: number;
   sharedAt: string | null;
   teamRefreshedAt: string | null;
+  /** A Client's Brain: onboarding, ready, or null before it starts. */
+  brainStatus: 'onboarding' | 'ready' | null;
 }
 
-const LIST_COLUMNS = 'id, name, type, city, state, website, status, tier, plan_ends_at, plan_months, programs, score, audit_kind, checked_at, claimed, score_change, rivals, shared_at, team_refreshed_at';
+const LIST_COLUMNS = 'id, name, type, city, state, website, status, tier, plan_ends_at, plan_months, programs, score, audit_kind, checked_at, claimed, score_change, rivals, shared_at, team_refreshed_at, brain_status';
 
 export async function loadInstitutionList(filters: TeamFilters): Promise<{ rows: TeamListRow[]; total: number }> {
   const supabase = await createClient();
@@ -83,6 +85,7 @@ export async function loadInstitutionList(filters: TeamFilters): Promise<{ rows:
       rivals: row.rivals ?? 0,
       sharedAt: row.shared_at,
       teamRefreshedAt: row.team_refreshed_at,
+      brainStatus: row.brain_status,
     })),
   };
 }
@@ -124,13 +127,15 @@ export interface TeamPerson {
   role: TeamRole;
   since: string;
   pending: boolean;
+  /** The name they gave, if any. */
+  name: string | null;
 }
 
 export const loadTeamPeople = cache(async (): Promise<TeamPerson[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('team_people');
   if (error) throw new Error(`Could not load the team: ${error.message}`);
-  return (data ?? []).map((row) => ({ userId: row.user_id, email: row.email, role: row.role, since: row.since, pending: row.pending }));
+  return (data ?? []).map((row) => ({ userId: row.user_id, email: row.email, role: row.role, since: row.since, pending: row.pending, name: row.name }));
 });
 
 export interface NoteRow {

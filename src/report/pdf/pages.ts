@@ -214,6 +214,7 @@ function SummaryPart({ data }: PageProps): ReactElement {
         { key: 'lines', style: { flexDirection: 'row', gap: GAP, marginTop: 14 }, wrap: false },
         h(View, { style: { flex: 1 } }, h(SectionTitle, { title: 'One rival move' }), h(Text, { style: { fontSize: 9.5, lineHeight: 1.45, ...clamp(4) } }, summary.lines.move)),
         summary.lines.enquiries ? h(View, { style: { flex: 1 } }, h(SectionTitle, { title: 'Your enquiries' }), h(Text, { style: { fontSize: 9.5, lineHeight: 1.45, ...clamp(4) } }, summary.lines.enquiries)) : null,
+        summary.brain ? h(View, { style: { flex: 1 } }, h(SectionTitle, { title: 'Your Brain' }), h(Text, { style: { fontSize: 9.5, lineHeight: 1.45, ...clamp(4) } }, summary.brain)) : null,
       ),
     ],
   });

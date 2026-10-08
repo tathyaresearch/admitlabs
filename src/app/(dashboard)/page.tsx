@@ -2,6 +2,7 @@ import { markKey, markOutcome } from '@/audit/marks';
 import { auditVerdict } from '@/audit/verdict';
 import { movedChecks, overviewView } from '@/audit/view';
 import { WordTiles } from '@/components/audit/PlaceBits';
+import { HelpCard } from '@/components/brain/HomeCard';
 import { FirstAuditWaiting, WaitingNotice } from '@/components/audit/Waiting';
 import { DemandHighlightCard, EnquiriesCard, RivalsLineCard } from '@/components/home/HomeCards';
 import { HomeThings, type HomeThing } from '@/components/home/HomeThings';
@@ -24,6 +25,8 @@ import { planReminder } from '@/domain/tiers';
 import { leadsSummary } from '@/leads/summary';
 import { requireInstitutionViewer } from '@/lib/auth/guards';
 import { loadAuditPage, nextAuditText } from '@/lib/audit/load';
+import { loadBrainPage } from '@/lib/brain/page';
+import { brainCardLine } from '@/brain/line';
 import { loadPlacesPage } from '@/lib/audit/places';
 import { loadHighlight, loadHighlightHistory, loadLatestPicks } from '@/lib/demand/load';
 import { loadGuideClosed, loadMarks, loadMovesSince, loadSpikes } from '@/lib/home/load';
@@ -76,7 +79,7 @@ export default async function HomePage() {
   const client = viewer.tier === 'client';
   const owner = role === 'owner' && !viewer.viewingAs;
   const now = new Date();
-  const [data, rivals, rivalList, highlight, guideClosed, work, links] = await Promise.all([
+  const [data, rivals, rivalList, highlight, guideClosed, work, links, brain] = await Promise.all([
     loadAuditPage(viewer),
     loadRivalSnapshot(viewer),
     loadRivalList(institution.id),
@@ -84,6 +87,7 @@ export default async function HomePage() {
     loadGuideClosed(viewer),
     client ? loadWork(institution.id) : Promise.resolve(null),
     client ? loadLinkCounts(institution.id) : Promise.resolve(null),
+    client ? loadBrainPage(institution.id, false) : Promise.resolve(null),
   ]);
   const [line, searches] = await Promise.all([loadRivalLine(institution.id, rivalList.map((rival) => rival.id)), loadHighlightHistory(viewer, highlight)]);
   const reminder = planReminder(viewer.plan, now);
@@ -100,12 +104,26 @@ export default async function HomePage() {
         It does not renew on its own. When it ends you move to Free and keep your last Audit. Renew now to keep it, at the same price and terms.
       </Notice>
     ) : null;
+  // A Client's Brain (spec section 26): Help us know you while it is set up, and a line on the team card.
+  const brainState = brain ? { status: brain.brain.status, percent: brain.progress.percent, stale: brain.stale.length, season: brain.season } : null;
   const clientCards =
     work && links ? (
-      <div className={styles.pair}>
-        <TeamCard card={workCard(work, now)} lastChecked={data.audit?.runAt ?? null} nextAudit={nextAudit} email={ADMITLABS_EMAIL} allHref="/work" />
-        <EnquiriesCard summary={leadsSummary(links)} thisMonth={monthKey(now)} lastMonth={previousMonth(monthKey(now))} />
-      </div>
+      <>
+        {brain && brain.brain.status === 'onboarding' ? (
+          <HelpCard percent={brain.progress.percent} left={brain.progress.missing.filter((slot) => slot.key !== 'plan').map((slot) => slot.label)} canFill={!viewer.viewingAs} />
+        ) : null}
+        <div className={styles.pair}>
+          <TeamCard
+            card={workCard(work, now)}
+            lastChecked={data.audit?.runAt ?? null}
+            nextAudit={nextAudit}
+            email={ADMITLABS_EMAIL}
+            allHref="/work"
+            brain={brainState ? { line: brainCardLine(brainState), href: '/brain', action: brainState.status === 'ready' && brainState.stale ? 'Check them' : 'See it' } : null}
+          />
+          <EnquiriesCard summary={leadsSummary(links)} thisMonth={monthKey(now)} lastMonth={previousMonth(monthKey(now))} />
+        </div>
+      </>
     ) : null;
   const cards = (
     <div className={styles.pair}>

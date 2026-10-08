@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { overviewView, scoresByMonth, type ListItem } from '@/audit/view';
 import { PartResults } from '@/components/audit/Parts';
+import { BrainTab } from '@/components/brain/Team';
 import { AddedTag } from '@/components/details/Added';
 import { HomeSummary } from '@/components/home/HomeSummary';
 import { NextSteps, type NextStep } from '@/components/home/NextSteps';
@@ -25,6 +26,7 @@ import { EFFORT_LABELS, INSTITUTION_TYPE_LABELS, LEAD_SOURCE_LABELS, MEMBERSHIP_
 import { byLink, type LinkCount } from '@/leads/summary';
 import { requireTeamViewer } from '@/lib/auth/guards';
 import { getViewer } from '@/lib/auth/viewer';
+import { loadBrainPage } from '@/lib/brain/page';
 import { loadAddedDetails, type AddedDetails } from '@/lib/details/load';
 import { loadLinkCounts } from '@/lib/leads/load';
 import { loadTeamInstitution, type LinkRow, type TeamInstitution, type WorkRow } from '@/lib/team/load';
@@ -99,12 +101,15 @@ export default async function TeamInstitutionPage({ params }: { params: Promise<
   // A new prospect: nothing to look at until the first team Audit, so that comes first.
   const firstStep = !institution.claimed && !(view && latest);
 
-  // A Client's work log comes first: it is what the team does for them every month.
+  // A Client's work log comes first: it is what the team does for them every month. Then its
+  // Client Brain (spec section 26), or Start onboarding.
   const client = tier === 'client';
+  const brain = institution.claimed ? await loadBrainPage(institution.id, true) : null;
   const tabs: TabItem[] = [
     ...(client || institution.work.length
       ? [{ id: 'work', label: 'Work log', count: institution.work.length, content: <WorkTab institution={institution} client={client} now={now} /> }]
       : []),
+    ...(client || brain ? [{ id: 'brain', label: 'Client Brain', content: <BrainTab institutionId={institution.id} page={brain} name={institution.name} /> }] : []),
     ...(client || leadLinks.length
       ? [{ id: 'leads', label: 'Leads links', count: leadLinks.length, content: <LeadLinksTab institution={institution} links={leadLinks} client={client} /> }]
       : []),

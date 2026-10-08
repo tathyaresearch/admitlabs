@@ -16,7 +16,7 @@
 export const SITE_PREFIX = '/site';
 
 /** The dashboard's first path segments. On the website's address they move to the dashboard's. */
-export const APP_SECTIONS: readonly string[] = ['login', 'signup', 'onboarding', 'audit', 'rivals', 'demand', 'leads', 'reports', 'plan', 'settings', 'notifications', 'work', 'team', 'share', 'design-system'];
+export const APP_SECTIONS: readonly string[] = ['login', 'signup', 'onboarding', 'audit', 'rivals', 'demand', 'leads', 'brain', 'reports', 'plan', 'settings', 'notifications', 'work', 'team', 'share', 'design-system'];
 
 /** Sign up and log in. While the dashboard is closed they stay, on the website, and say Drishti opens soon. */
 export const DOORS: readonly string[] = ['signup', 'login'];

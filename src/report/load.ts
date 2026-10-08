@@ -7,6 +7,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { findingsByAudit, latestStoredAudit, ownHistory, storedFindings } from '../audit/read.ts';
+import { loadBrainLine } from '../brain/load.ts';
 import { parsePickedIdea } from '../demand/picks.ts';
 import { latestDemandRows } from '../demand/read.ts';
 import { regionsFor } from '../demand/regions.ts';
@@ -192,6 +193,7 @@ export async function loadReportInput(
     picks: monthPicks,
     demand: { place: regions.city.region, signals },
     leads,
+    brain: tier === 'client' ? await loadBrainLine(db, institutionId, madeAt) : null,
     added: {
       institution: institutionDetailsFromRow(institutionDetails.data),
       programs: new Map((programDetails.data ?? []).map((row) => [row.program_id, programDetailsFromRow(row)])),

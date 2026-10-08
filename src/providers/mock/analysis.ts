@@ -1,5 +1,7 @@
 // Mock AI writer: text from a written bank that follows the copy rules. No Claude calls.
 
+import { matchQuestion } from '../../brain/ask.ts';
+import { fitIdea } from '../../brain/writing.ts';
 import { SAMPLE_CONTENT } from '../../sample/rivals.ts';
 import type { AnalysisProvider, ContentIdea } from '../analysis.ts';
 import { demandFixture, localize, placeWords } from './demand-bank.ts';
@@ -66,6 +68,7 @@ export const mockAnalysis: AnalysisProvider = {
       programName: input.programName,
       institutionDetails: context?.institutionDetails ?? null,
       programDetails: input.programName ? (context?.programDetails.get(input.programName) ?? null) : null,
+      brain: context?.brain ?? null,
     });
     return { ...advice, readyFix };
   },
@@ -80,5 +83,13 @@ export const mockAnalysis: AnalysisProvider = {
 
   async rivalLine(input) {
     return writeRivalLine(input);
+  },
+
+  async answerBrain({ question, facts }) {
+    return matchQuestion(question, facts);
+  },
+
+  async fitIdea({ idea, brain }) {
+    return fitIdea(idea, brain);
   },
 };

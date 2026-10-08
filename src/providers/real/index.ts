@@ -37,6 +37,12 @@ export const realAnalysis: AnalysisProvider = {
   async findingFix() {
     return notConnected();
   },
+  async answerBrain() {
+    return notConnected();
+  },
+  async fitIdea() {
+    return notConnected();
+  },
   async rivalActions() {
     return notConnected();
   },

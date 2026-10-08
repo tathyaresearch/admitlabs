@@ -36,10 +36,15 @@ export const INSTITUTION_NAV: readonly NavSection[] = [
 /** Leads (spec section 23), for an AdmitLabs Client, or one whose enquiries are still kept: after Demand. */
 export const LEADS_ITEM: NavItem = { href: '/leads', label: 'Leads', icon: 'enquiry' };
 
-export function institutionNav(leads: boolean): readonly NavSection[] {
-  if (!leads) return INSTITUTION_NAV;
+/** The Brain (spec section 26), for an AdmitLabs Client: after Leads. On a phone it sits under More. */
+export const BRAIN_ITEM: NavItem = { href: '/brain', label: 'Brain', icon: 'brain' };
+
+export function institutionNav(leads: boolean, brain = false): readonly NavSection[] {
+  if (!leads && !brain) return INSTITUTION_NAV;
   return INSTITUTION_NAV.map((section, index) =>
-    index === 0 ? { ...section, items: section.items.flatMap((item) => (item.href === '/demand' ? [item, LEADS_ITEM] : [item])) } : section,
+    index === 0
+      ? { ...section, items: section.items.flatMap((item) => (item.href === '/demand' ? [item, ...(leads ? [LEADS_ITEM] : []), ...(brain ? [BRAIN_ITEM] : [])] : [item])) }
+      : section,
   );
 }
 

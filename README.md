@@ -99,6 +99,21 @@ The Audit answers "What does the internet say about us?" (`src/components/audit/
 - The team keeps the log on the institution's page, in the Work log tab: Done or Next, one plain sentence, the day, and a link when there is one. Next can be marked as done.
 - The `team_work` table: the team writes, the Client's own people read while the service is active, and no other plan sees it (`supabase/tests/team_work.test.sql`). The rules for what can be saved are in `src/team/work.ts`.
 - The sample Client, Brightpath, has a log from August with two things next.
+- The card also has the Client's Brain in one line ("2 facts to check before admissions open on 1 Dec 2026"), and while the Brain is set up, Home opens with Help us know you (see Client Brain).
+
+## Client Brain (Clients)
+
+One living knowledge base per Client college (spec section 26): everything the AdmitLabs team needs to work for it. The college sees it as **Brain** in its menu (after Leads; under More on a phone); the team calls it **Client Brain**.
+
+- **Who:** the college's owner and members and the AdmitLabs team read and change it, while the college is a Client. Free and Paid get "not found". A Client that ends: the college no longer sees it; the team still reads it, and nobody changes it (`can_read_brain`, `can_edit_brain` in `supabase/migrations/20261021120100_client_brain.sql`).
+- **Eight sections**, a list on the left (a row of chips on a phone), one open at a time at its own address (`/brain?section=programs`), with an Overview first (what needs checking, what's missing, recent changes): Basics (contacts, approvals, address, how they like to talk, goals), Programs, Brand, Proof, Links, Calendar, Content and Notes and decisions.
+- **One source.** Facts that live elsewhere stay there: the institution record (name, city, type, the public links Drishti checks: changed by the owner in Settings, read only in the Brain), the details added by you (approvals, address, each program's level, fees, seats, dates, placements and highlights, "Also in Settings"; a Client's members and the team edit them too) and the team's private notes (the Brain's Team only notes). Everything else is one Brain fact each (`brain_items`), read by `src/brain/forms.ts` from one form per kind (`src/brain/form-spec.ts`) that the college and the team share.
+- **Onboarding.** The team clicks Start onboarding on the Client's page (Client Brain tab). Drishti pre-fills what the latest Audit found (fees and program pages the website shows, the approvals held officially, the placements page, listing sites: `src/brain/prefill.ts`); the team confirms, corrects or takes out each one. The kickoff call (`/team/institutions/<id>/brain/kickoff`) walks the sections with every missing fact's form open. The college fills **Help us know you** (`/brain/help`), block by block, saved as it goes. "Client Brain 80% complete" counts the must-have facts (`src/brain/progress.ts`); "Doesn't apply" counts as done where it may. The checklist has six steps; three need their fact first (a shared Drive folder, who approves content, an agreed plan). **Mark as Ready** waits for every must-have and the whole checklist; the college then gets "Your Brain is ready".
+- **Living.** Every change keeps who and when (`brain_changes`, written by triggers), shown in each fact's History and in Recent changes, by name (each person sets theirs once: Settings, Team; Team users) or by email. **Needs checking**: fees and dates after 6 months, everything else after 12 (`BRAIN_RULES` in `src/config/brain.ts`); "Still right" starts the clock again; in the 8 weeks before admissions open the facts to check lead the Overview and Home's team card.
+- **Ask the brain**: a box at the top ("What's the BBA fee?", "Who approves reels?"): the answer, the section it came from and when it was checked, or where to add it. Only ever from the Brain (Team only notes for the team alone). The AI writer's new `answerBrain` slot; its mock matches words to facts (`src/brain/ask.ts`).
+- **It powers the rest:** ready fixes fill more blanks from it (a tagline, when admissions open, the portal, an email, an alumnus), Make these 3 is fitted to the brand when picked (the tone, one Brain fact, nothing it avoids: `fitIdea`), Leads forms already use the same program list, a Client's monthly summary, email and PDF carry "Your Brain" in one line, and the Content section shows the work log (an approved script goes into it in one click).
+- **Rules:** no passwords or logins anywhere, checked in the forms and again in the database (`src/brain/guard.ts`, `private.brain_text_ok`); no student contact details in alumni or reviews; links first, plus a logo (PNG, JPG or WebP up to 2 MB) and brand guidelines (a PDF up to 10 MB) in the private bucket `brain-files`, opened through `/brain/file/<id>`. Drive folders are shared with admitlabs@gmail.com.
+- **Sample:** Brightpath's Brain has been Ready since 16 March, with 2 facts to check before admissions open on 1 December (Hotel Management's fees and dates, last checked in March). Silverline College became a Client on 1 October: its Brain is 80% complete with 4 of 6 steps done, and what Drishti found waits to be confirmed. Ritu Bora (owner) and Anjali Das (member, anjali@brightpath-skills.example) are Brightpath's people; Meera Kalita is Silverline's owner; Kabir Sen is the team user.
 
 ## Empty states
 
@@ -361,13 +376,14 @@ src/leads/       Leads: the enquiry form's rules, the page's numbers, the CSV, t
 src/email/       the emails' black and ivory layout
 src/report/      the monthly summary and report (the schedule, the 3 things to do, the summary and its email, the snapshot, the PDF, the job) and the shared Audit PDF
 src/team/        team tools: the bulk list reader, list filters, plan rules and the shared Audit
+src/brain/       the Client Brain: its facts, forms, progress, Needs checking, History, Ask the brain, the pre-fill and the brand voice
 src/graphics/    the gauges, line icons, the Drishti eye, brand logos (with their sources) and platform marks, shared by the screens and the PDFs
 src/product/     the product page: its words (numbers from config) and its preview data
 src/site/        the website: its words, what its pictures show, the Work with us form's rules and the Our work samples
 src/sample/      the fictional sample world, and that world worked out in memory (world.ts, report.ts)
 ```
 
-`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/leads`, `src/email`, `src/report`, `src/team`, `src/graphics`, `src/product`, `src/site` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, for shared Audit PDFs and for the sample report (`serverExternalPackages` in `next.config.ts`). Never in the browser.
+`src/domain`, `src/config`, `src/providers`, `src/audit`, `src/rivals`, `src/demand`, `src/leads`, `src/brain`, `src/email`, `src/report`, `src/team`, `src/graphics`, `src/product`, `src/site` and `src/sample` never import Next.js, so Node runs their tests directly. The PDF library only ever loads on the server: in the report job, for shared Audit PDFs and for the sample report (`serverExternalPackages` in `next.config.ts`). Never in the browser.
 
 ## How scores work
 

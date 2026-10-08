@@ -32,7 +32,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const planLine = viewer.tier === 'paid' && viewer.plan?.endsAt ? `Paid until ${formatDate(viewer.plan.endsAt)}` : `${TIER_LABELS[viewer.tier]} plan`;
   return (
     <AppShell
-      sections={institutionNav(leads)}
+      sections={institutionNav(leads, viewer.tier === 'client')}
       mobilePrimary={viewer.tier === 'client' ? LEADS_MOBILE_PRIMARY : MOBILE_PRIMARY}
       homeHref="/"
       email={viewer.email}

@@ -1,8 +1,10 @@
 // The written bank behind the mock writer's ready fixes (spec 7.7): for each check, a text or a
 // layout the institution can copy. Blanks it fills in are in [brackets]; the details it added in
-// Settings fill some of them in. Later the Claude API writes these from the same inputs. Rules:
+// Settings fill some of them in, and so does a Client's Brain (a tagline, when admissions open, the
+// admission portal, an email, an alumnus). Later the Claude API writes these from the same inputs. Rules:
 // plain words, short lines, no dashes, and nothing that claims a fact Drishti does not have.
 
+import type { BrainWriting } from '../../brain/writing.ts';
 import type { InstitutionDetails, ProgramDetails } from '../../domain/details.ts';
 import { formatDateLong, formatInr, joinNames } from '../../domain/format.ts';
 import type { ReadyFix } from '../../domain/ready-fix.ts';
@@ -19,6 +21,8 @@ export interface ReadyFixContext {
   institutionDetails: InstitutionDetails | null;
   /** The program's details, for program checks. */
   programDetails: ProgramDetails | null;
+  /** A Client's Brain, when there is one. */
+  brain?: BrainWriting | null;
 }
 
 const lakh = (value: number) => `₹${value} lakh a year`;
@@ -43,6 +47,7 @@ export function writeReadyFix(key: CheckKey, ctx: ReadyFixContext): ReadyFix {
   const kind = ctx.institutionType === 'skilling' ? 'institute' : ctx.institutionType;
   const school = ctx.institutionDetails;
   const course = ctx.programDetails;
+  const brain = ctx.brain ?? null;
   const fill = new Filler();
   const programs = ctx.programNames.length ? joinNames([...ctx.programNames]) : '[programs]';
 
@@ -220,7 +225,7 @@ export function writeReadyFix(key: CheckKey, ctx: ReadyFixContext): ReadyFix {
         {
           kind: 'text',
           title: 'Your Google profile description',
-          text: `${ctx.institutionName} is a ${kind} in ${ctx.city} offering ${programs}. Admissions for 2027 open on [date]. Visit us at ${fill.value(school?.campusAddress, String, '[address]')}, or ask us on WhatsApp at ${fill.value(school?.admissionsPhone, String, '[number]')}.`,
+          text: `${fill.value(brain?.tagline, (line) => `${line.replace(/[.!]$/, '')}. `, '')}${ctx.institutionName} is a ${kind} in ${ctx.city} offering ${programs}. Admissions for 2027 open on ${fill.value(brain?.admissionsOpen, (day) => formatDateLong(`${day}T06:30:00Z`), '[date]')}. Visit us at ${fill.value(school?.campusAddress, String, '[address]')}, or ask us on WhatsApp at ${fill.value(school?.admissionsPhone, String, '[number]')}.`,
         },
         fill,
       );
@@ -230,7 +235,7 @@ export function writeReadyFix(key: CheckKey, ctx: ReadyFixContext): ReadyFix {
         {
           kind: 'text',
           title: 'Two replies to start from',
-          text: `To a good review: “Thank you, [name]. We are glad the [program] faculty helped. See you at the alumni meet in [month].”\nTo a hard one: “Sorry to hear about [issue], [name]. Please write to ${fill.value(school?.admissionsEmail, String, '[email]')} and our admissions head will call you this week.”`,
+          text: `To a good review: “Thank you, [name]. We are glad the [program] faculty helped. See you at the alumni meet in [month].”\nTo a hard one: “Sorry to hear about [issue], [name]. Please write to ${fill.value(school?.admissionsEmail ?? brain?.contactEmail, String, '[email]')} and our admissions head will call you this week.”`,
         },
         fill,
       );
@@ -265,14 +270,16 @@ export function writeReadyFix(key: CheckKey, ctx: ReadyFixContext): ReadyFix {
       return {
         kind: 'text',
         title: 'A Facebook post for this week',
-        text: `Admissions for ${program} 2027 are open. Fees, placements and dates in one place: [link]. Ask us anything in the comments.`,
+        text: `Admissions for ${program} 2027 are open. Fees, placements and dates in one place: ${fill.value(brain?.portal ?? course?.pageUrl, String, '[link]')}. Ask us anything in the comments.`,
       };
 
     case 'students_in_content':
       return {
         kind: 'text',
         title: 'A caption, and the ask first',
-        text: `Caption: “[Name], ${program} 2026, now at [company]. In their words: ‘[one line]’.”\nAsk the student first, in writing.`,
+        text: brain?.alumnus
+          ? `Caption: “${brain.alumnus.name}${brain.alumnus.program ? `, ${brain.alumnus.program}` : ''}: ${brain.alumnus.line}. In their words: ‘[one line]’.”\nAsk them first, in writing.`
+          : `Caption: “[Name], ${program} 2026, now at [company]. In their words: ‘[one line]’.”\nAsk the student first, in writing.`,
       };
   }
 }

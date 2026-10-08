@@ -52,6 +52,8 @@ import {
   sampleInstitution,
   sampleToken,
 } from '../src/sample/index.ts';
+import { SAMPLE_BRAIN_NOTES, SAMPLE_BRAINS, SAMPLE_NAMES, SAMPLE_NEW_CLIENT_WORK, SAMPLE_NEW_CLIENTS } from '../src/sample/brain.ts';
+import { seedBrain } from './lib/brain-seed.ts';
 import { serviceClient } from './lib/db.ts';
 import { fail } from './lib/local.ts';
 
@@ -193,6 +195,11 @@ async function main(): Promise<void> {
     'team_users',
     SAMPLE_USERS.flatMap((user) => (user.teamRole ? [{ user_id: requireUser(user.email), role: user.teamRole, created_at: teamSince }] : [])),
   );
+  // Each person's name, as they set it once (the rest show by email).
+  await insert(
+    'person_names',
+    Object.entries(SAMPLE_NAMES).map(([email, name]) => ({ user_id: requireUser(email), name, updated_at: at('2026-03-02', 9) })),
+  );
   await insert(
     'plans',
     SAMPLE_INSTITUTIONS.flatMap((sample) => {
@@ -252,6 +259,13 @@ async function main(): Promise<void> {
       return { institution_id: institutionId(mark.slug), check_key: mark.check ?? null, finding_key: mark.finding ?? null, marked_by: userId(owner), marked_at: at(mark.markedOn, 17) };
     }),
   );
+
+  // Brightpath's Client Brain, Ready since March: its Audits, Make these 3 and summaries read it.
+  const brainCounts: string[] = [];
+  for (const brain of SAMPLE_BRAINS.filter((entry) => !entry.prefill)) {
+    const seeded = await seedBrain(db, brain, requireUser);
+    brainCounts.push(`${sampleInstitution(brain.slug).name} ${brain.ready ? 'Ready' : 'onboarding'} with ${seeded.facts} facts`);
+  }
 
   // Audits: every sample run, own, rival and team, through the live path (collect, score, save).
   // With Review first on, the team approved each own Audit three hours after it ran, except the
@@ -500,6 +514,35 @@ async function main(): Promise<void> {
     }
   }
 
+  // Silverline College becomes a Client on 1 October: its Brain starts on 3 October from what its
+  // latest Audit found, then the kickoff call and Help us know you. Its team's notes and work log.
+  for (const brain of SAMPLE_BRAINS.filter((entry) => entry.prefill)) {
+    const seeded = await seedBrain(db, brain, requireUser);
+    brainCounts.push(`${sampleInstitution(brain.slug).name} ${brain.ready ? 'Ready' : 'onboarding'} with ${seeded.facts} facts, ${seeded.found} found by Drishti`);
+  }
+  await insert(
+    'notes',
+    SAMPLE_BRAIN_NOTES.map((note) => ({ institution_id: institutionId(note.slug), author_id: requireUser(TEAM_EMAIL), body: note.body, created_at: at(note.on, 16) })),
+  );
+  for (const client of SAMPLE_NEW_CLIENTS) {
+    const moved = await db
+      .from('plans')
+      .update({ tier: 'client', starts_at: istDate(client.on, 10).toISOString(), ends_at: null, paid_months: null, set_by: requireUser(client.by) })
+      .eq('institution_id', institutionId(client.slug));
+    if (moved.error) fail(`Could not make ${client.slug} a Client: ${moved.error.message}`);
+  }
+  await insert(
+    'team_work',
+    SAMPLE_NEW_CLIENT_WORK.map((entry, index) => ({
+      institution_id: institutionId(entry.slug),
+      kind: entry.kind,
+      body: entry.text,
+      work_on: entry.on,
+      added_by: requireUser(TEAM_EMAIL),
+      created_at: istDate(entry.addedOn, 17, index).toISOString(),
+    })),
+  );
+
   // Older notifications have been read. New: the latest "Audit ready", and the last 10 days of
   // rival moves and demand spikes.
   const { data: notices, error: noticeError } = await db.from('notifications').select('id, institution_id, kind, created_at').order('created_at', { ascending: false });
@@ -533,6 +576,7 @@ async function main(): Promise<void> {
   console.log(`  Let AdmitLabs fix this ${SAMPLE_FIX_REQUESTS.length}, Leads ${SAMPLE_LEADS.length} from ${SAMPLE_LEAD_LINKS.length} tracking links`);
   console.log(`  Rival moves ${moveCount}, best posts ${contentCount ?? 0}, ads ${SAMPLE_ADS.length}, Rivals 3 things to do ${actionCount} (April to September)`);
   console.log(`  Demand pulls ${needed.length * DEMAND_MONTHS.length} with ${demandItems} grouped items, ${spikeCount} spike alerts sent`);
+  console.log(`  Client Brains: ${brainCounts.join('; ')}`);
   console.log(`  Make these 3 picked ${pickCount} times (${PICK_MONTHS.join(' and ')}), ${SAMPLE_MADE.length} marked as made`);
   const live = reportPages.filter((report) => report.month === LIVE_REPORT_MONTH);
   console.log(`  Monthly summaries and reports ${reportPages.length}, ${REPORT_MONTHS[0]} to ${LIVE_REPORT_MONTH} (${reportPages.map((report) => `${report.month} ${report.pages} pages`).join(', ')})`);
@@ -541,7 +585,7 @@ async function main(): Promise<void> {
   for (const user of SAMPLE_USERS) {
     const sample = user.institutionSlug ? sampleInstitution(user.institutionSlug) : null;
     const label = sample
-      ? `${user.membershipRole === 'owner' ? 'Owner' : 'Member'}, ${sample.name} (${sample.plan ? TIER_LABELS[sample.plan.tier] : 'Free'})`
+      ? `${user.membershipRole === 'owner' ? 'Owner' : 'Member'}, ${sample.name} (${SAMPLE_NEW_CLIENTS.some((client) => client.slug === sample.slug) ? TIER_LABELS.client : sample.plan ? TIER_LABELS[sample.plan.tier] : 'Free'})`
       : user.teamRole === 'admin'
         ? 'AdmitLabs admin'
         : 'AdmitLabs team';

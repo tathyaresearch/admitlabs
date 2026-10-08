@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { AddedTag } from '@/components/details/Added';
+import { NameForm } from '@/components/people/NameForm';
 import { PaidAction } from '@/components/plan/PaidAction';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
@@ -283,12 +284,20 @@ async function TeamGroup({ viewer }: { viewer: InstitutionViewer }) {
   return (
     <>
       <Head title="Team">Everyone who can see this dashboard. Members can look; only the owner changes things.</Head>
+      {viewer.viewingAs ? null : (
+        <Card padding="md">
+          <NameForm
+            name={people.find((person) => person.user_id === viewer.userId)?.name ?? null}
+            hint={viewer.tier === 'client' ? 'Your Brain’s History shows it beside what you changed. Without it, your email shows.' : 'Your team sees it beside your email.'}
+          />
+        </Card>
+      )}
       <Card padding="md">
         <ul className={styles.people}>
           {people.map((person) => (
             <li key={person.user_id} className={styles.person}>
               <span className={styles.personEmail}>
-                {person.email}
+                {person.name ? `${person.name}, ${person.email}` : person.email}
                 <span className={styles.personRole}>
                   {MEMBERSHIP_ROLE_LABELS[person.role]}
                   {person.user_id === viewer.userId ? ', you' : ''}
@@ -446,7 +455,7 @@ async function NotificationsGroup({ viewer, audit, rivals }: { viewer: Instituti
           {(people ?? []).map((person) => (
             <li key={person.user_id} className={styles.person}>
               <span className={styles.personEmail}>
-                {person.email}
+                {person.name ? `${person.name}, ${person.email}` : person.email}
                 <span className={styles.personRole}>
                   {MEMBERSHIP_ROLE_LABELS[person.role]}
                   {person.user_id === viewer.userId ? ', you' : ''}. {person.summary_email ? 'Gets it' : 'Turned off'}

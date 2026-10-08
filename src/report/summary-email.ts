@@ -36,6 +36,7 @@ export function summaryEmailParts(input: SummaryEmailInput): BlockEmail {
     { kind: 'heading', text: 'One rival move' },
     { kind: 'text', text: summary.lines.move },
     ...(summary.lines.enquiries ? ([{ kind: 'heading', text: 'Your enquiries' }, { kind: 'text', text: summary.lines.enquiries }] as const) : []),
+    ...(summary.brain ? ([{ kind: 'heading', text: 'Your Brain' }, { kind: 'text', text: summary.brain }] as const) : []),
     {
       kind: 'buttons',
       buttons: [

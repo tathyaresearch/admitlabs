@@ -75,6 +75,12 @@ export function SummaryBody({ summary }: { summary: MonthlySummary }) {
             <p className={styles.line}>{summary.lines.enquiries}</p>
           </div>
         ) : null}
+        {summary.brain ? (
+          <div className={styles.part}>
+            <h3 className={audit.miniTitle}>Your Brain</h3>
+            <p className={styles.line}>{summary.brain}</p>
+          </div>
+        ) : null}
       </div>
     </div>
   );

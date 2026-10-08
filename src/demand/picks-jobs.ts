@@ -4,10 +4,12 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { latestStoredAudit } from '../audit/read.ts';
+import { loadBrainWriting } from '../brain/load.ts';
 import { monthStart, previousMonth } from '../domain/dates.ts';
 import { effectiveTier } from '../domain/tiers.ts';
 import type { CheckKey, CheckResult } from '../domain/types.ts';
 import type { Database, Json } from '../lib/supabase/database.types.ts';
+import { getAnalysisProvider } from '../providers/registry.ts';
 import { parsePickedIdea, pickThree } from './picks.ts';
 import { latestDemandRows } from './read.ts';
 import { regionsFor } from './regions.ts';
@@ -80,8 +82,19 @@ export async function writeContentPicks(db: Db, institutionId: string, month: st
   });
   if (picks.length === 0) return 0;
 
+  // A Client with a Brain: each idea fitted to the brand (its tone, one Brain fact, nothing it avoids).
+  const brain = tier === 'client' ? await loadBrainWriting(db, institutionId, pickedAt) : null;
+  const fitted = brain
+    ? await Promise.all(
+        picks.map(async (pick) => {
+          const fit = await getAnalysisProvider().fitIdea({ idea: { hook: pick.idea.hook, points: pick.idea.points, programName: pick.idea.programName, topic: pick.idea.topic }, brain });
+          return { ...pick, idea: { ...pick.idea, hook: fit.hook, points: fit.points, voice: { tone: brain.tone, fact: fit.fact } } };
+        }),
+      )
+    : picks;
+
   const { error } = await db.from('content_picks').insert(
-    picks.map((pick) => ({
+    fitted.map((pick) => ({
       institution_id: institutionId,
       month: monthStart(month),
       rank: pick.rank,

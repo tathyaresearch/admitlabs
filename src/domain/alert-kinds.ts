@@ -1,7 +1,7 @@
 // Alerts by what they are about (B10): the filters on Notifications, and what each alert's link
 // says, so it is clear where it goes. Pure.
 
-export const ALERT_FILTERS = ['audit', 'rivals', 'students', 'reports', 'plan'] as const;
+export const ALERT_FILTERS = ['audit', 'rivals', 'students', 'reports', 'brain', 'plan'] as const;
 export type AlertFilter = (typeof ALERT_FILTERS)[number];
 
 export const ALERT_FILTER_LABELS: Readonly<Record<AlertFilter, string>> = {
@@ -9,6 +9,7 @@ export const ALERT_FILTER_LABELS: Readonly<Record<AlertFilter, string>> = {
   rivals: 'Rivals',
   students: 'Students',
   reports: 'Reports',
+  brain: 'Brain',
   plan: 'Plan',
 };
 
@@ -17,6 +18,7 @@ const FILTER_OF: Readonly<Record<string, AlertFilter>> = {
   rival_move: 'rivals',
   demand_spike: 'students',
   report_ready: 'reports',
+  brain_ready: 'brain',
   plan_reminder: 'plan',
   plan_ended: 'plan',
 };
@@ -37,6 +39,8 @@ export function alertLinkText(kind: string, link: string): string {
       return 'See what students search for';
     case 'report_ready':
       return 'See the report';
+    case 'brain_ready':
+      return 'See your Brain';
     case 'plan_reminder':
     case 'plan_ended':
       return 'See your plan';

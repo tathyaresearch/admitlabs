@@ -36,6 +36,8 @@ export interface PickedIdea {
   sourceUrl: string;
   platform: string | null;
   foundAt: string;
+  /** For a Client with a Brain: fitted to the brand when picked (src/brain/writing.ts), with the Brain fact it carries. */
+  voice?: { tone: 'friendly' | 'formal' | null; fact: string | null };
 }
 
 export interface Pick {
@@ -202,5 +204,8 @@ export function parsePickedIdea(value: unknown): PickedIdea | null {
     sourceUrl,
     platform: str(raw.platform),
     foundAt: str(raw.foundAt) ?? '',
+    ...(raw.voice && typeof raw.voice === 'object'
+      ? { voice: { tone: oneOf(['friendly', 'formal'] as const, (raw.voice as Record<string, unknown>).tone), fact: str((raw.voice as Record<string, unknown>).fact) } }
+      : {}),
   };
 }

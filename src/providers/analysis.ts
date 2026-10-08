@@ -21,6 +21,8 @@ import type {
   Impact,
   InstitutionType,
 } from '../domain/types.ts';
+import type { AskFact, BrainAnswer } from '../brain/ask.ts';
+import type { BrainWriting, FittedIdea, IdeaToFit } from '../brain/writing.ts';
 import type { LineFacts } from '../rivals/line.ts';
 import type { Opportunity } from '../rivals/opportunities.ts';
 import type { RivalContentValue } from './signals.ts';
@@ -34,6 +36,8 @@ export interface WritingContext {
   institutionDetails: InstitutionDetails | null;
   /** Each program's details, by program name. */
   programDetails: ReadonlyMap<string, ProgramDetails>;
+  /** A Client's Brain: its voice and the facts a ready fix can use. Null without one. */
+  brain?: BrainWriting | null;
 }
 
 export interface FixAdviceInput<K extends CheckKey = CheckKey> {
@@ -164,4 +168,8 @@ export interface AnalysisProvider {
   rivalActions(input: RivalActionsInput): Promise<RivalActionText[]>;
   /** The month's one line about rivals: who is ahead of you, and on what. One plain sentence. */
   rivalLine(input: RivalLineInput): Promise<string>;
+  /** Ask the brain: the facts that answer a question, only ever from the Brain, or where to add the answer. */
+  answerBrain(input: { question: string; facts: readonly AskFact[] }): Promise<BrainAnswer>;
+  /** One of Make these 3, fitted to a Client's brand: the hook in its tone, a Brain fact, nothing it avoids. */
+  fitIdea(input: { idea: IdeaToFit; brain: BrainWriting }): Promise<FittedIdea>;
 }
