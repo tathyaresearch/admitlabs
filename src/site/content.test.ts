@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, test } from 'node:test';
 import { CHECKS } from '../domain/checks.ts';
 import { hasDashes } from '../domain/copy.ts';
@@ -36,6 +38,23 @@ describe('the website copy', () => {
     );
   });
 
+  test('the logo strip: each logo named, its WebP in public, small, at twice its drawn size', () => {
+    assert.equal(content.CLIENTS.length, 10);
+    assert.equal(new Set(content.CLIENTS.map((client) => client.name)).size, content.CLIENTS.length);
+    for (const client of content.CLIENTS) {
+      assert.ok(client.name.trim().length > 1, client.src);
+      assert.match(client.src, /^\/brand\/clients\/[a-z-]+\.webp$/);
+      const file = readFileSync(join('public', client.src));
+      assert.equal(file.subarray(8, 12).toString('latin1'), 'WEBP', client.src);
+      assert.ok(file.length < 16 * 1024, client.src);
+      // VP8L (lossless) keeps its size in a 14 bit pair after the signature byte.
+      assert.equal(file.subarray(12, 16).toString('latin1'), 'VP8L', client.src);
+      const bits = file.readUInt32LE(21);
+      assert.equal((bits & 0x3fff) + 1, client.width, client.src);
+      assert.equal(((bits >> 14) & 0x3fff) + 1, client.height, client.src);
+    }
+  });
+
   test('the Products menu: Drishti on the website, Tathya in a new tab', () => {
     assert.deepEqual(
       content.PRODUCTS.items.map((item) => [item.name, item.href, item.newTab]),
@@ -55,7 +74,9 @@ describe('the website copy', () => {
   });
 
   test('who we work with, only: never who we don’t, and no prices anywhere', () => {
-    for (const text of ALL) {
+    // The logo strip's company names (Newton School) and files are names, not who we work with.
+    const names = new Set(texts(content.CLIENTS));
+    for (const text of ALL.filter((text) => !names.has(text))) {
       assert.doesNotMatch(text, /\bschools?\b|edtech|government (?:bod|institut|college)/i, text);
       assert.doesNotMatch(text, /₹|\brs\.?\s?\d|\binr\b/i, text);
     }

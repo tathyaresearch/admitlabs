@@ -55,6 +55,23 @@ export const HERO = {
   proof: '120+ education companies worked with.',
 } as const;
 
+/** The logo strip under the proof line. Ivory on transparent WebPs in public/brand/clients, made
+ *  from the PNGs in brand/clients: specks cleaned, one ivory, trimmed. Width and height are the
+ *  file's own px, twice the logo's size on a desktop, balanced by eye so no logo looks bigger
+ *  than the others (a taller shape gets less height). */
+export const CLIENTS = [
+  { name: 'UPES', src: '/brand/clients/upes.webp', width: 180, height: 55 },
+  { name: 'upGrad', src: '/brand/clients/upgrad.webp', width: 173, height: 45 },
+  { name: 'NMIMS', src: '/brand/clients/nmims.webp', width: 182, height: 56 },
+  { name: 'Newton School', src: '/brand/clients/newton-school.webp', width: 271, height: 37 },
+  { name: 'Tally Education', src: '/brand/clients/tally-education.webp', width: 127, height: 72 },
+  { name: 'Physics Wallah', src: '/brand/clients/physics-wallah.webp', width: 176, height: 57 },
+  { name: 'Lodha', src: '/brand/clients/lodha.webp', width: 226, height: 33 },
+  { name: 'Woxsen University', src: '/brand/clients/woxsen-university.webp', width: 144, height: 61 },
+  { name: 'Symbiosis', src: '/brand/clients/symbiosis.webp', width: 231, height: 50 },
+  { name: 'Northstar Academy', src: '/brand/clients/northstar-academy.webp', width: 181, height: 59 },
+] as const;
+
 const PILLAR_LINES: Readonly<Record<Pillar, string>> = {
   discovered: 'Students find you when they search.',
   trusted: 'They believe what they see.',

@@ -1,10 +1,12 @@
 // The website's hero, Spotlight: one idea on black. The promise in two lines under a soft cone of
-// light, the two buttons, and a quiet proof line, inside a fine frame with small crosses.
+// light, the two buttons, and a quiet proof line with a slow strip of logos, inside a fine frame
+// with small crosses.
 
 import { ButtonLink } from '@/components/ui/Button';
 import { CTA, HERO } from '@/site/content';
 import { wayIn } from '@/site/way-in';
 import { Frame } from './Frame';
+import { LogoStrip } from './LogoStrip';
 import styles from './hero.module.css';
 import site from './site.module.css';
 
@@ -33,7 +35,10 @@ export function Hero() {
             {CTA.secondary}
           </ButtonLink>
         </div>
-        <p className={styles.proof}>{HERO.proof}</p>
+        <p id="hero-proof" className={styles.proof}>
+          {HERO.proof}
+        </p>
+        <LogoStrip labelledBy="hero-proof" />
       </div>
     </section>
   );
