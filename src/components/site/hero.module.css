@@ -3,10 +3,13 @@
 .hero {
   --rule-top: var(--header-h);
   --rule-bottom: clamp(2.5rem, 1.5rem + 2.5vw, 4rem);
+  /* The proof line and its logo strip sit this much lower, nearer the bottom rule, taken from the
+     space below them, so nothing above them moves and the hero keeps its height. */
+  --proof-drop: clamp(0.5rem, -0.75rem + 3.6vw, 2.25rem);
   overflow: hidden;
   /* Under the header, so the light reaches the top of the screen. */
   margin-top: calc(-1 * var(--header-h));
-  padding: calc(var(--header-h) + clamp(4.5rem, 2.5rem + 7vw, 9.5rem)) 0 calc(var(--rule-bottom) + clamp(3.5rem, 2rem + 6vw, 6.5rem));
+  padding: calc(var(--header-h) + clamp(4.5rem, 2.5rem + 7vw, 9.5rem)) 0 calc(var(--rule-bottom) + clamp(3.5rem, 2rem + 6vw, 6.5rem) - var(--proof-drop));
   background: var(--grain-dark), var(--black);
 }
 
@@ -73,7 +76,7 @@
 }
 
 .proof {
-  margin-top: clamp(2.25rem, 1.5rem + 2.4vw, 3.5rem);
+  margin-top: calc(clamp(2.25rem, 1.5rem + 2.4vw, 3.5rem) + var(--proof-drop));
   font-size: 0.84375rem;
   color: var(--slate);
 }
