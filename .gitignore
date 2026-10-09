@@ -32,3 +32,6 @@ Thumbs.db
 
 # the thumbnail originals stay on this computer; the site uses public/brand/thumbs
 /brand/thumbs/
+
+# the Larkmoor logo original stays on this computer; the site draws it inline (src/site/larkmoor-mark.ts)
+/brand/larkmoor-logo.png

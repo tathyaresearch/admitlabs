@@ -7,6 +7,7 @@ import type { CSSProperties } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { BrandLogo } from '@/components/ui/Marks';
 import { CITY, CLIPS, INSTITUTION, PROGRAM_PAGE, SEASON, SEASON_DAYS, SEASON_PHOTOS, SOCIAL } from '@/site/scenes';
+import { LarkmoorMark } from './LarkmoorMark';
 import { LoopVideo } from './LoopVideo';
 import { NearScreen } from './NearScreen';
 import styles from './services.module.css';
@@ -32,7 +33,10 @@ export function ProgramPicture() {
         </p>
         <div className={styles.webPage} data-theme="light">
           <p className={styles.webNav}>
-            <strong>{INSTITUTION.name}</strong>
+            <strong className={styles.webBrand}>
+              <LarkmoorMark className={styles.brandMark} />
+              {INSTITUTION.name}
+            </strong>
             {PROGRAM_PAGE.nav.map((item) => (
               <span key={item}>{item}</span>
             ))}
@@ -71,7 +75,10 @@ export function ProgramPicture() {
       </div>
       <div className={styles.phone}>
         <div className={styles.phoneScreen} data-theme="light">
-          <p className={styles.phoneBrand}>{INSTITUTION.name}</p>
+          <p className={styles.phoneBrand}>
+            <LarkmoorMark className={styles.brandMark} />
+            {INSTITUTION.name}
+          </p>
           <p className={styles.phoneTitle}>{PROGRAM_PAGE.title}</p>
           <p className={styles.phoneLine}>{PROGRAM_PAGE.kicker}</p>
           <dl className={styles.phoneFacts}>
@@ -102,7 +109,9 @@ export function SocialPicture() {
           <strong>{SOCIAL.handle}</strong>
         </p>
         <div className={styles.profileHead}>
-          <span className={styles.profileMark}>{INSTITUTION.initial}</span>
+          <span className={styles.profileMark}>
+            <LarkmoorMark className={styles.avatarMark} />
+          </span>
           <p>
             <span className="num">{SOCIAL.posts}</span>
             <small>posts</small>
@@ -137,7 +146,9 @@ export function SocialPicture() {
         <p className={styles.reelTitle}>{SOCIAL.reel.title}</p>
         <div className={styles.reelFoot}>
           <p className={styles.reelWho}>
-            <span className={styles.profileMarkSmall}>{INSTITUTION.initial}</span>
+            <span className={styles.profileMarkSmall}>
+              <LarkmoorMark className={styles.avatarMark} />
+            </span>
             {SOCIAL.handle}
           </p>
           <p className={styles.reelCaption}>{SOCIAL.reel.caption}</p>
@@ -161,7 +172,9 @@ export function SocialPicture() {
           {SOCIAL.film.channel} · {SOCIAL.film.views}
         </p>
         <p className={styles.channel}>
-          <span className={styles.profileMarkSmall}>{INSTITUTION.initial}</span>
+          <span className={styles.profileMarkSmall}>
+            <LarkmoorMark className={styles.avatarMark} />
+          </span>
           {INSTITUTION.name}, {CITY}
         </p>
       </div>

@@ -130,6 +130,21 @@
   color: var(--black);
 }
 
+/* The institution's name with its mark before it, the mark a little under the line's height so
+   the header keeps its own. */
+.webNav .webBrand,
+.phoneBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.375em;
+}
+
+.brandMark {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+}
+
 .webNav span:not(.webApply) {
   display: none;
 }
@@ -447,19 +462,22 @@
   border-radius: 50%;
   background: linear-gradient(180deg, #f7f0e3, #d9cfbc);
   color: var(--black);
-  font-weight: 700;
 }
 
 .profileMark {
   width: 2.25rem;
   height: 2.25rem;
-  font-size: 0.875rem;
 }
 
 .profileMarkSmall {
   width: 1.25rem;
   height: 1.25rem;
-  font-size: 0.5625rem;
+}
+
+/* The mark inside the cream circle: six tenths of it, so the shield clears the edge. */
+.avatarMark {
+  width: 60%;
+  height: 60%;
 }
 
 .bio {
