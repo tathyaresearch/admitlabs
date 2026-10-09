@@ -57,7 +57,7 @@ export function SectionTitle({ icon, title, help, action, id }: { icon?: IconNam
   );
 }
 
-/** Visibility, Trust and Chosen as three tiles: the number out of 100 large with its word beside it and a thin bar, its question, what to fix first in it. */
+/** Discovered, Trusted and Chosen as three tiles: the number out of 100 large with its word beside it and a thin bar, its question, what to fix first in it. */
 export function WordTiles({ words, compact = false, fixHref }: { words: readonly WordView[]; compact?: boolean; fixHref?: (key: string) => string }) {
   return (
     <div className={[styles.wordTiles, compact ? styles.wordTilesCompact : ''].join(' ')}>
@@ -105,11 +105,11 @@ export function WordsMeaning() {
       <div className={styles.meaningBody}>
         <dl className={styles.meaningList}>
           <div>
-            <dt>Visibility</dt>
+            <dt>Discovered</dt>
             <dd>Can students find you? Search from your city, your Google profile, Instagram, YouTube, Facebook and AI answers.</dd>
           </div>
           <div>
-            <dt>Trust</dt>
+            <dt>Trusted</dt>
             <dd>Do they believe you? Placements, reviews and rating, approvals, faculty, and students in your posts.</dd>
           </div>
           <div>

@@ -44,7 +44,7 @@ export function FirstAuditWaiting({ ranAt, isOwner, hasRivals, city }: { ranAt: 
             What you will see
           </h2>
           <ul className={styles.plainList}>
-            <li>Visibility, Trust and Chosen: can students find you, believe you and pick you</li>
+            <li>Discovered, Trusted and Chosen: can students find you, believe you and pick you</li>
             <li>What the internet says about you, place by place, with links and dates</li>
             <li>Your first three fixes, each with a ready fix to copy</li>
           </ul>

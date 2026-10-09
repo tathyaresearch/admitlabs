@@ -47,6 +47,17 @@ export const NAV = [
   { href: '/#faq', label: 'FAQ' },
 ] as const;
 
+/** The header's links on /drishti: Pricing and FAQ go to the product page's own plans and FAQ. */
+export const DRISHTI_NAV = [
+  { href: '/#services', label: 'Services' },
+  { menu: 'products', label: PRODUCTS.label },
+  { href: '/drishti#plans', label: 'Pricing' },
+  { href: '/drishti#faq', label: 'FAQ' },
+] as const;
+
+/** A header's links: section links, and the Products menu. */
+export type SiteNav = ReadonlyArray<{ readonly href: string; readonly label: string } | { readonly menu: 'products'; readonly label: string }>;
+
 export const HERO = {
   /** "Get discovered, trusted, and chosen.", set in two lines: "Get discovered, trusted," and "and chosen." */
   title: { before: 'Get', words: { discovered: 'discovered', trusted: 'trusted', chosen: 'chosen' } satisfies Record<Pillar, string> },
@@ -88,17 +99,6 @@ export const SYSTEM = {
     line: PILLAR_LINES[pillar],
     checks: READS.words.find((entry) => entry.pillar === pillar)?.checks ?? [],
   })),
-  loop: {
-    title: 'Measure. Fix. Repeat.',
-    note: 'The same loop every month, so you always know what changed and what comes next.',
-    steps: [
-      { name: 'Measure', who: 'Drishti', line: 'Your Audit: what the internet says about you, and what holds you back.' },
-      { name: 'Fix', who: 'Our team', line: 'We build the content and pages that close the biggest gaps first.' },
-      { name: 'Repeat', who: 'Every month', line: 'A summary and a report: what changed, where you stand in your city, and what to fix next.' },
-    ],
-    /** On the way back round the loop. */
-    back: 'Next month',
-  },
 } as const;
 
 export type ServiceKey = 'program-growth' | 'institution-branding' | 'admit-campaign';
@@ -192,6 +192,12 @@ export const FOOTER = {
   name: 'AdmitLabs',
   email: SITE_SETTINGS.email,
   drishti: 'Drishti',
+  /** AdmitLabs' own pages, as icons at the end of the footer's links. Each opens in a new tab. */
+  social: [
+    { key: 'linkedin', href: 'https://www.linkedin.com/company/admitlabs', label: 'AdmitLabs on LinkedIn' },
+    { key: 'x', href: 'https://x.com/AdmitLabs', label: 'AdmitLabs on X' },
+    { key: 'instagram', href: 'https://www.instagram.com/admitlabs', label: 'AdmitLabs on Instagram' },
+  ],
 } as const;
 
 /** The "Work with us" page. */

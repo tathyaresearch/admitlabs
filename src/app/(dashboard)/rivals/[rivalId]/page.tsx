@@ -85,7 +85,7 @@ export default async function RivalPage({ params, searchParams }: { params: Prom
       )}
 
       <section className={audit.block} aria-labelledby="sides-title">
-        <SectionTitle id="sides-title" icon="rivals" title="You and them" help="From each one’s latest Audit. Visibility, Trust and Chosen out of 100; the overall score small, after them." />
+        <SectionTitle id="sides-title" icon="rivals" title="You and them" help="From each one’s latest Audit. Discovered, Trusted and Chosen out of 100; the overall score small, after them." />
         <Ranking rows={detail.view.ranking} />
         <div className={city.facts}>
           <div className={audit.card}>

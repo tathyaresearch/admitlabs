@@ -28,7 +28,7 @@ describe('what goes into the shared Audit PDF', () => {
       const data = buildAuditPdf(await sampleShared(slug), OPTIONS);
       assert.deepEqual(
         data.words.map((word) => word.name),
-        ['Visibility', 'Trust', 'Chosen'],
+        ['Discovered', 'Trusted', 'Chosen'],
       );
       assert.deepEqual(
         data.topFixes.map((fix) => fix.rank),

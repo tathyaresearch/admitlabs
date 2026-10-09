@@ -162,7 +162,7 @@ The institution enters:
 
 In Settings, the owner can also add the institution's **Google Maps listing** (optional): the link from the listing's Share button, or the listing page. The Audit's Google profile and review checks then read that listing, so the rating and reviews are always the institution's own.
 
-After onboarding, Free users pick the **one program** their Free Audit covers. The last step says what happens next: Drishti checks what a student would see (about a minute) and the AdmitLabs team looks it over (section 25); then it shows Visibility, Trust and Chosen, what it found in each place and the first things to fix, with an email when it is ready; and the next free Audit comes in 3 months. Then Home opens, with Start here (section 13).
+After onboarding, Free users pick the **one program** their Free Audit covers. The last step says what happens next: Drishti checks what a student would see (about a minute) and the AdmitLabs team looks it over (section 25); then it shows Discovered, Trusted and Chosen, what it found in each place and the first things to fix, with an email when it is ready; and the next free Audit comes in 3 months. Then Home opens, with Start here (section 13).
 
 **Details added by you (Settings, every plan).** All optional and short.
 
@@ -185,9 +185,9 @@ Five places, in this order. Every check sits in one place and feeds one of the t
 
 | Place | What it covers | Checks: key, name on screen (word it feeds, level) |
 |---|---|---|
-| Website | Program pages, fees, placements, admission steps, enquiry, mobile, speed, approvals, faculty | `program_page` Program pages (Chosen, program); `fees_shown` Fees (Chosen, program); `placement_proof` Placements (Trust, program); `admission_steps` Admission steps (Chosen, program); `easy_enquiry` Enquiry (Chosen); `mobile_friendly` Mobile (Chosen); `page_speed` Speed (Chosen); `approvals` Approvals (Trust); `faculty_leaders` Faculty and leaders (Trust) |
-| Google | Search results as seen from the institution's city, the Google profile, reviews and rating, AI answers | `google_search` Search from [city] (Visibility, program); `google_profile` Google profile (Visibility); `review_rating` Reviews and rating (Trust); `ai_answers` AI answers (Visibility, program) |
-| Social media | Instagram, YouTube and Facebook: how active, and what's working | `instagram_activity` Instagram (Visibility); `youtube` YouTube (Visibility); `other_socials` Facebook (Visibility); `students_in_content` Students in your posts (Trust) |
+| Website | Program pages, fees, placements, admission steps, enquiry, mobile, speed, approvals, faculty | `program_page` Program pages (Chosen, program); `fees_shown` Fees (Chosen, program); `placement_proof` Placements (Trusted, program); `admission_steps` Admission steps (Chosen, program); `easy_enquiry` Enquiry (Chosen); `mobile_friendly` Mobile (Chosen); `page_speed` Speed (Chosen); `approvals` Approvals (Trusted); `faculty_leaders` Faculty and leaders (Trusted) |
+| Google | Search results as seen from the institution's city, the Google profile, reviews and rating, AI answers | `google_search` Search from [city] (Discovered, program); `google_profile` Google profile (Discovered); `review_rating` Reviews and rating (Trusted); `ai_answers` AI answers (Discovered, program) |
+| Social media | Instagram, YouTube and Facebook: how active, and what's working | `instagram_activity` Instagram (Discovered); `youtube` YouTube (Discovered); `other_socials` Facebook (Discovered); `students_in_content` Students in your posts (Trusted) |
 | What people say | Reddit, Quora and forums: what's good, what's bad, and questions nobody answered | Findings, not scored |
 | Other places | News, college listing sites and directories | Findings, not scored |
 
@@ -206,11 +206,13 @@ These are the same 17 checks as version 1. Their keys stay; their names on scree
 
 The top of the Audit, Home, the summary and the report show the three, each as its score out of 100 ("79/100", in Inter) with a thin bar and its word (Strong, Okay or Weak) small beside it, so the number means something at a glance (decided 5 October 2026; until then the words stood alone):
 
-| Word | Was | Question |
-|---|---|---|
-| Visibility | Discovered | Can students find you? |
-| Trust | Trusted | Do they believe you? |
-| Chosen | Chosen | Is it easy to pick you? |
+| Word | Question |
+|---|---|
+| Discovered | Can students find you? |
+| Trusted | Do they believe you? |
+| Chosen | Is it easy to pick you? |
+
+The words read Discovered, Trusted and Chosen, like the website's promise ("Get discovered, trusted, and chosen."). For a while they were called Visibility and Trust; the names came back on 9 October 2026. The database and the code keep their keys (`discovered`, `trusted`, `chosen`).
 
 Each shows **Strong, Okay or Weak**, from its part's score **[ADJUSTABLE]**:
 
@@ -220,7 +222,7 @@ Each shows **Strong, Okay or Weak**, from its part's score **[ADJUSTABLE]**:
 | 40 to 69 | Okay |
 | 0 to 39 | Weak |
 
-**The overall score stays in the background.** It works as in version 1, so months stay comparable. It shows small, as a number without a word, only in Progress (on the Audit), the Rivals ranking and the monthly report, and on the AdmitLabs team's own screens. There is no big gauge anywhere. Visibility, Trust and Chosen show as numbers out of 100 everywhere they appear: Home, the top of the Audit, the Rivals ranking, Progress, Reports, the PDFs, the emails, a shared Audit, and the pictures of the product on `/drishti`, the website, sign up and log in.
+**The overall score stays in the background.** It works as in version 1, so months stay comparable. It shows small, as a number without a word, only in Progress (on the Audit), the Rivals ranking and the monthly report, and on the AdmitLabs team's own screens. There is no big gauge anywhere. Discovered, Trusted and Chosen show as numbers out of 100 everywhere they appear: Home, the top of the Audit, the Rivals ranking, Progress, Reports, the PDFs, the emails, a shared Audit, and the pictures of the product on `/drishti`, the website, sign up and log in.
 
 Each check gets a result: **Strong, Okay, Weak or Missing**.
 
@@ -233,7 +235,7 @@ Each check gets a result: **Strong, Okay, Weak or Missing**.
 
 Each part is out of 100. Weights **[ADJUSTABLE]**:
 
-**Visibility**
+**Discovered**
 
 | Check | College / University | Skilling |
 |---|---|---|
@@ -245,7 +247,7 @@ Each part is out of 100. Weights **[ADJUSTABLE]**:
 | other_socials | 5 | 5 |
 | **Total** | **100** | **100** |
 
-**Trust**
+**Trusted**
 
 | Check | College / University | Skilling |
 |---|---|---|
@@ -283,7 +285,7 @@ The engine must be one pure function (plus helpers) that takes check results and
 
 Fixed rules for now **[ADJUSTABLE]**. Later these move to comparison with peers (same type, same region), once enough institutions are audited. Build the threshold logic so this switch is possible.
 
-**Visibility**
+**Discovered**
 
 | Check | Strong | Okay | Weak | Missing |
 |---|---|---|---|---|
@@ -295,7 +297,7 @@ Fixed rules for now **[ADJUSTABLE]**. Later these move to comparison with peers 
 | ai_answers | Named by 2+ AI assistants | Named by 1 | Only when asked by name | Not known |
 | other_socials (Facebook) | Posts every month | Occasional | Inactive | No page |
 
-**Trust**
+**Trusted**
 
 | Check | Strong | Okay | Weak | Missing |
 |---|---|---|---|---|
@@ -352,7 +354,7 @@ Every fix has, in this order:
 
 What the user sees after an Audit, in order:
 
-1. **The three words**: Visibility, Trust and Chosen, each with its question and what holds it back most ("Fix first: Fees"). With history, how each moved, in words ("Up from Okay in June").
+1. **The three words**: Discovered, Trusted and Chosen, each with its question and what holds it back most ("Fix first: Fees"). With history, how each moved, in words ("Up from Okay in June").
 2. **Fix these first**: the top 3 fixes across every place, by impact.
 3. **The five places**, each as in 7.6.
 4. **Progress** (Paid and Client): a table, month by month, of the score (small), the three words, your place among your rivals and what moved, with every Audit folded below.
@@ -450,7 +452,7 @@ A number shows only when a source gives a real count: searches a month (keyword 
 | | Free | Paid | Client |
 |---|---|---|---|
 | **Audit** | | | |
-| Visibility, Trust and Chosen | Yes | Yes | Yes |
+| Discovered, Trusted and Chosen | Yes | Yes | Yes |
 | Every place: each check's result | Yes | Yes | Yes |
 | What we found, with proof | For its top 3 fixes and strengths | Everything | Everything |
 | What's good | Top 3 | Full | Full |
@@ -513,7 +515,7 @@ A number shows only when a source gives a real count: searches a month (keyword 
 
 **Contents, in order:**
 
-1. Cover: institution name, month, Visibility, Trust and Chosen
+1. Cover: institution name, month, Discovered, Trusted and Chosen
 2. This month in short: the monthly summary (section 24)
 3. What the internet says: each place, what's good and what to fix, with proof
 4. What to fix: the top 5 in detail (steps, the ready fix, effort, impact), the rest as a short ranked list
@@ -630,7 +632,7 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 - In rows and lists: a thin bar of the share of the check's points earned, then the word. No point numbers on screen. Missing is an empty dashed bar. One style for every result, on screen and in the PDF, so a list reads evenly.
 - A place's checks, every one named (rule 11 in section 18): every check as a row, weakest first (the worst result, then the most to gain): its icon, its name, a thin bar and the word. A program check shows its weakest program. A row opens its panel where the page has one.
 - Readable on black and on ivory. The word is always available: beside the bar, on hover, and for screen readers. Never rely on the shape alone.
-- **The three words**: Visibility, Trust and Chosen side by side (stacked on a phone), each word large in Bricolage with its question under it, what to fix first in it, and, with history, how it moved in words ("Up from Okay in June"). Never a gauge or a big number. Where the overall score shows (Progress, the Rivals ranking, the report and the team's screens) it is a small number in Inter.
+- **The three words**: Discovered, Trusted and Chosen side by side (stacked on a phone), each word large in Bricolage with its question under it, what to fix first in it, and, with history, how it moved in words ("Up from Okay in June"). Never a gauge or a big number. Where the overall score shows (Progress, the Rivals ranking, the report and the team's screens) it is a small number in Inter.
 - **Impact and effort** sit beside a fix as small words, "Impact High" and "Effort Quick", never a colour or a shape alone.
 
 **Icons and logos**
@@ -674,7 +676,7 @@ Comes from scale, weight, black and ivory surface flips, and inverted highlight 
 **Sections, in order:**
 
 1. **Hero**: the product's name with the Drishti eye (its Rise reveal plays once as the intro, section 14), then "See where you stand, who’s ahead, and what students want." with the last words in an ivory block. "Get your free Audit" and "See the sample report", the trust line and the proof line, then the dashboard's Home in an app window that settles flat as the page moves
-2. **The problem** (ivory), one tight band with less space around it than the other sections: "Most teams guess. Drishti checks." with its line beside it (on a wide screen the headline left and the line right, their last lines level), then one wide Drishti card, dense like the dashboard. A top bar with the sample university and when it was last checked, then its answers to the three questions in three panels side by side (two, then the questions across, on a tablet or small laptop; stacked on a phone), each with where it came from: Visibility, Trust and Chosen with their words, from the Audit's five places of public pages; its place among the rivals in its city, by name in thin rows, with the month's one line; the questions students ask most in its city, each on one line with its site and count small on the right ("Quora · 96"); and at the foot of that panel one short line with the program rising fastest, in words (Search trends)
+2. **The problem** (ivory), one tight band with less space around it than the other sections: "Most teams guess. Drishti checks." with its line beside it (on a wide screen the headline left and the line right, their last lines level), then one wide Drishti card, dense like the dashboard. A top bar with the sample university and when it was last checked, then its answers to the three questions in three panels side by side (two, then the questions across, on a tablet or small laptop; stacked on a phone), each with where it came from: Discovered, Trusted and Chosen with their words, from the Audit's five places of public pages; its place among the rivals in its city, by name in thin rows, with the month's one line; the questions students ask most in its city, each on one line with its site and count small on the right ("Quora · 96"); and at the foot of that panel one short line with the program rising fastest, in words (Search trends)
 3. **The three features**, each in the same frame: a bar with its name (heavy and narrow, with the dashboard's icon), its question and its place ("1 of 3"), which stays under the header while its pictures pass, on a phone too; one short line; then the product across the full width on a dark stage. The Audit with the three words, the places and what to fix first; Rivals with the month's one line, the ranking and place by place; Demand with Make these 3 and the programs rising
 4. **How Drishti reads you**, inside the Audit (its label says so): "Five places. Three words." The three words side by side (stacked on a phone), each with its question and the checks behind it, one to a row, each with its place and its result; then, compact, what makes a word Strong, Okay or Weak. No total score
 5. **Public data only**: the rules every result follows, in one framed band. Leads is the one exception, and says so: only what students send a client's college themselves
@@ -911,7 +913,7 @@ The main AdmitLabs website, built in this app (section 4), in the **Spotlight** 
 **Home page sections, in order:**
 
 1. **Hero**: "Get discovered, trusted, and chosen." in two lines (80px on a desktop), falling from ivory to warm grey, centred on black under a soft cone of light, inside a fine frame with small crosses. One short paragraph, two buttons ("Get your free Audit" and "Work with us"), and the quiet proof line "120+ education companies worked with." Under it, a slow strip of ten client logos (ivory WebPs in public/brand/clients, each named in its alt text) sliding right to left in an endless loop, phones included, faded at both ends, dimmed until pointed at, paused on hover; with reduced motion, one still row that can be swiped sideways. No other picture, no labels
-2. **The system** (ivory): one dark stage where the three moments happen in the order a student lives them: a search where the institution is the answer (an AI answer and the top result), a review and its proof, and an enquiry that someone receives. Under each, its words set like a caption: Visibility, Trust or Chosen, its line, and what Drishti checks. Then "Measure. Fix. Repeat." as one sentence on one track, with a dot that travels it. On a phone each moment gets its own small stage
+2. **The system** (ivory): one dark stage where the three moments happen in the order a student lives them: a search where the institution is the answer (an AI answer and the top result), a review and its proof, and an enquiry that someone receives. Under each, its words set like a caption: Discovered, Trusted or Chosen, its line, and what Drishti checks. On a phone each moment gets its own small stage
 3. **Services**: three chapters, each laid out its own way around what that service makes: Program Growth beside a program's own page (a browser, and the phone in front; on a phone, the phone alone); Institution Branding on a stage of phones (the official page's posts, a reel, a YouTube film); Admit Campaign beside its season, planned week by week, with this week's posts. Instagram and YouTube appear only as their official one colour logos. Each links to the form with the service named. "We create content. We don't run ads." No prices
 4. **Drishti**: under one small label, "Product", the only one on the page, its name with the Drishti eye (its Rise reveal plays once when the title comes into view, section 14); its three numbers (5 places checked, 5 rivals in your city, 1 report every month), its three questions as a short list beside the product itself, a made up institution's Home in an app window, then "Free to start." with "Get your free Audit" and "Explore Drishti"
 5. **Who we work with** (ivory): private colleges, private universities, and skilling and training institutes, set large as a staircase, for professional and career programs
@@ -928,7 +930,7 @@ The main AdmitLabs website, built in this app (section 4), in the **Spotlight** 
 - No small labels above headings (the one exception: "Product" above Drishti by AdmitLabs), no numbered steps, no icons in boxes, and no two sections built the same way.
 - The pictures show a made up institution, Larkmoor University, in Bangalore, with made up neighbours (Calderwood College, Brackenfield University, Thornbury College): none is a real institution, and none of it is Drishti's own sample data (`src/site/scenes.ts`). They carry no caption.
 - Gradients: subtle and monochrome only (black to graphite, soft ivory tones), for light, depth and transitions. Never colour, neon or glow. The website and `/drishti` only (section 14).
-- Motion is CSS only, with no animation library: the light and frame come in on load, sections fade and rise in, the moments and pictures play their details as they scroll into view, a dot travels the loop, and buttons, cards and links answer the pointer calmly. With reduced motion nothing moves and everything shows settled. Lighthouse near 90 on a phone.
+- Motion is CSS only, with no animation library: the light and frame come in on load, sections fade and rise in, the moments and pictures play their details as they scroll into view, and buttons, cards and links answer the pointer calmly. With reduced motion nothing moves and everything shows settled. Lighthouse near 90 on a phone.
 - Works on a phone, with no stretched cards.
 
 **Work with us:** the same style (light from above, the frame), the words on the left and the form on an ivory card. Name, institution, role (Founder or director, Principal or dean, Admissions, Marketing, Other), email and phone are required; the program to grow and a message are optional. Then "Thanks. We'll reply within one working day." Each enquiry is saved to `enquiries` (section 16) and joins its lead in the team's Enquiries (section 27), which emails the team. The same form opens at `admitlabs.in/talk/<code>` from a team tracking link, tagged with its source. A hidden field turns bots away, and one email can send at most 3 a day.
@@ -970,14 +972,14 @@ The main AdmitLabs website, built in this app (section 4), in the **Spotlight** 
 
 **Paid and Client: the monthly summary.** A short summary each month, made on the 1st with the report:
 
-1. How you're doing: Visibility, Trust and Chosen, and any that moved.
+1. How you're doing: Discovered, Trusted and Chosen, and any that moved.
 2. The 3 things to do this month (Home's three).
 3. One rival move.
 4. For a Client: the month's enquiries ("Your content brought 23 enquiries in September, 6 more than in August.").
 
 It arrives by email to the owner and members, each of whom can turn it off in Settings, Notifications, with links to the dashboard and the PDF. The same summary opens the month on Reports and in the PDF.
 
-**Free: the Audit ready email.** When a free Audit is ready (the first, then every 3 months), a short email: Visibility, Trust and Chosen; the top 3 fixes, each with Let AdmitLabs fix this; and Subscribe now. Each button opens the dashboard, where the owner asks with one click. To the owner and members, each of whom can turn it off.
+**Free: the Audit ready email.** When a free Audit is ready (the first, then every 3 months), a short email: Discovered, Trusted and Chosen; the top 3 fixes, each with Let AdmitLabs fix this; and Subscribe now. Each button opens the dashboard, where the owner asks with one click. To the owner and members, each of whom can turn it off.
 
 In this build both go to the local test inbox; WhatsApp later. With Review first on, both wait for the team's approval (section 25).
 

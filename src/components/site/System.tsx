@@ -1,10 +1,8 @@
 // The system, in ivory: the three things that decide whether a student picks you, shown as the
 // moments a student lives (search, trust, enquiry) on one dark stage, each with its words set like
-// a caption underneath. Then the monthly loop as one sentence on one track. On a phone, each
-// moment gets its own small stage, followed by its words. One set of markup for both.
+// a caption underneath. On a phone, each moment gets its own small stage, followed by its words.
+// One set of markup for both.
 
-import type { CSSProperties } from 'react';
-import { Icon } from '@/components/ui/Icon';
 import { SYSTEM } from '@/site/content';
 import { EnquiryScene, SearchScene, TrustScene } from './Scenes';
 import site from './site.module.css';
@@ -45,27 +43,6 @@ export function System() {
             );
           })}
         </ol>
-
-        <div className={styles.loop}>
-          <h3 className="visually-hidden">{SYSTEM.loop.title}</h3>
-          <p className={`${styles.loopNote} ${site.reveal}`}>{SYSTEM.loop.note}</p>
-          <div className={styles.cycle}>
-            <ol className={styles.steps}>
-              {SYSTEM.loop.steps.map((step, index) => (
-                <li key={step.name} className={`${styles.step} ${site.reveal}`} style={{ '--order': index } as CSSProperties}>
-                  <p className={styles.stepWord}>{step.name}.</p>
-                  <p className={styles.stepWho}>{step.who}</p>
-                  <p className={styles.stepLine}>{step.line}</p>
-                </li>
-              ))}
-            </ol>
-            <p className={styles.back}>
-              <Icon name="refresh" size={14} />
-              {SYSTEM.loop.back}
-            </p>
-            <span className={styles.rail} aria-hidden="true" />
-          </div>
-        </div>
       </div>
     </section>
   );

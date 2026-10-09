@@ -95,7 +95,7 @@ describe('sample scores in September 2026 (golden values)', () => {
       assert.equal(evaluation.overall, overall);
       assert.equal(evaluation.label, label);
       assert.deepEqual(evaluation.pillars, { discovered, trusted, chosen });
-      // Visibility, Trust and Chosen in words: Strong from 70, Okay from 40, Weak below.
+      // Discovered, Trusted and Chosen in words: Strong from 70, Okay from 40, Weak below.
       const word = (score: number) => (score >= 70 ? 'Strong' : score >= 40 ? 'Okay' : 'Weak');
       assert.deepEqual(evaluation.words, { discovered: word(discovered), trusted: word(trusted), chosen: word(chosen) });
     });

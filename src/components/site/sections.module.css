@@ -482,6 +482,22 @@
   color: var(--ivory);
 }
 
+/* AdmitLabs on LinkedIn, X and Instagram: 18 px icons in the links’ own colour, each in a 36 px
+   target. The row keeps the line’s height, and the icons line up with the links beside them. */
+.footerSocial {
+  display: flex;
+  align-items: center;
+  margin: -0.5rem -0.5625rem;
+  list-style: none;
+}
+
+.footerLinks .socialLink {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
 @media (min-width: 48rem) {
   .footerInner {
     grid-template-columns: auto auto;

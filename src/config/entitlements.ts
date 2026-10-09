@@ -69,7 +69,7 @@ const all = (cell: EntitlementCell) => ({ free: cell, paid: cell, client: cell }
 export const INSTEAD: ReadonlySet<EntitlementKey> = new Set(['audit_fix_request', 'audit_ready_email']);
 
 export const ENTITLEMENTS: readonly EntitlementRow[] = [
-  { key: 'audit_words', group: 'Audit', label: 'Visibility, Trust and Chosen', cells: all(YES) },
+  { key: 'audit_words', group: 'Audit', label: 'Discovered, Trusted and Chosen', cells: all(YES) },
   { key: 'audit_places', group: 'Audit', label: 'Every place: each check’s result', cells: all(YES) },
   {
     key: 'audit_found',

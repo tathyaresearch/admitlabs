@@ -97,7 +97,7 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
             <ul className={audit.unlockList}>
               <li>
                 <Icon name="lock" size={14} />
-                The ranking, with each rival&apos;s Visibility, Trust and Chosen
+                The ranking, with each rival&apos;s Discovered, Trusted and Chosen
               </li>
               <li>
                 <Icon name="lock" size={14} />
@@ -159,7 +159,7 @@ export default async function RivalsPage({ searchParams }: { searchParams: Promi
           id="ranking-title"
           icon="rivals"
           title="The ranking"
-          help={`You and your rivals${nearby ? '' : ` in ${institution.city}`}, from each one’s latest Audit. Visibility, Trust and Chosen out of 100; the overall score small, after them.`}
+          help={`You and your rivals${nearby ? '' : ` in ${institution.city}`}, from each one’s latest Audit. Discovered, Trusted and Chosen out of 100; the overall score small, after them.`}
         />
         <Ranking rows={full.view.ranking} rivalHref={(id) => `/rivals/${id}`} />
       </section>

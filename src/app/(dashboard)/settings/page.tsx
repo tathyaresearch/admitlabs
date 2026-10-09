@@ -446,7 +446,7 @@ async function NotificationsGroup({ viewer, audit, rivals }: { viewer: Instituti
         <h3 className={styles.subheadTitle}>{free ? 'The Audit ready email' : 'The monthly summary by email'}</h3>
         <p className={styles.tabNote}>
           {free
-            ? 'When each free Audit is ready: Visibility, Trust and Chosen, and what to fix first. Each person turns theirs on or off.'
+            ? 'When each free Audit is ready: Discovered, Trusted and Chosen, and what to fix first. Each person turns theirs on or off.'
             : 'On the 1st: how you are doing, the 3 things to do this month, one rival move and the month’s PDF. Each person turns theirs on or off.'}
         </p>
       </div>

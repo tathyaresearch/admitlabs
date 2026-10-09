@@ -30,7 +30,7 @@ export function ProgramChoice({ programs }: { programs: ReadonlyArray<{ id: stri
         </h2>
         <ol className={styles.nextSteps}>
           <li>Drishti checks what a student would see: Google, your website, Instagram and your reviews. It takes about a minute. Then someone from AdmitLabs looks it over.</li>
-          <li>You see Visibility, Trust and Chosen, what Drishti found in each place, and the first things to fix. An email tells you when it is ready.</li>
+          <li>You see Discovered, Trusted and Chosen, what Drishti found in each place, and the first things to fix. An email tells you when it is ready.</li>
           <li>Your next free Audit comes in {SCHEDULES.free.auditEveryMonths} months, and shows what changed.</li>
         </ol>
       </section>

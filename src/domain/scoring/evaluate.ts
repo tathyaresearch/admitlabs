@@ -36,7 +36,7 @@ export interface RankedOutcome extends CheckOutcome {
 
 export interface AuditEvaluation extends AuditScores {
   label: ScoreLabel;
-  /** Visibility, Trust and Chosen in words: Strong, Okay or Weak. */
+  /** Discovered, Trusted and Chosen in words: Strong, Okay or Weak. */
   words: Readonly<Record<Pillar, ScoreLabel>>;
   changes: ScoreChanges;
   working: WorkingItem[];

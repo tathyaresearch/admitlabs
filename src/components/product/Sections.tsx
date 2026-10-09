@@ -116,7 +116,7 @@ function PlaceMarks({ size }: { size: number }) {
  * The problem: most teams guess, Drishti checks. The headline with its line beside it, then one wide
  * Drishti card, dense like the dashboard: a top bar with the sample university and when it was
  * checked, then its answers to the three questions side by side (stacked on a phone), each with
- * where it came from: Visibility, Trust and Chosen from the Audit's five places; its place among
+ * where it came from: Discovered, Trusted and Chosen from the Audit's five places; its place among
  * the rivals in its city, from each one's own Audit, with the month's one line; and the questions
  * asked most with their site and count, with the program rising fastest under them, in words.
  */

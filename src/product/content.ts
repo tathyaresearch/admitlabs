@@ -92,7 +92,7 @@ export const FEATURES: readonly Feature[] = [
     key: 'audit',
     name: 'Audit',
     question: 'What does the internet say about us?',
-    lede: 'Five places, checked the way a student sees you. Visibility, Trust and Chosen, each out of 100. Then what to fix first.',
+    lede: 'Five places, checked the way a student sees you. Discovered, Trusted and Chosen, each out of 100. Then what to fix first.',
     line: 'Three scores out of 100 from five places, and what to fix first.',
   },
   {
@@ -196,7 +196,7 @@ export const PLANS: { title: readonly [string, string]; lede: string; cards: rea
       term: 'For as long as you like',
       line: 'Here’s what the internet says.',
       points: [
-        'Visibility, Trust and Chosen out of 100, place by place',
+        'Discovered, Trusted and Chosen out of 100, place by place',
         'Your top 3 fixes and strengths, with proof',
         'One program',
         'Ahead or behind each rival, and the month’s one line',

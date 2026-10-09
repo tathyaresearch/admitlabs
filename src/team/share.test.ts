@@ -74,7 +74,7 @@ describe('the shared Audit', () => {
     const view = sharedPlaces(shared);
     assert.deepEqual(
       view.words.map((word) => word.name),
-      ['Visibility', 'Trust', 'Chosen'],
+      ['Discovered', 'Trusted', 'Chosen'],
     );
     assert.deepEqual(
       view.places.map((place) => place.key),

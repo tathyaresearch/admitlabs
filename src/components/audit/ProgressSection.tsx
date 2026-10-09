@@ -1,5 +1,5 @@
 // Progress month by month (spec 7.8), Paid and Client: each month's score, small, with the three
-// words (Visibility, Trust and Chosen), the change since the month before, your place among your
+// words (Discovered, Trusted and Chosen), the change since the month before, your place among your
 // rivals, and the checks that moved since the month before. Newest first; on a phone, one card per month. Every Audit sits folded
 // below, extra refreshes included.
 

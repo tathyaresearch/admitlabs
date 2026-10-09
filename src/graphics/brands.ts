@@ -31,6 +31,17 @@ export const BRAND_MARKS: Readonly<Record<Brand, BrandMark>> = {
   },
 };
 
+/**
+ * LinkedIn's "in" mark, drawn by hand on a 24 grid (Simple Icons no longer carries it), with the
+ * letters cut out (fill-rule evenodd). Only for the website footer's link to AdmitLabs' own
+ * LinkedIn page, which LinkedIn's brand guidelines allow; the dashboard keeps a line icon.
+ */
+export const LINKEDIN_MARK: BrandMark = {
+  title: 'LinkedIn',
+  viewBox: '0 0 24 24',
+  path: 'M3 1H21A2 2 0 0 1 23 3V21A2 2 0 0 1 21 23H3A2 2 0 0 1 1 21V3A2 2 0 0 1 3 1ZM4.75 6.3A1.85 1.85 0 1 0 8.45 6.3A1.85 1.85 0 1 0 4.75 6.3ZM5 9.4H8.2V19.6H5ZM10.3 9.4H13.35V10.8C13.9 9.85 15.1 9.15 16.6 9.15C19.3 9.15 19.9 10.95 19.9 13.3V19.6H16.75V14.1C16.75 12.9 16.5 11.9 15.25 11.9C14 11.9 13.45 12.85 13.45 14.05V19.6H10.3Z',
+};
+
 /** YouTube's play triangle, from the same file: filled white under the dark logo, as YouTube asks. */
 export const YOUTUBE_PLAY = 'M9.545 15.568V8.432L15.818 12l-6.273 3.568z';
 

@@ -1,7 +1,7 @@
 // What goes into the monthly report (spec section 12), as one plain snapshot: every word and
 // number the PDF prints, already worded. Built from what was known at the end of the month, in the
 // spec's order:
-//   1. Cover: the institution, the month, Visibility, Trust and Chosen.
+//   1. Cover: the institution, the month, Discovered, Trusted and Chosen.
 //   2. This month in short: the monthly summary (section 24).
 //   3. What the internet says: each place, what's good and what to fix, with proof.
 //   4. What to fix: the top 5 in detail, the rest as a short ranked list.
@@ -131,7 +131,7 @@ export interface RivalRankRow {
   nearby: boolean;
   place: number | null;
   overall: number | null;
-  /** Visibility, Trust and Chosen, each out of 100 with its word. */
+  /** Discovered, Trusted and Chosen, each out of 100 with its word. */
   words: Array<{ score: number; word: ScoreLabel }>;
 }
 

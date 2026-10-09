@@ -8,7 +8,7 @@ import { useRef, useState } from 'react';
 import { AnchorButton } from '@/components/ui/Button';
 import { EyeName } from '@/components/ui/Eye';
 import { Icon } from '@/components/ui/Icon';
-import type { NAV, PRODUCTS } from '@/site/content';
+import type { PRODUCTS, SiteNav } from '@/site/content';
 import styles from './site.module.css';
 
 const MENU_ID = 'site-menu';
@@ -18,7 +18,7 @@ export function SiteMenu({
   products,
   buttons,
 }: {
-  nav: typeof NAV;
+  nav: SiteNav;
   products: typeof PRODUCTS;
   /** The header’s two buttons, in its order: Talk to us, outlined, then Sign in, filled. */
   buttons: ReadonlyArray<{ href: string; label: string; filled: boolean }>;

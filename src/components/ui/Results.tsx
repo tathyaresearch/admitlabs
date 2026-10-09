@@ -45,7 +45,7 @@ export function ResultBar({ result, points, max, share, showPoints = true, size 
 }
 
 /**
- * Visibility, Trust or Chosen as a number out of 100 (in Inter), with its word small beside it
+ * Discovered, Trusted or Chosen as a number out of 100 (in Inter), with its word small beside it
  * (Strong, Okay or Weak, so the number means something at a glance) and a thin bar of the score.
  * `stack`: the number and the word, the bar under them (tiles and headers). `row`: all three on
  * one line (lists and tables). Readers hear "79 out of 100, Strong".

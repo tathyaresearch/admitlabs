@@ -1,5 +1,5 @@
 // The shared Audit as a PDF, in the report's design and in the shared page's order: a black cover
-// with Visibility, Trust and Chosen, then one run of ivory pages: what to fix first (the top 3 in
+// with Discovered, Trusted and Chosen, then one run of ivory pages: what to fix first (the top 3 in
 // full), the rest by name under one line saying AdmitLabs can fix them, each place with what's good
 // and what to fix and their proof, and the closing line. Checks carry their icons, sources their
 // platform's mark.
@@ -34,7 +34,7 @@ function AuditCover({ data }: { data: AuditPdfData }): ReactElement {
     h(
       View,
       null,
-      h(Text, { style: { fontSize: 7.5, fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase', color: COLORS.slate, marginBottom: 10 } }, 'Visibility, Trust and Chosen'),
+      h(Text, { style: { fontSize: 7.5, fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase', color: COLORS.slate, marginBottom: 10 } }, 'Discovered, Trusted and Chosen'),
       h(WordColumns, { words: data.words, dark: true }),
       h(Text, { style: { fontSize: 15, fontWeight: 500, lineHeight: 1.35, letterSpacing: -0.2, marginTop: 26, maxWidth: 430, ...clamp(3) } }, data.answer),
     ),

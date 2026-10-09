@@ -60,7 +60,7 @@ export function ResultBar({
 }
 
 /**
- * Visibility, Trust or Chosen in a table: the number out of 100 in Inter, a thin bar of it, then
+ * Discovered, Trusted or Chosen in a table: the number out of 100 in Inter, a thin bar of it, then
  * the word, so the number means something at a glance.
  */
 export function ScoreCell({ score, word, width, inset = 12 }: { score: number; word: ScoreLabel; width: number; inset?: number }): ReactElement {

@@ -38,6 +38,29 @@ describe('the website copy', () => {
     );
   });
 
+  test('on /drishti the header shows Pricing and its own FAQ, both on /drishti', () => {
+    assert.deepEqual(
+      content.DRISHTI_NAV.map((item) => ('href' in item ? [item.label, item.href] : [item.label, 'menu'])),
+      [
+        ['Services', '/#services'],
+        ['Products', 'menu'],
+        ['Pricing', '/drishti#plans'],
+        ['FAQ', '/drishti#faq'],
+      ],
+    );
+  });
+
+  test('the footer: AdmitLabs on LinkedIn, X and Instagram, each named for screen readers', () => {
+    assert.deepEqual(
+      content.FOOTER.social.map((item) => [item.label, item.href]),
+      [
+        ['AdmitLabs on LinkedIn', 'https://www.linkedin.com/company/admitlabs'],
+        ['AdmitLabs on X', 'https://x.com/AdmitLabs'],
+        ['AdmitLabs on Instagram', 'https://www.instagram.com/admitlabs'],
+      ],
+    );
+  });
+
   test('the logo strip: each logo named, its WebP in public, small, at twice its drawn size', () => {
     assert.equal(content.CLIENTS.length, 10);
     assert.equal(new Set(content.CLIENTS.map((client) => client.name)).size, content.CLIENTS.length);
@@ -118,18 +141,14 @@ describe('the website copy', () => {
     assert.deepEqual(
       content.SYSTEM.pillars.map((pillar) => [pillar.name, pillar.line]),
       [
-        ['Visibility', 'Students find you when they search.'],
-        ['Trust', 'They believe what they see.'],
+        ['Discovered', 'Students find you when they search.'],
+        ['Trusted', 'They believe what they see.'],
         ['Chosen', 'Saying yes is easy.'],
       ],
     );
     assert.equal(
       content.SYSTEM.pillars.reduce((sum, pillar) => sum + pillar.checks.length, 0),
       CHECKS.length,
-    );
-    assert.deepEqual(
-      content.SYSTEM.loop.steps.map((step) => step.name),
-      ['Measure', 'Fix', 'Repeat'],
     );
   });
 });

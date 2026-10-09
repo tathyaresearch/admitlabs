@@ -1,5 +1,5 @@
 // Free's Audit ready email (spec section 24), as the version 2 mock was approved: when a free
-// Audit is ready (the first, then every 3 months), Visibility, Trust and Chosen, the top 3 fixes
+// Audit is ready (the first, then every 3 months), Discovered, Trusted and Chosen, the top 3 fixes
 // each with Let AdmitLabs fix this, the way to the Audit, and Subscribe now. Each button opens the
 // dashboard, where the owner asks with one click. Pure.
 
@@ -13,7 +13,7 @@ export interface AuditReadyInput {
   /** The program the free Audit covers. */
   program: string | null;
   city: string;
-  /** Visibility, Trust and Chosen, each with how it moved or its question. */
+  /** Discovered, Trusted and Chosen, each with how it moved or its question. */
   words: ReadonlyArray<{ name: string; score: number | null; word: string; note: string }>;
   /** The top 3 fixes: what to do, where it is with its impact and effort, and where it opens. */
   fixes: ReadonlyArray<{ title: string; meta: string; url: string }>;
@@ -29,7 +29,7 @@ export interface AuditReadyInput {
   nextAuditOn: string | null;
 }
 
-/** "Visibility 75/100 (Strong)". */
+/** "Discovered 75/100 (Strong)". */
 const wordText = (word: AuditReadyInput['words'][number]) => (word.score === null ? `${word.name} ${word.word}` : wordScoreText(word.name, word.score, word.word as ScoreLabel));
 
 export function auditReadySubject(input: Pick<AuditReadyInput, 'words' | 'first'>): string {

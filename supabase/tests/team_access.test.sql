@@ -84,7 +84,8 @@ select throws_ok(
 );
 select is((select count(*)::int from public.client_managers where institution_id = '26000000-0000-4000-8000-0000000000c1'), 1, 'The team sees who looks after a Client');
 select is((select count(*)::int from public.institutions where city = 'Accessville'), 5, 'A Team member sees every institution');
-select is((select count(*)::int from public.bulk_runs), 1, 'and the Bulk Audits');
+-- Only the Bulk Audit made above: a local database may hold others from trying the screen.
+select is((select count(*)::int from public.bulk_runs where created_by = '16000000-0000-4000-8000-000000000002'), 1, 'and the Bulk Audits');
 reset role;
 
 -- The Client manager: their Client, and the rival it tracks -------------------------------------

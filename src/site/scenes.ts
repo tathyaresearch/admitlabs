@@ -267,11 +267,11 @@ export const DASHBOARD = {
   title: 'Home',
   question: 'How are we doing this month?',
   words: {
-    title: 'Visibility, Trust and Chosen',
+    title: 'Discovered, Trusted and Chosen',
     /** Each word, on a thin bar of the points behind it, out of 100, and what to fix first in it. */
     items: [
-      { name: 'Visibility', word: 'Strong', value: 75, fix: 'AI answers' },
-      { name: 'Trust', word: 'Okay', value: 69, fix: 'Placements' },
+      { name: 'Discovered', word: 'Strong', value: 75, fix: 'AI answers' },
+      { name: 'Trusted', word: 'Okay', value: 69, fix: 'Placements' },
       { name: 'Chosen', word: 'Strong', value: 74, fix: 'Admission steps' },
     ],
     /** Before each word's weakest check. */

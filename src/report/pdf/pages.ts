@@ -1,4 +1,4 @@
-// The report's pages, in the spec's order (section 12): a black cover with Visibility, Trust and
+// The report's pages, in the spec's order (section 12): a black cover with Discovered, Trusted and
 // Chosen, then one run of ivory pages: This month in short (the monthly summary), what the internet
 // says, what to fix, rivals, demand, leads (Client) and progress with the sources. Each part starts
 // where the last one ends, with its head kept on the page of its first block, so a month reads in
@@ -98,7 +98,7 @@ function ProofLine({ proof, compact = false }: { proof: ReportProof; compact?: b
 
 // 1. Cover --------------------------------------------------------------------------------------
 
-/** Visibility, Trust and Chosen, side by side: each number out of 100 big with its word, its question and how it moved. */
+/** Discovered, Trusted and Chosen, side by side: each number out of 100 big with its word, its question and how it moved. */
 export function WordColumns({ words, dark }: { words: readonly ReportWord[]; dark: boolean }): ReactElement {
   const ink = dark ? COLORS.ivory : COLORS.black;
   const quiet = dark ? COLORS.slate : COLORS.muted;
@@ -151,7 +151,7 @@ export function CoverPage({ data }: PageProps): ReactElement {
     h(
       View,
       null,
-      h(Text, { style: { fontSize: 7.5, fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase', color: COLORS.slate, marginBottom: 10 } }, 'Visibility, Trust and Chosen'),
+      h(Text, { style: { fontSize: 7.5, fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase', color: COLORS.slate, marginBottom: 10 } }, 'Discovered, Trusted and Chosen'),
       h(WordColumns, { words: data.words, dark: true }),
       h(Text, { style: { fontSize: 15, fontWeight: 500, lineHeight: 1.35, letterSpacing: -0.2, marginTop: 26, maxWidth: 430, ...clamp(3) } }, data.answer),
     ),
@@ -692,8 +692,8 @@ function LeadsPart({ data }: PageProps): ReactElement | null {
 const PROGRESS_COLUMNS = [
   { key: 'month', label: 'Month', width: 58 },
   { key: 'score', label: 'Score', width: 40 },
-  { key: 'discovered', label: 'Visibility', width: 84 },
-  { key: 'trusted', label: 'Trust', width: 84 },
+  { key: 'discovered', label: 'Discovered', width: 84 },
+  { key: 'trusted', label: 'Trusted', width: 84 },
   { key: 'chosen', label: 'Chosen', width: 84 },
   { key: 'change', label: 'Change', width: 0 },
   { key: 'place', label: 'Among rivals', width: 66 },
@@ -705,7 +705,7 @@ function ProgressPart({ data }: PageProps): ReactElement {
     return column?.width ? { width: column.width } : { flex: 1 };
   };
   return h(Part, {
-    head: { eyebrow: 'Progress and sources', title: 'Month by month', lead: 'Your overall score, small, and Visibility, Trust and Chosen out of 100 each month, with your place among your rivals.' },
+    head: { eyebrow: 'Progress and sources', title: 'Month by month', lead: 'Each month: Discovered, Trusted and Chosen out of 100, your overall score, and your place among your rivals.' },
     first: h(
       View,
       null,

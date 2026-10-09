@@ -144,8 +144,8 @@ export const TIER_LABELS: Readonly<Record<Tier, string>> = {
 
 /** The three words on screen (spec 7.4). Inside the code and the database the keys stay as they were. */
 export const PILLAR_LABELS: Readonly<Record<Pillar, string>> = {
-  discovered: 'Visibility',
-  trusted: 'Trust',
+  discovered: 'Discovered',
+  trusted: 'Trusted',
   chosen: 'Chosen',
 };
 

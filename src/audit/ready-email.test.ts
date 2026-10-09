@@ -12,8 +12,8 @@ const INPUT: AuditReadyInput = {
   program: 'BBA',
   city: 'Guwahati',
   words: [
-    { name: 'Visibility', score: 52, word: 'Okay', note: 'Up from Weak in June' },
-    { name: 'Trust', score: 47, word: 'Okay', note: 'Do they believe you?' },
+    { name: 'Discovered', score: 52, word: 'Okay', note: 'Up from Weak in June' },
+    { name: 'Trusted', score: 47, word: 'Okay', note: 'Do they believe you?' },
     { name: 'Chosen', score: 61, word: 'Okay', note: 'Is it easy to pick you?' },
   ],
   fixes: [
@@ -30,8 +30,8 @@ const INPUT: AuditReadyInput = {
 
 describe('the Audit ready email', () => {
   test('the subject: a first free Audit, or a new one, with the three words', () => {
-    assert.equal(auditReadySubject(INPUT), 'Your new free Audit is ready: Visibility 52/100 (Okay), Trust 47/100 (Okay), Chosen 61/100 (Okay)');
-    assert.equal(auditReadySubject({ ...INPUT, first: true }), 'Your free Audit is ready: Visibility 52/100 (Okay), Trust 47/100 (Okay), Chosen 61/100 (Okay)');
+    assert.equal(auditReadySubject(INPUT), 'Your new free Audit is ready: Discovered 52/100 (Okay), Trusted 47/100 (Okay), Chosen 61/100 (Okay)');
+    assert.equal(auditReadySubject({ ...INPUT, first: true }), 'Your free Audit is ready: Discovered 52/100 (Okay), Trusted 47/100 (Okay), Chosen 61/100 (Okay)');
   });
 
   test('the top 3 fixes, each with Let AdmitLabs fix this opening its panel in the dashboard', () => {

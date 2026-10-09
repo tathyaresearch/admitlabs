@@ -82,7 +82,7 @@ export default async function SummaryReviewPage({ params }: { params: Promise<{ 
           }
         />
         <div className={audit.card}>
-          <p className={audit.miniTitle}>Visibility, Trust and Chosen</p>
+          <p className={audit.miniTitle}>Discovered, Trusted and Chosen</p>
           <p className={audit.quiet}>
             {state.summary.words.map((word) => `${summaryWordText(word)}: ${word.note}`).join('. ')}. From the approved Audit: a result is fixed in that Audit’s review.
           </p>

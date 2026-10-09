@@ -13,7 +13,7 @@ export interface StageData {
   city: string;
   /** When the Audit ran: "15 Aug 2026". */
   checked: string;
-  /** Visibility, Trust and Chosen, each with its word and the points behind it, out of 100. */
+  /** Discovered, Trusted and Chosen, each with its word and the points behind it, out of 100. */
   words: Array<{ key: Pillar; label: string; word: ScoreLabel; score: number }>;
   /** The one line from the three words. */
   answer: string;

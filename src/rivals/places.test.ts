@@ -49,7 +49,7 @@ describe('the ranking', () => {
     );
     assert.deepEqual(
       ranking[0]?.words.map((word) => word.name),
-      ['Visibility', 'Trust', 'Chosen'],
+      ['Discovered', 'Trusted', 'Chosen'],
     );
   });
 

@@ -41,7 +41,7 @@ export interface RankingRow {
   /** 1 is the highest score. Equal scores share a place. Null until checked. */
   place: number | null;
   overall: number | null;
-  /** Visibility, Trust and Chosen, each with its score out of 100 and its word. Empty until checked. */
+  /** Discovered, Trusted and Chosen, each with its score out of 100 and its word. Empty until checked. */
   words: Array<{ pillar: Pillar; name: string; score: number; word: ScoreLabel }>;
 }
 

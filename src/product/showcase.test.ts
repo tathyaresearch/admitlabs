@@ -61,8 +61,8 @@ describe('the product page pictures', () => {
     assert.deepEqual(
       audit.words.map((word) => [word.name, word.word]),
       [
-        ['Visibility', 'Strong'],
-        ['Trust', 'Okay'],
+        ['Discovered', 'Strong'],
+        ['Trusted', 'Okay'],
         ['Chosen', 'Strong'],
       ],
     );

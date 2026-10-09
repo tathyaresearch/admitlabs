@@ -1,7 +1,7 @@
 // The Audit answers "What does the internet say about us?" (spec 7.8 and section 13), as the
 // version 2 mock was approved, in this order:
 //   1. The title and the question, the line while a new Audit waits for review, the programs.
-//   2. Visibility, Trust and Chosen, each with its question and what to fix first, and "What do
+//   2. Discovered, Trusted and Chosen, each with its question and what to fix first, and "What do
 //      these mean?".
 //   3. Fix these first: the top 3 fixes across every place, by impact.
 //   4. The five places as tabs. Inside each: what we found, full width, then what's good and what
@@ -146,7 +146,7 @@ export function PlacesAudit(props: PlacesAuditProps) {
         {showPrograms ? <ProgramTabs entries={props.entries} active={props.programId} allLabel={props.allLabel} /> : null}
       </div>
 
-      <section className={styles.block} aria-label="Visibility, Trust and Chosen">
+      <section className={styles.block} aria-label="Discovered, Trusted and Chosen">
         <WordTiles words={view.words} compact fixHref={(key) => `?fix=${encodeURIComponent(`check:${key}`)}`} />
         <WordsMeaning />
       </section>
@@ -208,7 +208,7 @@ export function PlacesAudit(props: PlacesAuditProps) {
 
       {props.progress ? (
         <section className={styles.block} aria-labelledby="progress-title">
-          <SectionTitle id="progress-title" icon="demand" title="Progress, month by month" help="Each month’s overall score, small, with Visibility, Trust and Chosen out of 100, your place among your rivals and the checks that moved." />
+          <SectionTitle id="progress-title" icon="demand" title="Progress, month by month" help="Each month’s overall score, small, with Discovered, Trusted and Chosen out of 100, your place among your rivals and the checks that moved." />
           <ProgressSection
             months={props.progress.months}
             history={props.progress.history}

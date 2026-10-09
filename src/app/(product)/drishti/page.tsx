@@ -4,6 +4,7 @@ import { ReportShowcase } from '@/components/product/ReportShowcase';
 import { Features, FinalCall, Hero, Problem, Reads, Steps, Trust } from '@/components/product/Sections';
 import { SiteFooter } from '@/components/site/Footer';
 import { SiteHeader } from '@/components/site/Header';
+import { DRISHTI_NAV } from '@/site/content';
 import { PRODUCT_URL } from '@/lib/urls';
 import { FOOTER } from '@/product/content';
 import { loadShowcase } from '@/product/showcase';
@@ -42,7 +43,7 @@ export default async function ProductPage() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <SiteHeader />
+      <SiteHeader nav={DRISHTI_NAV} />
       <main id="main">
         <Hero showcase={showcase} />
         <Problem showcase={showcase} />

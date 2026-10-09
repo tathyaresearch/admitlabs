@@ -67,7 +67,7 @@ describe('the website’s pictures', () => {
     const { words, things, rivals, demand } = scenes.DASHBOARD;
     assert.deepEqual(
       words.items.map((item) => item.name),
-      ['Visibility', 'Trust', 'Chosen'],
+      ['Discovered', 'Trusted', 'Chosen'],
     );
     for (const item of words.items) assert.equal(item.word, scoreLabel(item.value), item.name);
     assert.deepEqual(

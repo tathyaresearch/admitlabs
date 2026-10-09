@@ -1,4 +1,4 @@
-// Score words (spec 7.4): 70 to 100 Strong, 40 to 69 Okay, 0 to 39 Weak. Visibility, Trust and
+// Score words (spec 7.4): 70 to 100 Strong, 40 to 69 Okay, 0 to 39 Weak. Discovered, Trusted and
 // Chosen each show their word; the number stays in the background.
 // The bands come from the scoring config, never from code.
 
@@ -45,7 +45,7 @@ export function nextBandText(score: number, config: Pick<ScoringConfig, 'labels'
   return rounded === top.min ? `Right where ${top.label} starts` : `${points(rounded - top.min)} above where ${top.label} starts`;
 }
 
-/** A part's score out of 100 in words, for a sentence or an email subject: "Visibility 79/100 (Strong)". */
+/** A part's score out of 100 in words, for a sentence or an email subject: "Discovered 79/100 (Strong)". */
 export function wordScoreText(name: string, score: number, word?: ScoreLabel): string {
   const value = Math.max(0, Math.min(100, Math.round(score)));
   return `${name} ${value}/100 (${word ?? scoreLabel(value)})`;

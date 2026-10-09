@@ -75,7 +75,7 @@ export function reviewChanges(
   };
 }
 
-/** The changes in one line, for To review: "Visibility Weak to Okay, 2 checks moved, 1 new finding". */
+/** The changes in one line, for To review: "Discovered Weak to Okay, 2 checks moved, 1 new finding". */
 export function changesLine(changes: ReviewChanges, first: boolean): string {
   if (first) return 'First Audit: nothing to compare with';
   const words = changes.words

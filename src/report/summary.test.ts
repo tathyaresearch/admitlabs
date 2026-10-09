@@ -27,7 +27,7 @@ function word(pillar: WordView['pillar'], name: string, value: WordView['word'],
   return { pillar, name, question: `${name}?`, word: value, score, fixFirst: null, moved };
 }
 
-const WORDS = [word('discovered', 'Visibility', 'Strong', 75), word('trusted', 'Trust', 'Okay', 62, 'Up from Weak in August'), word('chosen', 'Chosen', 'Strong', 74)];
+const WORDS = [word('discovered', 'Discovered', 'Strong', 75), word('trusted', 'Trusted', 'Okay', 62, 'Up from Weak in August'), word('chosen', 'Chosen', 'Strong', 74)];
 
 const FIX: FixView = {
   id: 'check:fees_shown',
@@ -91,13 +91,13 @@ const SUMMARY: MonthlySummary = buildSummary({
 
 describe('the monthly summary', () => {
   test('how you are doing: the words that moved, or that none did, or the first Audit', () => {
-    assert.equal(wordsLine(WORDS, { firstAudit: false, previousRunAt: '2026-08-15T04:30:00.000Z' }), 'Trust is up from Weak in August, now 62/100 (Okay).');
+    assert.equal(wordsLine(WORDS, { firstAudit: false, previousRunAt: '2026-08-15T04:30:00.000Z' }), 'Trusted: up from Weak in August, now 62/100 (Okay).');
     const held = WORDS.map((entry) => ({ ...entry, moved: null }));
-    assert.equal(wordsLine(held, { firstAudit: false, previousRunAt: '2026-08-15T04:30:00.000Z' }), 'No word moved since August: Visibility 75/100 (Strong), Trust 62/100 (Okay) and Chosen 74/100 (Strong).');
-    assert.equal(wordsLine(held, { firstAudit: true, previousRunAt: null }), 'Your first Audit: Visibility 75/100 (Strong), Trust 62/100 (Okay) and Chosen 74/100 (Strong).');
+    assert.equal(wordsLine(held, { firstAudit: false, previousRunAt: '2026-08-15T04:30:00.000Z' }), 'No word moved since August: Discovered 75/100 (Strong), Trusted 62/100 (Okay) and Chosen 74/100 (Strong).');
+    assert.equal(wordsLine(held, { firstAudit: true, previousRunAt: null }), 'Your first Audit: Discovered 75/100 (Strong), Trusted 62/100 (Okay) and Chosen 74/100 (Strong).');
     assert.deepEqual(
       SUMMARY.words.map((entry) => entry.note),
-      ['Visibility?', 'Up from Weak in August', 'Chosen?'],
+      ['Discovered?', 'Up from Weak in August', 'Chosen?'],
     );
   });
 
@@ -136,16 +136,16 @@ describe('the monthly summary', () => {
     assert.deepEqual(parseSummary(JSON.parse(JSON.stringify(SUMMARY))), SUMMARY);
     assert.equal(parseSummary(null), null);
     assert.equal(parseSummary({ ...SUMMARY, month: 'September' }), null);
-    assert.equal(parseSummary({ ...SUMMARY, words: [{ pillar: 'discovered', name: 'Visibility', word: 'Great', note: '' }] }), null);
+    assert.equal(parseSummary({ ...SUMMARY, words: [{ pillar: 'discovered', name: 'Discovered', word: 'Great', note: '' }] }), null);
     assert.equal(parseSummary({ ...SUMMARY, things: [{ source: 'somewhere', meta: '' }] }), null);
   });
 
   test('the subject says the month and the three words', () => {
-    assert.equal(summarySubject(SUMMARY), 'Your September: Visibility 75/100 (Strong), Trust 62/100 (Okay), Chosen 74/100 (Strong)');
+    assert.equal(summarySubject(SUMMARY), 'Your September: Discovered 75/100 (Strong), Trusted 62/100 (Okay), Chosen 74/100 (Strong)');
     // A summary kept before the numbers showed still reads, with its words alone.
     const old = parseSummary({ ...SUMMARY, words: SUMMARY.words.map((word) => ({ pillar: word.pillar, name: word.name, word: word.word, note: word.note })) });
     assert.ok(old);
-    assert.equal(summarySubject(old), 'Your September: Visibility Strong, Trust Okay, Chosen Strong');
+    assert.equal(summarySubject(old), 'Your September: Discovered Strong, Trusted Okay, Chosen Strong');
   });
 
   test('no dashes in any line', () => {
@@ -160,7 +160,7 @@ describe('the monthly summary by email', () => {
 
   test('the subject, the kind, and one message per person', () => {
     assert.equal(email.kind, 'monthly_summary');
-    assert.equal(email.subject, 'Your September: Visibility 75/100 (Strong), Trust 62/100 (Okay), Chosen 74/100 (Strong)');
+    assert.equal(email.subject, 'Your September: Discovered 75/100 (Strong), Trusted 62/100 (Okay), Chosen 74/100 (Strong)');
     assert.deepEqual(email.to, ['owner@brightpath-skills.example']);
   });
 

@@ -1,5 +1,5 @@
-/* The system: one dark stage where the three moments happen in order, a caption under each, and
-   the monthly loop on one track. Phone first: each moment on its own small stage. */
+/* The system: one dark stage where the three moments happen in order, a caption under each.
+   Phone first: each moment on its own small stage. */
 
 .system {
   padding-block: var(--section-pad);
@@ -435,91 +435,6 @@
   color: var(--grey-700);
 }
 
-/* The loop ---------------------------------------------------------------------------------- */
-
-.loop {
-  display: grid;
-  gap: var(--space-7);
-  margin-top: clamp(4.5rem, 3rem + 5vw, 7rem);
-  padding-top: 2.75rem;
-  border-top: 1px solid var(--hair-ink);
-}
-
-.loopNote {
-  max-width: 21rem;
-  font-size: 1rem;
-  line-height: 1.55;
-  color: var(--text-muted);
-}
-
-.cycle {
-  position: relative;
-}
-
-/* Phone: the track runs down the left. */
-.steps {
-  position: relative;
-  display: grid;
-  gap: 1.625rem;
-  padding-left: 1.375rem;
-  border-left: 1px solid rgba(10, 10, 12, 0.22);
-  list-style: none;
-}
-
-.step {
-  position: relative;
-}
-
-/* Where each step begins on the track. */
-.step::before {
-  content: '';
-  position: absolute;
-  left: calc(-1.375rem - 4px);
-  top: 0.75rem;
-  width: 7px;
-  height: 7px;
-  background: var(--black);
-}
-
-.stepWord {
-  font-size: clamp(2.125rem, 1.6rem + 1.6vw, 2.875rem);
-  font-weight: var(--weight-heading);
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.stepWho {
-  margin-top: 0.625rem;
-  font-size: 0.78125rem;
-  font-weight: var(--weight-heading);
-}
-
-.stepLine {
-  margin-top: 0.375rem;
-  font-size: 0.90625rem;
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
-.back {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  padding-left: 1.375rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.back svg {
-  color: var(--black);
-}
-
-/* The dot that travels the track: a carrier as long as the track, the dot at its start. */
-.rail {
-  display: none;
-}
-
 /* Tablet: each moment's stage beside its words --------------------------------------------- */
 
 @media (min-width: 48rem) {
@@ -541,71 +456,6 @@
     align-items: end;
   }
 
-  .loop {
-    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
-    column-gap: var(--space-16);
-  }
-
-  .loopNote {
-    padding-top: 0.625rem;
-  }
-
-  /* One track across, under the three words. */
-  .steps {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: 1.75rem;
-    padding-left: 0;
-    border-left: 0;
-  }
-
-  .steps::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 4.25rem;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(10, 10, 12, 0.3), rgba(10, 10, 12, 0.3) 85%, rgba(10, 10, 12, 0.05));
-  }
-
-  .step::before {
-    left: 0;
-    top: calc(4.25rem - 3px);
-  }
-
-  .stepWho {
-    margin-top: 2.5rem;
-  }
-
-  .back {
-    position: absolute;
-    right: 0;
-    top: 4.75rem;
-    margin: 0;
-    padding: 0;
-  }
-
-  .rail {
-    display: block;
-    position: absolute;
-    left: 0;
-    width: 100%;
-    top: calc(4.25rem - 4px);
-    height: 9px;
-    pointer-events: none;
-  }
-
-  .rail::before {
-    content: '';
-    position: absolute;
-    left: -1px;
-    top: 0;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--black);
-    box-shadow: 0 0 0 4px rgba(10, 10, 12, 0.08);
-  }
 }
 
 /* Wide: the shared stage. The three moments sit in its columns, staggered like a scene; their
@@ -738,7 +588,7 @@
 
 /* Motion: the moments arrive in order as the stage comes into view; the query types and its
    answers follow; the stars fill and the proof lines come one by one; the enquiry fills in and is
-   received; a dot travels the loop. All settled without it. */
+   received. All settled without it. */
 @media (prefers-reduced-motion: no-preference) {
   .caret {
     animation: blink 1100ms steps(1, end) infinite;
@@ -820,12 +670,6 @@
       }
     }
   }
-
-  @media (min-width: 64rem) {
-    .rail {
-      animation: travel 9s var(--ease-in-out) infinite;
-    }
-  }
 }
 
 @keyframes rise {
@@ -862,32 +706,3 @@
   }
 }
 
-/* Rests at each step, then goes round to next month. */
-@keyframes travel {
-  0% {
-    opacity: 0;
-    transform: translateX(0);
-  }
-  4%,
-  14% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  30%,
-  42% {
-    transform: translateX(33.6%);
-  }
-  58%,
-  70% {
-    transform: translateX(67.2%);
-  }
-  88% {
-    opacity: 1;
-    transform: translateX(100%);
-  }
-  96%,
-  100% {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-}

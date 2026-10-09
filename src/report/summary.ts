@@ -1,4 +1,4 @@
-// The monthly summary (spec section 24), for Paid and Client: how you're doing (Visibility, Trust
+// The monthly summary (spec section 24), for Paid and Client: how you're doing (Discovered, Trusted
 // and Chosen, and any that moved), the 3 things to do this month (Home's three), one rival move,
 // and for a Client the month's enquiries. Made on the 1st with the report; the same summary opens
 // the month on Reports, in the PDF and in the email. Kept with the report (reports.summary), where
@@ -89,12 +89,12 @@ export interface SummaryInput {
 
 const lower = (text: string) => `${text.charAt(0).toLowerCase()}${text.slice(1)}`;
 
-/** A word as a summary says it: "Visibility 79/100 (Strong)", or the word alone in an old summary. */
+/** A word as a summary says it: "Discovered 79/100 (Strong)", or the word alone in an old summary. */
 export function summaryWordText(word: Pick<SummaryWord, 'name' | 'score' | 'word'>): string {
   return word.score === null ? `${word.name} ${word.word}` : wordScoreText(word.name, word.score, word.word);
 }
 
-/** "Trust is up from Weak in August, now 45/100 (Okay).", "No word moved since August: ...", or the first Audit's words. */
+/** "Trusted: up from Weak in August, now 45/100 (Okay).", "No word moved since August: ...", or the first Audit's words. */
 export function wordsLine(words: readonly WordView[], options: { firstAudit: boolean; previousRunAt: string | null }): string {
   const all = words.map((word) => wordScoreText(word.name, word.score, word.word));
   if (options.firstAudit) return `Your first Audit: ${joinNames(all)}.`;
@@ -102,7 +102,7 @@ export function wordsLine(words: readonly WordView[], options: { firstAudit: boo
   if (moved.length === 0) {
     return options.previousRunAt ? `No word moved since ${formatMonthName(options.previousRunAt.slice(0, 7))}: ${joinNames(all)}.` : `${joinNames(all)}.`;
   }
-  return moved.map((word) => `${word.name} is ${lower(word.moved ?? '')}, now ${Math.round(word.score)}/100 (${word.word}).`).join(' ');
+  return moved.map((word) => `${word.name}: ${lower(word.moved ?? '')}, now ${Math.round(word.score)}/100 (${word.word}).`).join(' ');
 }
 
 /**
@@ -180,7 +180,7 @@ export function summaryTargets(summary: MonthlySummary): SummaryTarget[] {
   return SUMMARY_TARGETS.filter((target) => summaryLine(summary, target) !== null);
 }
 
-/** "Your September: Visibility 75/100 (Strong), Trust 69/100 (Okay), Chosen 74/100 (Strong)". */
+/** "Your September: Discovered 75/100 (Strong), Trusted 69/100 (Okay), Chosen 74/100 (Strong)". */
 export function summarySubject(summary: Pick<MonthlySummary, 'month' | 'words'>): string {
   return `Your ${formatMonthName(summary.month)}: ${summary.words.map(summaryWordText).join(', ')}`;
 }

@@ -73,7 +73,7 @@ describe('the product page copy', () => {
     );
     assert.deepEqual(
       content.READS.words.map((word) => word.name),
-      ['Visibility', 'Trust', 'Chosen'],
+      ['Discovered', 'Trusted', 'Chosen'],
     );
     assert.deepEqual(
       content.READS.places,
@@ -89,7 +89,7 @@ describe('the product page copy', () => {
   });
 
   test('the new product: three words, rivals in your city, Make these 3, Leads for clients and the Paid price', () => {
-    assert.match(content.FEATURES[0]?.lede ?? '', /Visibility, Trust and Chosen/);
+    assert.match(content.FEATURES[0]?.lede ?? '', /Discovered, Trusted and Chosen/);
     assert.match(content.FEATURES[1]?.question ?? '', /in our city/);
     assert.match(content.FEATURES[2]?.line ?? '', /Make these 3/);
     assert.match(content.CLIENTS.leads, /Leads/);

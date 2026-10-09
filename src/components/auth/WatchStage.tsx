@@ -2,7 +2,7 @@
 
 // The left side of /login: the Drishti eye, big, in the middle, and around it four pieces of the
 // dashboard for the sample university. The cards lean with the cursor at different depths, and each
-// plays in turn: Visibility, Trust and Chosen settle one by one with their numbers out of 100 and
+// plays in turn: Discovered, Trusted and Chosen settle one by one with their numbers out of 100 and
 // their bars, the rivals change
 // places into rank order, the questions students ask come in one by one, the searches by month
 // grow. The eye follows the cursor; when the cursor rests it watches each card as it changes, and

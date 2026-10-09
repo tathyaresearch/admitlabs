@@ -47,7 +47,7 @@ export function SharedAuditView({ shared, pdfHref }: { shared: SharedAudit; pdfH
           ]}
         />
 
-        <section className={places.block} aria-label="Visibility, Trust and Chosen">
+        <section className={places.block} aria-label="Discovered, Trusted and Chosen">
           <WordTiles words={view.words} compact />
           <WordsMeaning />
         </section>

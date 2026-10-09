@@ -13,6 +13,13 @@ neutral line icon and its name, until AdmitLabs has each brand's permission.
 Downloaded on 1 October 2026 from Simple Icons 16.33.0 (https://simpleicons.org, CC0 1.0). The files
 are unchanged; `src/graphics/brands.ts` copies their path data as it is.
 
+**LinkedIn, website footer only (9 October 2026):** the footer links to AdmitLabs' own LinkedIn,
+X and Instagram pages with their marks, as the user asked. LinkedIn's "in" mark is drawn by hand
+(`LINKEDIN_MARK` in `src/graphics/brands.ts`; Simple Icons no longer carries it); LinkedIn's
+guidelines let a company use it to link to its own LinkedIn page. The footer draws all three in its
+own link colour (slate, ivory under the pointer), to match the footer. Everywhere else LinkedIn
+still gets a line icon.
+
 The logos remain trademarks of their owners. Simple Icons' licence covers the files, not the right
 to use the marks. Each is used as its owner's guidelines allow:
 

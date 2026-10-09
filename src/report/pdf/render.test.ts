@@ -27,7 +27,7 @@ function heaviest(data: ReportData): ReportData {
     summary: {
       ...data.summary,
       lines: {
-        words: long('Trust is up from Weak in August.', 2),
+        words: long('Trusted: up from Weak in August.', 2),
         things: [1, 2, 3].map(() => long('Get found when students search for Data Analytics, Digital Marketing and Hotel Management', 1)),
         move: long('Silverline College: Announced 2027 admission dates. Forms open on 5 January 2027.', 2),
         enquiries: long('Your content brought 23 enquiries in September, 6 more than in August.', 2),

@@ -22,7 +22,7 @@ export function StartGuide({
   owner,
   onClose,
 }: {
-  /** "Visibility Strong, Trust Okay, Chosen Strong". */
+  /** "Discovered Strong, Trusted Okay, Chosen Strong". */
   words: string;
   /** The first fix in the Audit's ranking, and where it opens. Null when nothing needs fixing. */
   firstFix: { title: string; impact: Impact; href: string } | null;

@@ -1,5 +1,5 @@
 // The sample report section: three of its pages drawn from the same data as the PDF (the black
-// cover with Visibility, Trust and Chosen, This month in short, and what to fix with the sources),
+// cover with Discovered, Trusted and Chosen, This month in short, and what to fix with the sources),
 // fanned out on the ivory, and the download of the full sample PDF. The drawn pages are decoration
 // for sighted readers; the words beside them say what they show.
 
@@ -45,7 +45,7 @@ function Cover({ data }: { data: ReportData }) {
         {data.sample ? <p className={papers.sample}>{data.sample}</p> : null}
         <span className={papers.spacer} />
         <span className={papers.rule} />
-        <p className={papers.over}>Visibility, Trust and Chosen</p>
+        <p className={papers.over}>Discovered, Trusted and Chosen</p>
         <div className={papers.bars}>
           {data.words.map((word) => (
             <p key={word.pillar} className={papers.barHead}>

@@ -18,7 +18,7 @@ const LINKS = [
 ];
 
 describe('what goes into the monthly report', () => {
-  test('the cover: the month, the institution and Visibility, Trust and Chosen', async () => {
+  test('the cover: the month, the institution and Discovered, Trusted and Chosen', async () => {
     const data = buildReport(await input());
     assert.equal(data.monthLabel, 'September 2026');
     assert.equal(data.monthName, 'September');
@@ -26,7 +26,7 @@ describe('what goes into the monthly report', () => {
     assert.equal(data.checkedOn, 'Checked 15 Sep 2026');
     assert.deepEqual(
       data.words.map((word) => word.name),
-      ['Visibility', 'Trust', 'Chosen'],
+      ['Discovered', 'Trusted', 'Chosen'],
     );
     assert.ok(data.words.every((word) => ['Strong', 'Okay', 'Weak'].includes(word.word)));
     assert.ok(data.answer.length > 0);

@@ -81,8 +81,8 @@ describe('the Audit by place', () => {
     assert.deepEqual(
       view.words.map((word) => [word.name, word.word, word.question, word.fixFirst?.key, word.fixFirst?.result]),
       [
-        ['Visibility', 'Strong', 'Can students find you?', 'ai_answers', 'missing'],
-        ['Trust', 'Okay', 'Do they believe you?', 'placement_proof', 'missing'],
+        ['Discovered', 'Strong', 'Can students find you?', 'ai_answers', 'missing'],
+        ['Trusted', 'Okay', 'Do they believe you?', 'placement_proof', 'missing'],
         ['Chosen', 'Strong', 'Is it easy to pick you?', 'admission_steps', 'weak'],
       ],
     );
