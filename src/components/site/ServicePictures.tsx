@@ -5,7 +5,8 @@
 import type { CSSProperties } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { BrandLogo } from '@/components/ui/Marks';
-import { CITY, INSTITUTION, PROGRAM_PAGE, SEASON, SOCIAL } from '@/site/scenes';
+import { CITY, CLIPS, INSTITUTION, PROGRAM_PAGE, SEASON, SOCIAL } from '@/site/scenes';
+import { LoopVideo } from './LoopVideo';
 import styles from './services.module.css';
 
 const vars = (values: Record<string, string | number>) => values as CSSProperties;
@@ -60,7 +61,7 @@ export function ProgramPicture() {
               ))}
             </ul>
             <div className={styles.film}>
-              <Icon name="video" size={20} />
+              <LoopVideo clip={CLIPS.bbaClass} />
             </div>
           </div>
         </div>
@@ -122,6 +123,7 @@ export function SocialPicture() {
       </div>
 
       <div className={`${styles.device} ${styles.reel}`}>
+        <LoopVideo clip={CLIPS.reel} className={styles.reelFilm} />
         <p className={styles.appBar}>
           <BrandLogo brand="instagram" size={15} />
           <strong>{SOCIAL.reel.label}</strong>
@@ -144,6 +146,7 @@ export function SocialPicture() {
 
       <div className={`${styles.device} ${styles.tube}`}>
         <div className={styles.player}>
+          <LoopVideo clip={CLIPS.placements} className={styles.playerFilm} />
           <BrandLogo brand="youtube" size={40} />
           <span className={`${styles.length} num`}>{SOCIAL.film.length}</span>
         </div>

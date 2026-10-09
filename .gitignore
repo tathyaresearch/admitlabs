@@ -26,3 +26,6 @@ Thumbs.db
 
 # the client logo originals (PNGs) stay on this computer; the site uses public/brand/clients
 /brand/clients/
+
+# the service videos' originals stay on this computer; the site uses public/brand/videos
+/brand/videos/

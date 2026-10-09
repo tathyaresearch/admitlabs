@@ -74,6 +74,17 @@ export const ENQUIRY_SCENE = {
   when: '2 min ago',
 } as const;
 
+/** The pictures' three films: short silent loops in public/brand/videos, each with a still of its
+ *  first frame, made at twice their largest size on screen (originals in brand/videos, not in git). */
+export const CLIPS = {
+  /** Program Growth: the class, in the program page's video box. */
+  bbaClass: { src: '/brand/videos/v1-bba-class.mp4', poster: '/brand/videos/v1-bba-class.webp', width: 476, height: 268 },
+  /** Institution Branding: the reel, A day in BBA. */
+  reel: { src: '/brand/videos/v2-reel-day-in-bba.mp4', poster: '/brand/videos/v2-reel-day-in-bba.webp', width: 450, height: 800 },
+  /** Institution Branding: the film's thumbnail, Placements 2025. */
+  placements: { src: '/brand/videos/v3-youtube-placement.mp4', poster: '/brand/videos/v3-youtube-placement.webp', width: 366, height: 206 },
+} as const;
+
 /** Program Growth: one program's own page, on a laptop and a phone. */
 export const PROGRAM_PAGE = {
   url: `${INSTITUTION.site}/bba`,
