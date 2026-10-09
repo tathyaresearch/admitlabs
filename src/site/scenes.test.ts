@@ -114,6 +114,24 @@ describe('the website’s pictures', () => {
     });
   });
 
+  test('the program’s own account: text and photo posts in turn, one reel, real photos', () => {
+    const { posts, highlights, stats, bio } = scenes.PROGRAM_ACCOUNT;
+    assert.equal(posts.length, 6);
+    assert.equal(posts.filter((post) => post.kind === 'text').length, 3);
+    posts.forEach((post, index) => {
+      const right = index % 3 < 2 ? posts[index + 1] : undefined;
+      const below = posts[index + 3];
+      if (right) assert.notEqual(post.kind, right.kind, `post ${index} and the next`);
+      if (below) assert.notEqual(post.kind, below.kind, `post ${index} and the one below`);
+    });
+    assert.equal(posts.filter((post) => post.kind === 'photo' && post.reel).length, 1);
+    assert.deepEqual(highlights.map((highlight) => highlight.label), ['Placements', 'Internships', 'Faculty', 'Admissions']);
+    assert.deepEqual(stats.map((stat) => stat.value), ['86', '4,210', '112']);
+    assert.equal(bio.length, 3);
+    const photos = [...highlights.map((highlight) => highlight.photo), ...posts.flatMap((post) => (post.kind === 'photo' ? [post.photo] : []))];
+    for (const photo of photos) assert.ok(statSync(join(ROOT, '..', 'public', photo)).isFile(), photo);
+  });
+
   test('every post but the figure carries one of the first five photos, the figure stays drawn', () => {
     const photos = scenes.SOCIAL.tiles.flatMap((tile) => ('photo' in tile ? [tile.photo] : []));
     assert.deepEqual(new Set(photos), new Set(scenes.PHOTOS.slice(0, 5).map((name) => `/brand/thumbs/tiles/${name}.webp`)));

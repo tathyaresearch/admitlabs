@@ -132,8 +132,7 @@
 
 /* The institution's name with its mark before it, the mark a little under the line's height so
    the header keeps its own. */
-.webNav .webBrand,
-.phoneBrand {
+.webNav .webBrand {
   display: flex;
   align-items: center;
   gap: 0.375em;
@@ -259,111 +258,256 @@
   background: radial-gradient(80% 90% at 30% 20%, #45464c 0%, #141417 75%);
 }
 
+/* An iPhone (15 and 16: 71.6 by 147.6 mm, 1 to 2.06), its corners a little over a seventh of its
+   width. Heights in whole pixels, so nothing after it lands between pixels. */
 .phone {
+  display: flex;
+  flex-direction: column;
   width: 14rem;
+  height: 28.875rem;
   padding: 0.375rem;
   border: 1px solid var(--hair-2);
-  border-radius: 1.5rem;
+  border-radius: 15% / 7.28%;
   background: #0e0e11;
   box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9);
 }
 
+/* The program's own account, in the cream of its page, under an iPhone's status bar. The screen
+   fills the frame; its parts keep a small gap and share what height is left, so they sit evenly.
+   Sizes here are for a phone, where this phone shows on its own; a tablet steps them down, a
+   desktop a little less. */
 .phoneScreen {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  min-height: 22rem;
-  padding: 1rem 0.75rem 0.75rem;
-  border-radius: 1.125rem;
+  justify-content: space-between;
+  gap: 0.375rem;
+  min-height: 0;
+  padding: 0.5rem 0.625rem 0.625rem;
+  overflow: clip;
+  border-radius: 1.725rem;
   background: linear-gradient(180deg, #f7f0e3 0%, #efe5d2 100%);
   color: var(--black);
 }
 
-.phoneBrand {
-  font-size: 0.5625rem;
-  font-weight: 700;
+/* The status bar: the time, the Dynamic Island, the battery. */
+.statusBar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: var(--weight-heading);
+  line-height: 1;
 }
 
-.phoneTitle {
-  margin-top: 0.875rem;
-  font-size: 1.125rem;
-  font-weight: 650;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+.island {
+  width: 3.75rem;
+  height: 1.0625rem;
+  border-radius: 999px;
+  background: var(--black);
 }
 
-.phoneLine {
-  margin-top: 0.3125rem;
-  font-size: 0.5625rem;
-  line-height: 1.35;
-  color: var(--grey-700);
+.battery {
+  justify-self: end;
+  width: 1.25rem;
+  height: 0.5625rem;
+  border: 1px solid rgba(10, 10, 12, 0.55);
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--black) 72%, transparent 72%) content-box;
+  padding: 1px;
 }
 
-.phoneFacts {
-  margin-top: 0.75rem;
-}
-
-.phoneFacts div {
+.accountBar {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.accountBar strong {
+  font-weight: var(--weight-heading);
+}
+
+.accountHead {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.25rem;
-  padding: 0.375rem 0;
-  border-top: 1px solid var(--hair-ink);
-  font-size: 0.5625rem;
+  gap: 0.375rem;
+}
+
+.accountAvatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f7f0e3, #d9cfbc);
+  box-shadow: 0 0 0 1px var(--hair-ink);
+  color: var(--black);
+}
+
+.accountHead p {
+  display: grid;
+  justify-items: center;
+  font-size: 0.9375rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.15;
+}
+
+.accountHead small {
+  font-size: 0.625rem;
+  font-weight: var(--weight-regular);
   color: var(--grey-700);
 }
 
-.phoneFacts dd {
-  font-size: 0.75rem;
+.accountBio {
+  display: grid;
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  color: var(--grey-800);
+}
+
+.accountBio strong {
   font-weight: var(--weight-heading);
   color: var(--black);
 }
 
-.phoneApply {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  height: 1.875rem;
-  margin-top: auto;
-  border-radius: 3px;
-  background: var(--black);
-  color: var(--ivory);
-  font-size: 0.65625rem;
+.accountActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
   font-weight: var(--weight-heading);
+  line-height: 1.5rem;
+  text-align: center;
 }
 
-/* Shown on its own on a phone, the page's phone is larger, and so are its words. */
-@media (max-width: 39.99rem) {
-  .phoneScreen {
-    padding: 1.25rem 1rem 1rem;
-  }
+.accountFollow,
+.accountMessage {
+  border-radius: 0.375rem;
+}
 
-  .phoneBrand {
-    font-size: 0.6875rem;
-  }
+.accountFollow {
+  background: var(--black);
+  color: var(--ivory);
+}
 
-  .phoneTitle {
-    font-size: 1.5rem;
-  }
+.accountMessage {
+  background: rgba(10, 10, 12, 0.08);
+}
 
-  .phoneLine {
-    font-size: 0.71875rem;
-  }
+/* Highlights: small circles of photos, each with its word under it. */
+.highlights {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  justify-content: space-between;
+  column-gap: 0.25rem;
+  list-style: none;
+}
 
-  .phoneFacts div {
-    padding: 0.5rem 0;
-    font-size: 0.71875rem;
-  }
+.highlights li {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+}
 
-  .phoneFacts dd {
-    font-size: 0.9375rem;
-  }
+.highlights i {
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 50%;
+  outline: 1px solid rgba(10, 10, 12, 0.22);
+  outline-offset: 1.5px;
+  background: #ddd2bf;
+}
 
-  .phoneApply {
-    height: 2.375rem;
-    font-size: 0.8125rem;
-  }
+.highlights small {
+  font-size: 0.53125rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--grey-800);
+}
+
+/* The profile's tabs: posts (open), reels, tagged. */
+.accountTabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-items: center;
+  border-top: 1px solid var(--hair-ink);
+  color: var(--grey-600);
+}
+
+.accountTabs span {
+  padding: 0.375rem 0.75rem 0.25rem;
+}
+
+.accountTabs .tabOn {
+  border-top: 1.5px solid var(--black);
+  margin-top: -1px;
+  color: var(--black);
+}
+
+/* The posts: text cards and photos in turn, three across. */
+.accountPosts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  margin-top: -0.25rem;
+  list-style: none;
+}
+
+.accountPosts li {
+  position: relative;
+  display: grid;
+  align-content: end;
+  aspect-ratio: 1;
+  padding: 0.3125rem;
+  overflow: hidden;
+}
+
+.accountPosts strong {
+  font-size: 0.59375rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+.postDark {
+  background: linear-gradient(160deg, #2c2d32 0%, #0e0e11 100%);
+  color: var(--ivory);
+}
+
+.postLight {
+  background: linear-gradient(160deg, #fbf6ec 0%, #e6dac4 100%);
+  box-shadow: inset 0 0 0 1px var(--hair-ink);
+  color: var(--black);
+}
+
+.postPhoto {
+  background: linear-gradient(160deg, #e3d9c6 0%, #cfc4b0 100%);
+  color: var(--ivory);
+}
+
+.postPhoto svg {
+  position: absolute;
+  top: 0.3125rem;
+  right: 0.3125rem;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* The photos, once the phone comes close to the screen (NearScreen). Until then, sand. */
+.phoneScreen[data-near] .highlights i {
+  background: var(--photo) center / cover no-repeat, #ddd2bf;
+}
+
+.phoneScreen[data-near] .postPhoto {
+  background:
+    linear-gradient(200deg, rgba(10, 10, 12, 0.45) 0%, rgba(10, 10, 12, 0) 34%),
+    var(--photo) center / cover no-repeat,
+    #cfc4b0;
 }
 
 /* Institution Branding: a stage of phones rising from its lower edge ------------------------ */
@@ -932,10 +1076,109 @@
     right: 0;
     bottom: 0;
     width: 11rem;
+    height: 22.6875rem;
   }
 
   .phoneScreen {
-    min-height: 18.5rem;
+    gap: 0.3125rem;
+    padding: 0.375rem 0.5rem 0.5rem;
+    border-radius: 1.275rem;
+  }
+
+  .statusBar {
+    padding: 0 0.25rem;
+    font-size: 0.5rem;
+  }
+
+  .island {
+    width: 2.75rem;
+    height: 0.8125rem;
+  }
+
+  .battery {
+    width: 0.9375rem;
+    height: 0.4375rem;
+    border-radius: 2px;
+  }
+
+  .accountBar {
+    gap: 0.3125rem;
+    font-size: 0.5625rem;
+  }
+
+  .accountBar svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .accountHead {
+    gap: 0.25rem;
+  }
+
+  .accountAvatar {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .accountHead p {
+    font-size: 0.6875rem;
+  }
+
+  .accountHead small {
+    font-size: 0.4375rem;
+  }
+
+  .accountBio {
+    font-size: 0.5rem;
+  }
+
+  .accountActions {
+    gap: 0.1875rem;
+    font-size: 0.5rem;
+    line-height: 1rem;
+  }
+
+  .accountFollow,
+  .accountMessage {
+    border-radius: 0.25rem;
+  }
+
+  .highlights li {
+    gap: 0.125rem;
+  }
+
+  .highlights i {
+    width: 1.25rem;
+    height: 1.25rem;
+    outline-offset: 1px;
+  }
+
+  .highlights small {
+    font-size: 0.40625rem;
+  }
+
+  .accountTabs span {
+    padding: 0.25rem 0.5rem 0.125rem;
+  }
+
+  .accountTabs svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .accountPosts li {
+    padding: 0.25rem;
+  }
+
+  .accountPosts strong {
+    font-size: 0.46875rem;
+  }
+
+  .postPhoto svg {
+    top: 0.25rem;
+    right: 0.25rem;
+    width: 0.625rem;
+    height: 0.625rem;
   }
 
   .calendar {
@@ -1022,6 +1265,71 @@
 
   .phone {
     width: 12.5rem;
+    height: 25.75rem;
+  }
+
+  .phoneScreen {
+    gap: 0.375rem;
+    padding: 0.4375rem 0.5rem 0.5rem;
+    border-radius: 1.5rem;
+  }
+
+  .statusBar {
+    font-size: 0.5625rem;
+  }
+
+  .island {
+    width: 3.25rem;
+    height: 0.9375rem;
+  }
+
+  .accountBar {
+    font-size: 0.625rem;
+  }
+
+  .accountBar svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .accountAvatar {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .accountHead p {
+    font-size: 0.75rem;
+  }
+
+  .accountHead small {
+    font-size: 0.5rem;
+  }
+
+  .accountBio {
+    font-size: 0.5625rem;
+  }
+
+  .accountActions {
+    font-size: 0.5625rem;
+    line-height: 1.25rem;
+  }
+
+  .highlights i {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .highlights small {
+    font-size: 0.4375rem;
+  }
+
+  .accountTabs svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .accountPosts strong {
+    font-size: 0.5rem;
   }
 
   .institution-branding {
@@ -1090,20 +1398,17 @@
       animation-range: entry 0% exit 40%;
     }
 
-    .webFacts dd,
-    .phoneFacts dd {
+    .webFacts dd {
       animation: fade linear both;
       animation-timeline: view();
       animation-range: entry 30% entry 80%;
     }
 
-    .webFacts div:nth-child(2) dd,
-    .phoneFacts div:nth-child(2) dd {
+    .webFacts div:nth-child(2) dd {
       animation-range: entry 40% entry 90%;
     }
 
-    .webFacts div:nth-child(3) dd,
-    .phoneFacts div:nth-child(3) dd {
+    .webFacts div:nth-child(3) dd {
       animation-range: entry 50% entry 100%;
     }
 

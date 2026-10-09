@@ -1,12 +1,12 @@
-// What each service makes, drawn as the real thing: a program's own page (on a laptop and a
-// phone), the official pages' posts, reels and films, and an admission season planned week by
+// What each service makes, drawn as the real thing: a program's own page on a laptop and its own
+// account on a phone, the official pages' posts, reels and films, and an admission season planned week by
 // week. Made up (src/site/scenes.ts) and decorative; the words beside them say it all. The posts
 // and the season's busiest weeks carry photos, loaded only as they come close to the screen.
 
 import type { CSSProperties } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { BrandLogo } from '@/components/ui/Marks';
-import { CITY, CLIPS, INSTITUTION, PROGRAM_PAGE, SEASON, SEASON_DAYS, SEASON_PHOTOS, SOCIAL } from '@/site/scenes';
+import { CITY, CLIPS, INSTITUTION, PROGRAM_ACCOUNT, PROGRAM_PAGE, SEASON, SEASON_DAYS, SEASON_PHOTOS, SOCIAL } from '@/site/scenes';
 import { LarkmoorMark } from './LarkmoorMark';
 import { LoopVideo } from './LoopVideo';
 import { NearScreen } from './NearScreen';
@@ -15,7 +15,7 @@ import styles from './services.module.css';
 const vars = (values: Record<string, string | number>) => values as CSSProperties;
 const classes = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ') || undefined;
 
-/** Program Growth: the program's own page in a browser, and the same page on a phone. */
+/** Program Growth: the program's own page in a browser, and the program's own account on a phone. */
 export function ProgramPicture() {
   return (
     <div className={styles.program} aria-hidden="true">
@@ -74,26 +74,70 @@ export function ProgramPicture() {
         </div>
       </div>
       <div className={styles.phone}>
-        <div className={styles.phoneScreen} data-theme="light">
-          <p className={styles.phoneBrand}>
-            <LarkmoorMark className={styles.brandMark} />
-            {INSTITUTION.name}
+        <NearScreen className={styles.phoneScreen} data-theme="light">
+          <p className={styles.statusBar}>
+            <span className="num">{PROGRAM_ACCOUNT.time}</span>
+            <i className={styles.island} />
+            <i className={styles.battery} />
           </p>
-          <p className={styles.phoneTitle}>{PROGRAM_PAGE.title}</p>
-          <p className={styles.phoneLine}>{PROGRAM_PAGE.kicker}</p>
-          <dl className={styles.phoneFacts}>
-            {PROGRAM_PAGE.facts.map((fact) => (
-              <div key={fact.label}>
-                <dt>{fact.label}</dt>
-                <dd className="num">{fact.value}</dd>
-              </div>
+          <p className={styles.accountBar}>
+            <BrandLogo brand="instagram" size={13} />
+            <strong>{PROGRAM_ACCOUNT.handle}</strong>
+          </p>
+          <div className={styles.accountHead}>
+            <span className={styles.accountAvatar}>
+              <LarkmoorMark className={styles.avatarMark} />
+            </span>
+            {PROGRAM_ACCOUNT.stats.map((stat) => (
+              <p key={stat.label}>
+                <span className="num">{stat.value}</span>
+                <small>{stat.label}</small>
+              </p>
             ))}
-          </dl>
-          <p className={styles.phoneApply}>
-            {PROGRAM_PAGE.applyNow}
-            <Icon name="arrowRight" size={13} />
+          </div>
+          <p className={styles.accountBio}>
+            <strong>{PROGRAM_ACCOUNT.name}</strong>
+            {PROGRAM_ACCOUNT.bio.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
           </p>
-        </div>
+          <p className={styles.accountActions}>
+            <span className={styles.accountFollow}>{PROGRAM_ACCOUNT.follow}</span>
+            <span className={styles.accountMessage}>{PROGRAM_ACCOUNT.message}</span>
+          </p>
+          <ul className={styles.highlights}>
+            {PROGRAM_ACCOUNT.highlights.map((highlight) => (
+              <li key={highlight.label}>
+                <i style={vars({ '--photo': `url(${highlight.photo})` })} />
+                <small>{highlight.label}</small>
+              </li>
+            ))}
+          </ul>
+          <p className={styles.accountTabs}>
+            <span className={styles.tabOn}>
+              <Icon name="grid" size={14} />
+            </span>
+            <span>
+              <Icon name="video" size={14} />
+            </span>
+            <span>
+              <Icon name="user" size={14} />
+            </span>
+          </p>
+          <ul className={styles.accountPosts}>
+            {PROGRAM_ACCOUNT.posts.map((post) =>
+              post.kind === 'text' ? (
+                <li key={post.title} className={post.tone === 'dark' ? styles.postDark : styles.postLight}>
+                  <strong>{post.title}</strong>
+                </li>
+              ) : (
+                <li key={post.photo} className={styles.postPhoto} style={vars({ '--photo': `url(${post.photo})` })}>
+                  {post.reel ? <Icon name="video" size={12} /> : null}
+                </li>
+              ),
+            )}
+          </ul>
+        </NearScreen>
       </div>
     </div>
   );

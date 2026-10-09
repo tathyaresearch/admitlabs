@@ -83,7 +83,7 @@ export const CLIPS = {
   placements: { src: '/brand/videos/v3-youtube-placement.mp4', poster: '/brand/videos/v3-youtube-placement.webp', width: 366, height: 206 },
 } as const;
 
-/** Program Growth: one program's own page, on a laptop and a phone. */
+/** Program Growth: one program's own page, on a laptop. (The phone shows its own account.) */
 export const PROGRAM_PAGE = {
   url: `${INSTITUTION.site}/bba`,
   nav: ['Programs', 'Admissions', 'Campus'],
@@ -100,7 +100,6 @@ export const PROGRAM_PAGE = {
     { initials: 'MR', name: 'Dr. Meera Rao', role: 'Finance' },
     { initials: 'AK', name: 'Arjun Kamath', role: 'Marketing' },
   ],
-  applyNow: 'Apply now',
 } as const;
 
 /** The pictures' photos: 16 stills in public/brand/thumbs, numbered as they were made, toned to the
@@ -126,6 +125,41 @@ export const PHOTOS = [
 ] as const;
 
 const tilePhoto = (index: number) => `/brand/thumbs/tiles/${PHOTOS[index]}.webp`;
+const weekPhoto = (index: number) => `/brand/thumbs/weeks/${PHOTOS[index]}.webp`;
+/** The program account's own three photos (brand/thumbs, numbered 17 to 19 as they were made). */
+const postPhoto = (name: string) => `/brand/thumbs/posts/${name}.webp`;
+
+/** Program Growth, on the phone: the program's own Instagram account, in the cream of its page
+ *  beside it, so the laptop and the phone read as one program. Highlights use the season's small
+ *  photos (68 px); the photo posts have their own (posts, 124 px). Text and photo posts alternate. */
+export const PROGRAM_ACCOUNT = {
+  /** The phone's clock, as on every iPhone picture. */
+  time: '9:41',
+  handle: 'businessatlmu',
+  name: 'Business at LMU',
+  stats: [
+    { value: '86', label: 'posts' },
+    { value: '4,210', label: 'followers' },
+    { value: '112', label: 'following' },
+  ],
+  bio: ['BBA and B.Com, made simple.', `${CITY}.`, `Powered by ${INSTITUTION.name}`],
+  follow: 'Follow',
+  message: 'Message',
+  highlights: [
+    { label: 'Placements', photo: weekPhoto(3) },
+    { label: 'Internships', photo: weekPhoto(10) },
+    { label: 'Faculty', photo: weekPhoto(1) },
+    { label: 'Admissions', photo: weekPhoto(8) },
+  ],
+  posts: [
+    { kind: 'text', tone: 'dark', title: 'Balance sheet in 60 seconds' },
+    { kind: 'photo', photo: postPhoto('17-trading-class'), reel: false },
+    { kind: 'text', tone: 'light', title: 'Case study Friday' },
+    { kind: 'photo', photo: postPhoto('18-case-presentation'), reel: true },
+    { kind: 'text', tone: 'dark', title: 'Budget 2026, explained' },
+    { kind: 'photo', photo: postPhoto('19-accounts-study'), reel: false },
+  ],
+} as const;
 
 /** Institution Branding: the official page, posts, a reel and a film. */
 export const SOCIAL = {
