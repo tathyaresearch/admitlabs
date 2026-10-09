@@ -105,6 +105,30 @@ export const PROGRAM_PAGE = {
   applyNow: 'Apply now',
 } as const;
 
+/** The pictures' photos: 16 stills in public/brand/thumbs, numbered as they were made, toned to the
+ *  films (originals in brand/thumbs, not in git). The first five are posts on the official page
+ *  (tiles, 116 px); all 16 fill the season's busiest weeks (weeks, 68 px). Twice their size on screen. */
+export const PHOTOS = [
+  '01-campus-at-7am',
+  '02-meet-dr-rao',
+  '03-fees-explained',
+  '04-alumni-at-work',
+  '05-hostel-tour',
+  '06-library',
+  '07-campus-fest',
+  '08-convocation',
+  '09-campus-visit',
+  '10-admission-desk',
+  '11-applying-online',
+  '12-orientation-day',
+  '13-lab-session',
+  '14-faculty-mentoring',
+  '15-campus-canteen',
+  '16-sports-ground',
+] as const;
+
+const tilePhoto = (index: number) => `/brand/thumbs/tiles/${PHOTOS[index]}.webp`;
+
 /** Institution Branding: the official page, posts, a reel and a film. */
 export const SOCIAL = {
   handle: INSTITUTION.handle,
@@ -113,11 +137,11 @@ export const SOCIAL = {
   bio: `${INSTITUTION.name}, ${CITY}`,
   tiles: [
     { kind: 'figure', big: '92%', small: 'placed in 2025' },
-    { kind: 'person', initials: 'MR', small: 'Meet Dr. Rao' },
-    { kind: 'reel', small: 'Campus at 7am' },
-    { kind: 'text', small: 'Fees, explained' },
-    { kind: 'person', initials: 'SN', small: 'Alumni at work' },
-    { kind: 'reel', small: 'Hostel tour' },
+    { kind: 'person', small: 'Meet Dr. Rao', photo: tilePhoto(1) },
+    { kind: 'reel', small: 'Campus at 7am', photo: tilePhoto(0) },
+    { kind: 'text', small: 'Fees, explained', photo: tilePhoto(2) },
+    { kind: 'person', small: 'Alumni at work', photo: tilePhoto(3) },
+    { kind: 'reel', small: 'Hostel tour', photo: tilePhoto(4) },
   ],
   reel: {
     label: 'Reels',
@@ -152,6 +176,57 @@ export const SEASON = {
     { day: 'Fri', brand: 'youtube', kind: 'Live', title: 'Ask our alumni' },
   ],
 } as const;
+
+/** How many squares a week has: one for each day it can post on. */
+export const SEASON_DAYS = 5;
+
+/**
+ * Which photo fills each square of the busiest weeks (level 4), by week then day; null for the
+ * other weeks. All 16 are used before any repeats, shuffled with a fixed seed (the same on every
+ * visit), and a photo never sits beside itself, not even across a corner.
+ */
+export function peakPhotos(weeks: readonly number[], days = SEASON_DAYS, count = PHOTOS.length, seed = 2026): (number[] | null)[] {
+  let state = seed;
+  const random = () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const shuffled = () => {
+    const bag = Array.from({ length: count }, (_, index) => index);
+    for (let i = bag.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j]!, bag[i]!];
+    }
+    return bag;
+  };
+  const peak = Math.max(...weeks);
+  const grid: (number[] | null)[] = weeks.map(() => null);
+  let bag = shuffled();
+  weeks.forEach((level, week) => {
+    if (level !== peak) return;
+    const column: number[] = [];
+    for (let day = 0; day < days; day += 1) {
+      const before = grid[week - 1];
+      const near = new Set([column[day - 1], before?.[day - 1], before?.[day], before?.[day + 1]]);
+      let at = bag.findIndex((photo) => !near.has(photo));
+      if (at < 0) {
+        bag = [...bag, ...shuffled()];
+        at = bag.findIndex((photo) => !near.has(photo));
+      }
+      column.push(bag.splice(at, 1)[0]!);
+      if (bag.length === 0) bag = shuffled();
+    }
+    grid[week] = column;
+  });
+  return grid;
+}
+
+/** The season's busiest weeks, as drawn: each square's photo, as its index in PHOTOS. The squares
+ *  carry only the number (data-photo, from 1); services.module.css maps it to the file (week
+ *  squares, 68 px), which keeps 45 file paths out of the page. */
+export const SEASON_PHOTOS = peakPhotos(SEASON.weeks);
 
 /** Drishti: the institution's Home, as the dashboard would show it. */
 export const DASHBOARD = {

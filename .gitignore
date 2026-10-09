@@ -29,3 +29,6 @@ Thumbs.db
 
 # the service videos' originals stay on this computer; the site uses public/brand/videos
 /brand/videos/
+
+# the thumbnail originals stay on this computer; the site uses public/brand/thumbs
+/brand/thumbs/

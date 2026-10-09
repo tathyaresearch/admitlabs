@@ -88,4 +88,36 @@ describe('the website’s pictures', () => {
     assert.ok(weeks.every((level) => level >= 0 && level <= 4));
     assert.equal(Math.max(...weeks), 4);
   });
+
+  test('photos fill only the busiest weeks, all 16, never beside themselves', () => {
+    const { weeks } = scenes.SEASON;
+    const grid = scenes.peakPhotos(weeks);
+    weeks.forEach((level, week) => {
+      if (level === 4) assert.equal(grid[week]?.length, scenes.SEASON_DAYS, `week ${week} is full`);
+      else assert.equal(grid[week], null, `week ${week} has no photos`);
+    });
+    assert.equal(new Set(grid.flat().filter((photo) => photo !== null)).size, scenes.PHOTOS.length);
+    grid.forEach((column, week) => {
+      column?.forEach((photo, day) => {
+        for (const [dw, dd] of [[0, 1], [1, -1], [1, 0], [1, 1]] as const) {
+          const other = grid[week + dw]?.[day + dd];
+          if (other !== undefined) assert.notEqual(photo, other, `week ${week}, day ${day}`);
+        }
+      });
+    });
+    assert.deepEqual(scenes.peakPhotos(weeks), grid, 'the same on every visit');
+    assert.deepEqual(scenes.SEASON_PHOTOS, grid);
+    // The squares carry only a number; the stylesheet names each one's file.
+    const css = readFileSync(join(ROOT, 'components', 'site', 'services.module.css'), 'utf8');
+    scenes.PHOTOS.forEach((name, index) => {
+      assert.ok(css.includes(`.week i[data-photo='${index + 1}'] {\n  --photo: url(/brand/thumbs/weeks/${name}.webp);\n}`), name);
+    });
+  });
+
+  test('every post but the figure carries one of the first five photos, the figure stays drawn', () => {
+    const photos = scenes.SOCIAL.tiles.flatMap((tile) => ('photo' in tile ? [tile.photo] : []));
+    assert.deepEqual(new Set(photos), new Set(scenes.PHOTOS.slice(0, 5).map((name) => `/brand/thumbs/tiles/${name}.webp`)));
+    const figure = scenes.SOCIAL.tiles.find((tile) => tile.kind === 'figure');
+    assert.ok(figure && !('photo' in figure));
+  });
 });

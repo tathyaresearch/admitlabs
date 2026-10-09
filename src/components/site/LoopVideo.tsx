@@ -9,11 +9,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import styles from './loop-video.module.css';
+import { LOAD_AHEAD } from './NearScreen';
 
 type Clip = { readonly src: string; readonly poster: string; readonly width: number; readonly height: number };
-
-/** How far ahead of the screen the still and the video start loading. */
-const LOAD_AHEAD = '400px 0px';
 
 export function LoopVideo({ clip, className }: { clip: Clip; className?: string }) {
   const box = useRef<HTMLSpanElement>(null);

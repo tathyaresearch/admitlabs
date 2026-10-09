@@ -508,21 +508,6 @@
   color: var(--grey-800);
 }
 
-.tileFace {
-  position: absolute;
-  top: 0.375rem;
-  left: 0.375rem;
-  display: grid;
-  place-items: center;
-  width: 1.125rem;
-  height: 1.125rem;
-  border-radius: 50%;
-  background: var(--ivory);
-  color: var(--black);
-  font-size: 0.4375rem;
-  font-weight: 700;
-}
-
 .tile_reel svg {
   position: absolute;
   top: 0.375rem;
@@ -533,6 +518,23 @@
 
 .tiles .tile_text {
   background: linear-gradient(160deg, #3c3d43 0%, #1c1d21 100%);
+}
+
+/* A post's photo, once the page comes close to the screen (NearScreen): a soft dark fade under its
+   words, and on a reel under its video mark too. Until then, the drawn tile. */
+.profile[data-near] .tiles .photo {
+  background:
+    linear-gradient(0deg, rgba(10, 10, 12, 0.88) 0%, rgba(10, 10, 12, 0.56) 42%, rgba(10, 10, 12, 0) 76%),
+    var(--photo) center / cover no-repeat,
+    #1c1d21;
+}
+
+.profile[data-near] .tiles .tile_reel.photo {
+  background:
+    linear-gradient(0deg, rgba(10, 10, 12, 0.88) 0%, rgba(10, 10, 12, 0.56) 42%, rgba(10, 10, 12, 0) 76%),
+    linear-gradient(200deg, rgba(10, 10, 12, 0.5) 0%, rgba(10, 10, 12, 0) 34%),
+    var(--photo) center / cover no-repeat,
+    #1c1d21;
 }
 
 .reel {
@@ -745,6 +747,81 @@
 
 .week i.on {
   background: rgba(10, 10, 12, calc(0.22 + var(--level) * 0.17));
+}
+
+/* The busiest weeks carry photos once the season comes close to the screen (NearScreen), each
+   under a dark layer so they still read as the darkest squares. */
+.season[data-near] .week i.peak {
+  background:
+    linear-gradient(rgba(10, 10, 12, 0.66), rgba(10, 10, 12, 0.66)),
+    var(--photo) center / cover no-repeat,
+    rgba(10, 10, 12, 0.9);
+}
+
+/* Each peak square's photo, by its number in PHOTOS (src/site/scenes.ts). Only drawn, so only
+   loaded, by the rule above. */
+.week i[data-photo='1'] {
+  --photo: url(/brand/thumbs/weeks/01-campus-at-7am.webp);
+}
+
+.week i[data-photo='2'] {
+  --photo: url(/brand/thumbs/weeks/02-meet-dr-rao.webp);
+}
+
+.week i[data-photo='3'] {
+  --photo: url(/brand/thumbs/weeks/03-fees-explained.webp);
+}
+
+.week i[data-photo='4'] {
+  --photo: url(/brand/thumbs/weeks/04-alumni-at-work.webp);
+}
+
+.week i[data-photo='5'] {
+  --photo: url(/brand/thumbs/weeks/05-hostel-tour.webp);
+}
+
+.week i[data-photo='6'] {
+  --photo: url(/brand/thumbs/weeks/06-library.webp);
+}
+
+.week i[data-photo='7'] {
+  --photo: url(/brand/thumbs/weeks/07-campus-fest.webp);
+}
+
+.week i[data-photo='8'] {
+  --photo: url(/brand/thumbs/weeks/08-convocation.webp);
+}
+
+.week i[data-photo='9'] {
+  --photo: url(/brand/thumbs/weeks/09-campus-visit.webp);
+}
+
+.week i[data-photo='10'] {
+  --photo: url(/brand/thumbs/weeks/10-admission-desk.webp);
+}
+
+.week i[data-photo='11'] {
+  --photo: url(/brand/thumbs/weeks/11-applying-online.webp);
+}
+
+.week i[data-photo='12'] {
+  --photo: url(/brand/thumbs/weeks/12-orientation-day.webp);
+}
+
+.week i[data-photo='13'] {
+  --photo: url(/brand/thumbs/weeks/13-lab-session.webp);
+}
+
+.week i[data-photo='14'] {
+  --photo: url(/brand/thumbs/weeks/14-faculty-mentoring.webp);
+}
+
+.week i[data-photo='15'] {
+  --photo: url(/brand/thumbs/weeks/15-campus-canteen.webp);
+}
+
+.week i[data-photo='16'] {
+  --photo: url(/brand/thumbs/weeks/16-sports-ground.webp);
 }
 
 /* A dated moment: a fine line through the weeks, its words above. */

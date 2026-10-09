@@ -1,15 +1,18 @@
 // What each service makes, drawn as the real thing: a program's own page (on a laptop and a
 // phone), the official pages' posts, reels and films, and an admission season planned week by
-// week. Made up (src/site/scenes.ts) and decorative; the words beside them say it all.
+// week. Made up (src/site/scenes.ts) and decorative; the words beside them say it all. The posts
+// and the season's busiest weeks carry photos, loaded only as they come close to the screen.
 
 import type { CSSProperties } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { BrandLogo } from '@/components/ui/Marks';
-import { CITY, CLIPS, INSTITUTION, PROGRAM_PAGE, SEASON, SOCIAL } from '@/site/scenes';
+import { CITY, CLIPS, INSTITUTION, PROGRAM_PAGE, SEASON, SEASON_DAYS, SEASON_PHOTOS, SOCIAL } from '@/site/scenes';
 import { LoopVideo } from './LoopVideo';
+import { NearScreen } from './NearScreen';
 import styles from './services.module.css';
 
 const vars = (values: Record<string, string | number>) => values as CSSProperties;
+const classes = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ') || undefined;
 
 /** Program Growth: the program's own page in a browser, and the same page on a phone. */
 export function ProgramPicture() {
@@ -93,7 +96,7 @@ export function ProgramPicture() {
 export function SocialPicture() {
   return (
     <div className={styles.social} aria-hidden="true">
-      <div className={`${styles.device} ${styles.profile}`}>
+      <NearScreen className={`${styles.device} ${styles.profile}`}>
         <p className={styles.appBar}>
           <BrandLogo brand="instagram" size={15} />
           <strong>{SOCIAL.handle}</strong>
@@ -112,15 +115,18 @@ export function SocialPicture() {
         <p className={styles.bio}>{SOCIAL.bio}</p>
         <ul className={styles.tiles}>
           {SOCIAL.tiles.map((tile) => (
-            <li key={tile.small} className={styles[`tile_${tile.kind}`]}>
+            <li
+              key={tile.small}
+              className={classes(styles[`tile_${tile.kind}`], 'photo' in tile && styles.photo)}
+              style={'photo' in tile ? vars({ '--photo': `url(${tile.photo})` }) : undefined}
+            >
               {tile.kind === 'figure' ? <strong className="num">{'big' in tile ? tile.big : ''}</strong> : null}
-              {tile.kind === 'person' ? <span className={styles.tileFace}>{'initials' in tile ? tile.initials : ''}</span> : null}
               {tile.kind === 'reel' ? <Icon name="video" size={14} /> : null}
               <small>{tile.small}</small>
             </li>
           ))}
         </ul>
-      </div>
+      </NearScreen>
 
       <div className={`${styles.device} ${styles.reel}`}>
         <LoopVideo clip={CLIPS.reel} className={styles.reelFilm} />
@@ -166,7 +172,7 @@ export function SocialPicture() {
 /** Admit Campaign: the season planned week by week, busiest when students decide. */
 export function SeasonPicture() {
   return (
-    <div className={styles.season} data-theme="light" aria-hidden="true">
+    <NearScreen className={styles.season} data-theme="light" aria-hidden="true">
       <div className={styles.seasonHead}>
         <p className={styles.seasonTitle}>{SEASON.title}</p>
         <p className={styles.seasonKey}>
@@ -182,9 +188,17 @@ export function SeasonPicture() {
         <div className={styles.weeks}>
           {SEASON.weeks.map((level, week) => (
             <span key={week} className={styles.week} style={vars({ '--i': week })}>
-              {[0, 1, 2, 3, 4].map((day) => (
-                <i key={day} className={day <= level ? styles.on : undefined} style={vars({ '--level': level })} />
-              ))}
+              {Array.from({ length: SEASON_DAYS }, (_, day) => {
+                const photo = SEASON_PHOTOS[week]?.[day];
+                return (
+                  <i
+                    key={day}
+                    className={classes(day <= level && styles.on, photo !== undefined && styles.peak)}
+                    style={vars({ '--level': level })}
+                    data-photo={photo === undefined ? undefined : photo + 1}
+                  />
+                );
+              })}
             </span>
           ))}
           {SEASON.marks.map((mark) => (
@@ -212,6 +226,6 @@ export function SeasonPicture() {
           ))}
         </ul>
       </div>
-    </div>
+    </NearScreen>
   );
 }
