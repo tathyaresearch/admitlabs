@@ -5,7 +5,6 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { CTA, SERVICES, type ServiceKey } from '@/site/content';
-import { LarkmoorSymbol } from './LarkmoorMark';
 import { ProgramPicture, SeasonPicture, SocialPicture } from './ServicePictures';
 import styles from './services.module.css';
 import site from './site.module.css';
@@ -19,7 +18,6 @@ const PICTURES: Readonly<Record<ServiceKey, () => React.JSX.Element>> = {
 export function Services() {
   return (
     <section id="services" className={`${styles.services} ${site.grain}`} data-theme="dark" aria-labelledby="services-title">
-      <LarkmoorSymbol />
       <div className={site.container}>
         <div className={`${styles.head} ${site.reveal}`}>
           <h2 id="services-title" className={`${site.title} ${site.titleLight}`}>

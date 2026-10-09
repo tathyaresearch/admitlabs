@@ -10,7 +10,6 @@ export const INSTITUTION = {
   short: 'Larkmoor',
   site: 'larkmoor-university.example',
   handle: 'larkmoor.university',
-  initial: 'L',
 } as const;
 
 /** Its neighbours, for the search results and the rivals. */
@@ -29,7 +28,6 @@ export const SEARCH = {
     rest: `offers a three-year BBA in ${CITY}, with a published placement report and clear fees.`,
   },
   top: {
-    initial: INSTITUTION.initial,
     name: INSTITUTION.name,
     path: `${INSTITUTION.site} › bba`,
     title: `BBA at ${INSTITUTION.name}, ${CITY}`,

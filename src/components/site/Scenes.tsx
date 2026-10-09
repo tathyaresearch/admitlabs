@@ -5,6 +5,7 @@
 
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { ENQUIRY_SCENE, INSTITUTION, REVIEW, SEARCH } from '@/site/scenes';
+import { LarkmoorMark } from './LarkmoorMark';
 import styles from './system.module.css';
 
 export function SearchScene() {
@@ -26,7 +27,9 @@ export function SearchScene() {
         <span className={styles.source}>{INSTITUTION.site}</span>
       </div>
       <div className={`${styles.result} ${styles.top}`}>
-        <span className={styles.favicon}>{SEARCH.top.initial}</span>
+        <span className={styles.favicon}>
+          <LarkmoorMark className={styles.faviconMark} />
+        </span>
         <div>
           <p className={styles.site}>
             <strong>{SEARCH.top.name}</strong>

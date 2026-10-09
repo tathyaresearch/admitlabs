@@ -3,6 +3,7 @@ import { DrishtiSection } from '@/components/site/Drishti';
 import { SiteFooter } from '@/components/site/Footer';
 import { SiteHeader } from '@/components/site/Header';
 import { Hero } from '@/components/site/Hero';
+import { LarkmoorSymbol } from '@/components/site/LarkmoorMark';
 import { Audience, Faq, FinalCall, HowWeWork, OurWork, Tathya } from '@/components/site/Sections';
 import { Services } from '@/components/site/Services';
 import { System } from '@/components/site/System';
@@ -44,6 +45,8 @@ export default function SitePage() {
       </a>
       <SiteHeader />
       <main id="main">
+        {/* Larkmoor's mark, written once for every picture below that shows it. */}
+        <LarkmoorSymbol />
         <Hero />
         <System />
         <Services />

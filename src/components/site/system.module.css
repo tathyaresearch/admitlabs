@@ -206,6 +206,12 @@
   color: var(--black);
 }
 
+/* Larkmoor's mark in its circle, six tenths of it, like its avatars in the services. */
+.faviconMark {
+  width: 60%;
+  height: 60%;
+}
+
 .site {
   font-size: 0.75rem;
   line-height: 1.3;

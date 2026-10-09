@@ -1,6 +1,6 @@
 // Larkmoor University's mark, inline (no request), in the colour of the text around it. Its shapes
-// are written once on the page (LarkmoorSymbol, at the top of the services) and each mark points
-// to them, so five marks cost a few bytes each. Sized by its class; decorative, like the pictures
+// are written once on the page (LarkmoorSymbol, at the top of the home page's main) and each mark
+// points to them, so every mark costs a few bytes. Sized by its class; decorative, like the pictures
 // it sits in.
 
 import type { CSSProperties } from 'react';
